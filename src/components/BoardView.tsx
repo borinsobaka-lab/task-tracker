@@ -32,6 +32,7 @@ import { CSS } from '@dnd-kit/utilities'
 import { useBoard } from '../store'
 import type { Card, Column, ColumnRole, ID, Member } from '../types'
 import { ROLE_META, ROLE_ORDER } from '../columnRoles'
+import { QUADRANT_COLOR, QUADRANT_LABEL } from '../eisenhower'
 import { fmtDayMonth, hasContent, parseDateKey, toDateKey } from '../utils'
 import { AvatarStack } from './Avatar'
 import './board.css'
@@ -510,6 +511,18 @@ function CardContent({ card, members }: { card: Card; members: Member[] }) {
         {card.done && (
           <span className="card-done-check" title="Выполнено" aria-label="Выполнено">
             <CheckIcon />
+          </span>
+        )}
+        {card.priority && (
+          <span
+            className="card-prio-dot"
+            style={{ background: QUADRANT_COLOR[card.priority] }}
+            title={`Приоритет: ${QUADRANT_LABEL[card.priority]}`}
+          />
+        )}
+        {card.kind === 'meeting' && (
+          <span className="card-meeting-ico" aria-hidden>
+            📹
           </span>
         )}
         <span className="board-card-title-text">{card.title}</span>

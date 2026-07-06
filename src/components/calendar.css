@@ -443,13 +443,59 @@
   opacity: 0.35;
 }
 
-/* Верхняя строка блока: время слева, аватары справа — не отнимают место у заголовка */
-.cal-event-head {
+/* Верхняя строка: чекбокс + заголовок (заголовок с самого верха блока) */
+.cal-event-toprow {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px;
+  align-items: flex-start;
+  gap: 4px;
   flex-shrink: 0;
+}
+
+.cal-event-check {
+  flex-shrink: 0;
+  width: 15px;
+  height: 15px;
+  margin-top: 1px;
+  border-radius: 50%;
+  border: 1.5px solid color-mix(in srgb, var(--ev-color) 55%, var(--border-strong));
+  background: rgba(255, 255, 255, 0.6);
+  color: transparent;
+  font-size: 10px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+.cal-event-check:hover {
+  border-color: var(--ok);
+  color: var(--ok);
+}
+.cal-event-check.on {
+  background: var(--ok);
+  border-color: var(--ok);
+  color: #fff;
+}
+
+.cal-event-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--text);
+  overflow: hidden;
+}
+
+.cal-event-prio {
+  flex-shrink: 0;
+  width: 9px;
+  height: 9px;
+  margin-top: 3px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1.5px var(--surface);
 }
 
 .cal-event-time {
@@ -460,21 +506,13 @@
   flex-shrink: 0;
 }
 
-.cal-event-title {
-  flex: 1 1 auto;
-  min-height: 0;
-  font-size: 12px;
-  font-weight: 600;
-  line-height: 1.3;
-  color: var(--text);
-  overflow: hidden;
-}
-
+/* Аватары — внизу справа, не отнимают место у заголовка */
 .cal-event-avatars {
+  position: absolute;
+  right: 4px;
+  bottom: 3px;
   display: flex;
   justify-content: flex-end;
-  flex-shrink: 0;
-  overflow: hidden;
 }
 
 /* Компактный блок (30 минут): всё в одну строку */
@@ -486,7 +524,13 @@
   padding-bottom: 2px;
 }
 
-.cal-event.compact .cal-event-head {
+.cal-event.compact .cal-event-toprow {
+  flex: 1 1 auto;
+  min-width: 0;
+  align-items: center;
+}
+
+.cal-event.compact .cal-event-time {
   order: 2;
 }
 

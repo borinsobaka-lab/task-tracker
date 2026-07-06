@@ -34,6 +34,16 @@ export interface Attachment {
 /** Тип карточки: обычная задача или встреча (со ссылкой на созвон). */
 export type CardKind = 'task' | 'meeting'
 
+/**
+ * Квадрант матрицы Эйзенхауэра (приоритет):
+ *  - q1 — срочно и важно (красный)
+ *  - q2 — важно, не срочно (жёлтый)
+ *  - q3 — срочно, не важно (синий)
+ *  - q4 — не срочно, не важно (зелёный)
+ * Отсутствует — задача ещё не распределена по приоритету.
+ */
+export type EisenhowerQuadrant = 'q1' | 'q2' | 'q3' | 'q4'
+
 export interface Card {
   id: ID
   title: string
@@ -41,6 +51,8 @@ export interface Card {
   kind?: CardKind
   /** Ссылка на созвон (только у встреч) */
   meetingUrl?: string
+  /** Приоритет по матрице Эйзенхауэра (если распределён) */
+  priority?: EisenhowerQuadrant
   /** HTML из редактора (санитизируется при выводе) */
   description: string
   columnId: ID

@@ -265,6 +265,20 @@
   margin-top: 2px;
 }
 
+.card-prio-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+
+.card-meeting-ico {
+  flex-shrink: 0;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
 /* Бейджи */
 
 .board-card-meta {

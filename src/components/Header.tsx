@@ -50,6 +50,9 @@ export function Header({
         <button className={view === 'calendar' ? 'active' : ''} onClick={() => onViewChange('calendar')}>
           Календарь
         </button>
+        <button className={view === 'matrix' ? 'active' : ''} onClick={() => onViewChange('matrix')}>
+          Матрица
+        </button>
       </nav>
 
       <div className="header-members" title="Фильтр по участникам">

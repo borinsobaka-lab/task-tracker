@@ -70,10 +70,12 @@ export function setIdentityId(id: string | null): void {
   else localStorage.removeItem(LS.identity)
 }
 
-export function getSavedView(): 'board' | 'calendar' {
-  return localStorage.getItem(LS.view) === 'calendar' ? 'calendar' : 'board'
+export type SavedView = 'board' | 'calendar' | 'matrix'
+export function getSavedView(): SavedView {
+  const v = localStorage.getItem(LS.view)
+  return v === 'calendar' || v === 'matrix' ? v : 'board'
 }
-export function setSavedView(v: 'board' | 'calendar'): void {
+export function setSavedView(v: SavedView): void {
   localStorage.setItem(LS.view, v)
 }
 

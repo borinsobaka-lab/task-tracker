@@ -11,6 +11,7 @@ import { OwnerSetupScreen } from './components/OwnerSetupScreen'
 import { Header } from './components/Header'
 import { BoardView } from './components/BoardView'
 import { CalendarView } from './components/CalendarView'
+import { EisenhowerView } from './components/EisenhowerView'
 import { CardModal } from './components/CardModal'
 import { SettingsModal } from './components/SettingsModal'
 import { IdentityScreen } from './components/IdentityScreen'
@@ -112,7 +113,7 @@ function AppWithSession({
   )
 }
 
-export type ViewKind = 'board' | 'calendar'
+export type ViewKind = 'board' | 'calendar' | 'matrix'
 
 function Shell({ onLogout }: { onLogout: () => void }) {
   const store = useMaybeBoard()
@@ -167,11 +168,9 @@ function Shell({ onLogout }: { onLogout: () => void }) {
         onMemberFilterChange={setMemberFilter}
       />
       <main className="app-main">
-        {view === 'board' ? (
-          <BoardView memberFilter={memberFilter} onOpenCard={setSelectedCardId} />
-        ) : (
-          <CalendarView memberFilter={memberFilter} onOpenCard={setSelectedCardId} />
-        )}
+        {view === 'board' && <BoardView memberFilter={memberFilter} onOpenCard={setSelectedCardId} />}
+        {view === 'calendar' && <CalendarView memberFilter={memberFilter} onOpenCard={setSelectedCardId} />}
+        {view === 'matrix' && <EisenhowerView memberFilter={memberFilter} onOpenCard={setSelectedCardId} />}
       </main>
       {selectedCardId && <CardModal cardId={selectedCardId} onClose={() => setSelectedCardId(null)} />}
       {settingsOpen && <SettingsModal onClose={() => setSettingsOpen(false)} onLogout={onLogout} />}

@@ -334,7 +334,7 @@ function CardModalInner({ card, store, onClose }: { card: Card; store: BoardStor
             className={'cm-done' + (card.done ? ' on' : '')}
             title={card.done ? 'Отметить невыполненной' : 'Отметить выполненной'}
             aria-label={card.done ? 'Отметить невыполненной' : 'Отметить выполненной'}
-            onClick={() => store.updateCard(card.id, { done: !card.done })}
+            onClick={() => store.setCardDone(card.id, !card.done)}
           >
             ✓
           </button>

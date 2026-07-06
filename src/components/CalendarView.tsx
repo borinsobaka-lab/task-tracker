@@ -4,6 +4,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useBoard } from '../store'
 import type { Card, ID, Member } from '../types'
+import { QUADRANT_COLOR } from '../eisenhower'
 import {
   addDays,
   clamp,
@@ -457,15 +458,29 @@ export function CalendarView({
         }}
         {...dragEvents}
       >
-        <div className="cal-event-head">
-          <div className="cal-event-time">{label}</div>
-          <div className="cal-event-avatars">
-            <AvatarStack members={assigneesOf(c)} size="sm" />
+        <div className="cal-event-toprow">
+          <button
+            type="button"
+            className={'cal-event-check' + (c.done ? ' on' : '')}
+            title={c.done ? 'Снять отметку' : 'Отметить выполненной'}
+            aria-label={c.done ? 'Снять отметку' : 'Отметить выполненной'}
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation()
+              store.setCardDone(c.id, !c.done)
+            }}
+          >
+            ✓
+          </button>
+          <div className="cal-event-title">
+            {isMeeting(c) && <span className="cal-meeting-ico" aria-hidden>📹 </span>}
+            {c.title}
           </div>
+          {c.priority && <span className="cal-event-prio" style={{ background: QUADRANT_COLOR[c.priority] }} title="Приоритет" />}
         </div>
-        <div className="cal-event-title">
-          {isMeeting(c) && <span className="cal-meeting-ico" aria-hidden>📹 </span>}
-          {c.title}
+        <div className="cal-event-time">{label}</div>
+        <div className="cal-event-avatars">
+          <AvatarStack members={assigneesOf(c)} size="sm" />
         </div>
         <div
           className="cal-event-resize"

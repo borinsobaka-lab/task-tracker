@@ -4,7 +4,7 @@
 
 import React, { createContext, useContext, useEffect, useMemo, useSyncExternalStore } from 'react'
 import { produce } from 'immer'
-import type { Attachment, BoardData, Card, ChecklistItem, Column, ColumnRole, ID, Member } from './types'
+import type { Attachment, BoardData, Card, ChecklistItem, Column, ColumnRole, EisenhowerQuadrant, ID, Member } from './types'
 import type { StorageAdapter } from './storage/adapter'
 import { ConflictError } from './storage/adapter'
 import { emptyBoard, mergeBoards, normalizeBoard } from './merge'
@@ -290,6 +290,10 @@ export interface BoardStore {
   updateCard(id: ID, patch: Partial<Omit<Card, 'id' | 'createdAt' | 'updatedAt' | 'attachments'>>): void
   deleteCard(id: ID): void
   moveCard(id: ID, toColumnId: ID, toIndex: number): void
+  /** Отметить выполненной/невыполненной; при done=true переносит в колонку «Готово», если она задана */
+  setCardDone(id: ID, done: boolean): void
+  /** Приоритет по матрице Эйзенхауэра (undefined — снять с матрицы) */
+  setPriority(id: ID, priority: EisenhowerQuadrant | undefined): void
 
   // Чек-лист
   addChecklistItem(cardId: ID, text: string): void
@@ -528,6 +532,34 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
         else if (to.role) card.done = false
         touch(card)
         touch(to)
+      }),
+    setCardDone: (id, done) =>
+      engine.update((d) => {
+        const card = d.cards[id]
+        if (!card || card.deleted) return
+        card.done = done
+        touch(card)
+        if (!done) return
+        // Готовую задачу переносим в колонку с ролью «Готово», если она есть
+        const doneCol = d.columns.find((c) => !c.deleted && c.role === 'done')
+        if (!doneCol || card.columnId === doneCol.id) return
+        const from = d.columns.find((c) => c.id === card.columnId)
+        if (from) {
+          from.cardIds = from.cardIds.filter((x) => x !== id)
+          touch(from)
+        }
+        doneCol.cardIds = doneCol.cardIds.filter((x) => x !== id)
+        doneCol.cardIds.push(id)
+        card.columnId = doneCol.id
+        touch(doneCol)
+      }),
+    setPriority: (id, priority) =>
+      engine.update((d) => {
+        const card = d.cards[id]
+        if (!card || card.deleted) return
+        if (priority) card.priority = priority
+        else delete card.priority
+        touch(card)
       }),
 
     addChecklistItem: (cardId, text) =>
