@@ -362,23 +362,27 @@ function CardModalInner({ card, store, onClose }: { card: Card; store: BoardStor
                 }
               }}
             />
-            <label className="cm-subline">
-              в колонке{' '}
-              <select
-                className="cm-col-select"
-                value={card.columnId}
-                onChange={(e) => {
-                  const colId = e.target.value
-                  if (colId !== card.columnId) store.moveCard(card.id, colId, store.cardsInColumn(colId).length)
-                }}
-              >
-                {store.columns.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.title}
-                  </option>
-                ))}
-              </select>
-            </label>
+            {isMeeting ? (
+              <span className="cm-subline muted">Встреча — видна только в календаре</span>
+            ) : (
+              <label className="cm-subline">
+                в колонке{' '}
+                <select
+                  className="cm-col-select"
+                  value={card.columnId}
+                  onChange={(e) => {
+                    const colId = e.target.value
+                    if (colId !== card.columnId) store.moveCard(card.id, colId, store.cardsInColumn(colId).length)
+                  }}
+                >
+                  {store.columns.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.title}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
           </div>
           <div className="cm-kind-toggle" role="tablist" aria-label="Тип">
             <button

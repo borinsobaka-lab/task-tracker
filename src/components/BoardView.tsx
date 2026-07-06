@@ -68,7 +68,9 @@ export function BoardView({ memberFilter, onOpenCard }: { memberFilter: Readonly
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }))
 
   const matchesFilter = useCallback(
-    (card: Card) => memberFilter.size === 0 || card.assigneeIds.some((id) => memberFilter.has(id)),
+    // Встречи на доске не показываем — они существуют только в календаре
+    (card: Card) =>
+      card.kind !== 'meeting' && (memberFilter.size === 0 || card.assigneeIds.some((id) => memberFilter.has(id))),
     [memberFilter],
   )
 
