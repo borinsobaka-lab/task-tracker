@@ -28,6 +28,10 @@ interface GitHubAuth extends DataRepoConfig {
 async function api<T = any>(auth: GitHubAuth, path: string, init: RequestInit = {}, accept = 'application/vnd.github+json'): Promise<T> {
   const res = await fetch(`${API}${path}`, {
     ...init,
+    // GitHub присылает Cache-Control: max-age=60, из-за чего браузер отдавал бы
+    // из кэша устаревший board.json при опросе/перезагрузке (свежесозданная
+    // задача «пропадала»). no-store заставляет всегда читать с сервера.
+    cache: 'no-store',
     headers: {
       Authorization: `Bearer ${auth.token}`,
       Accept: accept,

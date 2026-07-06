@@ -18,6 +18,7 @@ interface FileMeta {
 async function ghJson(path: string, init: RequestInit = {}, token?: string): Promise<Response> {
   return fetch(`${API}${path}`, {
     ...init,
+    cache: 'no-store', // всегда свежий ответ, мимо кэша браузера
     headers: {
       Accept: 'application/vnd.github+json',
       'X-GitHub-Api-Version': '2022-11-28',
