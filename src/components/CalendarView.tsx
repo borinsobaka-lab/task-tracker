@@ -21,7 +21,6 @@ import { AvatarStack } from './Avatar'
 import './calendar.css'
 
 const HOUR_H = 48 // высота часа, px (синхронизировано с calendar.css)
-const GUTTER_W = 56 // ширина колонки часовых меток, px
 const SNAP = 30 // шаг привязки, минут
 const DAY_MIN = 24 * 60
 const DRAG_THRESHOLD = 4 // px: меньше — это клик
@@ -125,12 +124,11 @@ function timeRange(startMin: number, endMin: number): string {
   return `${minToTime(startMin)} – ${fmtEnd(endMin)}`
 }
 
-function weekTitle(monday: Date): string {
-  const sunday = addDays(monday, 6)
+function rangeTitle(start: Date, end: Date): string {
   const full = (d: Date) => fmtFullDate(d).replace(/\s*г\.\s*$/, '')
-  if (monday.getFullYear() !== sunday.getFullYear()) return `${full(monday)} – ${full(sunday)}`
-  if (monday.getMonth() !== sunday.getMonth()) return `${fmtDayMonth(monday)} – ${full(sunday)}`
-  return `${monday.getDate()} – ${full(sunday)}`
+  if (start.getFullYear() !== end.getFullYear()) return `${full(start)} – ${full(end)}`
+  if (start.getMonth() !== end.getMonth()) return `${fmtDayMonth(start)} – ${full(end)}`
+  return `${start.getDate()} – ${full(end)}`
 }
 
 // ---------- Компонент ----------
@@ -143,7 +141,11 @@ export function CalendarView({
   onOpenCard: (id: ID) => void
 }) {
   const store = useBoard()
-  const [weekStart, setWeekStart] = useState<Date>(() => startOfWeek(new Date()))
+  // Сколько дней показывать: на узком экране (телефон) — 3, иначе неделя.
+  const [nDays, setNDays] = useState<number>(() =>
+    typeof window !== 'undefined' && window.matchMedia('(max-width: 640px)').matches ? 3 : 7,
+  )
+  const [anchor, setAnchor] = useState<Date>(() => new Date())
   const [panelOpen, setPanelOpen] = useState(true)
   const [drag, setDrag] = useState<DragState | null>(null)
   const dragRef = useRef<DragState | null>(null)
@@ -154,6 +156,15 @@ export function CalendarView({
   const headRef = useRef<HTMLDivElement>(null)
   const gridRef = useRef<HTMLDivElement>(null)
   const sidebarRef = useRef<HTMLElement>(null)
+
+  // Переключение 3 дня / неделя при изменении ширины экрана
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 640px)')
+    const update = () => setNDays(mq.matches ? 3 : 7)
+    update()
+    mq.addEventListener('change', update)
+    return () => mq.removeEventListener('change', update)
+  }, [])
 
   // Красная линия «сейчас» — обновление раз в минуту
   useEffect(() => {
@@ -202,7 +213,13 @@ export function CalendarView({
     }
   }, [])
 
-  const days = useMemo(() => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)), [weekStart])
+  // Начало показываемого диапазона: неделя — с понедельника; 3 дня — с выбранного дня.
+  const rangeStart = useMemo(
+    () => (nDays === 7 ? startOfWeek(anchor) : new Date(anchor.getFullYear(), anchor.getMonth(), anchor.getDate())),
+    [anchor, nDays],
+  )
+  const gutterW = nDays === 7 ? 56 : 44
+  const days = useMemo(() => Array.from({ length: nDays }, (_, i) => addDays(rangeStart, i)), [rangeStart, nDays])
   const dayKeys = useMemo(() => days.map(toDateKey), [days])
   const todayKey = toDateKey(now)
   const nowMin = now.getHours() * 60 + now.getMinutes()
@@ -252,10 +269,10 @@ export function CalendarView({
     }
 
     const grect = grid.getBoundingClientRect()
-    const left = grect.left + GUTTER_W
-    const colW = (grect.width - GUTTER_W) / 7
+    const left = grect.left + gutterW
+    const colW = (grect.width - gutterW) / days.length
     if (colW <= 0 || x < left || x > grect.right) return null
-    const dayIdx = clamp(Math.floor((x - left) / colW), 0, 6)
+    const dayIdx = clamp(Math.floor((x - left) / colW), 0, days.length - 1)
 
     const hrect = head.getBoundingClientRect()
     if (y < hrect.bottom) return y >= hrect.top ? { type: 'allday', dayIdx } : null
@@ -549,30 +566,33 @@ export function CalendarView({
   const hours = Array.from({ length: 24 }, (_, h) => h)
 
   return (
-    <div className={`cal-root${drag?.moved ? ' is-dragging' : ''}`}>
+    <div
+      className={`cal-root${drag?.moved ? ' is-dragging' : ''}`}
+      style={{ ['--cal-days' as string]: String(nDays), ['--cal-gutter-w' as string]: `${gutterW}px` }}
+    >
       <div className="cal-toolbar">
-        <button className="btn btn-sm" onClick={() => setWeekStart(startOfWeek(new Date()))}>
+        <button className="btn btn-sm" onClick={() => setAnchor(new Date())}>
           Сегодня
         </button>
         <div className="cal-nav">
           <button
             className="icon-btn"
-            title="Предыдущая неделя"
-            aria-label="Предыдущая неделя"
-            onClick={() => setWeekStart((w) => addDays(w, -7))}
+            title="Назад"
+            aria-label="Показать предыдущие дни"
+            onClick={() => setAnchor((a) => addDays(a, -nDays))}
           >
             ‹
           </button>
           <button
             className="icon-btn"
-            title="Следующая неделя"
-            aria-label="Следующая неделя"
-            onClick={() => setWeekStart((w) => addDays(w, 7))}
+            title="Вперёд"
+            aria-label="Показать следующие дни"
+            onClick={() => setAnchor((a) => addDays(a, nDays))}
           >
             ›
           </button>
         </div>
-        <h2 className="cal-title">{weekTitle(weekStart)}</h2>
+        <h2 className="cal-title">{rangeTitle(rangeStart, days[days.length - 1])}</h2>
       </div>
 
       <div className="cal-body">

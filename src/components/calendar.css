@@ -8,6 +8,7 @@
   flex-direction: column;
   --cal-hour-h: 48px;
   --cal-gutter-w: 56px;
+  --cal-days: 7; /* число видимых дней; на мобильном задаётся из JS = 3 */
   --cal-line: var(--border);
   --cal-line-faint: color-mix(in srgb, var(--border) 45%, transparent);
 }
@@ -225,7 +226,7 @@
   top: 0;
   z-index: 10;
   display: grid;
-  grid-template-columns: var(--cal-gutter-w) repeat(7, 1fr);
+  grid-template-columns: var(--cal-gutter-w) repeat(var(--cal-days), 1fr);
   background: var(--surface);
   border-bottom: 1px solid var(--border-strong);
 }
@@ -363,7 +364,7 @@
 
 .cal-grid {
   display: grid;
-  grid-template-columns: var(--cal-gutter-w) repeat(7, 1fr);
+  grid-template-columns: var(--cal-gutter-w) repeat(var(--cal-days), 1fr);
   height: calc(var(--cal-hour-h) * 24);
 }
 
@@ -654,5 +655,32 @@
   }
   .cal-title {
     font-size: 14.5px;
+  }
+}
+
+/* Телефон: 3 дня (число колонок задаёт JS через --cal-days), поуже панель и метки */
+@media (max-width: 640px) {
+  .cal-sidebar {
+    width: 132px;
+  }
+  .cal-sidebar-head {
+    padding: 8px 4px 6px 10px;
+  }
+  .cal-sidebar-list {
+    padding: 2px 7px 8px;
+  }
+  .cal-sidebar-hint {
+    display: none;
+  }
+  .cal-hour-label {
+    font-size: 9.5px;
+    right: 4px;
+  }
+  .cal-toolbar {
+    padding: 8px 10px;
+  }
+  .cal-title {
+    font-size: 13.5px;
+    margin-left: 2px;
   }
 }
