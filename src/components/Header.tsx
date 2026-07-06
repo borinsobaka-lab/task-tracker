@@ -36,13 +36,6 @@ export function Header({
 
   return (
     <header className="app-header">
-      <div className="app-title">
-        <span className="app-logo" aria-hidden>
-          ▦
-        </span>
-        Задачи
-      </div>
-
       <nav className="view-tabs" aria-label="Вид">
         <button className={view === 'board' ? 'active' : ''} onClick={() => onViewChange('board')}>
           Доска

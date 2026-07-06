@@ -414,6 +414,18 @@
   background-color: color-mix(in srgb, var(--accent) 3%, transparent);
 }
 
+/* «Зона сна»: серые ранние часы (заполнять в приоритете время после) */
+.cal-sleep-band {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: color-mix(in srgb, var(--text) 9%, transparent);
+  border-bottom: 1px dashed color-mix(in srgb, var(--text) 22%, transparent);
+}
+
 /* ---------- Блоки задач ---------- */
 
 .cal-event {

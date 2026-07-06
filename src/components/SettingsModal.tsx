@@ -126,6 +126,24 @@ function MemberRow({ member }: { member: Member }) {
           title="Сменить цвет"
           aria-label={`Сменить цвет участника ${member.name}`}
         />
+        <label className="settings-sleep" title="До скольки часов спит — в календаре это время будет серым">
+          <span>спит до</span>
+          <select
+            className="input settings-sleep-select"
+            value={member.sleepUntil ?? ''}
+            onChange={(e) => {
+              const v = e.target.value
+              store.updateMember(member.id, { sleepUntil: v === '' ? undefined : Number(v) })
+            }}
+          >
+            <option value="">—</option>
+            {Array.from({ length: 12 }, (_, i) => i + 1).map((h) => (
+              <option key={h} value={h}>
+                {String(h).padStart(2, '0')}:00
+              </option>
+            ))}
+          </select>
+        </label>
         <button className="btn btn-ghost btn-sm" onClick={archive}>
           Архивировать
         </button>

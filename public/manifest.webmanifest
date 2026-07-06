@@ -1,0 +1,17 @@
+{
+  "name": "Задачи — доска и календарь",
+  "short_name": "Задачи",
+  "description": "Общая доска задач, недельный календарь и матрица приоритетов.",
+  "start_url": "/task-tracker/",
+  "scope": "/task-tracker/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#eef0f7",
+  "theme_color": "#5b5bd6",
+  "lang": "ru",
+  "icons": [
+    { "src": "/task-tracker/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/task-tracker/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/task-tracker/icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

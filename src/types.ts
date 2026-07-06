@@ -7,6 +7,8 @@ export interface Member {
   id: ID
   name: string
   color: string // hex, например "#7c5cff"
+  /** До скольки часов спит (0–12). Слоты 00:00–это_время в календаре серые. */
+  sleepUntil?: number
   archived?: boolean
   createdAt: string // ISO
   updatedAt: string

@@ -222,6 +222,8 @@ export function CalendarView({
   const days = useMemo(() => Array.from({ length: nDays }, (_, i) => addDays(rangeStart, i)), [rangeStart, nDays])
   const dayKeys = useMemo(() => days.map(toDateKey), [days])
   const todayKey = toDateKey(now)
+  // «Зона сна» текущего пользователя — серые слоты 00:00–это_время
+  const sleepUntil = Math.max(0, Math.min(12, store.identity?.sleepUntil ?? 0))
   const nowMin = now.getHours() * 60 + now.getMinutes()
 
   const memberById = useMemo(() => new Map(store.members.map((m) => [m.id, m])), [store.members])
@@ -680,6 +682,13 @@ export function CalendarView({
                   className={`cal-day-col${dayKeys[i] === todayKey ? ' today' : ''}`}
                   onDoubleClick={onColDblClick(i)}
                 >
+                  {sleepUntil > 0 && (
+                    <div
+                      className="cal-sleep-band"
+                      style={{ height: sleepUntil * HOUR_H }}
+                      title={`Сон до ${String(sleepUntil).padStart(2, '0')}:00`}
+                    />
+                  )}
                   {layoutDay(timedByDay[i]).map((ev) => renderEvent(ev, i))}
                   {renderGhost(i)}
                   {dayKeys[i] === todayKey && (
