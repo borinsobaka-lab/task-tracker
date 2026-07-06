@@ -329,84 +329,88 @@ function CardModalInner({ card, store, onClose }: { card: Card; store: BoardStor
 
         {/* ---------- Шапка ---------- */}
         <header className="cm-header">
-          <button
-            type="button"
-            className={'cm-done' + (card.done ? ' on' : '')}
-            title={card.done ? 'Отметить невыполненной' : 'Отметить выполненной'}
-            aria-label={card.done ? 'Отметить невыполненной' : 'Отметить выполненной'}
-            onClick={() => store.setCardDone(card.id, !card.done)}
-          >
-            ✓
-          </button>
-          <div className="cm-header-main">
-            <textarea
-              ref={titleRef}
-              className="cm-title"
-              value={title}
-              rows={1}
-              placeholder="Название карточки"
-              onFocus={() => setTitleFocused(true)}
-              onChange={(e) => {
-                setTitle(e.target.value)
-                runTitle(e.target.value)
-              }}
-              onBlur={() => {
-                flushTitle()
-                if (!title.trim()) setTitle(card.title)
-                setTitleFocused(false)
-              }}
-              onKeyDown={(e: ReactKeyboardEvent<HTMLTextAreaElement>) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault()
-                  e.currentTarget.blur()
-                }
-              }}
-            />
-            {isMeeting ? (
-              <span className="cm-subline muted">Встреча — видна только в календаре</span>
-            ) : (
-              <label className="cm-subline">
-                в колонке{' '}
-                <select
-                  className="cm-col-select"
-                  value={card.columnId}
-                  onChange={(e) => {
-                    const colId = e.target.value
-                    if (colId !== card.columnId) store.moveCard(card.id, colId, store.cardsInColumn(colId).length)
-                  }}
-                >
-                  {store.columns.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.title}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            )}
-          </div>
-          <div className="cm-kind-toggle" role="tablist" aria-label="Тип">
-            <button
-              type="button"
-              role="tab"
-              aria-selected={!isMeeting}
-              className={!isMeeting ? 'active' : ''}
-              onClick={() => setKind('task')}
-            >
-              Задача
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={isMeeting}
-              className={isMeeting ? 'active' : ''}
-              onClick={() => setKind('meeting')}
-            >
-              📹 Встреча
+          <div className="cm-header-top">
+            <div className="cm-kind-toggle" role="tablist" aria-label="Тип">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={!isMeeting}
+                className={!isMeeting ? 'active' : ''}
+                onClick={() => setKind('task')}
+              >
+                Задача
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={isMeeting}
+                className={isMeeting ? 'active' : ''}
+                onClick={() => setKind('meeting')}
+              >
+                📹 Встреча
+              </button>
+            </div>
+            <button type="button" className="icon-btn" title="Закрыть" aria-label="Закрыть" onClick={onClose}>
+              ✕
             </button>
           </div>
-          <button type="button" className="icon-btn" title="Закрыть" aria-label="Закрыть" onClick={onClose}>
-            ✕
-          </button>
+          <div className="cm-header-title-row">
+            <button
+              type="button"
+              className={'cm-done' + (card.done ? ' on' : '')}
+              title={card.done ? 'Отметить невыполненной' : 'Отметить выполненной'}
+              aria-label={card.done ? 'Отметить невыполненной' : 'Отметить выполненной'}
+              onClick={() => store.setCardDone(card.id, !card.done)}
+            >
+              ✓
+            </button>
+            <div className="cm-header-main">
+              <textarea
+                ref={titleRef}
+                className="cm-title"
+                value={title}
+                rows={1}
+                placeholder="Название карточки"
+                onFocus={() => setTitleFocused(true)}
+                onChange={(e) => {
+                  setTitle(e.target.value)
+                  runTitle(e.target.value)
+                }}
+                onBlur={() => {
+                  flushTitle()
+                  if (!title.trim()) setTitle(card.title)
+                  setTitleFocused(false)
+                }}
+                onKeyDown={(e: ReactKeyboardEvent<HTMLTextAreaElement>) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault()
+                    e.currentTarget.blur()
+                  }
+                }}
+              />
+              {isMeeting ? (
+                <span className="cm-subline muted">Встреча — видна только в календаре</span>
+              ) : (
+                <label className="cm-subline">
+                  в колонке{' '}
+                  <select
+                    className="cm-col-select"
+                    value={card.columnId}
+                    onChange={(e) => {
+                      const colId = e.target.value
+                      if (colId !== card.columnId) store.moveCard(card.id, colId, store.cardsInColumn(colId).length)
+                    }}
+                  >
+                    {store.columns.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.title}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
+            </div>
+          </div>
         </header>
 
         {/* ---------- Мета: участники и срок ---------- */}
