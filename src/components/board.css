@@ -123,8 +123,19 @@
   padding: 4px;
 }
 
+.col-menu-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 6px 10px 3px;
+}
+
 .col-menu-item {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   width: 100%;
   text-align: left;
   padding: 7px 10px;
@@ -138,11 +149,34 @@
 .col-menu-item:hover {
   background: var(--surface-2);
 }
+.col-menu-item.active {
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+}
+.col-menu-emoji {
+  width: 18px;
+  text-align: center;
+}
+.col-menu-check {
+  margin-left: auto;
+  color: var(--accent);
+  font-weight: 700;
+}
+.col-menu-sep {
+  height: 1px;
+  background: var(--border);
+  margin: 4px 6px;
+}
 .col-menu-item.danger {
   color: var(--danger);
 }
 .col-menu-item.danger:hover {
   background: var(--danger-soft);
+}
+
+.board-col-role {
+  margin-right: 4px;
+  font-size: 12px;
 }
 
 /* ---------- Список карточек ---------- */

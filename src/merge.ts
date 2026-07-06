@@ -162,17 +162,23 @@ export function normalizeBoard(data: BoardData): BoardData {
 
 export function emptyBoard(): BoardData {
   const ts = nowISO()
-  const mk = (id: string, title: string): Column => ({
+  const mk = (id: string, title: string, role: Column['role']): Column => ({
     id,
     title,
     cardIds: [],
+    role,
     createdAt: ts,
     updatedAt: ts,
   })
   return {
     schemaVersion: 1,
     members: [],
-    columns: [mk('col-todo', 'Нужно сделать'), mk('col-doing', 'В работе'), mk('col-done', 'Готово')],
+    columns: [
+      mk('col-todo', 'Нужно сделать', 'todo'),
+      mk('col-doing', 'В работе', 'doing'),
+      mk('col-review', 'Проверка', 'review'),
+      mk('col-done', 'Готово', 'done'),
+    ],
     cards: {},
     updatedAt: ts,
   }

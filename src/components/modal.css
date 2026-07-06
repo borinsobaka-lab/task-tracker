@@ -48,6 +48,45 @@
   gap: 10px;
 }
 
+/* Переключатель тип карточки: Задача / Встреча */
+.cm-kind-toggle {
+  display: inline-flex;
+  flex-shrink: 0;
+  margin-top: 4px;
+  background: var(--surface-2);
+  border-radius: 8px;
+  padding: 3px;
+  gap: 2px;
+}
+.cm-kind-toggle button {
+  border: none;
+  background: transparent;
+  padding: 5px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 13px;
+  color: var(--text-soft);
+  white-space: nowrap;
+}
+.cm-kind-toggle button.active {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow-sm);
+}
+
+.cm-meeting-url {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.cm-meeting-url .input {
+  flex: 1;
+}
+.cm-meeting-url a {
+  flex-shrink: 0;
+}
+
 .cm-done {
   width: 26px;
   height: 26px;

@@ -31,9 +31,16 @@ export interface Attachment {
   uploadedBy?: ID
 }
 
+/** Тип карточки: обычная задача или встреча (со ссылкой на созвон). */
+export type CardKind = 'task' | 'meeting'
+
 export interface Card {
   id: ID
   title: string
+  /** 'meeting' — встреча; отсутствует/'task' — обычная задача */
+  kind?: CardKind
+  /** Ссылка на созвон (только у встреч) */
+  meetingUrl?: string
   /** HTML из редактора (санитизируется при выводе) */
   description: string
   columnId: ID
@@ -53,11 +60,22 @@ export interface Card {
   updatedAt: string
 }
 
+/**
+ * Роль колонки для отчётов Telegram-бота и статуса задачи:
+ *  - 'todo'   — нужно сделать
+ *  - 'doing'  — в работе
+ *  - 'review' — ожидает проверки
+ *  - 'done'   — готово (карточка помечается выполненной)
+ * Без роли — колонка не влияет на статус (считается «нужно сделать»).
+ */
+export type ColumnRole = 'todo' | 'doing' | 'review' | 'done'
+
 export interface Column {
   id: ID
   title: string
   /** Порядок карточек в колонке — источник истины для расположения */
   cardIds: ID[]
+  role?: ColumnRole
   deleted?: boolean
   createdAt: string
   updatedAt: string

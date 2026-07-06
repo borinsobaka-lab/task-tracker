@@ -443,6 +443,15 @@
   opacity: 0.35;
 }
 
+/* Верхняя строка блока: время слева, аватары справа — не отнимают место у заголовка */
+.cal-event-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
 .cal-event-time {
   font-size: 10.5px;
   font-weight: 600;
@@ -452,6 +461,8 @@
 }
 
 .cal-event-title {
+  flex: 1 1 auto;
+  min-height: 0;
   font-size: 12px;
   font-weight: 600;
   line-height: 1.3;
@@ -460,11 +471,9 @@
 }
 
 .cal-event-avatars {
-  margin-top: auto;
   display: flex;
   justify-content: flex-end;
   flex-shrink: 0;
-  min-height: 0;
   overflow: hidden;
 }
 
@@ -477,7 +486,7 @@
   padding-bottom: 2px;
 }
 
-.cal-event.compact .cal-event-time {
+.cal-event.compact .cal-event-head {
   order: 2;
 }
 

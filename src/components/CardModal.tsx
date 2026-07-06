@@ -6,7 +6,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import type { DragEvent as ReactDragEvent, KeyboardEvent as ReactKeyboardEvent } from 'react'
 import { useBoard } from '../store'
 import type { BoardStore } from '../store'
-import type { Attachment, Card, ChecklistItem, ID, Member } from '../types'
+import type { Attachment, Card, CardKind, ChecklistItem, ID, Member } from '../types'
 import { fmtDayMonth, fmtFullDate, formatBytes, parseDateKey, toDateKey } from '../utils'
 import { Avatar } from './Avatar'
 import { RichTextEditor } from './RichTextEditor'
@@ -183,6 +183,22 @@ function CardModalInner({ card, store, onClose }: { card: Card; store: BoardStor
     setDateOpen(false)
   }
 
+  // --- тип карточки: задача / встреча ---
+  const isMeeting = card.kind === 'meeting'
+  const setKind = (kind: CardKind) => {
+    if ((card.kind ?? 'task') !== kind) store.updateCard(card.id, { kind })
+  }
+
+  // --- ссылка на созвон (у встреч) ---
+  const [meetingUrl, setMeetingUrl] = useState(card.meetingUrl ?? '')
+  const urlFocused = useRef(false)
+  const { run: runUrl, flush: flushUrl } = useDebouncedValue((v: string) => {
+    store.updateCard(card.id, { meetingUrl: v.trim() || undefined })
+  }, 600)
+  useEffect(() => {
+    if (!urlFocused.current) setMeetingUrl(card.meetingUrl ?? '')
+  }, [card.meetingUrl])
+
   // --- чек-лист ---
   const [newItem, setNewItem] = useState('')
   const checklistDone = card.checklist.filter((i) => i.done).length
@@ -203,6 +219,7 @@ function CardModalInner({ card, store, onClose }: { card: Card; store: BoardStor
   const dragDepth = useRef(0)
 
   const handleFiles = async (files: File[]) => {
+    if (card.kind === 'meeting') return // у встреч вложений нет
     for (const file of files) {
       if (file.size > MAX_FILE_SIZE) {
         alert(`Файл «${file.name}» весит ${formatBytes(file.size)}. Максимальный размер — 15 МБ.`)
@@ -363,6 +380,26 @@ function CardModalInner({ card, store, onClose }: { card: Card; store: BoardStor
               </select>
             </label>
           </div>
+          <div className="cm-kind-toggle" role="tablist" aria-label="Тип">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={!isMeeting}
+              className={!isMeeting ? 'active' : ''}
+              onClick={() => setKind('task')}
+            >
+              Задача
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={isMeeting}
+              className={isMeeting ? 'active' : ''}
+              onClick={() => setKind('meeting')}
+            >
+              📹 Встреча
+            </button>
+          </div>
           <button type="button" className="icon-btn" title="Закрыть" aria-label="Закрыть" onClick={onClose}>
             ✕
           </button>
@@ -469,6 +506,36 @@ function CardModalInner({ card, store, onClose }: { card: Card; store: BoardStor
           </div>
         </div>
 
+        {/* ---------- Ссылка на созвон (у встреч) ---------- */}
+        {isMeeting && (
+          <section className="cm-section">
+            <span className="field-label">Ссылка на созвон</span>
+            <div className="cm-meeting-url">
+              <input
+                className="input"
+                type="url"
+                inputMode="url"
+                placeholder="https://meet.google.com/…  ·  https://zoom.us/…"
+                value={meetingUrl}
+                onFocus={() => (urlFocused.current = true)}
+                onChange={(e) => {
+                  setMeetingUrl(e.target.value)
+                  runUrl(e.target.value)
+                }}
+                onBlur={() => {
+                  urlFocused.current = false
+                  flushUrl()
+                }}
+              />
+              {meetingUrl.trim() && (
+                <a className="btn btn-sm" href={meetingUrl.trim()} target="_blank" rel="noreferrer">
+                  Открыть
+                </a>
+              )}
+            </div>
+          </section>
+        )}
+
         {/* ---------- Описание ---------- */}
         <section className="cm-section">
           <span className="field-label">Описание</span>
@@ -479,7 +546,8 @@ function CardModalInner({ card, store, onClose }: { card: Card; store: BoardStor
           />
         </section>
 
-        {/* ---------- Чек-лист ---------- */}
+        {/* ---------- Чек-лист (только у задач) ---------- */}
+        {!isMeeting && (
         <section className="cm-section">
           <div className="cm-check-head">
             <span className="field-label">Чек-лист</span>
@@ -522,8 +590,10 @@ function CardModalInner({ card, store, onClose }: { card: Card; store: BoardStor
             }}
           />
         </section>
+        )}
 
-        {/* ---------- Вложения ---------- */}
+        {/* ---------- Вложения (только у задач) ---------- */}
+        {!isMeeting && (
         <section className="cm-section">
           <div className="cm-att-head">
             <span className="field-label">Вложения</span>
@@ -577,6 +647,7 @@ function CardModalInner({ card, store, onClose }: { card: Card; store: BoardStor
             )}
           </div>
         </section>
+        )}
 
         {/* ---------- Футер ---------- */}
         <footer className="cm-footer">

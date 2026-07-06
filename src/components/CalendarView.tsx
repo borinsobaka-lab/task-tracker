@@ -10,6 +10,7 @@ import {
   fmtDayMonth,
   fmtFullDate,
   fmtWeekday,
+  MEETING_COLOR,
   minToTime,
   startOfWeek,
   timeToMin,
@@ -221,7 +222,9 @@ export function CalendarView({
 
   const assigneesOf = (c: Card): Member[] =>
     c.assigneeIds.map((id) => memberById.get(id)).filter((m): m is Member => !!m)
-  const colorOf = (c: Card): string => assigneesOf(c)[0]?.color ?? 'var(--accent)'
+  const isMeeting = (c: Card): boolean => c.kind === 'meeting'
+  // Встречи — фиксированного цвета, задачи — по цвету первого исполнителя.
+  const colorOf = (c: Card): string => (isMeeting(c) ? MEETING_COLOR : assigneesOf(c)[0]?.color ?? 'var(--accent)')
 
   // ---------- Геометрия перетаскивания ----------
 
@@ -406,7 +409,10 @@ export function CalendarView({
         {...dragEvents}
       >
         <span className="cal-chip-dot" />
-        <span className="cal-chip-title">{c.title}</span>
+        <span className="cal-chip-title">
+          {isMeeting(c) && <span aria-hidden>📹 </span>}
+          {c.title}
+        </span>
       </div>
     )
   }
@@ -422,7 +428,7 @@ export function CalendarView({
     return (
       <div
         key={c.id}
-        className={`cal-event${c.done ? ' done' : ''}${compact ? ' compact' : ''}${dragging ? ' is-dragging' : ''}`}
+        className={`cal-event${c.done ? ' done' : ''}${compact ? ' compact' : ''}${dragging ? ' is-dragging' : ''}${isMeeting(c) ? ' meeting' : ''}`}
         style={
           {
             top,
@@ -451,10 +457,15 @@ export function CalendarView({
         }}
         {...dragEvents}
       >
-        <div className="cal-event-time">{label}</div>
-        <div className="cal-event-title">{c.title}</div>
-        <div className="cal-event-avatars">
-          <AvatarStack members={assigneesOf(c)} size="sm" />
+        <div className="cal-event-head">
+          <div className="cal-event-time">{label}</div>
+          <div className="cal-event-avatars">
+            <AvatarStack members={assigneesOf(c)} size="sm" />
+          </div>
+        </div>
+        <div className="cal-event-title">
+          {isMeeting(c) && <span className="cal-meeting-ico" aria-hidden>📹 </span>}
+          {c.title}
         </div>
         <div
           className="cal-event-resize"
@@ -505,7 +516,10 @@ export function CalendarView({
         onPointerDown={(e) => beginDrag(e, { kind: 'unscheduled', cardId: c.id }, { durationMin: 60 })}
         {...dragEvents}
       >
-        <div className="cal-side-title">{c.title}</div>
+        <div className="cal-side-title">
+          {isMeeting(c) && <span aria-hidden>📹 </span>}
+          {c.title}
+        </div>
         {assignees.length > 0 && (
           <div className="cal-side-meta">
             <AvatarStack members={assignees} size="sm" />

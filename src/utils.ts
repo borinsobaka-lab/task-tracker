@@ -76,6 +76,9 @@ export const MEMBER_COLORS = [
   '#8b5cf6', '#ec4899', '#14b8a6', '#f97316', '#84cc16',
 ]
 
+/** Фиксированный цвет встреч в календаре — чтобы отличать их от задач. */
+export const MEETING_COLOR = '#7c3aed'
+
 export function initials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean)
   if (parts.length === 0) return '?'

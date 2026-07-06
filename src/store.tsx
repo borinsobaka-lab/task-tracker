@@ -4,7 +4,7 @@
 
 import React, { createContext, useContext, useEffect, useMemo, useSyncExternalStore } from 'react'
 import { produce } from 'immer'
-import type { Attachment, BoardData, Card, ChecklistItem, Column, ID, Member } from './types'
+import type { Attachment, BoardData, Card, ChecklistItem, Column, ColumnRole, ID, Member } from './types'
 import type { StorageAdapter } from './storage/adapter'
 import { ConflictError } from './storage/adapter'
 import { emptyBoard, mergeBoards, normalizeBoard } from './merge'
@@ -281,6 +281,7 @@ export interface BoardStore {
   // Колонки
   addColumn(title: string): void
   renameColumn(id: ID, title: string): void
+  setColumnRole(id: ID, role: ColumnRole | undefined): void
   deleteColumn(id: ID): void
   moveColumn(id: ID, toIndex: number): void
 
@@ -420,6 +421,24 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
         col.title = title.trim() || col.title
         touch(col)
       }),
+    setColumnRole: (id, role) =>
+      engine.update((d) => {
+        const col = d.columns.find((c) => c.id === id)
+        if (!col) return
+        if (role) col.role = role
+        else delete col.role
+        touch(col)
+        // Приводим отметку «выполнено» у карточек колонки в соответствие с ролью
+        for (const cardId of col.cardIds) {
+          const card = d.cards[cardId]
+          if (!card || card.deleted) continue
+          const shouldBeDone = role === 'done'
+          if (!!card.done !== shouldBeDone && (role === 'done' || card.done)) {
+            card.done = shouldBeDone
+            touch(card)
+          }
+        }
+      }),
     deleteColumn: (id) =>
       engine.update((d) => {
         const col = d.columns.find((c) => c.id === id)
@@ -503,6 +522,10 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
         to.cardIds = to.cardIds.filter((x) => x !== id)
         to.cardIds.splice(clamp(toIndex, 0, to.cardIds.length), 0, id)
         card.columnId = toColumnId
+        // Перемещение в колонку с ролью синхронизирует отметку «выполнено»:
+        // в «Готово» → выполнено; в любую другую колонку с ролью → не выполнено.
+        if (to.role === 'done') card.done = true
+        else if (to.role) card.done = false
         touch(card)
         touch(to)
       }),

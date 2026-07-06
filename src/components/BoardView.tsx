@@ -30,7 +30,8 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { useBoard } from '../store'
-import type { Card, Column, ID, Member } from '../types'
+import type { Card, Column, ColumnRole, ID, Member } from '../types'
+import { ROLE_META, ROLE_ORDER } from '../columnRoles'
 import { fmtDayMonth, hasContent, parseDateKey, toDateKey } from '../utils'
 import { AvatarStack } from './Avatar'
 import './board.css'
@@ -326,6 +327,11 @@ function BoardColumn({
           />
         ) : (
           <h3 className="board-col-title" title="Нажмите, чтобы переименовать" onClick={startEdit}>
+            {column.role && (
+              <span className="board-col-role" title={ROLE_META[column.role].label}>
+                {ROLE_META[column.role].emoji}
+              </span>
+            )}
             {column.title}
           </h3>
         )}
@@ -373,6 +379,10 @@ function ColumnMenu({ column }: { column: Column }) {
     }
   }
 
+  const setRole = (role: ColumnRole | undefined) => {
+    store.setColumnRole(column.id, role)
+  }
+
   return (
     <div className="col-menu-wrap" onPointerDown={(e) => e.stopPropagation()}>
       <button
@@ -387,8 +397,33 @@ function ColumnMenu({ column }: { column: Column }) {
         <>
           <div className="col-menu-backdrop" onClick={() => setOpen(false)} />
           <div className="col-menu" role="menu">
+            <div className="col-menu-label">Статус для отчётов</div>
+            {ROLE_ORDER.map((r) => (
+              <button
+                key={r}
+                className={'col-menu-item' + (column.role === r ? ' active' : '')}
+                role="menuitemradio"
+                aria-checked={column.role === r}
+                onClick={() => setRole(r)}
+              >
+                <span className="col-menu-emoji">{ROLE_META[r].emoji}</span>
+                {ROLE_META[r].label}
+                {column.role === r && <span className="col-menu-check">✓</span>}
+              </button>
+            ))}
+            <button
+              className={'col-menu-item' + (!column.role ? ' active' : '')}
+              role="menuitemradio"
+              aria-checked={!column.role}
+              onClick={() => setRole(undefined)}
+            >
+              <span className="col-menu-emoji">▫️</span>
+              Без статуса
+              {!column.role && <span className="col-menu-check">✓</span>}
+            </button>
+            <div className="col-menu-sep" />
             <button className="col-menu-item danger" role="menuitem" onClick={remove}>
-              Удалить колонку
+              🗑 Удалить колонку
             </button>
           </div>
         </>
