@@ -39,10 +39,6 @@ export function addDays(d: Date, days: number): Date {
   return res
 }
 
-export function isSameDay(a: Date, b: Date): boolean {
-  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate()
-}
-
 const DAY_FMT = new Intl.DateTimeFormat('ru-RU', { weekday: 'short' })
 const DATE_FMT = new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'short' })
 const FULL_FMT = new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })
@@ -124,16 +120,19 @@ export function formatBytes(n: number): string {
   return `${(n / 1024 / 1024).toFixed(1)} МБ`
 }
 
-/** HTML -> обычный текст (для превью на карточке) */
-export function htmlToText(html: string): string {
-  if (!html) return ''
-  const doc = new DOMParser().parseFromString(html, 'text/html')
-  return (doc.body.textContent || '').trim()
-}
-
-/** Есть ли в описании видимое содержимое */
+/**
+ * Есть ли в описании видимое содержимое. Вызывается при отрисовке каждой
+ * карточки доски, поэтому без DOMParser — быстрый разбор регуляркой.
+ */
 export function hasContent(html: string): boolean {
-  return htmlToText(html).length > 0
+  if (!html) return false
+  const stripped = html
+    .replace(/<[^>]*>/g, '')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&[a-z]+;|&#\d+;/gi, 'x')
+  if (stripped.trim().length > 0) return true
+  // Медиа без текста (картинка, разделитель и т.п.) тоже считается содержимым
+  return /<(img|video|iframe|hr)\b/i.test(html)
 }
 
 export function sanitizeFileName(name: string): string {

@@ -16,6 +16,9 @@ export interface ChecklistItem {
   id: ID
   text: string
   done: boolean
+  /** Для слияния правок двух участников на уровне пункта (LWW). Может
+   *  отсутствовать у пунктов, созданных ранними версиями — тогда «самый старый». */
+  updatedAt?: string
 }
 
 export interface Attachment {

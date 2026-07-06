@@ -144,6 +144,8 @@ export function CalendarView({
   const [weekStart, setWeekStart] = useState<Date>(() => startOfWeek(new Date()))
   const [panelOpen, setPanelOpen] = useState(true)
   const [drag, setDrag] = useState<DragState | null>(null)
+  const dragRef = useRef<DragState | null>(null)
+  dragRef.current = drag
   const [now, setNow] = useState<Date>(() => new Date())
 
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -172,6 +174,31 @@ export function CalendarView({
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [drag])
+
+  // Страховка: pointer-события висят на самом блоке, и если он размонтируется
+  // посреди перетаскивания (фоновая синхронизация подменила/удалила карточку),
+  // штатный onPointerUp до нас не дойдёт и drag завис бы в is-dragging навсегда.
+  // Ловим отпускание указателя на уровне window и снимаем зависший drag.
+  useEffect(() => {
+    const release = (e: PointerEvent): void => {
+      const d = dragRef.current
+      if (!d || e.pointerId !== d.pointerId) return
+      // Даём сработать штатному обработчику элемента (он бежит раньше и сам
+      // сбросит drag). Если через микротаск drag всё ещё висит — элемент исчез,
+      // снимаем перетаскивание.
+      setTimeout(() => {
+        if (dragRef.current && dragRef.current.pointerId === e.pointerId) setDrag(null)
+      }, 0)
+    }
+    window.addEventListener('pointerup', release)
+    window.addEventListener('pointercancel', release)
+    window.addEventListener('lostpointercapture', release)
+    return () => {
+      window.removeEventListener('pointerup', release)
+      window.removeEventListener('pointercancel', release)
+      window.removeEventListener('lostpointercapture', release)
+    }
+  }, [])
 
   const days = useMemo(() => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)), [weekStart])
   const dayKeys = useMemo(() => days.map(toDateKey), [days])

@@ -95,13 +95,18 @@ function CardModalInner({ card, store, onClose }: { card: Card; store: BoardStor
     if (t && t !== card.title) store.updateCard(card.id, { title: t })
   }, TITLE_DEBOUNCE_MS)
 
-  // Внешнее изменение заголовка (синхронизация) — подхватываем, если не редактируем
+  const [titleFocused, setTitleFocused] = useState(false)
+
+  // Внешнее изменение заголовка (синхронизация): подхватываем, когда поле не
+  // в фокусе. Если пользователь в этот момент редактирует — НЕ трогаем ref,
+  // чтобы синхронизировать сразу после blur (иначе заголовок в модалке навсегда
+  // остался бы рассинхронизирован со свежим значением из хранилища).
   useEffect(() => {
-    if (card.title !== lastCardTitle.current) {
-      lastCardTitle.current = card.title
-      if (document.activeElement !== titleRef.current) setTitle(card.title)
-    }
-  }, [card.title])
+    if (card.title === lastCardTitle.current) return
+    if (titleFocused) return
+    lastCardTitle.current = card.title
+    setTitle(card.title)
+  }, [card.title, titleFocused])
 
   // autosize
   useEffect(() => {
@@ -323,6 +328,7 @@ function CardModalInner({ card, store, onClose }: { card: Card; store: BoardStor
               value={title}
               rows={1}
               placeholder="Название карточки"
+              onFocus={() => setTitleFocused(true)}
               onChange={(e) => {
                 setTitle(e.target.value)
                 runTitle(e.target.value)
@@ -330,6 +336,7 @@ function CardModalInner({ card, store, onClose }: { card: Card; store: BoardStor
               onBlur={() => {
                 flushTitle()
                 if (!title.trim()) setTitle(card.title)
+                setTitleFocused(false)
               }}
               onKeyDown={(e: ReactKeyboardEvent<HTMLTextAreaElement>) => {
                 if (e.key === 'Enter') {

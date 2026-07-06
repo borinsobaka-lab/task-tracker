@@ -9,7 +9,7 @@ import type { StorageAdapter } from './storage/adapter'
 import { ConflictError } from './storage/adapter'
 import { emptyBoard, mergeBoards, normalizeBoard } from './merge'
 import { getIdentity, setIdentityId } from './config'
-import { nowISO, uid } from './utils'
+import { clamp, nowISO, uid } from './utils'
 
 export type SyncStatus = 'loading' | 'synced' | 'saving' | 'offline' | 'error'
 
@@ -31,6 +31,12 @@ export class SyncEngine {
   private dirty = false
   private saving = false
   private stopped = false
+  /** Токен текущего запуска. Каждый start()/stop() его увеличивает, поэтому
+   *  «зависший» в await прошлый start() (React 18 StrictMode) аборится. */
+  private epoch = 0
+  /** Растёт при каждом успешном сохранении; poll использует его, чтобы
+   *  не перезаписать данные ответом GET, снятым до параллельного save */
+  private saveGen = 0
   private saveTimer: ReturnType<typeof setTimeout> | null = null
   private retryTimer: ReturnType<typeof setTimeout> | null = null
   private pollTimer: ReturnType<typeof setInterval> | null = null
@@ -75,11 +81,17 @@ export class SyncEngine {
   // ---------- жизненный цикл ----------
 
   async start(): Promise<void> {
+    // React 18 StrictMode делает mount→unmount→mount на одном движке.
+    // Каждый запуск получает свой epoch; если во время await движок
+    // остановили или перезапустили, продолжение аборится.
+    const myEpoch = ++this.epoch
     this.stopped = false
+    const aborted = () => this.stopped || this.epoch !== myEpoch
     try {
       let state = await this.adapter.load()
+      if (aborted()) return
       if (!state) state = await this.adapter.init(emptyBoard())
-      if (this.stopped) return
+      if (aborted()) return
       this.data = state.data
       this.rev = state.rev
       this.status = 'synced'
@@ -87,13 +99,14 @@ export class SyncEngine {
       this.lastError = null
       this.emit()
     } catch (e) {
-      if (this.stopped) return
+      if (aborted()) return
       this.status = 'error'
       this.lastError = e instanceof Error ? e.message : String(e)
       this.emit()
       return
     }
 
+    if (aborted()) return
     this.pollTimer = setInterval(() => {
       if (document.visibilityState === 'visible') void this.poll()
     }, POLL_INTERVAL_MS)
@@ -104,6 +117,7 @@ export class SyncEngine {
 
   stop(): void {
     this.stopped = true
+    this.epoch++
     if (this.pollTimer) clearInterval(this.pollTimer)
     if (this.saveTimer) clearTimeout(this.saveTimer)
     if (this.retryTimer) clearTimeout(this.retryTimer)
@@ -168,6 +182,7 @@ export class SyncEngine {
     try {
       const { rev } = await this.adapter.save(snapshot, this.rev)
       this.rev = rev
+      this.saveGen++
       this.conflictRetries = 0
       this.errorBackoffMs = 5000
       this.lastSyncAt = Date.now()
@@ -199,7 +214,10 @@ export class SyncEngine {
       this.saving = false
     }
     this.emit()
-    if (this.dirty && this.status === 'synced') this.scheduleSave()
+    // Пока сохраняли, пользователь мог внести новую правку (dirty снова true).
+    // Перепланируем, если нет уже поставленного повтора (retryTimer) из
+    // веток ошибки/конфликта — они планируют сами.
+    if (this.dirty && this.lastError === null) this.scheduleSave()
   }
 
   async poll(): Promise<void> {
@@ -210,20 +228,28 @@ export class SyncEngine {
       void this.flush()
       return
     }
+    const genBefore = this.saveGen
     try {
       const remote = await this.adapter.load()
-      if (!remote || this.saving || this.stopped) return
-      if (remote.rev !== this.rev) {
-        this.data = this.dirty ? mergeBoards(this.data!, remote.data) : remote.data
+      // Пока летел GET, могло начаться/завершиться сохранение или появиться
+      // локальная правка — тогда ответ устарел, применять его нельзя (иначе
+      // откатим только что сохранённое и регрессируем rev).
+      if (!remote || this.saving || this.dirty || this.stopped || this.saveGen !== genBefore) return
+      const revChanged = remote.rev !== this.rev
+      if (revChanged) {
+        this.data = remote.data
         this.rev = remote.rev
-        if (this.dirty) this.scheduleSave()
       }
-      this.lastSyncAt = Date.now()
+      this.lastSyncAt = Date.now() // обновляем тихо: подхватится следующим emit
+      let statusChanged = false
       if (this.status === 'offline' || this.status === 'error') {
         this.status = 'synced'
         this.lastError = null
+        statusChanged = true
       }
-      this.emit()
+      // Не эмитим на каждый опрос при неизменных данных — иначе весь UI
+      // (все карточки доски) перерисовывался бы каждые 25 секунд впустую.
+      if (revChanged || statusChanged) this.emit()
     } catch {
       // Ошибки фонового опроса не показываем — покажем при сохранении
     }
@@ -416,7 +442,7 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
         if (from < 0) return
         const target = live[from]
         live.splice(from, 1)
-        live.splice(Math.max(0, Math.min(toIndex, live.length)), 0, target)
+        live.splice(clamp(toIndex, 0, live.length), 0, target)
         // Пересобираем общий массив: живые в новом порядке + удалённые в конце
         d.columns = [...live, ...d.columns.filter((c) => c.deleted)]
         touch(target)
@@ -475,7 +501,7 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
         }
         // На случай рассинхрона убираем дубликаты
         to.cardIds = to.cardIds.filter((x) => x !== id)
-        to.cardIds.splice(Math.max(0, Math.min(toIndex, to.cardIds.length)), 0, id)
+        to.cardIds.splice(clamp(toIndex, 0, to.cardIds.length), 0, id)
         card.columnId = toColumnId
         touch(card)
         touch(to)
@@ -485,7 +511,7 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
       engine.update((d) => {
         const card = d.cards[cardId]
         if (!card || card.deleted) return
-        card.checklist.push({ id: uid(), text: text.trim(), done: false })
+        card.checklist.push({ id: uid(), text: text.trim(), done: false, updatedAt: nowISO() })
         touch(card)
       }),
     updateChecklistItem: (cardId, itemId, patch) =>
@@ -495,6 +521,7 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
         const item = card.checklist.find((i) => i.id === itemId)
         if (!item) return
         Object.assign(item, patch)
+        item.updatedAt = nowISO()
         touch(card)
       }),
     removeChecklistItem: (cardId, itemId) =>
@@ -538,11 +565,12 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
       })
     },
     removeAttachment: async (cardId, attId) => {
-      let att: Attachment | undefined
+      // Берём метаданные из текущего снапшота (обычный замороженный объект),
+      // а НЕ из immer-черновика внутри update — тот отзывается после produce.
+      const att = data.cards[cardId]?.attachments.find((a) => a.id === attId)
       engine.update((d) => {
         const card = d.cards[cardId]
         if (!card) return
-        att = card.attachments.find((a) => a.id === attId)
         card.attachments = card.attachments.filter((a) => a.id !== attId)
         touch(card)
       })

@@ -3,13 +3,51 @@
 // удаления — через надгробия (deleted: true). После слияния доска нормализуется:
 // каждая живая карточка лежит ровно в одной живой колонке.
 
-import type { BoardData, Card, Column, Member, ID } from './types'
+import type { Attachment, BoardData, Card, ChecklistItem, Column, Member, ID } from './types'
 import { nowISO } from './utils'
 
 const TOMBSTONE_TTL_MS = 45 * 24 * 60 * 60 * 1000
 
 function newer<T extends { updatedAt: string }>(a: T, b: T): T {
   return a.updatedAt >= b.updatedAt ? a : b
+}
+
+/**
+ * Слияние двух версий одной карточки. Скалярные поля (название, описание,
+ * дата, исполнители) берём по LWW у более свежей карточки, но вложения и
+ * пункты чек-листа сливаем как keyed-коллекции — иначе одновременная правка
+ * двумя людьми (один отметил пункт, другой прикрепил файл) молча теряла бы
+ * изменения проигравшей стороны.
+ */
+function mergeCard(a: Card, b: Card): Card {
+  const base = newer(a, b)
+  if (base.deleted) return base // надгробие — сливать нечего
+  const other = base === a ? b : a
+  return {
+    ...base,
+    checklist: mergeChecklist(base.checklist, other.checklist),
+    attachments: mergeAttachments(base.attachments, other.attachments),
+  }
+}
+
+function mergeChecklist(base: ChecklistItem[], other: ChecklistItem[]): ChecklistItem[] {
+  const otherById = new Map(other.map((i) => [i.id, i]))
+  const result = base.map((bi) => {
+    const oi = otherById.get(bi.id)
+    if (!oi) return bi
+    // Один и тот же пункт правили с двух сторон — берём более свежий.
+    return (oi.updatedAt ?? '') > (bi.updatedAt ?? '') ? oi : bi
+  })
+  const baseIds = new Set(base.map((i) => i.id))
+  for (const oi of other) if (!baseIds.has(oi.id)) result.push(oi) // добавлен на другой стороне
+  return result
+}
+
+function mergeAttachments(a: Attachment[], b: Attachment[]): Attachment[] {
+  const byId = new Map<ID, Attachment>()
+  for (const x of a) byId.set(x.id, x)
+  for (const x of b) if (!byId.has(x.id)) byId.set(x.id, x) // вложения неизменяемы — объединяем
+  return [...byId.values()]
 }
 
 function mergeById<T extends { id: ID; updatedAt: string }>(local: T[], remote: T[]): T[] {
@@ -36,7 +74,7 @@ export function mergeBoards(local: BoardData, remote: BoardData): BoardData {
   for (const id of ids) {
     const l = local.cards[id]
     const r = remote.cards[id]
-    cards[id] = l && r ? newer(l, r) : (l ?? r)
+    cards[id] = l && r ? mergeCard(l, r) : (l ?? r)
   }
 
   return normalizeBoard({
