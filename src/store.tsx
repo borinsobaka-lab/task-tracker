@@ -1,0 +1,572 @@
+// Хранилище состояния доски + движок синхронизации.
+// Все изменения проходят через SyncEngine.update(), который штампует updatedAt,
+// откладывает сохранение (debounce), а при конфликтах сливает версии и повторяет.
+
+import React, { createContext, useContext, useEffect, useMemo, useSyncExternalStore } from 'react'
+import { produce } from 'immer'
+import type { Attachment, BoardData, Card, ChecklistItem, Column, ID, Member } from './types'
+import type { StorageAdapter } from './storage/adapter'
+import { ConflictError } from './storage/adapter'
+import { emptyBoard, mergeBoards, normalizeBoard } from './merge'
+import { getIdentity, setIdentityId } from './config'
+import { nowISO, uid } from './utils'
+
+export type SyncStatus = 'loading' | 'synced' | 'saving' | 'offline' | 'error'
+
+export interface StoreSnapshot {
+  data: BoardData | null
+  status: SyncStatus
+  lastSyncAt: number | null
+  lastError: string | null
+  identityId: ID | null
+}
+
+const SAVE_DEBOUNCE_MS = 1200
+const POLL_INTERVAL_MS = 25_000
+const MAX_CONFLICT_RETRIES = 6
+
+export class SyncEngine {
+  private data: BoardData | null = null
+  private rev: string | null = null
+  private dirty = false
+  private saving = false
+  private stopped = false
+  private saveTimer: ReturnType<typeof setTimeout> | null = null
+  private retryTimer: ReturnType<typeof setTimeout> | null = null
+  private pollTimer: ReturnType<typeof setInterval> | null = null
+  private conflictRetries = 0
+  private errorBackoffMs = 5000
+  private listeners = new Set<() => void>()
+  private snapshot: StoreSnapshot
+
+  status: SyncStatus = 'loading'
+  lastSyncAt: number | null = null
+  lastError: string | null = null
+  identityId: ID | null = getIdentity()
+
+  constructor(public readonly adapter: StorageAdapter) {
+    this.snapshot = this.buildSnapshot()
+  }
+
+  // ---------- подписка для React ----------
+
+  subscribe = (fn: () => void): (() => void) => {
+    this.listeners.add(fn)
+    return () => this.listeners.delete(fn)
+  }
+
+  getSnapshot = (): StoreSnapshot => this.snapshot
+
+  private buildSnapshot(): StoreSnapshot {
+    return {
+      data: this.data,
+      status: this.status,
+      lastSyncAt: this.lastSyncAt,
+      lastError: this.lastError,
+      identityId: this.identityId,
+    }
+  }
+
+  private emit(): void {
+    this.snapshot = this.buildSnapshot()
+    for (const fn of this.listeners) fn()
+  }
+
+  // ---------- жизненный цикл ----------
+
+  async start(): Promise<void> {
+    this.stopped = false
+    try {
+      let state = await this.adapter.load()
+      if (!state) state = await this.adapter.init(emptyBoard())
+      if (this.stopped) return
+      this.data = state.data
+      this.rev = state.rev
+      this.status = 'synced'
+      this.lastSyncAt = Date.now()
+      this.lastError = null
+      this.emit()
+    } catch (e) {
+      if (this.stopped) return
+      this.status = 'error'
+      this.lastError = e instanceof Error ? e.message : String(e)
+      this.emit()
+      return
+    }
+
+    this.pollTimer = setInterval(() => {
+      if (document.visibilityState === 'visible') void this.poll()
+    }, POLL_INTERVAL_MS)
+    window.addEventListener('focus', this.onFocus)
+    window.addEventListener('online', this.onOnline)
+    window.addEventListener('beforeunload', this.onBeforeUnload)
+  }
+
+  stop(): void {
+    this.stopped = true
+    if (this.pollTimer) clearInterval(this.pollTimer)
+    if (this.saveTimer) clearTimeout(this.saveTimer)
+    if (this.retryTimer) clearTimeout(this.retryTimer)
+    window.removeEventListener('focus', this.onFocus)
+    window.removeEventListener('online', this.onOnline)
+    window.removeEventListener('beforeunload', this.onBeforeUnload)
+  }
+
+  private onFocus = (): void => {
+    void this.poll()
+  }
+
+  private onOnline = (): void => {
+    if (this.dirty) void this.flush()
+    else void this.poll()
+  }
+
+  private onBeforeUnload = (e: BeforeUnloadEvent): void => {
+    if (this.dirty || this.saving) {
+      e.preventDefault()
+    }
+  }
+
+  // ---------- изменения ----------
+
+  update(mutator: (d: BoardData) => void): void {
+    if (!this.data) return
+    this.data = produce(this.data, (draft) => {
+      mutator(draft)
+      draft.updatedAt = nowISO()
+    })
+    this.dirty = true
+    this.conflictRetries = 0
+    this.emit()
+    this.scheduleSave()
+  }
+
+  setIdentity(id: ID | null): void {
+    this.identityId = id
+    setIdentityId(id)
+    this.emit()
+  }
+
+  private scheduleSave(): void {
+    if (this.saveTimer) clearTimeout(this.saveTimer)
+    this.saveTimer = setTimeout(() => void this.flush(), SAVE_DEBOUNCE_MS)
+  }
+
+  async flush(): Promise<void> {
+    if (this.saving || !this.dirty || !this.data || this.rev === null || this.stopped) return
+    if (this.saveTimer) {
+      clearTimeout(this.saveTimer)
+      this.saveTimer = null
+    }
+    this.saving = true
+    this.status = 'saving'
+    this.emit()
+
+    const snapshot = normalizeBoard(this.data)
+    this.dirty = false
+
+    try {
+      const { rev } = await this.adapter.save(snapshot, this.rev)
+      this.rev = rev
+      this.conflictRetries = 0
+      this.errorBackoffMs = 5000
+      this.lastSyncAt = Date.now()
+      this.lastError = null
+      this.status = this.dirty ? 'saving' : 'synced'
+    } catch (e) {
+      this.dirty = true
+      if (e instanceof ConflictError) {
+        this.conflictRetries++
+        if (this.conflictRetries <= MAX_CONFLICT_RETRIES) {
+          this.data = mergeBoards(this.data!, e.remote.data)
+          this.rev = e.remote.rev
+          this.saving = false
+          this.emit()
+          // Немедленный повтор поверх свежей ревизии
+          this.retryTimer = setTimeout(() => void this.flush(), 100)
+          return
+        }
+        this.status = 'error'
+        this.lastError = 'Не удаётся согласовать изменения — попробуйте обновить страницу'
+      } else {
+        this.status = typeof navigator !== 'undefined' && !navigator.onLine ? 'offline' : 'error'
+        this.lastError = e instanceof Error ? e.message : String(e)
+        // Повтор с растущим интервалом
+        this.retryTimer = setTimeout(() => void this.flush(), this.errorBackoffMs)
+        this.errorBackoffMs = Math.min(this.errorBackoffMs * 2, 60_000)
+      }
+    } finally {
+      this.saving = false
+    }
+    this.emit()
+    if (this.dirty && this.status === 'synced') this.scheduleSave()
+  }
+
+  async poll(): Promise<void> {
+    if (this.saving || this.stopped || !this.data) return
+    if (this.dirty) {
+      // Есть несохранённые изменения — просто ускоряем сохранение,
+      // конфликт (если будет) разрешится слиянием.
+      void this.flush()
+      return
+    }
+    try {
+      const remote = await this.adapter.load()
+      if (!remote || this.saving || this.stopped) return
+      if (remote.rev !== this.rev) {
+        this.data = this.dirty ? mergeBoards(this.data!, remote.data) : remote.data
+        this.rev = remote.rev
+        if (this.dirty) this.scheduleSave()
+      }
+      this.lastSyncAt = Date.now()
+      if (this.status === 'offline' || this.status === 'error') {
+        this.status = 'synced'
+        this.lastError = null
+      }
+      this.emit()
+    } catch {
+      // Ошибки фонового опроса не показываем — покажем при сохранении
+    }
+  }
+}
+
+// ---------- React-контекст ----------
+
+export interface BoardStore {
+  data: BoardData
+  status: SyncStatus
+  lastSyncAt: number | null
+  lastError: string | null
+
+  members: Member[] // без архивных
+  columns: Column[] // без удалённых
+  card(id: ID): Card | undefined
+  cardsInColumn(columnId: ID): Card[]
+  liveCards(): Card[]
+
+  identity: Member | null
+  setIdentity(id: ID | null): void
+
+  // Участники
+  addMember(name: string, color: string): Member
+  updateMember(id: ID, patch: Partial<Pick<Member, 'name' | 'color'>>): void
+  archiveMember(id: ID): void
+
+  // Колонки
+  addColumn(title: string): void
+  renameColumn(id: ID, title: string): void
+  deleteColumn(id: ID): void
+  moveColumn(id: ID, toIndex: number): void
+
+  // Карточки
+  addCard(columnId: ID, title: string): ID
+  updateCard(id: ID, patch: Partial<Omit<Card, 'id' | 'createdAt' | 'updatedAt' | 'attachments'>>): void
+  deleteCard(id: ID): void
+  moveCard(id: ID, toColumnId: ID, toIndex: number): void
+
+  // Чек-лист
+  addChecklistItem(cardId: ID, text: string): void
+  updateChecklistItem(cardId: ID, itemId: ID, patch: Partial<ChecklistItem>): void
+  removeChecklistItem(cardId: ID, itemId: ID): void
+
+  // Календарь
+  scheduleCard(id: ID, date: string | null, start?: string | null, durationMin?: number): void
+
+  // Вложения
+  uploadAttachment(cardId: ID, file: File): Promise<void>
+  removeAttachment(cardId: ID, attId: ID): Promise<void>
+  downloadAttachment(att: Attachment): Promise<void>
+
+  flush(): Promise<void>
+  refresh(): Promise<void>
+}
+
+const StoreContext = createContext<BoardStore | null>(null)
+const EngineContext = createContext<SyncEngine | null>(null)
+
+export function BoardProvider({ adapter, children }: { adapter: StorageAdapter; children: React.ReactNode }) {
+  const engine = useMemo(() => new SyncEngine(adapter), [adapter])
+
+  useEffect(() => {
+    void engine.start()
+    return () => engine.stop()
+  }, [engine])
+
+  const snap = useSyncExternalStore(engine.subscribe, engine.getSnapshot)
+
+  const store = useMemo<BoardStore | null>(() => {
+    if (!snap.data) return null
+    return buildStore(engine, snap)
+  }, [engine, snap])
+
+  return (
+    <EngineContext.Provider value={engine}>
+      <StoreContext.Provider value={store}>{children}</StoreContext.Provider>
+    </EngineContext.Provider>
+  )
+}
+
+/** Статус синхронизации до того, как данные загрузились */
+export function useSyncMeta(): { status: SyncStatus; lastError: string | null } {
+  const engine = useContext(EngineContext)
+  if (!engine) throw new Error('useSyncMeta вне BoardProvider')
+  const snap = useSyncExternalStore(engine.subscribe, engine.getSnapshot)
+  return { status: snap.status, lastError: snap.lastError }
+}
+
+export function useBoard(): BoardStore {
+  const store = useContext(StoreContext)
+  if (!store) throw new Error('useBoard вызван до загрузки данных или вне BoardProvider')
+  return store
+}
+
+/** Как useBoard, но возвращает null, пока данные не загрузились */
+export function useMaybeBoard(): BoardStore | null {
+  return useContext(StoreContext)
+}
+
+function touch(e: { updatedAt: string }): void {
+  e.updatedAt = nowISO()
+}
+
+function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
+  const data = snap.data!
+  const liveColumns = data.columns.filter((c) => !c.deleted)
+  const activeMembers = data.members.filter((m) => !m.archived)
+  const identity = snap.identityId ? data.members.find((m) => m.id === snap.identityId && !m.archived) ?? null : null
+
+  const getCard = (id: ID): Card | undefined => {
+    const c = data.cards[id]
+    return c && !c.deleted ? c : undefined
+  }
+
+  return {
+    data,
+    status: snap.status,
+    lastSyncAt: snap.lastSyncAt,
+    lastError: snap.lastError,
+
+    members: activeMembers,
+    columns: liveColumns,
+    card: getCard,
+    cardsInColumn: (columnId) => {
+      const col = liveColumns.find((c) => c.id === columnId)
+      if (!col) return []
+      return col.cardIds.map((id) => getCard(id)).filter((c): c is Card => !!c)
+    },
+    liveCards: () => Object.values(data.cards).filter((c) => !c.deleted),
+
+    identity,
+    setIdentity: (id) => engine.setIdentity(id),
+
+    addMember: (name, color) => {
+      const ts = nowISO()
+      const member: Member = { id: uid(), name: name.trim(), color, createdAt: ts, updatedAt: ts }
+      engine.update((d) => {
+        d.members.push(member)
+      })
+      return member
+    },
+    updateMember: (id, patch) =>
+      engine.update((d) => {
+        const m = d.members.find((x) => x.id === id)
+        if (!m) return
+        Object.assign(m, patch)
+        touch(m)
+      }),
+    archiveMember: (id) =>
+      engine.update((d) => {
+        const m = d.members.find((x) => x.id === id)
+        if (!m) return
+        m.archived = true
+        touch(m)
+      }),
+
+    addColumn: (title) =>
+      engine.update((d) => {
+        const ts = nowISO()
+        d.columns.push({ id: uid(), title: title.trim() || 'Новая колонка', cardIds: [], createdAt: ts, updatedAt: ts })
+      }),
+    renameColumn: (id, title) =>
+      engine.update((d) => {
+        const col = d.columns.find((c) => c.id === id)
+        if (!col) return
+        col.title = title.trim() || col.title
+        touch(col)
+      }),
+    deleteColumn: (id) =>
+      engine.update((d) => {
+        const col = d.columns.find((c) => c.id === id)
+        if (!col) return
+        col.deleted = true
+        for (const cardId of col.cardIds) {
+          const card = d.cards[cardId]
+          if (card) {
+            card.deleted = true
+            touch(card)
+          }
+        }
+        col.cardIds = []
+        touch(col)
+      }),
+    moveColumn: (id, toIndex) =>
+      engine.update((d) => {
+        const live = d.columns.filter((c) => !c.deleted)
+        const from = live.findIndex((c) => c.id === id)
+        if (from < 0) return
+        const target = live[from]
+        live.splice(from, 1)
+        live.splice(Math.max(0, Math.min(toIndex, live.length)), 0, target)
+        // Пересобираем общий массив: живые в новом порядке + удалённые в конце
+        d.columns = [...live, ...d.columns.filter((c) => c.deleted)]
+        touch(target)
+      }),
+
+    addCard: (columnId, title) => {
+      const id = uid()
+      engine.update((d) => {
+        const col = d.columns.find((c) => c.id === columnId && !c.deleted)
+        if (!col) return
+        const ts = nowISO()
+        d.cards[id] = {
+          id,
+          title: title.trim() || 'Без названия',
+          description: '',
+          columnId,
+          assigneeIds: [],
+          checklist: [],
+          attachments: [],
+          createdAt: ts,
+          updatedAt: ts,
+        }
+        col.cardIds.push(id)
+        touch(col)
+      })
+      return id
+    },
+    updateCard: (id, patch) =>
+      engine.update((d) => {
+        const card = d.cards[id]
+        if (!card || card.deleted) return
+        Object.assign(card, patch)
+        touch(card)
+      }),
+    deleteCard: (id) =>
+      engine.update((d) => {
+        const card = d.cards[id]
+        if (!card) return
+        card.deleted = true
+        touch(card)
+        const col = d.columns.find((c) => c.id === card.columnId)
+        if (col) {
+          col.cardIds = col.cardIds.filter((x) => x !== id)
+          touch(col)
+        }
+      }),
+    moveCard: (id, toColumnId, toIndex) =>
+      engine.update((d) => {
+        const card = d.cards[id]
+        const to = d.columns.find((c) => c.id === toColumnId && !c.deleted)
+        if (!card || card.deleted || !to) return
+        const from = d.columns.find((c) => c.id === card.columnId)
+        if (from) {
+          from.cardIds = from.cardIds.filter((x) => x !== id)
+          if (from.id !== to.id) touch(from)
+        }
+        // На случай рассинхрона убираем дубликаты
+        to.cardIds = to.cardIds.filter((x) => x !== id)
+        to.cardIds.splice(Math.max(0, Math.min(toIndex, to.cardIds.length)), 0, id)
+        card.columnId = toColumnId
+        touch(card)
+        touch(to)
+      }),
+
+    addChecklistItem: (cardId, text) =>
+      engine.update((d) => {
+        const card = d.cards[cardId]
+        if (!card || card.deleted) return
+        card.checklist.push({ id: uid(), text: text.trim(), done: false })
+        touch(card)
+      }),
+    updateChecklistItem: (cardId, itemId, patch) =>
+      engine.update((d) => {
+        const card = d.cards[cardId]
+        if (!card || card.deleted) return
+        const item = card.checklist.find((i) => i.id === itemId)
+        if (!item) return
+        Object.assign(item, patch)
+        touch(card)
+      }),
+    removeChecklistItem: (cardId, itemId) =>
+      engine.update((d) => {
+        const card = d.cards[cardId]
+        if (!card || card.deleted) return
+        card.checklist = card.checklist.filter((i) => i.id !== itemId)
+        touch(card)
+      }),
+
+    scheduleCard: (id, date, start, durationMin) =>
+      engine.update((d) => {
+        const card = d.cards[id]
+        if (!card || card.deleted) return
+        if (date === null) {
+          delete card.date
+          delete card.start
+          delete card.durationMin
+        } else {
+          card.date = date
+          if (start === null) {
+            delete card.start
+            delete card.durationMin
+          } else if (start !== undefined) {
+            card.start = start
+            card.durationMin = durationMin ?? card.durationMin ?? 60
+          } else if (durationMin !== undefined) {
+            card.durationMin = durationMin
+          }
+        }
+        touch(card)
+      }),
+
+    uploadAttachment: async (cardId, file) => {
+      const att = await engine.adapter.uploadAttachment(cardId, file, snap.identityId ?? undefined)
+      engine.update((d) => {
+        const card = d.cards[cardId]
+        if (!card || card.deleted) return
+        card.attachments.push(att)
+        touch(card)
+      })
+    },
+    removeAttachment: async (cardId, attId) => {
+      let att: Attachment | undefined
+      engine.update((d) => {
+        const card = d.cards[cardId]
+        if (!card) return
+        att = card.attachments.find((a) => a.id === attId)
+        card.attachments = card.attachments.filter((a) => a.id !== attId)
+        touch(card)
+      })
+      if (att) {
+        try {
+          await engine.adapter.deleteAttachment(att)
+        } catch (e) {
+          console.warn('Не удалось удалить файл вложения', e)
+        }
+      }
+    },
+    downloadAttachment: async (att) => {
+      const blob: Blob = await engine.adapter.downloadAttachment(att)
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = att.name
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      setTimeout(() => URL.revokeObjectURL(url), 30_000)
+    },
+
+    flush: () => engine.flush(),
+    refresh: () => engine.poll(),
+  }
+}

@@ -1,0 +1,273 @@
+/* Каркас приложения: шапка, экраны входа и выбора участника */
+
+.app-shell {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-main {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---------- Шапка ---------- */
+
+.app-header {
+  height: var(--header-h);
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 0 16px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.app-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.app-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 15px;
+}
+
+.view-tabs {
+  display: flex;
+  background: var(--surface-2);
+  border-radius: 9px;
+  padding: 3px;
+  gap: 2px;
+}
+
+.view-tabs button {
+  border: none;
+  background: transparent;
+  padding: 5px 16px;
+  border-radius: 7px;
+  cursor: pointer;
+  font-weight: 500;
+  color: var(--text-soft);
+}
+
+.view-tabs button.active {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow-sm);
+}
+
+.header-members {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 4px;
+}
+
+.member-filter-btn {
+  border: 2px solid transparent;
+  background: none;
+  padding: 1px;
+  border-radius: 50%;
+  cursor: pointer;
+  opacity: 0.75;
+  transition: opacity 0.12s, border-color 0.12s;
+}
+.member-filter-btn:hover {
+  opacity: 1;
+}
+.member-filter-btn.active {
+  border-color: var(--accent);
+  opacity: 1;
+}
+
+.header-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sync-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  color: var(--text-faint);
+  white-space: nowrap;
+}
+
+.sync-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ok);
+}
+.sync-status.busy .sync-dot {
+  background: var(--accent);
+  animation: pulse 1s ease-in-out infinite;
+}
+.sync-status.warn .sync-dot {
+  background: var(--warn);
+}
+.sync-status.err .sync-dot {
+  background: var(--danger);
+}
+.sync-status.err {
+  color: var(--danger);
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+/* ---------- Экран входа / выбора участника ---------- */
+
+.login-screen {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  background: linear-gradient(160deg, #eef0f7 0%, #e6e6f5 100%);
+  overflow-y: auto;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 480px;
+  background: var(--surface);
+  border-radius: 16px;
+  box-shadow: var(--shadow-md);
+  padding: 32px;
+}
+
+.login-card h1 {
+  margin: 0 0 8px;
+  font-size: 22px;
+}
+
+.login-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 22px;
+  margin-bottom: 16px;
+}
+
+.login-steps {
+  padding-left: 20px;
+  margin: 16px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: var(--text-soft);
+}
+
+.login-steps a {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.login-form {
+  display: flex;
+  gap: 8px;
+}
+
+.login-error {
+  margin-top: 12px;
+  padding: 10px 12px;
+  background: var(--danger-soft);
+  color: var(--danger);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+}
+
+.login-note {
+  font-size: 12.5px;
+  margin-top: 16px;
+  margin-bottom: 0;
+}
+
+.identity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 16px 0 24px;
+}
+
+.identity-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 500;
+  text-align: left;
+  transition: border-color 0.12s, background 0.12s;
+}
+.identity-item:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.identity-new {
+  border-top: 1px solid var(--border);
+  padding-top: 16px;
+}
+
+.color-row {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.color-swatch {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  padding: 0;
+}
+.color-swatch.active {
+  border-color: var(--text);
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--border-strong);
+}
+
+@media (max-width: 720px) {
+  .app-header {
+    gap: 10px;
+    padding: 0 10px;
+    overflow-x: auto;
+  }
+  .sync-status {
+    display: none;
+  }
+}

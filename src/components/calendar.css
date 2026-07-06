@@ -1,0 +1,605 @@
+/* Недельный календарь. Геометрия синхронизирована с CalendarView.tsx:
+   высота часа 48px, ширина колонки меток 56px. */
+
+.cal-root {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  --cal-hour-h: 48px;
+  --cal-gutter-w: 56px;
+  --cal-line: var(--border);
+  --cal-line-faint: color-mix(in srgb, var(--border) 45%, transparent);
+}
+
+.cal-root.is-dragging,
+.cal-root.is-dragging * {
+  cursor: grabbing !important;
+  user-select: none;
+}
+
+/* ---------- Тулбар ---------- */
+
+.cal-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.cal-nav {
+  display: flex;
+  gap: 2px;
+}
+
+.cal-nav .icon-btn {
+  font-size: 20px;
+  line-height: 1;
+  padding-bottom: 3px;
+}
+
+.cal-title {
+  margin: 0 0 0 6px;
+  font-size: 16.5px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---------- Корпус ---------- */
+
+.cal-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+/* ---------- Панель «Без даты» ---------- */
+
+.cal-sidebar {
+  width: 232px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-panel);
+  border-right: 1px solid var(--border);
+  transition: background 0.12s, box-shadow 0.12s;
+}
+
+.cal-sidebar.drop-hint {
+  background: var(--accent-soft);
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+.cal-sidebar.collapsed {
+  width: 34px;
+  align-items: center;
+  padding-top: 6px;
+  gap: 10px;
+  cursor: default;
+}
+
+.cal-sidebar-vlabel {
+  writing-mode: vertical-rl;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-soft);
+  letter-spacing: 0.05em;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.cal-sidebar-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 8px 8px 14px;
+  flex-shrink: 0;
+}
+
+.cal-sidebar-title {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-soft);
+}
+
+.cal-count {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-soft);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0 7px;
+  line-height: 17px;
+}
+
+.cal-collapse {
+  margin-left: auto;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.cal-sidebar.collapsed .cal-collapse {
+  margin-left: 0;
+}
+
+.cal-sidebar-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 2px 10px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cal-sidebar-empty {
+  padding: 12px 4px;
+  font-size: 13px;
+  text-align: center;
+}
+
+.cal-sidebar-hint {
+  padding: 8px 14px 10px;
+  font-size: 11.5px;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.cal-side-card {
+  --ev-color: var(--accent);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--ev-color);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
+  padding: 7px 9px;
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+  transition: border-color 0.12s, box-shadow 0.12s;
+}
+
+.cal-side-card:hover {
+  border-color: var(--border-strong);
+  border-left-color: var(--ev-color);
+  box-shadow: var(--shadow-md);
+}
+
+.cal-side-card.is-dragging {
+  opacity: 0.4;
+}
+
+.cal-side-card.done .cal-side-title {
+  text-decoration: line-through;
+  color: var(--text-faint);
+}
+
+.cal-side-title {
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.35;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.cal-side-meta {
+  margin-top: 5px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* ---------- Основная область ---------- */
+
+.cal-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+}
+
+.cal-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: relative;
+  scrollbar-gutter: stable;
+}
+
+/* ---------- Закреплённая шапка недели ---------- */
+
+.cal-head {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: grid;
+  grid-template-columns: var(--cal-gutter-w) repeat(7, 1fr);
+  background: var(--surface);
+  border-bottom: 1px solid var(--border-strong);
+}
+
+.cal-head-gutter {
+  border-right: 1px solid var(--cal-line);
+}
+
+.cal-day-head {
+  border-left: 1px solid var(--cal-line);
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.cal-day-head:first-of-type {
+  border-left: none;
+}
+
+.cal-day-name {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 7px 4px 5px;
+  font-size: 12.5px;
+  color: var(--text-soft);
+  user-select: none;
+}
+
+.cal-day-wd {
+  text-transform: lowercase;
+}
+
+.cal-day-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 3px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.cal-day-head.today .cal-day-wd {
+  color: var(--accent-strong);
+  font-weight: 600;
+}
+
+.cal-day-head.today .cal-day-num {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* Зона «весь день» */
+
+.cal-allday {
+  flex: 1;
+  min-height: 30px;
+  max-height: 108px;
+  overflow-y: auto;
+  padding: 2px 4px 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  border-top: 1px solid var(--cal-line-faint);
+  transition: background 0.12s, box-shadow 0.12s;
+}
+
+.cal-allday.drop-hint {
+  background: var(--accent-soft);
+  box-shadow: inset 0 0 0 2px var(--accent);
+  border-radius: var(--radius-sm);
+}
+
+.cal-chip {
+  --ev-color: var(--accent);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 7px;
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--ev-color) 16%, white);
+  border: 1px solid color-mix(in srgb, var(--ev-color) 35%, white);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text);
+  cursor: pointer;
+  user-select: none;
+  touch-action: none;
+  min-width: 0;
+}
+
+.cal-chip:hover {
+  background: color-mix(in srgb, var(--ev-color) 26%, white);
+}
+
+.cal-chip-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--ev-color);
+  flex-shrink: 0;
+}
+
+.cal-chip-title {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.cal-chip.done .cal-chip-title {
+  text-decoration: line-through;
+  color: var(--text-faint);
+}
+
+.cal-chip.done {
+  opacity: 0.75;
+}
+
+.cal-chip.is-dragging {
+  opacity: 0.4;
+}
+
+.cal-chip.ghost {
+  border: 1.5px dashed var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, white);
+  color: var(--accent-strong);
+}
+
+/* ---------- Сетка ---------- */
+
+.cal-grid {
+  display: grid;
+  grid-template-columns: var(--cal-gutter-w) repeat(7, 1fr);
+  height: calc(var(--cal-hour-h) * 24);
+}
+
+.cal-gutter {
+  position: relative;
+  border-right: 1px solid var(--cal-line);
+  user-select: none;
+}
+
+.cal-hour-label {
+  position: absolute;
+  right: 8px;
+  transform: translateY(-50%);
+  font-size: 11px;
+  color: var(--text-faint);
+  background: var(--surface);
+  padding: 0 2px;
+}
+
+.cal-hour-label.first {
+  transform: none;
+}
+
+.cal-day-col {
+  position: relative;
+  min-width: 0;
+  border-left: 1px solid var(--cal-line);
+  /* Линии часов и бледные линии получасов (шаг 48px / 24px) */
+  background-image: repeating-linear-gradient(
+    to bottom,
+    var(--cal-line) 0,
+    var(--cal-line) 1px,
+    transparent 1px,
+    transparent 24px,
+    var(--cal-line-faint) 24px,
+    var(--cal-line-faint) 25px,
+    transparent 25px,
+    transparent 48px
+  );
+}
+
+.cal-day-col:first-of-type {
+  border-left: none;
+}
+
+.cal-day-col.today {
+  background-color: color-mix(in srgb, var(--accent) 3%, transparent);
+}
+
+/* ---------- Блоки задач ---------- */
+
+.cal-event {
+  --ev-color: var(--accent);
+  position: absolute;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 3px 7px 4px 8px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--ev-color) 18%, white);
+  box-shadow: inset 3px 0 0 var(--ev-color), 0 0 0 1px color-mix(in srgb, var(--ev-color) 30%, white);
+  overflow: hidden;
+  cursor: pointer;
+  user-select: none;
+  touch-action: none;
+  transition: box-shadow 0.12s;
+}
+
+.cal-event:hover {
+  z-index: 3;
+  box-shadow: inset 3px 0 0 var(--ev-color), 0 0 0 1px color-mix(in srgb, var(--ev-color) 45%, white),
+    var(--shadow-md);
+}
+
+.cal-event.is-dragging {
+  opacity: 0.35;
+}
+
+.cal-event-time {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: color-mix(in srgb, var(--ev-color) 72%, var(--text));
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.cal-event-title {
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--text);
+  overflow: hidden;
+}
+
+.cal-event-avatars {
+  margin-top: auto;
+  display: flex;
+  justify-content: flex-end;
+  flex-shrink: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Компактный блок (30 минут): всё в одну строку */
+.cal-event.compact {
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  padding-top: 2px;
+  padding-bottom: 2px;
+}
+
+.cal-event.compact .cal-event-time {
+  order: 2;
+}
+
+.cal-event.compact .cal-event-title {
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.cal-event.compact .cal-event-avatars {
+  display: none;
+}
+
+.cal-event.done {
+  opacity: 0.55;
+  filter: saturate(0.4);
+}
+
+.cal-event.done .cal-event-title {
+  text-decoration: line-through;
+}
+
+.cal-event-resize {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 7px;
+  cursor: ns-resize;
+  touch-action: none;
+}
+
+.cal-event-resize::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 2px;
+  width: 24px;
+  height: 3px;
+  transform: translateX(-50%);
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--ev-color) 55%, white);
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+
+.cal-event:hover .cal-event-resize::after {
+  opacity: 1;
+}
+
+/* ---------- Призрак перетаскивания ---------- */
+
+.cal-ghost {
+  position: absolute;
+  left: 2px;
+  right: 3px;
+  z-index: 6;
+  border: 1.5px dashed var(--accent);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  padding: 3px 7px;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.cal-ghost-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent-strong);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.cal-ghost-tip {
+  position: absolute;
+  top: -24px;
+  left: 0;
+  background: var(--text);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 5px;
+  white-space: nowrap;
+  box-shadow: var(--shadow-md);
+}
+
+.cal-ghost-tip.below {
+  top: auto;
+  bottom: -24px;
+}
+
+/* ---------- Линия текущего времени ---------- */
+
+.cal-now {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--danger);
+  z-index: 5;
+  pointer-events: none;
+}
+
+.cal-now::before {
+  content: '';
+  position: absolute;
+  left: -4px;
+  top: -3px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--danger);
+}
+
+/* ---------- Узкие экраны ---------- */
+
+@media (max-width: 900px) {
+  .cal-sidebar {
+    width: 190px;
+  }
+  .cal-title {
+    font-size: 14.5px;
+  }
+}
