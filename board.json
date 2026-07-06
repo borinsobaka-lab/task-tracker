@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "members": [],
+  "columns": [
+    { "id": "col-todo", "title": "Нужно сделать", "cardIds": [], "createdAt": "2026-07-06T00:00:00.000Z", "updatedAt": "2026-07-06T00:00:00.000Z" },
+    { "id": "col-doing", "title": "В работе", "cardIds": [], "createdAt": "2026-07-06T00:00:00.000Z", "updatedAt": "2026-07-06T00:00:00.000Z" },
+    { "id": "col-done", "title": "Готово", "cardIds": [], "createdAt": "2026-07-06T00:00:00.000Z", "updatedAt": "2026-07-06T00:00:00.000Z" }
+  ],
+  "cards": {},
+  "updatedAt": "2026-07-06T00:00:00.000Z"
+}
