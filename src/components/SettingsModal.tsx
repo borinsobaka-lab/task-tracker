@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useBoard } from '../store'
-import { getDataRepoConfig, setDataRepoConfig } from '../config'
+import { getDataRepoConfig, getToken, setDataRepoConfig } from '../config'
+import { saveEncryptedToken } from '../auth'
 import { MEMBER_COLORS } from '../utils'
 import type { Member } from '../types'
 import { Avatar } from './Avatar'
@@ -355,23 +356,65 @@ function DataSection() {
   )
 }
 
-// ---------- Аккаунт ----------
+// ---------- Пароль и аккаунт ----------
 
 function AccountSection({ onLogout }: { onLogout: () => void }) {
+  const token = getToken()
+  const [p1, setP1] = useState('')
+  const [p2, setP2] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [msg, setMsg] = useState<string | null>(null)
+  const [err, setErr] = useState<string | null>(null)
+
+  const changePassword = async () => {
+    if (!token) return
+    if (p1.length < 8) return setErr('Пароль слишком короткий — минимум 8 символов.')
+    if (p1 !== p2) return setErr('Пароли не совпадают.')
+    setBusy(true)
+    setErr(null)
+    setMsg(null)
+    try {
+      await saveEncryptedToken(token, p1)
+      setMsg('Пароль обновлён. Сообщите новый пароль коллегам — старый больше не подойдёт.')
+      setP1('')
+      setP2('')
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : String(e))
+    } finally {
+      setBusy(false)
+    }
+  }
+
   const logout = () => {
-    const ok = confirm(
-      'Выйти и сменить токен GitHub?\n\nТокен будет удалён с этого устройства, данные на GitHub останутся.'
-    )
+    const ok = confirm('Выйти?\n\nНа этом устройстве потребуется снова ввести пароль. Данные останутся на месте.')
     if (ok) onLogout()
   }
 
   return (
     <section className="settings-section">
-      <h3 className="field-label settings-section-title">Аккаунт</h3>
-      <button className="btn btn-danger" onClick={logout}>
-        Выйти (сменить токен GitHub)
+      <h3 className="field-label settings-section-title">Пароль и вход</h3>
+      {token ? (
+        <>
+          <p className="settings-hint" style={{ marginTop: 0 }}>
+            Сменить пароль для входа (например, если ушёл кто-то из команды):
+          </p>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <input className="input" style={{ flex: 1, minWidth: 140 }} type="password" placeholder="новый пароль" value={p1} onChange={(e) => setP1(e.target.value)} />
+            <input className="input" style={{ flex: 1, minWidth: 140 }} type="password" placeholder="повторите" value={p2} onChange={(e) => setP2(e.target.value)} />
+            <button className="btn" onClick={() => void changePassword()} disabled={busy || !p1 || !p2}>
+              {busy && <span className="spinner settings-btn-spinner" />}
+              {busy ? 'Сохраняем…' : 'Сменить пароль'}
+            </button>
+          </div>
+          {msg && <p className="settings-hint" style={{ color: 'var(--ok)' }}>{msg}</p>}
+          {err && <p className="settings-hint" style={{ color: 'var(--danger)' }}>{err}</p>}
+        </>
+      ) : (
+        <p className="settings-hint" style={{ marginTop: 0 }}>Смена пароля недоступна в этом режиме.</p>
+      )}
+      <button className="btn btn-danger" style={{ marginTop: 12 }} onClick={logout}>
+        Выйти с этого устройства
       </button>
-      <p className="settings-hint">После выхода приложение снова попросит токен доступа к GitHub.</p>
     </section>
   )
 }

@@ -1,6 +1,10 @@
-// Настройки подключения к хранилищу данных.
-// По умолчанию данные живут в этом же репозитории в отдельной ветке tasks-data.
-// При желании можно указать другой (например, приватный) репозиторий в настройках.
+// Настройки подключения к хранилищу.
+//
+// Схема «закрытые данные + пароль»:
+//  - Код приложения и зашифрованный ключ (auth.json) — в ПУБЛИЧНОМ репозитории
+//    task-tracker (ветка app-config). Читается без токена.
+//  - Задачи и вложения — в ОТДЕЛЬНОМ ПРИВАТНОМ репозитории (по умолчанию
+//    task-tracker-data). Доступ к ним даёт только расшифрованный паролем ключ.
 
 export interface DataRepoConfig {
   owner: string
@@ -8,10 +12,19 @@ export interface DataRepoConfig {
   branch: string
 }
 
+/** Приватный репозиторий с данными (по умолчанию). Владелец создаёт его сам. */
 export const DEFAULT_DATA_REPO: DataRepoConfig = {
   owner: 'borinsobaka-lab',
-  repo: 'task-tracker',
+  repo: 'task-tracker-data',
   branch: 'tasks-data',
+}
+
+/** Публичный репозиторий, где лежит зашифрованный ключ доступа. */
+export const AUTH_REPO = {
+  owner: 'borinsobaka-lab',
+  repo: 'task-tracker',
+  branch: 'app-config',
+  path: 'auth.json',
 }
 
 const LS = {
@@ -40,6 +53,7 @@ export function setDataRepoConfig(cfg: DataRepoConfig | null): void {
   else localStorage.removeItem(LS.dataRepo)
 }
 
+/** Кэш расшифрованного токена на этом устройстве (чтобы не вводить пароль каждый раз). */
 export function getToken(): string | null {
   return localStorage.getItem(LS.token)
 }

@@ -1,54 +1,109 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { BoardProvider, useMaybeBoard, useSyncMeta } from './store'
 import type { StorageAdapter } from './storage/adapter'
 import { GitHubAdapter } from './storage/github'
 import { LocalAdapter } from './storage/local'
 import { getDataRepoConfig, getSavedView, getToken, isDemoMode, setSavedView, setToken } from './config'
-import { LoginScreen } from './components/LoginScreen'
-import { IdentityScreen } from './components/IdentityScreen'
+import { getAuthState } from './auth'
+import type { EncryptedBlob } from './crypto'
+import { PasswordScreen } from './components/PasswordScreen'
+import { OwnerSetupScreen } from './components/OwnerSetupScreen'
 import { Header } from './components/Header'
 import { BoardView } from './components/BoardView'
 import { CalendarView } from './components/CalendarView'
 import { CardModal } from './components/CardModal'
 import { SettingsModal } from './components/SettingsModal'
+import { IdentityScreen } from './components/IdentityScreen'
 import type { ID } from './types'
 import './app.css'
 
-type Session = { mode: 'demo' } | { mode: 'github'; token: string }
-
-function detectSession(): Session | null {
-  if (isDemoMode()) return { mode: 'demo' }
-  const token = getToken()
-  return token ? { mode: 'github', token } : null
-}
+type Phase =
+  | { kind: 'loading' }
+  | { kind: 'demo' }
+  | { kind: 'token'; token: string }
+  | { kind: 'password'; blob: EncryptedBlob }
+  | { kind: 'setup' }
+  | { kind: 'error'; message: string }
 
 export default function App() {
-  const [session, setSession] = useState<Session | null>(detectSession)
+  const [phase, setPhase] = useState<Phase>({ kind: 'loading' })
 
-  if (!session) {
-    return (
-      <LoginScreen
-        onLogin={(token) => {
-          setToken(token)
-          setSession({ mode: 'github', token })
-        }}
-      />
-    )
+  const bootstrap = useCallback(async () => {
+    if (isDemoMode()) {
+      setPhase({ kind: 'demo' })
+      return
+    }
+    const cached = getToken()
+    if (cached) {
+      setPhase({ kind: 'token', token: cached })
+      return
+    }
+    setPhase({ kind: 'loading' })
+    try {
+      const state = await getAuthState()
+      setPhase(state.kind === 'configured' ? { kind: 'password', blob: state.blob } : { kind: 'setup' })
+    } catch (e) {
+      setPhase({ kind: 'error', message: e instanceof Error ? e.message : String(e) })
+    }
+  }, [])
+
+  useEffect(() => {
+    void bootstrap()
+  }, [bootstrap])
+
+  const onAuthenticated = (token: string) => {
+    setToken(token)
+    setPhase({ kind: 'token', token })
   }
 
-  return <AppWithSession session={session} onLogout={() => logout(setSession)} />
+  const onLogout = () => {
+    setToken(null)
+    void bootstrap()
+  }
+
+  switch (phase.kind) {
+    case 'loading':
+      return (
+        <div className="fullscreen-note">
+          <div className="spinner" style={{ width: 28, height: 28 }} />
+          <div>Загрузка…</div>
+        </div>
+      )
+    case 'error':
+      return (
+        <div className="fullscreen-note">
+          <div style={{ fontSize: 40 }}>😕</div>
+          <div style={{ fontWeight: 600, fontSize: 16, color: 'var(--text)' }}>Не удалось открыть приложение</div>
+          <div style={{ maxWidth: 440 }}>{phase.message}</div>
+          <button className="btn btn-primary" onClick={() => void bootstrap()}>
+            Повторить
+          </button>
+        </div>
+      )
+    case 'demo':
+      return <AppWithSession adapterKind="demo" onLogout={onLogout} />
+    case 'token':
+      return <AppWithSession adapterKind="github" token={phase.token} onLogout={onLogout} />
+    case 'password':
+      return <PasswordScreen blob={phase.blob} onUnlock={onAuthenticated} onReconfigure={() => setPhase({ kind: 'setup' })} />
+    case 'setup':
+      return <OwnerSetupScreen onDone={onAuthenticated} />
+  }
 }
 
-function logout(setSession: (s: Session | null) => void) {
-  setToken(null)
-  setSession(null)
-}
-
-function AppWithSession({ session, onLogout }: { session: Session; onLogout: () => void }) {
+function AppWithSession({
+  adapterKind,
+  token,
+  onLogout,
+}: {
+  adapterKind: 'demo' | 'github'
+  token?: string
+  onLogout: () => void
+}) {
   const adapter = useMemo<StorageAdapter>(() => {
-    if (session.mode === 'demo') return new LocalAdapter()
-    return new GitHubAdapter({ ...getDataRepoConfig(), token: session.token })
-  }, [session])
+    if (adapterKind === 'demo') return new LocalAdapter()
+    return new GitHubAdapter({ ...getDataRepoConfig(), token: token! })
+  }, [adapterKind, token])
 
   return (
     <BoardProvider adapter={adapter}>
@@ -79,7 +134,7 @@ function Shell({ onLogout }: { onLogout: () => void }) {
               Повторить
             </button>
             <button className="btn" onClick={onLogout}>
-              Сменить токен
+              Выйти
             </button>
           </div>
         </div>
