@@ -156,6 +156,7 @@ export function CalendarView({
   const headRef = useRef<HTMLDivElement>(null)
   const gridRef = useRef<HTMLDivElement>(null)
   const sidebarRef = useRef<HTMLElement>(null)
+  const swipeRef = useRef<{ x: number; y: number; ignore: boolean } | null>(null)
 
   // Переключение 3 дня / неделя при изменении ширины экрана
   useEffect(() => {
@@ -563,6 +564,33 @@ export function CalendarView({
     )
   }
 
+  // ---------- Свайп по горизонтали: листать дни (в дополнение к стрелкам) ----------
+
+  const onCalTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length !== 1) {
+      swipeRef.current = null
+      return
+    }
+    const t = e.touches[0]
+    // Свайп по событию/чипу/ручке — это перетаскивание, не листание
+    const ignore = !!(e.target as HTMLElement).closest('.cal-event, .cal-chip, .cal-side-card, .cal-event-resize')
+    swipeRef.current = { x: t.clientX, y: t.clientY, ignore }
+  }
+
+  const onCalTouchEnd = (e: React.TouchEvent) => {
+    const s = swipeRef.current
+    swipeRef.current = null
+    if (!s || s.ignore || drag) return
+    const t = e.changedTouches[0]
+    if (!t) return
+    const dx = t.clientX - s.x
+    const dy = t.clientY - s.y
+    // Явно горизонтальный жест (иначе это вертикальная прокрутка часов)
+    if (Math.abs(dx) >= 60 && Math.abs(dx) > Math.abs(dy) * 1.3) {
+      setAnchor((a) => addDays(a, dx < 0 ? nDays : -nDays))
+    }
+  }
+
   // ---------- Разметка ----------
 
   const hours = Array.from({ length: 24 }, (_, h) => h)
@@ -637,7 +665,7 @@ export function CalendarView({
           </aside>
         )}
 
-        <div className="cal-main">
+        <div className="cal-main" onTouchStart={onCalTouchStart} onTouchEnd={onCalTouchEnd}>
           <div className="cal-scroll" ref={scrollRef}>
             <div className="cal-head" ref={headRef}>
               <div className="cal-head-gutter" />
