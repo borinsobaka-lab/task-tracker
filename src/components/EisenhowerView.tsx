@@ -35,8 +35,8 @@ export function EisenhowerView({
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }))
 
   const inFilter = (c: Card) => memberFilter.size === 0 || c.assigneeIds.some((id) => memberFilter.has(id))
-  // В матрице только задачи: без встреч и без готовых
-  const cards = store.liveCards().filter((c) => c.kind !== 'meeting' && !c.done && inFilter(c))
+  // В матрице только обычные задачи: без встреч, без регулярных и без готовых
+  const cards = store.liveCards().filter((c) => c.kind !== 'meeting' && !c.seriesId && !c.done && inFilter(c))
 
   const inbox = cards.filter((c) => !c.priority)
   const byQuadrant: Record<EisenhowerQuadrant, Card[]> = { q1: [], q2: [], q3: [], q4: [] }

@@ -36,6 +36,33 @@ export interface Attachment {
 /** Тип карточки: обычная задача или встреча (со ссылкой на созвон). */
 export type CardKind = 'task' | 'meeting'
 
+// ---------- Повторяющиеся (регулярные) задачи ----------
+
+export type RecurFreq = 'daily' | 'weekly' | 'monthly'
+
+export interface RecurrenceRule {
+  freq: RecurFreq
+  /** для weekly: дни недели по Date.getDay() — 0=Вс … 6=Сб */
+  weekdays?: number[]
+  /** для monthly: числа месяца 1..31 */
+  monthdays?: number[]
+}
+
+/** Шаблон повторяющейся задачи. Экземпляры — обычные Card со seriesId. */
+export interface Series {
+  id: ID
+  title: string
+  description: string
+  assigneeIds: ID[]
+  rule: RecurrenceRule
+  /** время 'HH:MM' (необязательно). Если задано — экземпляры попадают в сетку календаря */
+  start?: string
+  durationMin?: number
+  deleted?: boolean
+  createdAt: string
+  updatedAt: string
+}
+
 /**
  * Квадрант матрицы Эйзенхауэра (приоритет):
  *  - q1 — срочно и важно (красный)
@@ -55,6 +82,8 @@ export interface Card {
   meetingUrl?: string
   /** Приоритет по матрице Эйзенхауэра (если распределён) */
   priority?: EisenhowerQuadrant
+  /** Если задан — это экземпляр повторяющейся задачи (серии) */
+  seriesId?: ID
   /** HTML из редактора (санитизируется при выводе) */
   description: string
   columnId: ID
@@ -100,5 +129,7 @@ export interface BoardData {
   members: Member[]
   columns: Column[]
   cards: Record<ID, Card>
+  /** Шаблоны повторяющихся задач (может отсутствовать в старых данных) */
+  series?: Record<ID, Series>
   updatedAt: string
 }

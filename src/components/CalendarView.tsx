@@ -432,6 +432,7 @@ export function CalendarView({
         <span className="cal-chip-dot" />
         <span className="cal-chip-title">
           {isMeeting(c) && <span aria-hidden>📹 </span>}
+          {c.seriesId && <span aria-hidden>🔁 </span>}
           {c.title}
         </span>
       </div>
@@ -494,6 +495,7 @@ export function CalendarView({
           </button>
           <div className="cal-event-title">
             {isMeeting(c) && <span className="cal-meeting-ico" aria-hidden>📹 </span>}
+            {c.seriesId && <span aria-hidden>🔁 </span>}
             {c.title}
           </div>
           {c.priority && <span className="cal-event-prio" style={{ background: QUADRANT_COLOR[c.priority] }} title="Приоритет" />}

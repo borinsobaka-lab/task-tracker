@@ -4,12 +4,45 @@
 
 import React, { createContext, useContext, useEffect, useMemo, useSyncExternalStore } from 'react'
 import { produce } from 'immer'
-import type { Attachment, BoardData, Card, ChecklistItem, Column, ColumnRole, EisenhowerQuadrant, ID, Member } from './types'
+import type { Attachment, BoardData, Card, ChecklistItem, Column, ColumnRole, EisenhowerQuadrant, ID, Member, RecurrenceRule, Series } from './types'
 import type { StorageAdapter } from './storage/adapter'
 import { ConflictError } from './storage/adapter'
 import { emptyBoard, mergeBoards, normalizeBoard } from './merge'
+import { firstOccurrence, nextOccurrence } from './recurrence'
 import { getIdentity, setIdentityId } from './config'
-import { clamp, nowISO, uid } from './utils'
+import { clamp, nowISO, toDateKey, uid } from './utils'
+
+export interface SeriesInput {
+  title: string
+  description?: string
+  assigneeIds: ID[]
+  rule: RecurrenceRule
+  start?: string
+  durationMin?: number
+}
+
+const MAX_DONE_INSTANCES = 8 // сколько выполненных экземпляров серии храним
+
+function makeInstance(seriesId: ID, s: Series, dateKey: string, ts: string): Card {
+  const c: Card = {
+    id: uid(),
+    seriesId,
+    title: s.title,
+    description: s.description,
+    columnId: '',
+    assigneeIds: [...s.assigneeIds],
+    checklist: [],
+    attachments: [],
+    date: dateKey,
+    createdAt: ts,
+    updatedAt: ts,
+  }
+  if (s.start) {
+    c.start = s.start
+    c.durationMin = s.durationMin ?? 60
+  }
+  return c
+}
 
 export type SyncStatus = 'loading' | 'synced' | 'saving' | 'offline' | 'error'
 
@@ -295,6 +328,15 @@ export interface BoardStore {
   /** Приоритет по матрице Эйзенхауэра (undefined — снять с матрицы) */
   setPriority(id: ID, priority: EisenhowerQuadrant | undefined): void
 
+  // Повторяющиеся (регулярные) задачи
+  series: Series[]
+  seriesById(id: ID): Series | undefined
+  /** Живые экземпляры повторяющихся задач (карточки со seriesId) */
+  recurringCards(): Card[]
+  addSeries(input: SeriesInput): void
+  updateSeries(id: ID, input: SeriesInput): void
+  deleteSeries(id: ID): void
+
   // Чек-лист
   addChecklistItem(cardId: ID, text: string): void
   updateChecklistItem(cardId: ID, itemId: ID, patch: Partial<ChecklistItem>): void
@@ -386,6 +428,10 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
       return col.cardIds.map((id) => getCard(id)).filter((c): c is Card => !!c)
     },
     liveCards: () => Object.values(data.cards).filter((c) => !c.deleted),
+
+    series: Object.values(data.series ?? {}).filter((s) => !s.deleted),
+    seriesById: (id) => data.series?.[id],
+    recurringCards: () => Object.values(data.cards).filter((c) => !c.deleted && !!c.seriesId),
 
     identity,
     setIdentity: (id) => engine.setIdentity(id),
@@ -540,7 +586,34 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
         card.done = done
         touch(card)
         if (!done) return
-        // Готовую задачу переносим в колонку с ролью «Готово», если она есть
+
+        // Экземпляр повторяющейся задачи: не переносим на доску, а порождаем
+        // следующий экземпляр и подчищаем старые выполненные.
+        if (card.seriesId) {
+          const s = d.series?.[card.seriesId]
+          if (s && !s.deleted) {
+            const hasActive = Object.values(d.cards).some(
+              (c) => c.seriesId === card.seriesId && !c.deleted && !c.done && c.id !== id,
+            )
+            if (!hasActive) {
+              const nextKey = nextOccurrence(card.date ?? toDateKey(new Date()), s.rule)
+              if (nextKey) {
+                const inst = makeInstance(card.seriesId, s, nextKey, nowISO())
+                d.cards[inst.id] = inst
+              }
+            }
+            const completed = Object.values(d.cards)
+              .filter((c) => c.seriesId === card.seriesId && !c.deleted && c.done)
+              .sort((a, b) => (a.date ?? '').localeCompare(b.date ?? ''))
+            for (let i = 0; i < completed.length - MAX_DONE_INSTANCES; i++) {
+              completed[i].deleted = true
+              touch(completed[i])
+            }
+          }
+          return
+        }
+
+        // Обычная задача: переносим в колонку с ролью «Готово», если она есть
         const doneCol = d.columns.find((c) => !c.deleted && c.role === 'done')
         if (!doneCol || card.columnId === doneCol.id) return
         const from = d.columns.find((c) => c.id === card.columnId)
@@ -560,6 +633,78 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
         if (priority) card.priority = priority
         else delete card.priority
         touch(card)
+      }),
+    addSeries: (input) =>
+      engine.update((d) => {
+        const ts = nowISO()
+        const sid = uid()
+        if (!d.series) d.series = {}
+        const s: Series = {
+          id: sid,
+          title: input.title.trim() || 'Регулярная задача',
+          description: input.description ?? '',
+          assigneeIds: [...input.assigneeIds],
+          rule: input.rule,
+          ...(input.start ? { start: input.start, durationMin: input.durationMin ?? 60 } : {}),
+          createdAt: ts,
+          updatedAt: ts,
+        }
+        d.series[sid] = s
+        const firstKey = firstOccurrence(toDateKey(new Date()), s.rule)
+        if (firstKey) {
+          const inst = makeInstance(sid, s, firstKey, ts)
+          d.cards[inst.id] = inst
+        }
+      }),
+    updateSeries: (id, input) =>
+      engine.update((d) => {
+        const s = d.series?.[id]
+        if (!s || s.deleted) return
+        const ruleChanged = JSON.stringify(input.rule) !== JSON.stringify(s.rule)
+        s.title = input.title.trim() || s.title
+        s.description = input.description ?? ''
+        s.assigneeIds = [...input.assigneeIds]
+        s.rule = input.rule
+        if (input.start) {
+          s.start = input.start
+          s.durationMin = input.durationMin ?? 60
+        } else {
+          delete s.start
+          delete s.durationMin
+        }
+        touch(s)
+        // Синхронизируем активный (невыполненный) экземпляр
+        const active = Object.values(d.cards).find((c) => c.seriesId === id && !c.deleted && !c.done)
+        if (active) {
+          active.title = s.title
+          active.description = s.description
+          active.assigneeIds = [...s.assigneeIds]
+          if (s.start) {
+            active.start = s.start
+            active.durationMin = s.durationMin
+          } else {
+            delete active.start
+            delete active.durationMin
+          }
+          if (ruleChanged) {
+            const k = firstOccurrence(toDateKey(new Date()), s.rule)
+            if (k) active.date = k
+          }
+          touch(active)
+        }
+      }),
+    deleteSeries: (id) =>
+      engine.update((d) => {
+        const s = d.series?.[id]
+        if (!s) return
+        s.deleted = true
+        touch(s)
+        for (const c of Object.values(d.cards)) {
+          if (c.seriesId === id && !c.deleted) {
+            c.deleted = true
+            touch(c)
+          }
+        }
       }),
 
     addChecklistItem: (cardId, text) =>

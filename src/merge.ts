@@ -3,7 +3,7 @@
 // удаления — через надгробия (deleted: true). После слияния доска нормализуется:
 // каждая живая карточка лежит ровно в одной живой колонке.
 
-import type { Attachment, BoardData, Card, ChecklistItem, Column, Member, ID } from './types'
+import type { Attachment, BoardData, Card, ChecklistItem, Column, Member, ID, Series } from './types'
 import { nowISO } from './utils'
 
 const TOMBSTONE_TTL_MS = 45 * 24 * 60 * 60 * 1000
@@ -77,11 +77,20 @@ export function mergeBoards(local: BoardData, remote: BoardData): BoardData {
     cards[id] = l && r ? mergeCard(l, r) : (l ?? r)
   }
 
+  const series: Record<ID, Series> = {}
+  const sids = new Set([...Object.keys(local.series ?? {}), ...Object.keys(remote.series ?? {})])
+  for (const id of sids) {
+    const l = local.series?.[id]
+    const r = remote.series?.[id]
+    series[id] = l && r ? newer(l, r) : (l ?? r)!
+  }
+
   return normalizeBoard({
     schemaVersion: 1,
     members,
     columns,
     cards,
+    series,
     updatedAt: local.updatedAt >= remote.updatedAt ? local.updatedAt : remote.updatedAt,
   })
 }
@@ -126,11 +135,12 @@ export function normalizeBoard(data: BoardData): BoardData {
     return { ...col, cardIds }
   })
 
-  // Потерянные живые карточки — возвращаем на доску
+  // Потерянные живые карточки — возвращаем на доску.
+  // Экземпляры повторяющихся задач (seriesId) на доске не живут — пропускаем.
   const placed = new Set(homeOf.keys())
   const liveColsAfter = columns.filter((c) => !c.deleted)
   for (const [id, card] of Object.entries(data.cards)) {
-    if (card.deleted || placed.has(id)) continue
+    if (card.deleted || card.seriesId || placed.has(id)) continue
     if (liveColsAfter.length === 0) continue
     const target = liveColsAfter.find((c) => c.id === card.columnId) ?? liveColsAfter[0]
     target.cardIds = [...target.cardIds, id]
@@ -157,7 +167,16 @@ export function normalizeBoard(data: BoardData): BoardData {
     return Number.isNaN(t) || t >= cutoff
   })
 
-  return { ...data, columns: keptColumns, cards }
+  const series: Record<ID, Series> = {}
+  for (const [id, s] of Object.entries(data.series ?? {})) {
+    if (s.deleted) {
+      const t = Date.parse(s.updatedAt)
+      if (!Number.isNaN(t) && t < cutoff) continue // старое надгробие серии — выкидываем
+    }
+    series[id] = s
+  }
+
+  return { ...data, columns: keptColumns, cards, series }
 }
 
 export function emptyBoard(): BoardData {
@@ -180,6 +199,7 @@ export function emptyBoard(): BoardData {
       mk('col-done', 'Готово', 'done'),
     ],
     cards: {},
+    series: {},
     updatedAt: ts,
   }
 }

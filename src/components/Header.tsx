@@ -46,6 +46,9 @@ export function Header({
         <button className={view === 'matrix' ? 'active' : ''} onClick={() => onViewChange('matrix')}>
           Матрица
         </button>
+        <button className={view === 'recurring' ? 'active' : ''} onClick={() => onViewChange('recurring')}>
+          Регулярное
+        </button>
       </nav>
 
       <div className="header-members" title="Фильтр по участникам">
@@ -74,7 +77,6 @@ export function Header({
           <span className="sync-dot" />
           {status.text}
         </span>
-        {store.identity && <Avatar member={store.identity} title={`Вы: ${store.identity.name}`} />}
         <button className="icon-btn" onClick={onOpenSettings} title="Настройки" aria-label="Настройки">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="12" cy="12" r="3" />

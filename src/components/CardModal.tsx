@@ -185,6 +185,7 @@ function CardModalInner({ card, store, onClose }: { card: Card; store: BoardStor
 
   // --- тип карточки: задача / встреча ---
   const isMeeting = card.kind === 'meeting'
+  const isRecurring = !!card.seriesId
   const setKind = (kind: CardKind) => {
     if ((card.kind ?? 'task') !== kind) store.updateCard(card.id, { kind })
   }
@@ -330,26 +331,30 @@ function CardModalInner({ card, store, onClose }: { card: Card; store: BoardStor
         {/* ---------- Шапка ---------- */}
         <header className="cm-header">
           <div className="cm-header-top">
-            <div className="cm-kind-toggle" role="tablist" aria-label="Тип">
-              <button
-                type="button"
-                role="tab"
-                aria-selected={!isMeeting}
-                className={!isMeeting ? 'active' : ''}
-                onClick={() => setKind('task')}
-              >
-                Задача
-              </button>
-              <button
-                type="button"
-                role="tab"
-                aria-selected={isMeeting}
-                className={isMeeting ? 'active' : ''}
-                onClick={() => setKind('meeting')}
-              >
-                📹 Встреча
-              </button>
-            </div>
+            {isRecurring ? (
+              <span className="cm-recur-label">🔁 Повторяется</span>
+            ) : (
+              <div className="cm-kind-toggle" role="tablist" aria-label="Тип">
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={!isMeeting}
+                  className={!isMeeting ? 'active' : ''}
+                  onClick={() => setKind('task')}
+                >
+                  Задача
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={isMeeting}
+                  className={isMeeting ? 'active' : ''}
+                  onClick={() => setKind('meeting')}
+                >
+                  📹 Встреча
+                </button>
+              </div>
+            )}
             <button type="button" className="icon-btn" title="Закрыть" aria-label="Закрыть" onClick={onClose}>
               ✕
             </button>
@@ -388,7 +393,9 @@ function CardModalInner({ card, store, onClose }: { card: Card; store: BoardStor
                   }
                 }}
               />
-              {isMeeting ? (
+              {isRecurring ? (
+                <span className="cm-subline muted">Повторяющаяся задача — настраивается в разделе «Регулярное»</span>
+              ) : isMeeting ? (
                 <span className="cm-subline muted">Встреча — видна только в календаре</span>
               ) : (
                 <label className="cm-subline">

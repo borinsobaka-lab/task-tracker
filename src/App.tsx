@@ -12,6 +12,7 @@ import { Header } from './components/Header'
 import { BoardView } from './components/BoardView'
 import { CalendarView } from './components/CalendarView'
 import { EisenhowerView } from './components/EisenhowerView'
+import { RecurringView } from './components/RecurringView'
 import { CardModal } from './components/CardModal'
 import { SettingsModal } from './components/SettingsModal'
 import { IdentityScreen } from './components/IdentityScreen'
@@ -113,7 +114,7 @@ function AppWithSession({
   )
 }
 
-export type ViewKind = 'board' | 'calendar' | 'matrix'
+export type ViewKind = 'board' | 'calendar' | 'matrix' | 'recurring'
 
 function Shell({ onLogout }: { onLogout: () => void }) {
   const store = useMaybeBoard()
@@ -171,6 +172,7 @@ function Shell({ onLogout }: { onLogout: () => void }) {
         {view === 'board' && <BoardView memberFilter={memberFilter} onOpenCard={setSelectedCardId} />}
         {view === 'calendar' && <CalendarView memberFilter={memberFilter} onOpenCard={setSelectedCardId} />}
         {view === 'matrix' && <EisenhowerView memberFilter={memberFilter} onOpenCard={setSelectedCardId} />}
+        {view === 'recurring' && <RecurringView memberFilter={memberFilter} onOpenCard={setSelectedCardId} />}
       </main>
       {selectedCardId && <CardModal cardId={selectedCardId} onClose={() => setSelectedCardId(null)} />}
       {settingsOpen && <SettingsModal onClose={() => setSettingsOpen(false)} onLogout={onLogout} />}

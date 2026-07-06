@@ -63,6 +63,15 @@
   gap: 10px;
 }
 
+.cm-recur-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent-strong);
+  background: var(--accent-soft);
+  border-radius: 8px;
+  padding: 5px 12px;
+}
+
 /* Переключатель тип карточки: Задача / Встреча */
 .cm-kind-toggle {
   display: inline-flex;
