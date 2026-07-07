@@ -232,13 +232,20 @@
   /* both-edges — резерв под скроллбар с обеих сторон, чтобы отступы были симметричны */
   scrollbar-gutter: stable both-edges;
   scrollbar-width: thin;
+  scrollbar-color: rgba(120, 130, 150, 0.35) transparent; /* Firefox: светло-серый полупрозрачный */
 }
 .board-col-cards::-webkit-scrollbar {
   width: 8px;
 }
+.board-col-cards::-webkit-scrollbar-track {
+  background: transparent;
+}
 .board-col-cards::-webkit-scrollbar-thumb {
-  background: var(--border-strong);
+  background: rgba(120, 130, 150, 0.35);
   border-radius: 8px;
+}
+.board-col-cards::-webkit-scrollbar-thumb:hover {
+  background: rgba(120, 130, 150, 0.55);
 }
 
 .board-drop-hint {
@@ -260,7 +267,8 @@
   box-shadow: var(--shadow-sm);
   padding: 9px 11px;
   cursor: pointer;
-  touch-action: none;
+  /* pan-y — палец может вертикально прокручивать список; drag стартует по удержанию */
+  touch-action: pan-y;
   user-select: none;
   -webkit-user-select: none;
   transition: border-color 0.12s;

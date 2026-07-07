@@ -268,10 +268,9 @@ export function CalendarView({
     c.assigneeIds.map((id) => memberById.get(id)).filter((m): m is Member => !!m)
   const isMeeting = (c: Card): boolean => c.kind === 'meeting'
   // Встречи — фиксированного цвета, задачи — по цвету первого исполнителя.
-  // Встречи — серые; цвет полосы слева зависит от участника (у кого встреча),
-  // без участников — тёмная («чёрная») полоса. Задачи — по цвету исполнителя.
-  const colorOf = (c: Card): string =>
-    isMeeting(c) ? assigneesOf(c)[0]?.color ?? '#334155' : assigneesOf(c)[0]?.color ?? 'var(--accent)'
+  // Встречи — серые, полоса слева и текст всегда чёрные (независимо от участников).
+  // Задачи — по цвету исполнителя.
+  const colorOf = (c: Card): string => (isMeeting(c) ? '#1f2937' : assigneesOf(c)[0]?.color ?? 'var(--accent)')
 
   // ---------- Геометрия перетаскивания ----------
 
@@ -492,13 +491,7 @@ export function CalendarView({
         }
         {...dragEvents}
       >
-        <span className="cal-chip-dot" />
-        {c.priority && <span className="cal-prio-dot" style={{ background: QUADRANT_COLOR[c.priority] }} title="Приоритет" />}
-        <span className="cal-chip-title">
-          {isMeeting(c) && <span className="inline-ico" aria-hidden><IcoMeeting size={13} /></span>}
-          {c.seriesId && <span className="inline-ico" aria-hidden><IcoRecurring size={13} /></span>}
-          {c.title}
-        </span>
+        <span className="cal-chip-title">{c.title}</span>
         {assigneesOf(c).length > 0 && (
           <span className="cal-chip-avatars">
             <AvatarStack members={assigneesOf(c)} size="xs" />

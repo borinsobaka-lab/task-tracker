@@ -11,8 +11,9 @@ import {
   DndContext,
   DragOverlay,
   MeasuringStrategy,
-  PointerSensor,
+  MouseSensor,
   pointerWithin,
+  TouchSensor,
   useSensor,
   useSensors,
 } from '@dnd-kit/core'
@@ -66,7 +67,12 @@ export function BoardView({ memberFilter, onOpenCard }: { memberFilter: Readonly
   // Гасим click, который браузер шлёт сразу после завершения drag
   const suppressClickRef = useRef(false)
 
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }))
+  // Мышь — тащим почти сразу; палец — только после удержания (~220 мс), иначе
+  // при вертикальной прокрутке списка карточки случайно переносились бы.
+  const sensors = useSensors(
+    useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 220, tolerance: 6 } }),
+  )
 
   const matchesFilter = useCallback(
     // Встречи и экземпляры регулярных задач на доске не показываем

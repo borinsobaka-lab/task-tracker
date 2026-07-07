@@ -347,10 +347,10 @@
   display: flex;
   align-items: center;
   gap: 5px;
-  padding: 2px 7px;
+  padding: 2px 8px;
   border-radius: 5px;
-  background: color-mix(in srgb, var(--ev-color) 16%, white);
-  border: 1px solid color-mix(in srgb, var(--ev-color) 35%, white);
+  background: var(--surface);
+  border: 1px solid var(--border);
   font-size: 12px;
   font-weight: 500;
   color: var(--text);
@@ -361,15 +361,7 @@
 }
 
 .cal-chip:hover {
-  background: color-mix(in srgb, var(--ev-color) 26%, white);
-}
-
-.cal-chip-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--ev-color);
-  flex-shrink: 0;
+  border-color: var(--border-strong);
 }
 
 .cal-chip-title {
@@ -502,7 +494,7 @@
   opacity: 0.35;
 }
 
-/* Встречи — серые, с цветной (по участнику) полосой слева; без участника — тёмной */
+/* Встречи — серые, с чёрной полосой слева; заголовок и время чёрные (у всех одинаково) */
 .cal-event.meeting {
   background: var(--surface-2);
   box-shadow: inset 3px 0 0 var(--ev-color), 0 0 0 1px var(--border);
@@ -510,15 +502,17 @@
 .cal-event.meeting:hover {
   box-shadow: inset 3px 0 0 var(--ev-color), 0 0 0 1px var(--border-strong), var(--shadow-md);
 }
+.cal-event.meeting .cal-event-title,
+.cal-event.meeting .cal-event-time {
+  color: var(--ev-color);
+}
 .cal-chip.meeting {
   background: var(--surface-2);
-  border-color: var(--border);
-}
-.cal-chip.meeting .cal-chip-dot {
-  background: var(--ev-color);
+  border-left: 3px solid var(--ev-color);
 }
 .cal-side-card.meeting {
   background: var(--surface-2);
+  border-left-color: var(--ev-color);
 }
 
 /* Верхняя строка: чекбокс + заголовок (заголовок с самого верха блока) */

@@ -1,11 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { ComponentType } from 'react'
 import type { IconProps } from '@solar-icons/react'
 import type { ViewKind } from '../App'
 import { useBoard } from '../store'
 import type { ID } from '../types'
 import { Avatar } from './Avatar'
-import { IcoBoard, IcoBrand, IcoCalendar, IcoCheck, IcoChevronDown, IcoMatrix, IcoRecurring, IcoSettings } from '../icons'
+import { IcoBoard, IcoCalendar, IcoCheck, IcoChevronDown, IcoMatrix, IcoRecurring, IcoSettings } from '../icons'
 
 const STATUS_LABEL: Record<string, { text: string; cls: string }> = {
   synced: { text: 'Сохранено', cls: 'ok' },
@@ -24,21 +24,40 @@ const VIEWS: { key: ViewKind; label: string; Icon: ComponentType<IconProps> }[] 
 
 /** Компактный выбор вида вместо ряда табов — экономит место в шапке. */
 function ViewSwitch({ view, onViewChange }: { view: ViewKind; onViewChange: (v: ViewKind) => void }) {
-  const [open, setOpen] = useState(false)
+  // Меню позиционируем fixed по координатам кнопки, чтобы оно не обрезалось
+  // прокруткой шапки (overflow) на мобильном и было поверх всего.
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null)
+  const btnRef = useRef<HTMLButtonElement>(null)
   const cur = VIEWS.find((v) => v.key === view) ?? VIEWS[0]
+  const open = !!pos
+
+  const toggle = () => {
+    if (pos) {
+      setPos(null)
+      return
+    }
+    const r = btnRef.current?.getBoundingClientRect()
+    if (r) setPos({ top: r.bottom + 5, left: r.left })
+  }
 
   useEffect(() => {
     if (!open) return
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false)
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setPos(null)
+    const onScroll = () => setPos(null)
     window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
+    window.addEventListener('scroll', onScroll, true)
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      window.removeEventListener('scroll', onScroll, true)
+    }
   }, [open])
 
   return (
     <div className="view-switch">
       <button
+        ref={btnRef}
         className="view-switch-btn"
-        onClick={() => setOpen((o) => !o)}
+        onClick={toggle}
         aria-haspopup="menu"
         aria-expanded={open}
         title="Сменить вид"
@@ -51,10 +70,10 @@ function ViewSwitch({ view, onViewChange }: { view: ViewKind; onViewChange: (v: 
           <IcoChevronDown size={14} />
         </span>
       </button>
-      {open && (
+      {pos && (
         <>
-          <div className="view-switch-backdrop" onClick={() => setOpen(false)} />
-          <div className="view-switch-menu" role="menu">
+          <div className="view-switch-backdrop" onClick={() => setPos(null)} />
+          <div className="view-switch-menu" role="menu" style={{ position: 'fixed', top: pos.top, left: pos.left }}>
             {VIEWS.map((v) => (
               <button
                 key={v.key}
@@ -63,7 +82,7 @@ function ViewSwitch({ view, onViewChange }: { view: ViewKind; onViewChange: (v: 
                 aria-checked={v.key === view}
                 onClick={() => {
                   onViewChange(v.key)
-                  setOpen(false)
+                  setPos(null)
                 }}
               >
                 <span className="view-ico" aria-hidden>
@@ -109,9 +128,6 @@ export function Header({
 
   return (
     <header className="app-header">
-      <span className="app-brand" title="Task Tracker" aria-hidden>
-        <IcoBrand size={22} />
-      </span>
       {/* На десктопе — табы, на мобильном — выпадающий список (переключается в CSS) */}
       <nav className="view-tabs" aria-label="Вид">
         {VIEWS.map((v) => (
