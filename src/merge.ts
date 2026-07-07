@@ -3,7 +3,7 @@
 // удаления — через надгробия (deleted: true). После слияния доска нормализуется:
 // каждая живая карточка лежит ровно в одной живой колонке.
 
-import type { Attachment, BoardData, Card, ChecklistItem, Column, Comment, Member, ID, Series } from './types'
+import type { ActivityEntry, Attachment, BoardData, Card, ChecklistItem, Column, Comment, Member, ID, Series } from './types'
 import { nowISO } from './utils'
 
 const TOMBSTONE_TTL_MS = 45 * 24 * 60 * 60 * 1000
@@ -87,6 +87,20 @@ function mergeById<T extends { id: ID; updatedAt: string }>(local: T[], remote: 
   return out
 }
 
+/** Журнал истории — объединение по id (события почти неизменны; при коалесценции
+ *  побеждает запись с более поздним ts), сортировка по времени, ограничение хвоста. */
+function mergeActivity(a?: ActivityEntry[], b?: ActivityEntry[]): ActivityEntry[] | undefined {
+  if (!a && !b) return undefined
+  const byId = new Map<ID, ActivityEntry>()
+  for (const e of a ?? []) byId.set(e.id, e)
+  for (const e of b ?? []) {
+    const cur = byId.get(e.id)
+    if (!cur || e.ts > cur.ts) byId.set(e.id, e)
+  }
+  const merged = [...byId.values()].sort((x, y) => x.ts.localeCompare(y.ts))
+  return merged.length > 500 ? merged.slice(merged.length - 500) : merged
+}
+
 export function mergeBoards(local: BoardData, remote: BoardData): BoardData {
   const members: Member[] = mergeById(local.members, remote.members)
   const columns: Column[] = mergeById(local.columns, remote.columns)
@@ -113,6 +127,7 @@ export function mergeBoards(local: BoardData, remote: BoardData): BoardData {
     columns,
     cards,
     series,
+    activity: mergeActivity(local.activity, remote.activity),
     updatedAt: local.updatedAt >= remote.updatedAt ? local.updatedAt : remote.updatedAt,
   })
 }

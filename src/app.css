@@ -373,23 +373,23 @@
   .sync-status {
     display: none;
   }
-  /* Табы с иконками и подписями. Не помещаются — лента табов прокручивается вбок,
-     а поиск и настройки остаются прижатыми справа. */
+  /* Только иконки, без подписей — переключаемся по иконкам. Кнопки чуть шире
+     квадрата, чтобы удобно попадать пальцем. */
   .view-tabs {
     gap: 2px;
     padding: 3px;
-    min-width: 0;
-    flex-shrink: 1;
-    overflow-x: auto;
-    scrollbar-width: none;
+    flex-shrink: 0;
   }
-  .view-tabs::-webkit-scrollbar {
+  .view-tab-label {
     display: none;
   }
   .view-tabs button {
-    padding: 9px 10px;
-    gap: 5px;
-    font-size: 13px;
+    padding: 9px 16px;
+    gap: 0;
+    justify-content: center;
     flex-shrink: 0;
+  }
+  .view-ico {
+    font-size: 17px;
   }
 }

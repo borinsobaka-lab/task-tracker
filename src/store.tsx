@@ -4,13 +4,15 @@
 
 import React, { createContext, useContext, useEffect, useMemo, useSyncExternalStore } from 'react'
 import { produce } from 'immer'
-import type { Attachment, BoardData, Card, CardKind, ChecklistItem, Column, ColumnRole, Comment, EisenhowerQuadrant, ID, Member, RecurrenceRule, Series } from './types'
+import type { ActivityEntry, Attachment, BoardData, Card, CardKind, ChecklistItem, Column, ColumnRole, Comment, EisenhowerQuadrant, ID, Member, RecurrenceRule, Series } from './types'
 import type { StorageAdapter } from './storage/adapter'
 import { ConflictError } from './storage/adapter'
 import { emptyBoard, mergeBoards, normalizeBoard } from './merge'
 import { dateMatchesRule, firstOccurrence, nextOccurrence } from './recurrence'
 import { getIdentity, setIdentityId } from './config'
-import { clamp, nowISO, toDateKey, uid } from './utils'
+import { clamp, nowISO, plainSnippet, toDateKey, uid } from './utils'
+import { logActivity } from './activity'
+import { QUADRANT_LABEL } from './eisenhower'
 
 export interface SeriesInput {
   title: string
@@ -349,6 +351,8 @@ export interface BoardStore {
   card(id: ID): Card | undefined
   cardsInColumn(columnId: ID): Card[]
   liveCards(): Card[]
+  /** Журнал истории проекта (в порядке возникновения; новые в конце) */
+  activity(): ActivityEntry[]
 
   identity: Member | null
   setIdentity(id: ID | null): void
@@ -489,6 +493,7 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
       return col.cardIds.map((id) => getCard(id)).filter((c): c is Card => !!c)
     },
     liveCards: () => Object.values(data.cards).filter((c) => !c.deleted),
+    activity: () => data.activity ?? [],
 
     series: Object.values(data.series ?? {}).filter((s) => !s.deleted),
     seriesById: (id) => data.series?.[id],
@@ -621,6 +626,7 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
         }
         col.cardIds.push(id)
         touch(col)
+        logActivity(d, identity, 'card.create', { cardId: id, cardTitle: d.cards[id].title })
       })
       return id
     },
@@ -628,13 +634,34 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
       engine.update((d) => {
         const card = d.cards[id]
         if (!card || card.deleted) return
+        const before = {
+          title: card.title,
+          description: card.description,
+          kind: card.kind,
+          assignees: card.assigneeIds.join(','),
+        }
         Object.assign(card, patch)
         touch(card)
+        // Журнал: осмысленные изменения
+        if (patch.kind === 'meeting' && before.kind !== 'meeting') {
+          logActivity(d, identity, 'meeting.create', { cardId: id, cardTitle: card.title })
+        }
+        if (patch.title !== undefined && patch.title !== before.title) {
+          logActivity(d, identity, 'card.rename', { cardId: id, cardTitle: card.title })
+        }
+        if (patch.description !== undefined && patch.description !== before.description) {
+          logActivity(d, identity, 'card.describe', { cardId: id, cardTitle: card.title })
+        }
+        if (patch.assigneeIds !== undefined && patch.assigneeIds.join(',') !== before.assignees) {
+          logActivity(d, identity, 'card.assign', { cardId: id, cardTitle: card.title })
+        }
       }),
     deleteCard: (id) =>
       engine.update((d) => {
         const card = d.cards[id]
         if (!card) return
+        const wasMeeting = card.kind === 'meeting'
+        const title = card.title
         card.deleted = true
         touch(card)
         const col = d.columns.find((c) => c.id === card.columnId)
@@ -642,12 +669,14 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
           col.cardIds = col.cardIds.filter((x) => x !== id)
           touch(col)
         }
+        logActivity(d, identity, wasMeeting ? 'meeting.delete' : 'card.delete', { cardId: id, cardTitle: title })
       }),
     moveCard: (id, toColumnId, toIndex) =>
       engine.update((d) => {
         const card = d.cards[id]
         const to = d.columns.find((c) => c.id === toColumnId && !c.deleted)
         if (!card || card.deleted || !to) return
+        const changedColumn = card.columnId !== toColumnId
         const from = d.columns.find((c) => c.id === card.columnId)
         if (from) {
           from.cardIds = from.cardIds.filter((x) => x !== id)
@@ -663,6 +692,7 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
         else if (to.role) card.done = false
         touch(card)
         touch(to)
+        if (changedColumn) logActivity(d, identity, 'card.move', { cardId: id, cardTitle: card.title, detail: to.title })
       }),
     setCardDone: (id, done) =>
       engine.update((d) => {
@@ -670,6 +700,7 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
         if (!card || card.deleted) return
         card.done = done
         touch(card)
+        logActivity(d, identity, done ? 'card.done' : 'card.undone', { cardId: id, cardTitle: card.title })
         if (!done) {
           // Отмена выполнения повторяющейся задачи — «шаг назад»: задача снова
           // становится активной, а автоматически созданный следующий экземпляр
@@ -731,6 +762,11 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
         if (priority) card.priority = priority
         else delete card.priority
         touch(card)
+        logActivity(d, identity, 'priority.change', {
+          cardId: id,
+          cardTitle: card.title,
+          detail: priority ? QUADRANT_LABEL[priority] : 'без приоритета',
+        })
       }),
     addSeries: (input) =>
       engine.update((d) => {
@@ -753,6 +789,7 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
           const inst = makeInstance(sid, s, firstKey, ts)
           d.cards[inst.id] = inst
         }
+        logActivity(d, identity, 'series.add', { cardTitle: s.title })
       }),
     updateSeries: (id, input) =>
       engine.update((d) => {
@@ -803,6 +840,7 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
             touch(c)
           }
         }
+        logActivity(d, identity, 'series.delete', { cardTitle: s.title })
       }),
 
     // ---------- Повторяющиеся встречи ----------
@@ -847,6 +885,7 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
           d.series[sid] = s
           card.seriesId = sid
           touch(card)
+          logActivity(d, identity, 'meeting.recurring', { cardId, cardTitle: card.title })
         }
         topUpMeetingSeries(d, s)
       }),
@@ -883,6 +922,7 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
         if (!card || card.deleted) return
         card.checklist.push({ id: uid(), text: text.trim(), done: false, updatedAt: nowISO() })
         touch(card)
+        logActivity(d, identity, 'checklist.add', { cardId, cardTitle: card.title, detail: text.trim() })
       }),
     updateChecklistItem: (cardId, itemId, patch) =>
       engine.update((d) => {
@@ -918,6 +958,7 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
         if (!card.comments) card.comments = []
         card.comments.push(comment)
         touch(card)
+        logActivity(d, identity, 'comment.add', { cardId, cardTitle: card.title, detail: plainSnippet(html) })
       }),
     updateComment: (cardId, commentId, html) =>
       engine.update((d) => {
@@ -932,6 +973,7 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
         c.updatedAt = ts
         c.editedAt = ts
         touch(card)
+        logActivity(d, identity, 'comment.edit', { cardId, cardTitle: card.title, detail: plainSnippet(html) })
       }),
     removeComment: (cardId, commentId) =>
       engine.update((d) => {
@@ -945,6 +987,7 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
         c.html = ''
         c.updatedAt = nowISO()
         touch(card)
+        logActivity(d, identity, 'comment.delete', { cardId, cardTitle: card.title })
       }),
 
     scheduleCard: (id, date, start, durationMin) =>
@@ -968,6 +1011,11 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
           }
         }
         touch(card)
+        logActivity(d, identity, 'card.schedule', {
+          cardId: id,
+          cardTitle: card.title,
+          detail: date === null ? 'убрал дату' : date + (card.start ? `, ${card.start}` : ''),
+        })
       }),
 
     uploadAttachment: async (cardId, file) => {
@@ -977,6 +1025,7 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
         if (!card || card.deleted) return
         card.attachments.push(att)
         touch(card)
+        logActivity(d, identity, 'attachment.add', { cardId, cardTitle: card.title, detail: file.name })
       })
     },
     removeAttachment: async (cardId, attId) => {

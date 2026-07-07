@@ -209,6 +209,19 @@ export function formatBytes(n: number): string {
  * Есть ли в описании видимое содержимое. Вызывается при отрисовке каждой
  * карточки доски, поэтому без DOMParser — быстрый разбор регуляркой.
  */
+/** Короткий текст без разметки (для журнала: сниппет комментария и т.п.). */
+export function plainSnippet(html: string, max = 80): string {
+  const text = html
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/\s+/g, ' ')
+    .trim()
+  return text.length > max ? text.slice(0, max).trimEnd() + '…' : text
+}
+
 export function hasContent(html: string): boolean {
   if (!html) return false
   const stripped = html

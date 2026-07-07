@@ -15,6 +15,7 @@ import { EisenhowerView } from './components/EisenhowerView'
 import { RecurringView } from './components/RecurringView'
 import { CardModal } from './components/CardModal'
 import { SettingsModal } from './components/SettingsModal'
+import { HistoryModal } from './components/HistoryModal'
 import { IdentityScreen } from './components/IdentityScreen'
 import { PublicTimeline } from './components/PublicTimeline'
 import { CommentsSeenProvider } from './components/Comments'
@@ -184,6 +185,7 @@ function Shell({ onLogout }: { onLogout: () => void }) {
   const [view, setView] = useState<ViewKind>(getSavedView)
   const [selectedCardId, setSelectedCardId] = useState<ID | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [historyOpen, setHistoryOpen] = useState(false)
   const [memberFilter, setMemberFilter] = useState<ReadonlySet<ID>>(new Set())
 
   // При загрузке один раз пополняем будущие экземпляры повторяющихся встреч
@@ -266,6 +268,7 @@ function Shell({ onLogout }: { onLogout: () => void }) {
         view={view}
         onViewChange={changeView}
         onOpenSettings={() => setSettingsOpen(true)}
+        onOpenHistory={() => setHistoryOpen(true)}
         onOpenCard={setSelectedCardId}
       />
       <main className="app-main">
@@ -283,6 +286,9 @@ function Shell({ onLogout }: { onLogout: () => void }) {
       </main>
       {selectedCardId && <CardModal cardId={selectedCardId} onClose={() => setSelectedCardId(null)} />}
       {settingsOpen && <SettingsModal onClose={() => setSettingsOpen(false)} onLogout={onLogout} />}
+      {historyOpen && (
+        <HistoryModal onClose={() => setHistoryOpen(false)} onOpenCard={(id) => setSelectedCardId(id)} />
+      )}
     </div>
   )
 }

@@ -218,6 +218,43 @@ test('комментарии: добавление, бейдж, правка и 
   await expect(page.locator('.comment')).toHaveCount(0)
 })
 
+test('история проекта фиксирует события и открывает задачу', async ({ page }) => {
+  await createIdentity(page, 'Борис')
+  await page.getByText('Добавить карточку').first().click()
+  await page.locator('.board-col').first().locator('textarea').fill('Собрать отчёт')
+  await page.keyboard.press('Enter')
+  await page.keyboard.press('Escape')
+
+  // Назначаем приоритет — ещё одно событие в истории
+  await page.getByText('Собрать отчёт').click()
+  await page.locator('.cm-prio-btn').click()
+  await page.locator('.cm-prio-item').first().click()
+  await page.keyboard.press('Escape')
+
+  // Открываем историю
+  await page.getByRole('button', { name: 'История проекта' }).click()
+  const modal = page.locator('.history-modal')
+  await expect(modal).toBeVisible()
+  await expect(modal.locator('.history-daylabel', { hasText: 'Сегодня' })).toBeVisible()
+  await expect(modal.locator('.history-row', { hasText: 'создал(а) задачу' })).toContainText('Собрать отчёт')
+  await expect(modal.locator('.history-row', { hasText: 'изменил(а) приоритет' })).toBeVisible()
+
+  // Клик по записи открывает связанную задачу
+  await modal.locator('.history-row.clickable').first().click()
+  await expect(page.getByRole('button', { name: /Удалить карточку/ })).toBeVisible()
+})
+
+test('мобильные табы — только иконки, переключение работает', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 780 })
+  await createIdentity(page)
+  // Подписи скрыты, иконки видны
+  await expect(page.locator('.view-tab-label').first()).toBeHidden()
+  await expect(page.locator('.view-tabs button').first().locator('.view-ico')).toBeVisible()
+  // Переключение по иконке (2-я кнопка — Календарь)
+  await page.locator('.view-tabs button').nth(1).click()
+  await expect(page.locator('.cal-view-select')).toBeVisible()
+})
+
 test('живая публичная ссылка на таймлайн — внешняя страница только для просмотра', async ({ page, context }) => {
   await context.grantPermissions(['clipboard-read', 'clipboard-write'])
   await createIdentity(page)
