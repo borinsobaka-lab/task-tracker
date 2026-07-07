@@ -15,6 +15,7 @@ import {
 import { useBoard } from '../store'
 import type { Card, EisenhowerQuadrant, ID, Member } from '../types'
 import { QUADRANTS } from '../eisenhower'
+import { IcoMeeting } from '../icons'
 import { AvatarStack } from './Avatar'
 import './eisenhower.css'
 
@@ -178,7 +179,7 @@ function EisCardBody({
   return (
     <div className={'eis-card-body' + (dragging ? ' overlay' : '')} style={color ? { borderLeftColor: color } : undefined}>
       <div className="eis-card-title">
-        {card.kind === 'meeting' && <span aria-hidden>📹 </span>}
+        {card.kind === 'meeting' && <span className="inline-ico" aria-hidden><IcoMeeting size={13} /></span>}
         {card.title}
       </div>
       {members.length > 0 && (

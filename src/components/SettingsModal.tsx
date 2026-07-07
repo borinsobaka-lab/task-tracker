@@ -3,6 +3,7 @@ import { useBoard } from '../store'
 import { getDataRepoConfig, getToken, setDataRepoConfig } from '../config'
 import { saveEncryptedToken } from '../auth'
 import { imageFileToAvatar, MEMBER_COLORS } from '../utils'
+import { IcoCamera, IcoChevronRight, IcoClose } from '../icons'
 import type { Member } from '../types'
 import { Avatar } from './Avatar'
 import './settings.css'
@@ -28,7 +29,7 @@ export function SettingsModal({ onClose, onLogout }: { onClose: () => void; onLo
         <header className="settings-header">
           <h2>Настройки</h2>
           <button className="icon-btn" onClick={onClose} title="Закрыть" aria-label="Закрыть">
-            ✕
+            <IcoClose size={20} />
           </button>
         </header>
 
@@ -120,7 +121,7 @@ function MemberRow({ member }: { member: Member }) {
             >
               <Avatar member={member} size="lg" />
               <span className="settings-avatar-cam" aria-hidden>
-                📷
+                <IcoCamera size={16} />
               </span>
             </button>
             {member.avatar && (
@@ -131,7 +132,7 @@ function MemberRow({ member }: { member: Member }) {
                 title="Убрать аватарку"
                 aria-label="Убрать аватарку"
               >
-                ✕
+                <IcoClose size={13} />
               </button>
             )}
             <input ref={fileRef} type="file" accept="image/*" hidden onChange={pickAvatar} />
@@ -365,7 +366,7 @@ function DataSection() {
           onClick={() => setAdvancedOpen((v) => !v)}
           aria-expanded={advancedOpen}
         >
-          <span className={`settings-chevron${advancedOpen ? ' open' : ''}`}>▶</span>
+          <span className={`settings-chevron${advancedOpen ? ' open' : ''}`}><IcoChevronRight size={14} /></span>
           Сменить хранилище (для продвинутых)
         </button>
         {advancedOpen && (

@@ -6,6 +6,7 @@ import { useBoard } from '../store'
 import { getCalDays, setCalDays } from '../config'
 import type { Card, ID, Member } from '../types'
 import { QUADRANT_COLOR } from '../eisenhower'
+import { IcoCheck, IcoChevronLeft, IcoChevronRight, IcoMeeting, IcoRecurring } from '../icons'
 import {
   addDays,
   clamp,
@@ -451,7 +452,8 @@ export function CalendarView({
   // ---------- Создание карточек двойным кликом ----------
 
   const createCard = (dayIdx: number, startMin: number | null): void => {
-    const col = store.columns[0]
+    // По умолчанию — в колонку со статусом «нужно сделать» (роль todo), иначе первая
+    const col = store.columns.find((c) => c.role === 'todo') ?? store.columns[0]
     if (!col) return
     const id = store.addCard(col.id, 'Новая задача')
     if (startMin === null) store.scheduleCard(id, dayKeys[dayIdx], null)
@@ -491,8 +493,8 @@ export function CalendarView({
         <span className="cal-chip-dot" />
         {c.priority && <span className="cal-prio-dot" style={{ background: QUADRANT_COLOR[c.priority] }} title="Приоритет" />}
         <span className="cal-chip-title">
-          {isMeeting(c) && <span aria-hidden>📹 </span>}
-          {c.seriesId && <span aria-hidden>🔁 </span>}
+          {isMeeting(c) && <span className="inline-ico" aria-hidden><IcoMeeting size={13} /></span>}
+          {c.seriesId && <span className="inline-ico" aria-hidden><IcoRecurring size={13} /></span>}
           {c.title}
         </span>
       </div>
@@ -557,12 +559,12 @@ export function CalendarView({
                 store.setCardDone(c.id, !c.done)
               }}
             >
-              ✓
+              <IcoCheck size={13} />
             </button>
           )}
           <div className="cal-event-title">
-            {mtg && <span className="cal-meeting-ico" aria-hidden>📹 </span>}
-            {c.seriesId && <span aria-hidden>🔁 </span>}
+            {mtg && <span className="cal-meeting-ico inline-ico" aria-hidden><IcoMeeting size={13} /></span>}
+            {c.seriesId && <span className="inline-ico" aria-hidden><IcoRecurring size={13} /></span>}
             {c.title}
           </div>
           {c.priority && <span className="cal-event-prio" style={{ background: QUADRANT_COLOR[c.priority] }} title="Приоритет" />}
@@ -623,8 +625,8 @@ export function CalendarView({
       >
         <div className="cal-side-title">
           {c.priority && <span className="cal-prio-dot" style={{ background: QUADRANT_COLOR[c.priority] }} title="Приоритет" />}
-          {isMeeting(c) && <span aria-hidden>📹 </span>}
-          {c.seriesId && <span aria-hidden>🔁 </span>}
+          {isMeeting(c) && <span className="inline-ico" aria-hidden><IcoMeeting size={13} /></span>}
+          {c.seriesId && <span className="inline-ico" aria-hidden><IcoRecurring size={13} /></span>}
           {c.title}
         </div>
         {assignees.length > 0 && (
@@ -683,7 +685,7 @@ export function CalendarView({
             aria-label="Показать предыдущие дни"
             onClick={() => setAnchor((a) => addDays(a, -nDays))}
           >
-            ‹
+            <IcoChevronLeft size={18} />
           </button>
           <button
             className="icon-btn"
@@ -691,7 +693,7 @@ export function CalendarView({
             aria-label="Показать следующие дни"
             onClick={() => setAnchor((a) => addDays(a, nDays))}
           >
-            ›
+            <IcoChevronRight size={18} />
           </button>
         </div>
         <h2 className="cal-title">
@@ -727,7 +729,7 @@ export function CalendarView({
                 aria-label="Свернуть панель"
                 onClick={() => setPanelOpen(false)}
               >
-                ‹
+                <IcoChevronLeft size={16} />
               </button>
             </div>
             <div className="cal-sidebar-list" ref={sidebarListRef}>
@@ -744,7 +746,7 @@ export function CalendarView({
               aria-label="Развернуть панель «Без даты»"
               onClick={() => setPanelOpen(true)}
             >
-              ›
+              <IcoChevronRight size={16} />
             </button>
             <span className="cal-sidebar-vlabel">
               Без даты{unscheduled.length > 0 ? ` · ${unscheduled.length}` : ''}

@@ -3,6 +3,7 @@ import { getDataRepoConfig, setDataRepoConfig, AUTH_REPO, type DataRepoConfig } 
 import { GitHubAdapter, validateAccess } from '../storage/github'
 import { saveEncryptedToken } from '../auth'
 import { emptyBoard } from '../merge'
+import { IcoBrand } from '../icons'
 
 const TOKEN_URL = 'https://github.com/settings/tokens/new?scopes=repo&description=Task%20Tracker'
 const MIN_PASSWORD = 8
@@ -55,7 +56,7 @@ export function OwnerSetupScreen({ onDone }: { onDone: (token: string) => void }
     <div className="login-screen">
       <div className="login-card">
         <div className="login-logo" aria-hidden>
-          ▦
+          <IcoBrand size={30} />
         </div>
         <h1>Настройка (один раз)</h1>
         <p className="muted">

@@ -316,6 +316,8 @@ export interface BoardStore {
   renameColumn(id: ID, title: string): void
   setColumnRole(id: ID, role: ColumnRole | undefined): void
   setColumnColor(id: ID, color: string | undefined): void
+  /** Разовая сортировка карточек колонки (порядок сохраняется в cardIds) */
+  sortColumn(id: ID, by: 'due' | 'created'): void
   deleteColumn(id: ID): void
   moveColumn(id: ID, toIndex: number): void
 
@@ -496,6 +498,22 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
         if (!col) return
         if (color) col.color = color
         else delete col.color
+        touch(col)
+      }),
+    sortColumn: (id, by) =>
+      engine.update((d) => {
+        const col = d.columns.find((c) => c.id === id)
+        if (!col) return
+        const live = col.cardIds
+          .map((cid) => d.cards[cid])
+          .filter((c): c is Card => !!c && !c.deleted)
+        const dueKey = (c: Card) => (c.date ? `${c.date}T${c.start ?? '99:99'}` : '￿') // без даты — в конец
+        live.sort((a, b) =>
+          by === 'created'
+            ? a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id)
+            : dueKey(a).localeCompare(dueKey(b)) || a.createdAt.localeCompare(b.createdAt),
+        )
+        col.cardIds = live.map((c) => c.id)
         touch(col)
       }),
     deleteColumn: (id) =>

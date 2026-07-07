@@ -186,6 +186,19 @@ select {
   border-radius: 50%;
   display: block;
 }
+
+/* Иконки (Solar) — ровное выравнивание по строке */
+svg {
+  vertical-align: middle;
+}
+/* Строчная иконка перед текстом (встреча/повтор в заголовках) */
+.inline-ico {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 3px;
+  flex-shrink: 0;
+  vertical-align: -0.15em;
+}
 .avatar.sm {
   width: 22px;
   height: 22px;

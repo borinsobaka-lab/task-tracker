@@ -277,9 +277,9 @@
 }
 
 .settings-chevron {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
   transition: transform 0.12s;
-  font-size: 10px;
 }
 .settings-chevron.open {
   transform: rotate(90deg);

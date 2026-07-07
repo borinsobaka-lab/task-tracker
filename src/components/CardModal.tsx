@@ -9,6 +9,7 @@ import type { BoardStore } from '../store'
 import type { Attachment, Card, CardKind, ChecklistItem, EisenhowerQuadrant, ID, Member } from '../types'
 import { fmtDayMonth, fmtFullDate, formatBytes, parseDateKey, toDateKey } from '../utils'
 import { QUADRANT_COLOR, QUADRANT_LABEL, QUADRANTS } from '../eisenhower'
+import { IcoCalendar, IcoCheck, IcoChevronDown, IcoClose, IcoMeeting, IcoRecurring } from '../icons'
 import { Avatar } from './Avatar'
 import { RichTextEditor } from './RichTextEditor'
 import './modal.css'
@@ -106,7 +107,7 @@ function PriorityPicker({ card }: { card: Card }) {
         />
         <span className="cm-prio-label">{cur ? QUADRANT_LABEL[cur] : 'Приоритет'}</span>
         <span className="cm-prio-caret" aria-hidden>
-          ▾
+          <IcoChevronDown size={14} />
         </span>
       </button>
       {open && (
@@ -127,7 +128,7 @@ function PriorityPicker({ card }: { card: Card }) {
                   {q.title}
                   <span className="cm-prio-hint">{q.hint}</span>
                 </span>
-                {cur === q.key && <span className="cm-prio-check">✓</span>}
+                {cur === q.key && <span className="cm-prio-check"><IcoCheck size={16} /></span>}
               </button>
             ))}
             <div className="cm-prio-sep" />
@@ -140,7 +141,7 @@ function PriorityPicker({ card }: { card: Card }) {
             >
               <span className="cm-prio-dot none" />
               <span className="cm-prio-item-text">Без приоритета</span>
-              {!cur && <span className="cm-prio-check">✓</span>}
+              {!cur && <span className="cm-prio-check"><IcoCheck size={16} /></span>}
             </button>
           </div>
         </>
@@ -413,7 +414,7 @@ function CardModalInner({ card, store, onClose }: { card: Card; store: BoardStor
           <div className="cm-header-top">
             <div className="cm-header-top-left">
               {isRecurring ? (
-                <span className="cm-recur-label">🔁 Повторяется</span>
+                <span className="cm-recur-label"><span className="inline-ico"><IcoRecurring size={14} /></span>Повторяется</span>
               ) : (
                 <div className="cm-kind-toggle" role="tablist" aria-label="Тип">
                   <button
@@ -432,7 +433,7 @@ function CardModalInner({ card, store, onClose }: { card: Card; store: BoardStor
                     className={isMeeting ? 'active' : ''}
                     onClick={() => setKind('meeting')}
                   >
-                    📹 Встреча
+                    <span className="inline-ico"><IcoMeeting size={14} /></span>Встреча
                   </button>
                 </div>
               )}
@@ -440,7 +441,7 @@ function CardModalInner({ card, store, onClose }: { card: Card; store: BoardStor
               {!isMeeting && <PriorityPicker card={card} />}
             </div>
             <button type="button" className="icon-btn" title="Закрыть" aria-label="Закрыть" onClick={onClose}>
-              ✕
+              <IcoClose size={20} />
             </button>
           </div>
           <div className="cm-header-title-row">
@@ -453,7 +454,7 @@ function CardModalInner({ card, store, onClose }: { card: Card; store: BoardStor
                 aria-label={card.done ? 'Отметить невыполненной' : 'Отметить выполненной'}
                 onClick={() => store.setCardDone(card.id, !card.done)}
               >
-                ✓
+                <IcoCheck size={18} />
               </button>
             )}
             <div className="cm-header-main">
@@ -536,7 +537,7 @@ function CardModalInner({ card, store, onClose }: { card: Card; store: BoardStor
                       <button type="button" key={m.id} className="cm-member-row" onClick={() => toggleMember(m.id)}>
                         <Avatar member={m} size="sm" />
                         <span className="cm-member-name">{m.name}</span>
-                        {on && <span className="cm-member-check">✓</span>}
+                        {on && <span className="cm-member-check"><IcoCheck size={15} /></span>}
                       </button>
                     )
                   })
@@ -740,7 +741,7 @@ function CardModalInner({ card, store, onClose }: { card: Card; store: BoardStor
                   aria-label="Удалить вложение"
                   onClick={() => removeAttachment(att)}
                 >
-                  ✕
+                  <IcoClose size={16} />
                 </button>
               </div>
             ))}
@@ -821,17 +822,12 @@ function ChecklistRow({
         }}
       />
       <button type="button" className="icon-btn cm-check-del" title="Удалить пункт" aria-label="Удалить пункт" onClick={onRemove}>
-        ✕
+        <IcoClose size={16} />
       </button>
     </div>
   )
 }
 
 function CalendarGlyph() {
-  return (
-    <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
-      <rect x="2" y="3" width="12" height="11" rx="2" />
-      <path d="M2 6.5h12M5.5 1.5v3M10.5 1.5v3" strokeLinecap="round" />
-    </svg>
-  )
+  return <IcoCalendar size={14} aria-hidden />
 }

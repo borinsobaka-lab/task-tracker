@@ -1,8 +1,11 @@
 import { useEffect, useState } from 'react'
+import type { ComponentType } from 'react'
+import type { IconProps } from '@solar-icons/react'
 import type { ViewKind } from '../App'
 import { useBoard } from '../store'
 import type { ID } from '../types'
 import { Avatar } from './Avatar'
+import { IcoBoard, IcoBrand, IcoCalendar, IcoCheck, IcoChevronDown, IcoMatrix, IcoRecurring, IcoSettings } from '../icons'
 
 const STATUS_LABEL: Record<string, { text: string; cls: string }> = {
   synced: { text: 'Сохранено', cls: 'ok' },
@@ -12,11 +15,11 @@ const STATUS_LABEL: Record<string, { text: string; cls: string }> = {
   error: { text: 'Ошибка сохранения', cls: 'err' },
 }
 
-const VIEWS: { key: ViewKind; label: string; icon: string }[] = [
-  { key: 'board', label: 'Доска', icon: '🗂️' },
-  { key: 'calendar', label: 'Календарь', icon: '📅' },
-  { key: 'matrix', label: 'Матрица', icon: '🎯' },
-  { key: 'recurring', label: 'Регулярное', icon: '🔁' },
+const VIEWS: { key: ViewKind; label: string; Icon: ComponentType<IconProps> }[] = [
+  { key: 'board', label: 'Доска', Icon: IcoBoard },
+  { key: 'calendar', label: 'Календарь', Icon: IcoCalendar },
+  { key: 'matrix', label: 'Матрица', Icon: IcoMatrix },
+  { key: 'recurring', label: 'Регулярное', Icon: IcoRecurring },
 ]
 
 /** Компактный выбор вида вместо ряда табов — экономит место в шапке. */
@@ -41,11 +44,11 @@ function ViewSwitch({ view, onViewChange }: { view: ViewKind; onViewChange: (v: 
         title="Сменить вид"
       >
         <span className="view-ico" aria-hidden>
-          {cur.icon}
+          <cur.Icon size={17} />
         </span>
         <span className="view-switch-label">{cur.label}</span>
         <span className="view-switch-caret" aria-hidden>
-          ▾
+          <IcoChevronDown size={14} />
         </span>
       </button>
       {open && (
@@ -64,10 +67,14 @@ function ViewSwitch({ view, onViewChange }: { view: ViewKind; onViewChange: (v: 
                 }}
               >
                 <span className="view-ico" aria-hidden>
-                  {v.icon}
+                  <v.Icon size={18} />
                 </span>
                 {v.label}
-                {v.key === view && <span className="view-switch-check">✓</span>}
+                {v.key === view && (
+                  <span className="view-switch-check">
+                    <IcoCheck size={16} />
+                  </span>
+                )}
               </button>
             ))}
           </div>
@@ -103,14 +110,14 @@ export function Header({
   return (
     <header className="app-header">
       <span className="app-brand" title="Task Tracker" aria-hidden>
-        📋
+        <IcoBrand size={22} />
       </span>
       {/* На десктопе — табы, на мобильном — выпадающий список (переключается в CSS) */}
       <nav className="view-tabs" aria-label="Вид">
         {VIEWS.map((v) => (
           <button key={v.key} className={v.key === view ? 'active' : ''} onClick={() => onViewChange(v.key)}>
             <span className="view-ico" aria-hidden>
-              {v.icon}
+              <v.Icon size={17} />
             </span>
             <span className="view-tab-label">{v.label}</span>
           </button>
@@ -145,10 +152,7 @@ export function Header({
           {status.text}
         </span>
         <button className="icon-btn" onClick={onOpenSettings} title="Настройки" aria-label="Настройки">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="12" r="3" />
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-          </svg>
+          <IcoSettings size={20} />
         </button>
       </div>
     </header>

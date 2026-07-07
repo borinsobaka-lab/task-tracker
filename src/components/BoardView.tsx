@@ -34,6 +34,7 @@ import type { Card, Column, ColumnRole, ID, Member } from '../types'
 import { ROLE_META, ROLE_ORDER } from '../columnRoles'
 import { QUADRANT_COLOR, QUADRANT_LABEL } from '../eisenhower'
 import { COLUMN_COLORS, fmtDayMonth, hasContent, parseDateKey, toDateKey } from '../utils'
+import { IcoCalendar, IcoCheck, IcoClose, IcoDescription, IcoMeeting, IcoMenu, IcoNone, IcoPaperclip, IcoSort, IcoTrash } from '../icons'
 import { Avatar, AvatarStack } from './Avatar'
 import './board.css'
 
@@ -393,6 +394,11 @@ function ColumnMenu({ column }: { column: Column }) {
     store.setColumnColor(column.id, color)
   }
 
+  const sortBy = (by: 'due' | 'created') => {
+    store.sortColumn(column.id, by)
+    setOpen(false)
+  }
+
   return (
     <div className="col-menu-wrap" onPointerDown={(e) => e.stopPropagation()}>
       <button
@@ -401,12 +407,22 @@ function ColumnMenu({ column }: { column: Column }) {
         aria-label="Действия с колонкой"
         onClick={() => setOpen((o) => !o)}
       >
-        ⋯
+        <IcoMenu size={18} />
       </button>
       {open && (
         <>
           <div className="col-menu-backdrop" onClick={() => setOpen(false)} />
           <div className="col-menu" role="menu">
+            <div className="col-menu-label">Действие</div>
+            <button className="col-menu-item" role="menuitem" onClick={() => sortBy('due')}>
+              <span className="col-menu-emoji"><IcoSort size={16} /></span>
+              Сортировать по дате выполнения
+            </button>
+            <button className="col-menu-item" role="menuitem" onClick={() => sortBy('created')}>
+              <span className="col-menu-emoji"><IcoSort size={16} /></span>
+              Сортировать по дате создания
+            </button>
+            <div className="col-menu-sep" />
             <div className="col-menu-label">Статус для отчётов</div>
             {ROLE_ORDER.map((r) => (
               <button
@@ -418,7 +434,7 @@ function ColumnMenu({ column }: { column: Column }) {
               >
                 <span className="col-menu-emoji">{ROLE_META[r].emoji}</span>
                 {ROLE_META[r].label}
-                {column.role === r && <span className="col-menu-check">✓</span>}
+                {column.role === r && <span className="col-menu-check"><IcoCheck size={16} /></span>}
               </button>
             ))}
             <button
@@ -427,9 +443,9 @@ function ColumnMenu({ column }: { column: Column }) {
               aria-checked={!column.role}
               onClick={() => setRole(undefined)}
             >
-              <span className="col-menu-emoji">▫️</span>
+              <span className="col-menu-emoji"><IcoNone size={16} /></span>
               Без статуса
-              {!column.role && <span className="col-menu-check">✓</span>}
+              {!column.role && <span className="col-menu-check"><IcoCheck size={16} /></span>}
             </button>
             <div className="col-menu-sep" />
             <div className="col-menu-label">Цвет колонки</div>
@@ -440,7 +456,7 @@ function ColumnMenu({ column }: { column: Column }) {
                 title="Без цвета"
                 aria-label="Без цвета"
               >
-                ✕
+                <IcoClose size={15} />
               </button>
               {COLUMN_COLORS.map((c) => (
                 <button
@@ -455,7 +471,8 @@ function ColumnMenu({ column }: { column: Column }) {
             </div>
             <div className="col-menu-sep" />
             <button className="col-menu-item danger" role="menuitem" onClick={remove}>
-              🗑 Удалить колонку
+              <span className="col-menu-emoji"><IcoTrash size={16} /></span>
+              Удалить колонку
             </button>
           </div>
         </>
@@ -578,7 +595,7 @@ function QuickAssign({ card, members, assignees }: { card: Card; members: Member
               <button key={m.id} type="button" className="card-assign-row" onClick={() => toggle(m.id)}>
                 <Avatar member={m} size="sm" />
                 <span className="card-assign-name">{m.name}</span>
-                {on && <span className="card-assign-check">✓</span>}
+                {on && <span className="card-assign-check"><IcoCheck size={15} /></span>}
               </button>
             )
           })}
@@ -624,7 +641,7 @@ function CardContent({ card, members, interactive }: { card: Card; members: Memb
         )}
         {card.kind === 'meeting' && (
           <span className="card-meeting-ico" aria-hidden>
-            📹
+            <IcoMeeting size={14} />
           </span>
         )}
         <span className="board-card-title-text">{card.title}</span>
@@ -642,7 +659,7 @@ function CardContent({ card, members, interactive }: { card: Card; members: Memb
               className={'card-badge' + (doneCount === total ? ' complete' : '')}
               title={`Чек-лист: ${doneCount} из ${total}`}
             >
-              ✓ {doneCount}/{total}
+              <IcoCheck size={12} /> {doneCount}/{total}
             </span>
           )}
           {attachments > 0 && (
@@ -746,7 +763,7 @@ function AddCard({ columnId }: { columnId: ID }) {
           Добавить
         </button>
         <button className="icon-btn" title="Отмена" aria-label="Отмена" onClick={close}>
-          ✕
+          <IcoClose size={18} />
         </button>
       </div>
     </div>
@@ -808,7 +825,7 @@ function AddColumn() {
             Добавить
           </button>
           <button className="icon-btn" title="Отмена" aria-label="Отмена" onClick={close}>
-            ✕
+            <IcoClose size={18} />
           </button>
         </div>
       </div>
@@ -819,38 +836,17 @@ function AddColumn() {
 // ---------- Иконки ----------
 
 function CheckIcon() {
-  return (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <polyline points="20 6 9 17 4 12" />
-    </svg>
-  )
+  return <IcoCheck size={13} aria-hidden />
 }
 
 function CalendarIcon() {
-  return (
-    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <rect x="3" y="4" width="18" height="17" rx="2" />
-      <line x1="16" y1="2" x2="16" y2="6" />
-      <line x1="8" y1="2" x2="8" y2="6" />
-      <line x1="3" y1="10" x2="21" y2="10" />
-    </svg>
-  )
+  return <IcoCalendar size={12} aria-hidden />
 }
 
 function PaperclipIcon() {
-  return (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
-    </svg>
-  )
+  return <IcoPaperclip size={12} aria-hidden />
 }
 
 function DescriptionIcon() {
-  return (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <line x1="3" y1="7" x2="21" y2="7" />
-      <line x1="3" y1="12" x2="21" y2="12" />
-      <line x1="3" y1="17" x2="13" y2="17" />
-    </svg>
-  )
+  return <IcoDescription size={13} aria-hidden />
 }

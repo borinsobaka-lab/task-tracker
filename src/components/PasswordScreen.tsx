@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { EncryptedBlob } from '../crypto'
 import { WrongPasswordError } from '../crypto'
 import { unlockToken } from '../auth'
+import { IcoBrand } from '../icons'
 
 /** Экран входа по паролю (для всех участников). */
 export function PasswordScreen({
@@ -32,7 +33,7 @@ export function PasswordScreen({
     <div className="login-screen">
       <div className="login-card">
         <div className="login-logo" aria-hidden>
-          ▦
+          <IcoBrand size={30} />
         </div>
         <h1>Задачи</h1>
         <p className="muted">Введите пароль, чтобы открыть общую доску и календарь.</p>

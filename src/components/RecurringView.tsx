@@ -4,6 +4,7 @@ import type { SeriesInput } from '../store'
 import type { Card, ID, Member, RecurFreq, RecurrenceRule, Series } from '../types'
 import { describeRule, ruleIsValid, WEEKDAYS } from '../recurrence'
 import { fmtDayMonth, parseDateKey } from '../utils'
+import { IcoCheck, IcoClose, IcoOpen, IcoRecurring } from '../icons'
 import { Avatar, AvatarStack } from './Avatar'
 import './recurring.css'
 
@@ -107,11 +108,11 @@ function RecRow({
         aria-label={done ? 'Вернуть в невыполненные' : 'Отметить выполненной'}
         onClick={onToggle}
       >
-        ✓
+        <IcoCheck size={17} />
       </button>
       <button className="rec-body" onClick={onEdit} title="Настроить повторение">
         <div className="rec-title">
-          <span aria-hidden>🔁 </span>
+          <span className="inline-ico" aria-hidden><IcoRecurring size={15} /></span>
           {card.title}
         </div>
         <div className="rec-meta">
@@ -122,7 +123,7 @@ function RecRow({
       <div className="rec-right">
         {members.length > 0 && <AvatarStack members={members} size="sm" />}
         <button className="icon-btn rec-open" title="Открыть в календаре" aria-label="Открыть карточку" onClick={() => onOpenCard(card.id)}>
-          ↗
+          <IcoOpen size={16} />
         </button>
       </div>
     </div>
@@ -183,7 +184,7 @@ function RecurringEditor({ series, onClose }: { series: Series | null; onClose: 
         <header className="rec-editor-head">
           <h3>{series ? 'Регулярная задача' : 'Новая регулярная задача'}</h3>
           <button className="icon-btn" onClick={onClose} aria-label="Закрыть">
-            ✕
+            <IcoClose size={20} />
           </button>
         </header>
 
@@ -206,7 +207,7 @@ function RecurringEditor({ series, onClose }: { series: Series | null; onClose: 
               >
                 <Avatar member={m} size="sm" />
                 {m.name}
-                {on && <span className="rec-member-check">✓</span>}
+                {on && <span className="rec-member-check"><IcoCheck size={15} /></span>}
               </button>
             )
           })}
