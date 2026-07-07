@@ -5,7 +5,7 @@
 import { useEffect, useRef } from 'react'
 import type { ReactNode } from 'react'
 import { EditorContent, useEditor } from '@tiptap/react'
-import type { ChainedCommands } from '@tiptap/core'
+import type { ChainedCommands, Editor } from '@tiptap/core'
 import StarterKit from '@tiptap/starter-kit'
 import Link from '@tiptap/extension-link'
 import Underline from '@tiptap/extension-underline'
@@ -13,6 +13,16 @@ import Placeholder from '@tiptap/extension-placeholder'
 import './modal.css'
 
 const CHANGE_DEBOUNCE_MS = 700
+
+/** Общий набор расширений редактора — для описания и для комментариев. */
+export function richTextExtensions(placeholder?: string) {
+  return [
+    StarterKit.configure({ heading: { levels: [2, 3] } }),
+    Underline,
+    Link.configure({ openOnClick: false, autolink: true }),
+    Placeholder.configure({ placeholder: placeholder ?? 'Добавьте описание…' }),
+  ]
+}
 
 export function RichTextEditor({
   value,
@@ -46,12 +56,7 @@ export function RichTextEditor({
   }
 
   const editor = useEditor({
-    extensions: [
-      StarterKit.configure({ heading: { levels: [2, 3] } }),
-      Underline,
-      Link.configure({ openOnClick: false, autolink: true }),
-      Placeholder.configure({ placeholder: placeholder ?? 'Добавьте описание…' }),
-    ],
+    extensions: richTextExtensions(placeholder),
     content: value,
     editorProps: {
       attributes: { class: 'rte-content' },
@@ -85,6 +90,16 @@ export function RichTextEditor({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  return (
+    <div className="rte">
+      <EditorToolbar editor={editor} />
+      <EditorContent editor={editor} />
+    </div>
+  )
+}
+
+/** Тулбар форматирования — переиспользуется в описании и в комментариях. */
+export function EditorToolbar({ editor }: { editor: Editor | null }) {
   const run = (fn: (chain: ChainedCommands) => ChainedCommands) => {
     if (editor) fn(editor.chain().focus()).run()
   }
@@ -106,58 +121,52 @@ export function RichTextEditor({
   }
 
   return (
-    <div className="rte">
-      <div className="rte-toolbar" role="toolbar" aria-label="Форматирование">
-        <RteButton title="Полужирный" active={active('bold')} onClick={() => run((c) => c.toggleBold())}>
-          <b>Ж</b>
-        </RteButton>
-        <RteButton title="Курсив" active={active('italic')} onClick={() => run((c) => c.toggleItalic())}>
-          <i>К</i>
-        </RteButton>
-        <RteButton title="Подчёркнутый" active={active('underline')} onClick={() => run((c) => c.toggleUnderline())}>
-          <u>Ч</u>
-        </RteButton>
-        <RteButton title="Зачёркнутый" active={active('strike')} onClick={() => run((c) => c.toggleStrike())}>
-          <s>S</s>
-        </RteButton>
-        <span className="rte-sep" />
-        <RteButton
-          title="Заголовок"
-          active={active('heading', { level: 2 })}
-          onClick={() => run((c) => c.toggleHeading({ level: 2 }))}
-        >
-          H2
-        </RteButton>
-        <span className="rte-sep" />
-        <RteButton
-          title="Маркированный список"
-          active={active('bulletList')}
-          onClick={() => run((c) => c.toggleBulletList())}
-        >
-          <IconBullets />
-        </RteButton>
-        <RteButton
-          title="Нумерованный список"
-          active={active('orderedList')}
-          onClick={() => run((c) => c.toggleOrderedList())}
-        >
-          <IconNumbers />
-        </RteButton>
-        <RteButton title="Цитата" active={active('blockquote')} onClick={() => run((c) => c.toggleBlockquote())}>
-          <IconQuote />
-        </RteButton>
-        <span className="rte-sep" />
-        <RteButton title="Ссылка" active={active('link')} onClick={editLink}>
-          <IconLink />
-        </RteButton>
-        <RteButton
-          title="Убрать форматирование"
-          onClick={() => run((c) => c.clearNodes().unsetAllMarks())}
-        >
-          <IconClear />
-        </RteButton>
-      </div>
-      <EditorContent editor={editor} />
+    <div className="rte-toolbar" role="toolbar" aria-label="Форматирование">
+      <RteButton title="Полужирный" active={active('bold')} onClick={() => run((c) => c.toggleBold())}>
+        <b>Ж</b>
+      </RteButton>
+      <RteButton title="Курсив" active={active('italic')} onClick={() => run((c) => c.toggleItalic())}>
+        <i>К</i>
+      </RteButton>
+      <RteButton title="Подчёркнутый" active={active('underline')} onClick={() => run((c) => c.toggleUnderline())}>
+        <u>Ч</u>
+      </RteButton>
+      <RteButton title="Зачёркнутый" active={active('strike')} onClick={() => run((c) => c.toggleStrike())}>
+        <s>S</s>
+      </RteButton>
+      <span className="rte-sep" />
+      <RteButton
+        title="Заголовок"
+        active={active('heading', { level: 2 })}
+        onClick={() => run((c) => c.toggleHeading({ level: 2 }))}
+      >
+        H2
+      </RteButton>
+      <span className="rte-sep" />
+      <RteButton
+        title="Маркированный список"
+        active={active('bulletList')}
+        onClick={() => run((c) => c.toggleBulletList())}
+      >
+        <IconBullets />
+      </RteButton>
+      <RteButton
+        title="Нумерованный список"
+        active={active('orderedList')}
+        onClick={() => run((c) => c.toggleOrderedList())}
+      >
+        <IconNumbers />
+      </RteButton>
+      <RteButton title="Цитата" active={active('blockquote')} onClick={() => run((c) => c.toggleBlockquote())}>
+        <IconQuote />
+      </RteButton>
+      <span className="rte-sep" />
+      <RteButton title="Ссылка" active={active('link')} onClick={editLink}>
+        <IconLink />
+      </RteButton>
+      <RteButton title="Убрать форматирование" onClick={() => run((c) => c.clearNodes().unsetAllMarks())}>
+        <IconClear />
+      </RteButton>
     </div>
   )
 }

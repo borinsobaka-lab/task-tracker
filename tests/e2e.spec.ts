@@ -100,7 +100,8 @@ test('редактирование описания с форматирован�
   await page.keyboard.press('Enter')
   await page.getByText('Задача с описанием').click()
 
-  const editor = page.locator('.ProseMirror')
+  // Редактор описания — в левой (контентной) части модалки
+  const editor = page.locator('.cm-main .ProseMirror')
   await editor.click()
   await editor.pressSequentially('Важный текст')
   await page.waitForTimeout(1200) // debounce сохранения описания
@@ -108,7 +109,7 @@ test('редактирование описания с форматирован�
 
   // Переоткрываем — описание на месте
   await page.getByText('Задача с описанием').click()
-  await expect(page.locator('.ProseMirror')).toContainText('Важный текст')
+  await expect(page.locator('.cm-main .ProseMirror')).toContainText('Важный текст')
 })
 
 test('глобальный поиск в шапке находит задачу и открывает её', async ({ page }) => {
@@ -157,6 +158,64 @@ test('таймлайн календаря: хронология с закреп�
   // Задача видна в таймлайне (в блоке «Сегодня» или «Просрочено» — зависит от времени запуска)
   await expect(page.locator('.tl-card', { hasText: 'Задача таймлайна' })).toBeVisible()
   await expect(page.locator('.tl-daylabel').first()).toBeVisible()
+})
+
+test('крупная кнопка закрытия модалки работает', async ({ page }) => {
+  await createIdentity(page)
+  await page.getByText('Добавить карточку').first().click()
+  await page.locator('textarea').first().fill('Закрыть по кнопке')
+  await page.keyboard.press('Enter')
+  await page.getByText('Закрыть по кнопке').click()
+
+  await expect(page.locator('.cm-close')).toBeVisible()
+  await page.locator('.cm-close').click()
+  await expect(page.getByRole('button', { name: /Удалить карточку/ })).toBeHidden()
+})
+
+test('комментарии: добавление, бейдж, правка и удаление', async ({ page }) => {
+  await createIdentity(page, 'Борис')
+  await page.getByText('Добавить карточку').first().click()
+  await page.locator('textarea').first().fill('Задача для обсуждения')
+  await page.keyboard.press('Enter')
+  await page.getByText('Задача для обсуждения').click()
+
+  // Панель комментариев видна (десктоп — справа)
+  await expect(page.locator('.cm-comments')).toBeVisible()
+
+  // Пишем и отправляем комментарий
+  const composer = page.locator('.comment-composer .ProseMirror')
+  await composer.click()
+  await composer.pressSequentially('Первый комментарий')
+  await page.locator('.comment-composer').getByRole('button', { name: 'Отправить' }).click()
+
+  // Комментарий появился с автором и текстом
+  const item = page.locator('.comment', { hasText: 'Первый комментарий' })
+  await expect(item).toBeVisible()
+  await expect(item.locator('.comment-author')).toHaveText('Борис')
+
+  await page.keyboard.press('Escape')
+
+  // На карточке доски — бейдж комментариев с количеством, не красный (я автор и прочитал)
+  const card = page.locator('.board-card', { hasText: 'Задача для обсуждения' })
+  const badge = card.locator('.card-badge').filter({ hasText: '1' })
+  await expect(badge).toBeVisible()
+  await expect(badge).not.toHaveClass(/unseen/)
+
+  // Переоткрываем и правим свой комментарий
+  await card.click()
+  await page.locator('.comment').getByRole('button', { name: 'Изменить' }).click()
+  const editor = page.locator('.comment .comment-composer .ProseMirror')
+  await editor.click()
+  await page.keyboard.press('Control+A')
+  await editor.pressSequentially('Исправленный комментарий')
+  await page.locator('.comment .comment-composer').getByRole('button', { name: 'Сохранить' }).click()
+  await expect(page.locator('.comment', { hasText: 'Исправленный комментарий' })).toBeVisible()
+  await expect(page.locator('.comment-time')).toContainText('изменён')
+
+  // Удаляем свой комментарий
+  page.once('dialog', (d) => d.accept())
+  await page.locator('.comment').getByRole('button', { name: 'Удалить' }).click()
+  await expect(page.locator('.comment')).toHaveCount(0)
 })
 
 test('живая публичная ссылка на таймлайн — внешняя страница только для просмотра', async ({ page, context }) => {

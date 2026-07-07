@@ -3,7 +3,7 @@ import { useBoard } from '../store'
 import { getDataRepoConfig, getToken, setDataRepoConfig } from '../config'
 import { saveEncryptedToken } from '../auth'
 import { imageFileToAvatar, MEMBER_COLORS } from '../utils'
-import { IcoCamera, IcoChevronRight, IcoClose } from '../icons'
+import { IcoCamera, IcoChevronRight, IcoClose, IcoX } from '../icons'
 import type { Member } from '../types'
 import { Avatar } from './Avatar'
 import './settings.css'
@@ -28,8 +28,8 @@ export function SettingsModal({ onClose, onLogout }: { onClose: () => void; onLo
       <div className="modal settings-modal" role="dialog" aria-modal="true" aria-label="Настройки">
         <header className="settings-header">
           <h2>Настройки</h2>
-          <button className="icon-btn" onClick={onClose} title="Закрыть" aria-label="Закрыть">
-            <IcoClose size={20} />
+          <button className="cm-close" onClick={onClose} title="Закрыть" aria-label="Закрыть">
+            <IcoX size={22} />
           </button>
         </header>
 

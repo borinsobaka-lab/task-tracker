@@ -37,6 +37,22 @@ export interface Attachment {
   uploadedBy?: ID
 }
 
+/** Комментарий к задаче. HTML из редактора (санитизируется при выводе). */
+export interface Comment {
+  id: ID
+  /** Автор — id участника. Может отсутствовать, если участник неизвестен. */
+  authorId?: ID
+  /** Имя автора на момент написания (fallback, если участника удалили). */
+  authorName: string
+  html: string
+  createdAt: string
+  updatedAt: string
+  /** Проставляется, если комментарий редактировали после создания. */
+  editedAt?: string
+  /** Надгробие для синхронизации удалений. */
+  deleted?: boolean
+}
+
 /** Тип карточки: обычная задача или встреча (со ссылкой на созвон). */
 export type CardKind = 'task' | 'meeting'
 
@@ -98,6 +114,8 @@ export interface Card {
   assigneeIds: ID[]
   checklist: ChecklistItem[]
   attachments: Attachment[]
+  /** Комментарии к задаче (может отсутствовать в старых данных) */
+  comments?: Comment[]
   /** Дата в формате YYYY-MM-DD (локальная). Если нет — карточка не видна в календаре */
   date?: string
   /** Время начала HH:MM. Если нет при заданной дате — задача «на весь день» (в шапке календаря) */

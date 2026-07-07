@@ -9,6 +9,7 @@ import {
   ArrowRightUp,
   Calendar,
   Camera,
+  ChatRoundLine,
   CheckCircle,
   ClipboardList,
   CloseCircle,
@@ -58,3 +59,13 @@ export const IcoNone = duotone(MinusCircle)
 export const IcoSearch = duotone(Magnifer)
 export const IcoLaunch = duotone(Rocket)
 export const IcoLink = duotone(Link)
+export const IcoComment = duotone(ChatRoundLine)
+
+/** Чистый тонкий крестик закрытия (аккуратнее и крупнее, чем залитый кружок). */
+export function IcoX({ size = 22, color = 'currentColor' }: { size?: number; color?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M6.5 6.5 17.5 17.5M17.5 6.5 6.5 17.5" stroke={color} strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  )
+}

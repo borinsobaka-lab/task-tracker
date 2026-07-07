@@ -42,6 +42,12 @@ export function addDays(d: Date, days: number): Date {
 const DAY_FMT = new Intl.DateTimeFormat('ru-RU', { weekday: 'short' })
 const DATE_FMT = new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'short' })
 const FULL_FMT = new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })
+const DATETIME_FMT = new Intl.DateTimeFormat('ru-RU', {
+  day: 'numeric',
+  month: 'short',
+  hour: '2-digit',
+  minute: '2-digit',
+})
 
 export function fmtWeekday(d: Date): string {
   return DAY_FMT.format(d)
@@ -51,6 +57,10 @@ export function fmtDayMonth(d: Date): string {
 }
 export function fmtFullDate(d: Date): string {
   return FULL_FMT.format(d)
+}
+/** «7 июл, 14:30» — дата и время для комментариев */
+export function fmtDateTime(d: Date): string {
+  return DATETIME_FMT.format(d).replace('.,', ',')
 }
 
 /** 'HH:MM' -> минуты от полуночи */

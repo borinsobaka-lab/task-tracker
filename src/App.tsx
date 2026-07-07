@@ -17,6 +17,7 @@ import { CardModal } from './components/CardModal'
 import { SettingsModal } from './components/SettingsModal'
 import { IdentityScreen } from './components/IdentityScreen'
 import { PublicTimeline } from './components/PublicTimeline'
+import { CommentsSeenProvider } from './components/Comments'
 import { isLiveTimelineHash, parseTimelineHash } from './timelineShare'
 import { buildTimelineItems, publishTimeline } from './publicTimelinePublisher'
 import type { TLItem } from './timelineShare'
@@ -129,7 +130,9 @@ function AppWithSession({
   return (
     <BoardProvider adapter={adapter}>
       {adapterKind === 'github' && token && <TimelinePublisher token={token} />}
-      <Shell onLogout={onLogout} />
+      <CommentsSeenProvider>
+        <Shell onLogout={onLogout} />
+      </CommentsSeenProvider>
     </BoardProvider>
   )
 }

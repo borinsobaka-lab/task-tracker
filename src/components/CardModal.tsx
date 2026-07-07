@@ -10,10 +10,11 @@ import type { Attachment, Card, CardKind, ChecklistItem, EisenhowerQuadrant, ID,
 import { fmtDayMonth, fmtFullDate, formatBytes, parseDateKey, toDateKey } from '../utils'
 import { QUADRANT_COLOR, QUADRANT_LABEL, QUADRANTS } from '../eisenhower'
 import { describeRule, ruleIsValid } from '../recurrence'
-import { IcoCalendar, IcoCheck, IcoChevronDown, IcoClose, IcoMeeting, IcoRecurring } from '../icons'
+import { IcoCalendar, IcoCheck, IcoChevronDown, IcoClose, IcoMeeting, IcoRecurring, IcoX } from '../icons'
 import { Avatar } from './Avatar'
 import { RichTextEditor } from './RichTextEditor'
 import { RecurrenceFields } from './RecurrenceFields'
+import { CommentsPanel } from './Comments'
 import './modal.css'
 
 const MAX_FILE_SIZE = 15 * 1024 * 1024 // 15 МБ
@@ -470,7 +471,7 @@ function CardModalInner({ card, store, onClose }: { card: Card; store: BoardStor
       }}
     >
       <div
-        className={'modal cm' + (dragActive ? ' dragging' : '')}
+        className={'modal cm' + (isMeeting ? '' : ' cm-wide') + (dragActive ? ' dragging' : '')}
         role="dialog"
         aria-modal="true"
         onDragEnter={onDragEnter}
@@ -511,8 +512,8 @@ function CardModalInner({ card, store, onClose }: { card: Card; store: BoardStor
               {/* Приоритет по матрице — только у задач (не у встреч) */}
               {!isMeeting && <PriorityPicker card={card} />}
             </div>
-            <button type="button" className="icon-btn" title="Закрыть" aria-label="Закрыть" onClick={onClose}>
-              <IcoClose size={20} />
+            <button type="button" className="cm-close" title="Закрыть" aria-label="Закрыть" onClick={onClose}>
+              <IcoX size={22} />
             </button>
           </div>
           <div className="cm-header-title-row">
@@ -580,6 +581,9 @@ function CardModalInner({ card, store, onClose }: { card: Card; store: BoardStor
             </div>
           </div>
         </header>
+
+        <div className="cm-body">
+        <div className="cm-main">
 
         {/* ---------- Мета: участники и срок ---------- */}
         <div className="cm-meta">
@@ -835,6 +839,9 @@ function CardModalInner({ card, store, onClose }: { card: Card; store: BoardStor
             Удалить карточку
           </button>
         </footer>
+        </div>
+        {!isMeeting && <CommentsPanel card={card} />}
+        </div>
       </div>
     </div>
   )

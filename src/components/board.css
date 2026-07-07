@@ -375,6 +375,12 @@
   padding: 2px 0;
   color: var(--text-faint);
 }
+/* Есть непрочитанные комментарии — красный бейдж */
+.card-badge.unseen {
+  background: var(--danger-soft);
+  color: var(--danger);
+  font-weight: 600;
+}
 
 .card-assignees {
   margin-left: auto;

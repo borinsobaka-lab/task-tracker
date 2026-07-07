@@ -36,9 +36,10 @@ import { ROLE_META, ROLE_ORDER } from '../columnRoles'
 import { QUADRANT_COLOR, QUADRANT_LABEL } from '../eisenhower'
 import { COLUMN_COLORS, fmtDayMonth, hasContent, parseDateKey, toDateKey } from '../utils'
 import type { ViewProps } from '../viewProps'
-import { IcoCalendar, IcoCheck, IcoClose, IcoDescription, IcoMeeting, IcoMenu, IcoNone, IcoPaperclip, IcoSort, IcoTrash } from '../icons'
+import { IcoCalendar, IcoCheck, IcoClose, IcoComment, IcoDescription, IcoMeeting, IcoMenu, IcoNone, IcoPaperclip, IcoSort, IcoTrash } from '../icons'
 import { Avatar, AvatarStack } from './Avatar'
 import { SubHeader } from './SubHeader'
+import { hasUnseenComments, liveComments, useCommentsSeen } from './Comments'
 import './board.css'
 
 type CardsByCol = Record<ID, ID[]>
@@ -617,10 +618,14 @@ function QuickAssign({ card, members, assignees }: { card: Card; members: Member
 }
 
 function CardContent({ card, members, interactive }: { card: Card; members: Member[]; interactive?: boolean }) {
+  const store = useBoard()
+  const { seenAt } = useCommentsSeen()
   const total = card.checklist.length
   const doneCount = card.checklist.reduce((n, i) => n + (i.done ? 1 : 0), 0)
   const attachments = card.attachments.length
   const withDescription = hasContent(card.description)
+  const commentCount = liveComments(card).length
+  const unseenComments = commentCount > 0 && hasUnseenComments(card, store.identity?.id ?? null, seenAt(card.id))
   const assignees = card.assigneeIds
     .map((id) => members.find((m) => m.id === id))
     .filter((m): m is Member => !!m)
@@ -633,7 +638,8 @@ function CardContent({ card, members, interactive }: { card: Card; members: Memb
     overdue = !card.done && card.date < toDateKey(new Date())
   }
 
-  const hasMeta = dateLabel !== null || total > 0 || attachments > 0 || withDescription || assignees.length > 0
+  const hasMeta =
+    dateLabel !== null || total > 0 || attachments > 0 || withDescription || commentCount > 0 || assignees.length > 0
 
   return (
     <>
@@ -682,6 +688,14 @@ function CardContent({ card, members, interactive }: { card: Card; members: Memb
           {withDescription && (
             <span className="card-badge plain" title="Есть описание">
               <DescriptionIcon />
+            </span>
+          )}
+          {commentCount > 0 && (
+            <span
+              className={'card-badge' + (unseenComments ? ' unseen' : ' plain')}
+              title={unseenComments ? 'Есть непрочитанные комментарии' : `Комментариев: ${commentCount}`}
+            >
+              <IcoComment size={12} /> {commentCount}
             </span>
           )}
           {interactive ? (

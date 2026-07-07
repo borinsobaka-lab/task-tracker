@@ -3,7 +3,7 @@
 // удаления — через надгробия (deleted: true). После слияния доска нормализуется:
 // каждая живая карточка лежит ровно в одной живой колонке.
 
-import type { Attachment, BoardData, Card, ChecklistItem, Column, Member, ID, Series } from './types'
+import type { Attachment, BoardData, Card, ChecklistItem, Column, Comment, Member, ID, Series } from './types'
 import { nowISO } from './utils'
 
 const TOMBSTONE_TTL_MS = 45 * 24 * 60 * 60 * 1000
@@ -27,7 +27,29 @@ function mergeCard(a: Card, b: Card): Card {
     ...base,
     checklist: mergeChecklist(base.checklist, other.checklist),
     attachments: mergeAttachments(base.attachments, other.attachments),
+    comments: mergeComments(base.comments, other.comments),
   }
+}
+
+/**
+ * Слияние комментариев двух версий карточки как keyed-коллекции: один и тот же
+ * комментарий (по id) берём по более свежему updatedAt (правка/удаление-надгробие
+ * побеждают старую версию), новые с любой из сторон — добавляем. Так одновременные
+ * комментарии двух участников не теряются.
+ */
+function mergeComments(base: Comment[] | undefined, other: Comment[] | undefined): Comment[] | undefined {
+  if (!base && !other) return undefined
+  const b = base ?? []
+  const o = other ?? []
+  const otherById = new Map(o.map((c) => [c.id, c]))
+  const result = b.map((bc) => {
+    const oc = otherById.get(bc.id)
+    if (!oc) return bc
+    return oc.updatedAt > bc.updatedAt ? oc : bc
+  })
+  const baseIds = new Set(b.map((c) => c.id))
+  for (const oc of o) if (!baseIds.has(oc.id)) result.push(oc)
+  return result
 }
 
 function mergeChecklist(base: ChecklistItem[], other: ChecklistItem[]): ChecklistItem[] {

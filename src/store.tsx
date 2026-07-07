@@ -4,7 +4,7 @@
 
 import React, { createContext, useContext, useEffect, useMemo, useSyncExternalStore } from 'react'
 import { produce } from 'immer'
-import type { Attachment, BoardData, Card, CardKind, ChecklistItem, Column, ColumnRole, EisenhowerQuadrant, ID, Member, RecurrenceRule, Series } from './types'
+import type { Attachment, BoardData, Card, CardKind, ChecklistItem, Column, ColumnRole, Comment, EisenhowerQuadrant, ID, Member, RecurrenceRule, Series } from './types'
 import type { StorageAdapter } from './storage/adapter'
 import { ConflictError } from './storage/adapter'
 import { emptyBoard, mergeBoards, normalizeBoard } from './merge'
@@ -397,6 +397,11 @@ export interface BoardStore {
   addChecklistItem(cardId: ID, text: string): void
   updateChecklistItem(cardId: ID, itemId: ID, patch: Partial<ChecklistItem>): void
   removeChecklistItem(cardId: ID, itemId: ID): void
+
+  // Комментарии
+  addComment(cardId: ID, html: string): void
+  updateComment(cardId: ID, commentId: ID, html: string): void
+  removeComment(cardId: ID, commentId: ID): void
 
   // Календарь
   scheduleCard(id: ID, date: string | null, start?: string | null, durationMin?: number): void
@@ -894,6 +899,51 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
         const card = d.cards[cardId]
         if (!card || card.deleted) return
         card.checklist = card.checklist.filter((i) => i.id !== itemId)
+        touch(card)
+      }),
+
+    addComment: (cardId, html) =>
+      engine.update((d) => {
+        const card = d.cards[cardId]
+        if (!card || card.deleted) return
+        const ts = nowISO()
+        const comment: Comment = {
+          id: uid(),
+          ...(identity ? { authorId: identity.id } : {}),
+          authorName: identity?.name ?? 'Аноним',
+          html,
+          createdAt: ts,
+          updatedAt: ts,
+        }
+        if (!card.comments) card.comments = []
+        card.comments.push(comment)
+        touch(card)
+      }),
+    updateComment: (cardId, commentId, html) =>
+      engine.update((d) => {
+        const card = d.cards[cardId]
+        if (!card || card.deleted || !card.comments) return
+        const c = card.comments.find((x) => x.id === commentId)
+        if (!c || c.deleted) return
+        // Редактировать можно только свои комментарии
+        if (identity && c.authorId && c.authorId !== identity.id) return
+        const ts = nowISO()
+        c.html = html
+        c.updatedAt = ts
+        c.editedAt = ts
+        touch(card)
+      }),
+    removeComment: (cardId, commentId) =>
+      engine.update((d) => {
+        const card = d.cards[cardId]
+        if (!card || card.deleted || !card.comments) return
+        const c = card.comments.find((x) => x.id === commentId)
+        if (!c || c.deleted) return
+        if (identity && c.authorId && c.authorId !== identity.id) return
+        // Надгробие: сохраняем факт удаления для синхронизации, содержимое стираем
+        c.deleted = true
+        c.html = ''
+        c.updatedAt = nowISO()
         touch(card)
       }),
 

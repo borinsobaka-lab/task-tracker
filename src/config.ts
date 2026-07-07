@@ -33,6 +33,7 @@ const LS = {
   dataRepo: 'tt.dataRepo',
   view: 'tt.view',
   demo: 'tt.demo',
+  commentsSeen: 'tt.commentsSeen',
 }
 
 export function getDataRepoConfig(): DataRepoConfig {
@@ -96,6 +97,32 @@ export function getCalTimeline(): boolean {
 }
 export function setCalTimeline(on: boolean): void {
   localStorage.setItem('tt.calTimeline', on ? '1' : '0')
+}
+
+/**
+ * Отметки «когда я в последний раз смотрел комментарии карточки» — локально на
+ * этом устройстве (карта cardId -> ISO). По ним считаем непрочитанные (красный
+ * бейдж). Синхронизировать между устройствами не нужно.
+ */
+export function getCommentsSeen(): Record<string, string> {
+  try {
+    const raw = localStorage.getItem(LS.commentsSeen)
+    if (raw) {
+      const parsed = JSON.parse(raw)
+      if (parsed && typeof parsed === 'object') return parsed as Record<string, string>
+    }
+  } catch {
+    /* игнорируем битые данные */
+  }
+  return {}
+}
+
+export function setCommentsSeen(map: Record<string, string>): void {
+  try {
+    localStorage.setItem(LS.commentsSeen, JSON.stringify(map))
+  } catch {
+    /* переполнение хранилища игнорируем */
+  }
 }
 
 /** Демо-режим: локальное хранилище вместо GitHub (для тестов и предпросмотра) */
