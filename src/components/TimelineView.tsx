@@ -11,6 +11,9 @@ export interface TimelineHandle {
 interface TimelineViewProps {
   items: TLItem[]
   interactive: boolean
+  /** 'compact' — внутри приложения (просрочка закреплена сверху);
+   *  'widget' — внешняя полоса: хронология, текущая задача прокручена наверх. */
+  variant?: 'compact' | 'widget'
   onOpenCard?: (id: string) => void
   onToggleDone?: (id: string, done: boolean) => void
 }
@@ -31,13 +34,20 @@ function initials(name: string): string {
     .toUpperCase()
 }
 
+interface Section {
+  key: string
+  isOverdueBlock?: boolean
+  overdue?: boolean
+  showDate?: boolean
+  items: TLItem[]
+}
+
 /**
- * Вертикальная хронология задач. Просроченные закреплены вверху, ниже — сегодня,
- * завтра и будущее с метками дней слева. Используется и в календаре (interactive),
- * и на публичной странице-демонстрации (только просмотр).
+ * Вертикальная хронология задач. Два режима: компактный (в приложении) и
+ * «виджет» — сплошная лента с автопрокруткой к текущей задаче.
  */
 export const TimelineView = forwardRef<TimelineHandle, TimelineViewProps>(function TimelineView(
-  { items, interactive, onOpenCard, onToggleDone },
+  { items, interactive, variant = 'compact', onOpenCard, onToggleDone },
   ref,
 ) {
   const [now, setNow] = useState<Date>(() => new Date())
@@ -48,9 +58,12 @@ export const TimelineView = forwardRef<TimelineHandle, TimelineViewProps>(functi
 
   const containerRef = useRef<HTMLDivElement>(null)
   const todayRef = useRef<HTMLDivElement>(null)
+  const currentRef = useRef<HTMLDivElement>(null)
+  const lastScrolled = useRef<string | null>(null)
   useImperativeHandle(ref, () => ({
     scrollToToday: () => {
-      if (todayRef.current) todayRef.current.scrollIntoView({ block: 'start', behavior: 'smooth' })
+      const target = currentRef.current ?? todayRef.current
+      if (target) target.scrollIntoView({ block: 'start', behavior: 'smooth' })
       else containerRef.current?.scrollTo({ top: 0 })
     },
   }))
@@ -69,23 +82,48 @@ export const TimelineView = forwardRef<TimelineHandle, TimelineViewProps>(functi
     return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59).getTime()
   }
   const isMtg = (it: TLItem): boolean => it.kind === 'meeting'
-
-  const overdue = items
-    .filter((it) => !it.done && !isMtg(it) && endMsOf(it) < nowMs)
-    .sort((a, b) => (a.date + (a.start ?? '')).localeCompare(b.date + (b.start ?? '')))
-  const overdueSet = new Set(overdue.map((i) => i.id))
-  const future = items.filter((it) => !overdueSet.has(it.id) && it.date >= todayKey)
-  const dayKeys = Array.from(new Set(future.map((i) => i.date))).sort()
-  const days = dayKeys.map((key) => ({
-    key,
-    items: future
-      .filter((i) => i.date === key)
-      .sort((a, b) => (a.start ?? '').localeCompare(b.start ?? '') || a.title.localeCompare(b.title, 'ru')),
-  }))
+  const byStart = (a: TLItem, b: TLItem) =>
+    (a.start ?? '').localeCompare(b.start ?? '') || a.title.localeCompare(b.title, 'ru')
+  const groupByDay = (list: TLItem[]): { key: string; items: TLItem[] }[] => {
+    const keys = Array.from(new Set(list.map((i) => i.date))).sort()
+    return keys.map((key) => ({ key, items: list.filter((i) => i.date === key).sort(byStart) }))
+  }
   const dayLabel = (key: string): { name: string; date: string } => {
     const d = parseDateKey(key)
     return { name: key === todayKey ? 'Сегодня' : key === tomorrowKey ? 'Завтра' : fmtWeekday(d), date: fmtDayMonth(d) }
   }
+
+  // Текущая (или ближайшая невыполненная) задача — к ней прокручиваем в режиме «виджет».
+  let currentId: string | null = null
+  let sections: Section[] = []
+
+  if (variant === 'widget') {
+    // Хронология: просроченные (прошлые дни, невыполненные) + сегодня и будущее.
+    const kept = items.filter((it) => it.date >= todayKey || (!it.done && !isMtg(it)))
+    sections = groupByDay(kept).map((g) => ({ ...g, overdue: g.key < todayKey }))
+    const chron = kept
+      .slice()
+      .sort((a, b) => (a.date + (a.start ?? '')).localeCompare(b.date + (b.start ?? '')))
+    currentId = chron.find((it) => !it.done && endMsOf(it) >= nowMs)?.id ?? null
+  } else {
+    const overdue = items
+      .filter((it) => !it.done && !isMtg(it) && endMsOf(it) < nowMs)
+      .sort((a, b) => (a.date + (a.start ?? '')).localeCompare(b.date + (b.start ?? '')))
+    const overdueSet = new Set(overdue.map((i) => i.id))
+    const future = items.filter((it) => !overdueSet.has(it.id) && it.date >= todayKey)
+    if (overdue.length) sections.push({ key: '__overdue__', isOverdueBlock: true, showDate: true, items: overdue })
+    for (const g of groupByDay(future)) sections.push(g)
+  }
+
+  // В режиме «виджет» ставим текущую задачу наверх (предыдущие — выше, скрыты).
+  useEffect(() => {
+    if (variant !== 'widget') return
+    if (currentId && currentRef.current && lastScrolled.current !== currentId) {
+      currentRef.current.scrollIntoView({ block: 'start' })
+      lastScrolled.current = currentId
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [variant, currentId, items])
 
   const renderCard = (it: TLItem, showDate: boolean): React.ReactNode => {
     const mtg = isMtg(it)
@@ -108,7 +146,13 @@ export const TimelineView = forwardRef<TimelineHandle, TimelineViewProps>(functi
         }
       : {}
     return (
-      <div key={it.id} className={cls} style={{ ['--ev-color' as string]: color } as CSSProperties} {...clickProps}>
+      <div
+        key={it.id}
+        ref={it.id === currentId ? currentRef : undefined}
+        className={cls}
+        style={{ ['--ev-color' as string]: color } as CSSProperties}
+        {...clickProps}
+      >
         <div className="tl-card-left">
           {!mtg &&
             (interactive ? (
@@ -146,7 +190,7 @@ export const TimelineView = forwardRef<TimelineHandle, TimelineViewProps>(functi
               <span className="tl-time">{timeRange(timeToMin(it.start), timeToMin(it.start) + (it.durationMin ?? 60))}</span>
             )}
             {showDate && <span className="tl-date">{fmtDayMonth(parseDateKey(it.date))}</span>}
-            {it.members.length > 0 && (
+            {variant !== 'widget' && it.members.length > 0 && (
               <span className="tl-avatars">
                 {it.members.map((m, i) => (
                   <span key={i} className="tl-avatar" style={{ background: m.color }} title={m.name}>
@@ -161,33 +205,29 @@ export const TimelineView = forwardRef<TimelineHandle, TimelineViewProps>(functi
     )
   }
 
-  const empty = overdue.length === 0 && days.length === 0
-
   return (
     <div className="cal-timeline" ref={containerRef}>
       <div className="tl-inner">
-        {overdue.length > 0 && (
-          <div className="tl-day tl-overdue">
-            <div className="tl-daylabel">
-              <span className="tl-day-name">⚠️</span>
-              <span className="tl-day-date">просрочено</span>
-            </div>
-            <div className="tl-day-cards">{overdue.map((it) => renderCard(it, true))}</div>
-          </div>
-        )}
-        {days.map((g) => {
-          const lbl = dayLabel(g.key)
-          return (
-            <div className="tl-day" key={g.key} ref={g.key === todayKey ? todayRef : undefined}>
-              <div className={`tl-daylabel${g.key === todayKey ? ' today' : ''}`}>
-                <span className="tl-day-name">{lbl.name}</span>
-                <span className="tl-day-date">{lbl.date}</span>
+        {sections.map((sec) =>
+          sec.isOverdueBlock ? (
+            <div className="tl-day tl-overdue" key={sec.key}>
+              <div className="tl-daylabel">
+                <span className="tl-day-name">⚠️</span>
+                <span className="tl-day-date">просрочено</span>
               </div>
-              <div className="tl-day-cards">{g.items.map((it) => renderCard(it, false))}</div>
+              <div className="tl-day-cards">{sec.items.map((it) => renderCard(it, !!sec.showDate))}</div>
             </div>
-          )
-        })}
-        {empty && <div className="tl-empty muted">Запланированных задач нет 🎉</div>}
+          ) : (
+            <div className="tl-day" key={sec.key} ref={sec.key === todayKey ? todayRef : undefined}>
+              <div className={`tl-daylabel${sec.key === todayKey ? ' today' : ''}${sec.overdue ? ' overdue' : ''}`}>
+                <span className="tl-day-name">{dayLabel(sec.key).name}</span>
+                <span className="tl-day-date">{dayLabel(sec.key).date}</span>
+              </div>
+              <div className="tl-day-cards">{sec.items.map((it) => renderCard(it, !!sec.showDate))}</div>
+            </div>
+          ),
+        )}
+        {sections.length === 0 && <div className="tl-empty muted">Запланированных задач нет 🎉</div>}
       </div>
     </div>
   )

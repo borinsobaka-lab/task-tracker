@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import type { TLItem } from '../timelineShare'
 import { rawTimelineUrl } from '../timelineShare'
 import { TimelineView } from './TimelineView'
-import { IcoBrand } from '../icons'
 import './calendar.css'
 
 const REFRESH_MS = 60_000 // как часто перечитывать публичный timeline.json
@@ -16,7 +15,6 @@ const REFRESH_MS = 60_000 // как часто перечитывать публ
 export function PublicTimeline({ items, live }: { items?: TLItem[]; live?: boolean }) {
   const [data, setData] = useState<TLItem[] | null>(items ?? null)
   const [status, setStatus] = useState<'loading' | 'ok' | 'error'>(items ? 'ok' : 'loading')
-  const [updatedAt, setUpdatedAt] = useState<string | null>(null)
 
   useEffect(() => {
     if (!live) return
@@ -29,7 +27,6 @@ export function PublicTimeline({ items, live }: { items?: TLItem[]; live?: boole
         if (stopped) return
         const arr: TLItem[] = Array.isArray(json?.items) ? json.items : Array.isArray(json) ? json : []
         setData(arr)
-        setUpdatedAt(typeof json?.generatedAt === 'string' ? json.generatedAt : null)
         setStatus('ok')
       } catch {
         // не затираем уже показанные данные при временной ошибке сети
@@ -44,22 +41,10 @@ export function PublicTimeline({ items, live }: { items?: TLItem[]; live?: boole
     }
   }, [live])
 
-  const updLabel = updatedAt
-    ? `обновлено ${new Date(updatedAt).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}`
-    : null
-
   return (
-    <div className="public-tl">
-      <header className="public-tl-head">
-        <span className="public-tl-logo" aria-hidden>
-          <IcoBrand size={18} />
-        </span>
-        <span className="public-tl-title">Таймлайн</span>
-        {updLabel && <span className="public-tl-upd">{updLabel}</span>}
-        <span className="public-tl-note">только просмотр</span>
-      </header>
+    <div className="public-tl public-tl-widget">
       {data ? (
-        <TimelineView items={data} interactive={false} />
+        <TimelineView items={data} interactive={false} variant="widget" />
       ) : status === 'error' ? (
         <div className="tl-empty muted">Не удалось загрузить таймлайн. Он появится после первой публикации.</div>
       ) : (

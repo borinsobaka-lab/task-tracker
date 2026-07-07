@@ -958,6 +958,9 @@
   font-size: 13.5px;
   font-weight: 600;
   color: var(--text);
+  overflow-wrap: break-word; /* длинные слова переносятся, не вылезают за карточку */
+  word-break: break-word;
+  min-width: 0;
 }
 .tl-card.meeting .tl-card-title {
   color: var(--ev-color);
@@ -1064,6 +1067,7 @@
 .public-tl .cal-timeline {
   align-items: stretch;
   padding: 10px 16px 56px;
+  overflow-x: hidden; /* страховка от горизонтального обреза при крупном шрифте */
 }
 .public-tl .tl-inner {
   width: 100%;
@@ -1092,12 +1096,25 @@
   padding: 4px 2px 8px;
 }
 .public-tl .tl-day-name {
-  font-size: 60px;
+  font-size: 48px;
   font-weight: 800;
   line-height: 1.1;
 }
 .public-tl .tl-day-date {
-  font-size: 40px;
+  font-size: 32px;
+}
+/* Прошедшие дни (просроченное) — красным заголовком */
+.public-tl .tl-daylabel.overdue .tl-day-name,
+.public-tl .tl-daylabel.overdue .tl-day-date {
+  color: var(--danger);
+}
+/* Аватары в виджете не показываем */
+.public-tl .tl-avatars {
+  display: none;
+}
+/* Небольшой отступ сверху при автопрокрутке к текущей задаче */
+.public-tl .tl-card {
+  scroll-margin-top: 16px;
 }
 .public-tl .tl-day-cards {
   gap: 22px;
