@@ -63,6 +63,10 @@
   min-width: 0;
 }
 
+.cm-recur-fields {
+  margin-top: 8px;
+}
+
 /* ---------- Выбор приоритета (матрица Эйзенхауэра) ---------- */
 .cm-prio {
   position: relative;

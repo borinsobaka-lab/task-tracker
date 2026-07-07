@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { BoardProvider, useMaybeBoard, useSyncMeta } from './store'
 import type { StorageAdapter } from './storage/adapter'
 import { GitHubAdapter } from './storage/github'
@@ -128,6 +128,15 @@ function Shell({ onLogout }: { onLogout: () => void }) {
   const [selectedCardId, setSelectedCardId] = useState<ID | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [memberFilter, setMemberFilter] = useState<ReadonlySet<ID>>(new Set())
+
+  // При загрузке один раз пополняем будущие экземпляры повторяющихся встреч
+  const toppedUp = useRef(false)
+  useEffect(() => {
+    if (store && !toppedUp.current) {
+      toppedUp.current = true
+      store.topUpMeetings()
+    }
+  }, [store])
 
   if (!store) {
     if (status === 'error') {

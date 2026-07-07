@@ -4,7 +4,7 @@
 
 import React, { createContext, useContext, useEffect, useMemo, useSyncExternalStore } from 'react'
 import { produce } from 'immer'
-import type { Attachment, BoardData, Card, ChecklistItem, Column, ColumnRole, EisenhowerQuadrant, ID, Member, RecurrenceRule, Series } from './types'
+import type { Attachment, BoardData, Card, CardKind, ChecklistItem, Column, ColumnRole, EisenhowerQuadrant, ID, Member, RecurrenceRule, Series } from './types'
 import type { StorageAdapter } from './storage/adapter'
 import { ConflictError } from './storage/adapter'
 import { emptyBoard, mergeBoards, normalizeBoard } from './merge'
@@ -17,11 +17,15 @@ export interface SeriesInput {
   description?: string
   assigneeIds: ID[]
   rule: RecurrenceRule
+  kind?: CardKind
+  meetingUrl?: string
   start?: string
   durationMin?: number
 }
 
 const MAX_DONE_INSTANCES = 8 // сколько выполненных экземпляров серии храним
+const MEETING_WINDOW = 6 // сколько будущих экземпляров повторяющейся встречи держим готовыми
+const MEETING_MAX_PAST = 4 // сколько прошедших встреч серии храним
 
 function makeInstance(seriesId: ID, s: Series, dateKey: string, ts: string): Card {
   const c: Card = {
@@ -37,11 +41,46 @@ function makeInstance(seriesId: ID, s: Series, dateKey: string, ts: string): Car
     createdAt: ts,
     updatedAt: ts,
   }
+  if (s.kind === 'meeting') {
+    c.kind = 'meeting'
+    if (s.meetingUrl) c.meetingUrl = s.meetingUrl
+  }
   if (s.start) {
     c.start = s.start
     c.durationMin = s.durationMin ?? 60
   }
   return c
+}
+
+/**
+ * Пополняет серию-встречу будущими экземплярами до окна MEETING_WINDOW и
+ * подчищает старые прошедшие. Работает по времени (встречи не «выполняются»).
+ */
+function topUpMeetingSeries(d: BoardData, s: Series): void {
+  if (s.deleted || s.kind !== 'meeting') return
+  const today = toDateKey(new Date())
+  const own = () => Object.values(d.cards).filter((c) => c.seriesId === s.id && !c.deleted)
+  const dates = new Set(own().map((c) => c.date).filter(Boolean) as string[])
+  let future = own().filter((c) => (c.date ?? '') >= today)
+  let lastDate = own().reduce((m, c) => (c.date && c.date > m ? c.date : m), '')
+  let guard = 0
+  while (future.length < MEETING_WINDOW && guard++ < 64) {
+    const nextKey = lastDate ? nextOccurrence(lastDate, s.rule) : firstOccurrence(today, s.rule)
+    if (!nextKey) break
+    lastDate = nextKey
+    if (dates.has(nextKey)) continue
+    const inst = makeInstance(s.id, s, nextKey, nowISO())
+    d.cards[inst.id] = inst
+    dates.add(nextKey)
+    future.push(inst)
+  }
+  const past = own()
+    .filter((c) => (c.date ?? '') < today)
+    .sort((a, b) => (a.date ?? '').localeCompare(b.date ?? ''))
+  for (let i = 0; i < past.length - MEETING_MAX_PAST; i++) {
+    past[i].deleted = true
+    touch(past[i])
+  }
 }
 
 export type SyncStatus = 'loading' | 'synced' | 'saving' | 'offline' | 'error'
@@ -339,6 +378,12 @@ export interface BoardStore {
   addSeries(input: SeriesInput): void
   updateSeries(id: ID, input: SeriesInput): void
   deleteSeries(id: ID): void
+  /** Сделать встречу повторяющейся (или изменить правило) — генерирует будущие экземпляры */
+  applyMeetingRecurrence(cardId: ID, rule: RecurrenceRule): void
+  /** Отключить повторение у встречи: убрать серию и будущие экземпляры, текущую оставить */
+  stopMeetingRecurrence(cardId: ID): void
+  /** Пополнить будущие экземпляры повторяющихся встреч (вызывается при загрузке) */
+  topUpMeetings(): void
 
   // Чек-лист
   addChecklistItem(cardId: ID, text: string): void
@@ -745,6 +790,78 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
             touch(c)
           }
         }
+      }),
+
+    // ---------- Повторяющиеся встречи ----------
+    applyMeetingRecurrence: (cardId, rule) =>
+      engine.update((d) => {
+        const card = d.cards[cardId]
+        if (!card || card.deleted) return
+        const ts = nowISO()
+        let s = card.seriesId ? d.series?.[card.seriesId] : undefined
+        if (s && s.kind === 'meeting' && !s.deleted) {
+          // Обновляем существующую серию-встречу по данным карточки + новое правило
+          s.rule = rule
+          s.title = card.title
+          s.description = card.description
+          s.assigneeIds = [...card.assigneeIds]
+          if (card.meetingUrl) s.meetingUrl = card.meetingUrl
+          else delete s.meetingUrl
+          if (card.start) {
+            s.start = card.start
+            s.durationMin = card.durationMin ?? 60
+          } else {
+            delete s.start
+            delete s.durationMin
+          }
+          touch(s)
+        } else {
+          // Создаём новую серию-встречу из текущей карточки
+          if (!d.series) d.series = {}
+          const sid = uid()
+          s = {
+            id: sid,
+            kind: 'meeting',
+            title: card.title,
+            description: card.description,
+            assigneeIds: [...card.assigneeIds],
+            rule,
+            ...(card.meetingUrl ? { meetingUrl: card.meetingUrl } : {}),
+            ...(card.start ? { start: card.start, durationMin: card.durationMin ?? 60 } : {}),
+            createdAt: ts,
+            updatedAt: ts,
+          }
+          d.series[sid] = s
+          card.seriesId = sid
+          touch(card)
+        }
+        topUpMeetingSeries(d, s)
+      }),
+    stopMeetingRecurrence: (cardId) =>
+      engine.update((d) => {
+        const card = d.cards[cardId]
+        if (!card || !card.seriesId) return
+        const sid = card.seriesId
+        const s = d.series?.[sid]
+        if (s) {
+          s.deleted = true
+          touch(s)
+        }
+        // Удаляем будущие экземпляры этой серии, текущую карточку оставляем разовой
+        const today = toDateKey(new Date())
+        for (const c of Object.values(d.cards)) {
+          if (c.seriesId === sid && c.id !== cardId && !c.deleted && (c.date ?? '') >= today) {
+            c.deleted = true
+            touch(c)
+          }
+        }
+        delete card.seriesId
+        touch(card)
+      }),
+    topUpMeetings: () =>
+      engine.update((d) => {
+        if (!d.series) return
+        for (const s of Object.values(d.series)) topUpMeetingSeries(d, s)
       }),
 
     addChecklistItem: (cardId, text) =>

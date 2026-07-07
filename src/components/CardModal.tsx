@@ -6,12 +6,14 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import type { CSSProperties, DragEvent as ReactDragEvent, KeyboardEvent as ReactKeyboardEvent } from 'react'
 import { useBoard } from '../store'
 import type { BoardStore } from '../store'
-import type { Attachment, Card, CardKind, ChecklistItem, EisenhowerQuadrant, ID, Member } from '../types'
+import type { Attachment, Card, CardKind, ChecklistItem, EisenhowerQuadrant, ID, Member, RecurFreq, RecurrenceRule } from '../types'
 import { fmtDayMonth, fmtFullDate, formatBytes, parseDateKey, toDateKey } from '../utils'
 import { QUADRANT_COLOR, QUADRANT_LABEL, QUADRANTS } from '../eisenhower'
+import { describeRule, ruleIsValid } from '../recurrence'
 import { IcoCalendar, IcoCheck, IcoChevronDown, IcoClose, IcoMeeting, IcoRecurring } from '../icons'
 import { Avatar } from './Avatar'
 import { RichTextEditor } from './RichTextEditor'
+import { RecurrenceFields } from './RecurrenceFields'
 import './modal.css'
 
 const MAX_FILE_SIZE = 15 * 1024 * 1024 // 15 МБ
@@ -147,6 +149,73 @@ function PriorityPicker({ card }: { card: Card }) {
         </>
       )}
     </div>
+  )
+}
+
+/** Повторение встречи: включить/выключить и настроить (неделя/месяц + дни). */
+function MeetingRecurrence({ card }: { card: Card }) {
+  const store = useBoard()
+  const series = card.seriesId ? store.seriesById(card.seriesId) : undefined
+  const isRec = !!series && series.kind === 'meeting' && !series.deleted
+  const [on, setOn] = useState(isRec)
+  const [freq, setFreq] = useState<RecurFreq>(series?.rule.freq ?? 'weekly')
+  const [weekdays, setWeekdays] = useState<number[]>(series?.rule.weekdays ?? [new Date().getDay()])
+  const [monthdays, setMonthdays] = useState<number[]>(
+    series?.rule.monthdays ?? [card.date ? parseDateKey(card.date).getDate() : new Date().getDate()],
+  )
+  const first = useRef(true)
+
+  const buildRule = (): RecurrenceRule =>
+    freq === 'weekly' ? { freq, weekdays } : freq === 'monthly' ? { freq, monthdays } : { freq: 'daily' }
+
+  // Применяем изменения частоты/дней, когда повтор включён (первый рендер пропускаем)
+  useEffect(() => {
+    if (first.current) {
+      first.current = false
+      return
+    }
+    if (!on) return
+    const rule = buildRule()
+    if (ruleIsValid(rule)) store.applyMeetingRecurrence(card.id, rule)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [freq, weekdays, monthdays])
+
+  const toggle = (checked: boolean) => {
+    setOn(checked)
+    if (checked) {
+      const rule = buildRule()
+      if (ruleIsValid(rule)) store.applyMeetingRecurrence(card.id, rule)
+    } else {
+      store.stopMeetingRecurrence(card.id)
+    }
+  }
+
+  const rule = buildRule()
+  return (
+    <section className="cm-section">
+      <label className="rec-time-toggle">
+        <input type="checkbox" checked={on} onChange={(e) => toggle(e.target.checked)} />
+        Повторяющаяся встреча
+      </label>
+      {on && (
+        <div className="cm-recur-fields">
+          <RecurrenceFields
+            freq={freq}
+            setFreq={setFreq}
+            weekdays={weekdays}
+            setWeekdays={setWeekdays}
+            monthdays={monthdays}
+            setMonthdays={setMonthdays}
+          />
+          {!ruleIsValid(rule) && (
+            <div className="login-error" style={{ marginTop: 8 }}>
+              {freq === 'weekly' ? 'Выберите хотя бы один день недели.' : 'Выберите хотя бы одно число месяца.'}
+            </div>
+          )}
+          {ruleIsValid(rule) && <div className="cm-subline muted" style={{ marginTop: 6 }}>{describeRule(rule)}</div>}
+        </div>
+      )}
+    </section>
   )
 }
 
@@ -481,7 +550,9 @@ function CardModalInner({ card, store, onClose }: { card: Card; store: BoardStor
                   }
                 }}
               />
-              {isRecurring ? (
+              {isRecurring && isMeeting ? (
+                <span className="cm-subline muted">Повторяющаяся встреча — видна только в календаре</span>
+              ) : isRecurring ? (
                 <span className="cm-subline muted">Повторяющаяся задача — настраивается в разделе «Регулярное»</span>
               ) : isMeeting ? (
                 <span className="cm-subline muted">Встреча — видна только в календаре</span>
@@ -638,6 +709,9 @@ function CardModalInner({ card, store, onClose }: { card: Card; store: BoardStor
             </div>
           </section>
         )}
+
+        {/* ---------- Повторение (у встреч) ---------- */}
+        {isMeeting && <MeetingRecurrence card={card} />}
 
         {/* ---------- Описание ---------- */}
         <section className="cm-section">

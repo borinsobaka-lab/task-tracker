@@ -52,13 +52,17 @@ export interface RecurrenceRule {
   monthdays?: number[]
 }
 
-/** Шаблон повторяющейся задачи. Экземпляры — обычные Card со seriesId. */
+/** Шаблон повторяющейся задачи или встречи. Экземпляры — обычные Card со seriesId. */
 export interface Series {
   id: ID
   title: string
   description: string
   assigneeIds: ID[]
   rule: RecurrenceRule
+  /** 'meeting' — повторяющаяся встреча; отсутствует/'task' — регулярная задача */
+  kind?: CardKind
+  /** Ссылка на созвон (только у встреч) */
+  meetingUrl?: string
   /** время 'HH:MM' (необязательно). Если задано — экземпляры попадают в сетку календаря */
   start?: string
   durationMin?: number

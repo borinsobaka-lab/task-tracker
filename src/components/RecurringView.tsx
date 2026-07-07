@@ -3,11 +3,12 @@ import type { CSSProperties } from 'react'
 import { useBoard } from '../store'
 import type { SeriesInput } from '../store'
 import type { Card, ID, Member, RecurFreq, RecurrenceRule, Series } from '../types'
-import { describeRule, ruleIsValid, WEEKDAYS } from '../recurrence'
+import { describeRule, ruleIsValid } from '../recurrence'
 import { fmtDayMonth, parseDateKey } from '../utils'
 import { IcoCheck, IcoClose, IcoOpen, IcoRecurring } from '../icons'
 import { Avatar, AvatarStack } from './Avatar'
 import { RichTextEditor } from './RichTextEditor'
+import { RecurrenceFields } from './RecurrenceFields'
 import './recurring.css'
 
 const DURATIONS: { v: number; label: string }[] = [
@@ -30,7 +31,8 @@ export function RecurringView({
   const [editing, setEditing] = useState<Series | 'new' | null>(null)
 
   const inFilter = (c: Card) => memberFilter.size === 0 || c.assigneeIds.some((id) => memberFilter.has(id))
-  const insts = store.recurringCards().filter(inFilter)
+  // Раздел «Регулярное» — только задачи; повторяющиеся встречи живут в календаре
+  const insts = store.recurringCards().filter((c) => c.kind !== 'meeting' && inFilter(c))
   const active = insts
     .filter((c) => !c.done)
     .sort((a, b) => (a.date ?? '').localeCompare(b.date ?? '') || a.title.localeCompare(b.title, 'ru'))
@@ -150,9 +152,6 @@ function RecurringEditor({ series, onClose }: { series: Series | null; onClose: 
   const [duration, setDuration] = useState(series?.durationMin ?? 60)
   const [error, setError] = useState<string | null>(null)
 
-  const toggle = (arr: number[], v: number, set: (a: number[]) => void) =>
-    set(arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v])
-
   const buildRule = (): RecurrenceRule => {
     if (freq === 'weekly') return { freq, weekdays }
     if (freq === 'monthly') return { freq, monthdays }
@@ -228,43 +227,14 @@ function RecurringEditor({ series, onClose }: { series: Series | null; onClose: 
         <label className="field-label" style={{ marginTop: 14 }}>
           Повторять
         </label>
-        <div className="rec-freq">
-          {(['daily', 'weekly', 'monthly'] as RecurFreq[]).map((f) => (
-            <button key={f} type="button" className={'chip' + (freq === f ? ' active' : '')} onClick={() => setFreq(f)}>
-              {f === 'daily' ? 'Каждый день' : f === 'weekly' ? 'Раз в неделю' : 'Раз в месяц'}
-            </button>
-          ))}
-        </div>
-
-        {freq === 'weekly' && (
-          <div className="rec-weekdays">
-            {WEEKDAYS.map((w) => (
-              <button
-                key={w.day}
-                type="button"
-                className={'rec-wd' + (weekdays.includes(w.day) ? ' on' : '')}
-                onClick={() => toggle(weekdays, w.day, setWeekdays)}
-              >
-                {w.short}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {freq === 'monthly' && (
-          <div className="rec-monthdays">
-            {Array.from({ length: 31 }, (_, i) => i + 1).map((n) => (
-              <button
-                key={n}
-                type="button"
-                className={'rec-md' + (monthdays.includes(n) ? ' on' : '')}
-                onClick={() => toggle(monthdays, n, setMonthdays)}
-              >
-                {n}
-              </button>
-            ))}
-          </div>
-        )}
+        <RecurrenceFields
+          freq={freq}
+          setFreq={setFreq}
+          weekdays={weekdays}
+          setWeekdays={setWeekdays}
+          monthdays={monthdays}
+          setMonthdays={setMonthdays}
+        />
 
         <label className="rec-time-toggle" style={{ marginTop: 14 }}>
           <input type="checkbox" checked={hasTime} onChange={(e) => setHasTime(e.target.checked)} />
