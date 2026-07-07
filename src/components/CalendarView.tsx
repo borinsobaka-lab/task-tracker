@@ -3,6 +3,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useBoard } from '../store'
+import { getCalDays, setCalDays } from '../config'
 import type { Card, ID, Member } from '../types'
 import { QUADRANT_COLOR } from '../eisenhower'
 import {
@@ -141,10 +142,12 @@ export function CalendarView({
   onOpenCard: (id: ID) => void
 }) {
   const store = useBoard()
-  // Сколько дней показывать: на узком экране (телефон) — 3, иначе неделя.
-  const [nDays, setNDays] = useState<number>(() =>
-    typeof window !== 'undefined' && window.matchMedia('(max-width: 640px)').matches ? 3 : 7,
-  )
+  // Сколько дней показывать: 1 / 3 / 7 — выбор пользователя (сохраняется).
+  const [nDays, setNDaysState] = useState<number>(() => getCalDays())
+  const setNDays = (n: number) => {
+    setCalDays(n)
+    setNDaysState(n)
+  }
   const [anchor, setAnchor] = useState<Date>(() => new Date())
   const [panelOpen, setPanelOpen] = useState(true)
   const [drag, setDrag] = useState<DragState | null>(null)
@@ -157,15 +160,6 @@ export function CalendarView({
   const gridRef = useRef<HTMLDivElement>(null)
   const sidebarRef = useRef<HTMLElement>(null)
   const swipeRef = useRef<{ x: number; y: number; ignore: boolean } | null>(null)
-
-  // Переключение 3 дня / неделя при изменении ширины экрана
-  useEffect(() => {
-    const mq = window.matchMedia('(max-width: 640px)')
-    const update = () => setNDays(mq.matches ? 3 : 7)
-    update()
-    mq.addEventListener('change', update)
-    return () => mq.removeEventListener('change', update)
-  }, [])
 
   // Красная линия «сейчас» — обновление раз в минуту
   useEffect(() => {
@@ -624,7 +618,22 @@ export function CalendarView({
             ›
           </button>
         </div>
-        <h2 className="cal-title">{rangeTitle(rangeStart, days[days.length - 1])}</h2>
+        <h2 className="cal-title">
+          {days.length === 1
+            ? fmtFullDate(rangeStart).replace(/\s*г\.\s*$/, '')
+            : rangeTitle(rangeStart, days[days.length - 1])}
+        </h2>
+        <select
+          className="cal-view-select"
+          value={nDays}
+          onChange={(e) => setNDays(Number(e.target.value))}
+          title="Сколько дней показывать"
+          aria-label="Сколько дней показывать"
+        >
+          <option value={1}>Сегодня</option>
+          <option value={3}>3 дня</option>
+          <option value={7}>Неделя</option>
+        </select>
       </div>
 
       <div className="cal-body">

@@ -79,6 +79,17 @@ export function setSavedView(v: SavedView): void {
   localStorage.setItem(LS.view, v)
 }
 
+/** Сколько дней показывать в календаре: 1 / 3 / 7. По умолчанию — 3 на телефоне, 7 иначе. */
+export function getCalDays(): number {
+  const v = Number(localStorage.getItem('tt.calDays'))
+  if (v === 1 || v === 3 || v === 7) return v
+  if (typeof window !== 'undefined' && window.matchMedia('(max-width: 640px)').matches) return 3
+  return 7
+}
+export function setCalDays(n: number): void {
+  localStorage.setItem('tt.calDays', String(n))
+}
+
 /** Демо-режим: локальное хранилище вместо GitHub (для тестов и предпросмотра) */
 export function isDemoMode(): boolean {
   if (typeof location === 'undefined') return false
