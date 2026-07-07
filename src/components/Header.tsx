@@ -15,11 +15,11 @@ const STATUS_LABEL: Record<string, { text: string; cls: string }> = {
   error: { text: 'Ошибка сохранения', cls: 'err' },
 }
 
-const VIEWS: { key: ViewKind; label: string; Icon: ComponentType<IconProps> }[] = [
-  { key: 'board', label: 'Доска', Icon: IcoBoard },
-  { key: 'calendar', label: 'Календарь', Icon: IcoCalendar },
-  { key: 'matrix', label: 'Матрица', Icon: IcoMatrix },
-  { key: 'recurring', label: 'Регулярное', Icon: IcoRecurring },
+const VIEWS: { key: ViewKind; label: string; Icon: ComponentType<IconProps>; color: string }[] = [
+  { key: 'board', label: 'Доска', Icon: IcoBoard, color: '#3b82f6' }, // синий
+  { key: 'calendar', label: 'Календарь', Icon: IcoCalendar, color: '#f97316' }, // оранжевый
+  { key: 'matrix', label: 'Матрица', Icon: IcoMatrix, color: '#ef4444' }, // красный
+  { key: 'recurring', label: 'Регулярное', Icon: IcoRecurring, color: '#22c55e' }, // зелёный
 ]
 
 /** Компактный выбор вида вместо ряда табов — экономит место в шапке. */
@@ -63,7 +63,7 @@ function ViewSwitch({ view, onViewChange }: { view: ViewKind; onViewChange: (v: 
         title="Сменить вид"
       >
         <span className="view-ico" aria-hidden>
-          <cur.Icon size={17} />
+          <cur.Icon size={17} color={cur.color} />
         </span>
         <span className="view-switch-label">{cur.label}</span>
         <span className="view-switch-caret" aria-hidden>
@@ -86,7 +86,7 @@ function ViewSwitch({ view, onViewChange }: { view: ViewKind; onViewChange: (v: 
                 }}
               >
                 <span className="view-ico" aria-hidden>
-                  <v.Icon size={18} />
+                  <v.Icon size={18} color={v.color} />
                 </span>
                 {v.label}
                 {v.key === view && (
@@ -133,7 +133,7 @@ export function Header({
         {VIEWS.map((v) => (
           <button key={v.key} className={v.key === view ? 'active' : ''} onClick={() => onViewChange(v.key)}>
             <span className="view-ico" aria-hidden>
-              <v.Icon size={17} />
+              <v.Icon size={17} color={v.color} />
             </span>
             <span className="view-tab-label">{v.label}</span>
           </button>

@@ -259,6 +259,12 @@ export function CalendarView({
   const unscheduled = visible
     .filter((c) => !c.date)
     .sort((a, b) => a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id))
+  // Группируем «Без даты» по статусу (колонке доски) в порядке колонок
+  const liveColumns = store.columns.filter((c) => !c.deleted)
+  const unscheduledGroups = liveColumns
+    .map((col) => ({ col, cards: unscheduled.filter((c) => c.columnId === col.id) }))
+    .filter((g) => g.cards.length > 0)
+  const unscheduledOther = unscheduled.filter((c) => !liveColumns.some((col) => col.id === c.columnId))
   const allDayByDay = dayKeys.map((key) =>
     visible.filter((c) => c.date === key && !c.start).sort((a, b) => a.title.localeCompare(b.title, 'ru')),
   )
@@ -491,6 +497,21 @@ export function CalendarView({
         }
         {...dragEvents}
       >
+        {!isMeeting(c) && (
+          <button
+            type="button"
+            className={'cal-chip-check' + (c.done ? ' on' : '')}
+            title={c.done ? 'Снять отметку' : 'Отметить выполненной'}
+            aria-label={c.done ? 'Снять отметку' : 'Отметить выполненной'}
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation()
+              store.setCardDone(c.id, !c.done)
+            }}
+          >
+            <IcoCheck size={12} color="currentColor" />
+          </button>
+        )}
         <span className="cal-chip-title">{c.title}</span>
         {assigneesOf(c).length > 0 && (
           <span className="cal-chip-avatars">
@@ -733,8 +754,19 @@ export function CalendarView({
               </button>
             </div>
             <div className="cal-sidebar-list" ref={sidebarListRef}>
-              {unscheduled.map(renderSideCard)}
               {unscheduled.length === 0 && <div className="cal-sidebar-empty muted">Все задачи запланированы</div>}
+              {unscheduledGroups.map((g) => (
+                <React.Fragment key={g.col.id}>
+                  <div className="cal-side-status">{g.col.title}</div>
+                  {g.cards.map(renderSideCard)}
+                </React.Fragment>
+              ))}
+              {unscheduledOther.length > 0 && (
+                <React.Fragment>
+                  {unscheduledGroups.length > 0 && <div className="cal-side-status">Прочее</div>}
+                  {unscheduledOther.map(renderSideCard)}
+                </React.Fragment>
+              )}
             </div>
             <div className="cal-sidebar-hint muted">Перетащите задачу на день или время</div>
           </aside>

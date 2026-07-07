@@ -144,6 +144,19 @@
   margin-left: 0;
 }
 
+.cal-side-status {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-faint);
+  padding: 0 2px;
+  margin-top: 8px;
+}
+.cal-side-status:first-child {
+  margin-top: 0;
+}
+
 .cal-sidebar-list {
   flex: 1;
   min-height: 0;
@@ -349,8 +362,9 @@
   gap: 5px;
   padding: 2px 8px;
   border-radius: 5px;
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--ev-color) 14%, white);
+  border: 1px solid color-mix(in srgb, var(--ev-color) 30%, white);
+  border-left: 3px solid var(--ev-color); /* цветная полоса слева (по исполнителю) */
   font-size: 12px;
   font-weight: 500;
   color: var(--text);
@@ -361,7 +375,33 @@
 }
 
 .cal-chip:hover {
-  border-color: var(--border-strong);
+  background: color-mix(in srgb, var(--ev-color) 24%, white);
+}
+
+/* Чекбокс «выполнено» на закреплённой (all-day) карточке */
+.cal-chip-check {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1.5px solid color-mix(in srgb, var(--ev-color) 55%, var(--border-strong));
+  background: rgba(255, 255, 255, 0.6);
+  color: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+.cal-chip-check:hover {
+  border-color: var(--ok);
+  color: var(--ok);
+}
+.cal-chip-check.on {
+  background: var(--ok);
+  border-color: var(--ok);
+  color: #fff;
 }
 
 .cal-chip-title {
@@ -508,7 +548,13 @@
 }
 .cal-chip.meeting {
   background: var(--surface-2);
+  border: 1px solid var(--border);
   border-left: 3px solid var(--ev-color);
+  color: var(--ev-color);
+}
+.cal-chip.meeting:hover {
+  background: var(--surface-2);
+  border-color: var(--border-strong);
 }
 .cal-side-card.meeting {
   background: var(--surface-2);
