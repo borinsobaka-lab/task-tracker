@@ -471,7 +471,7 @@ function ColumnMenu({ column }: { column: Column }) {
             </div>
             <div className="col-menu-sep" />
             <button className="col-menu-item danger" role="menuitem" onClick={remove}>
-              <span className="col-menu-emoji"><IcoTrash size={16} /></span>
+              <span className="col-menu-emoji"><IcoTrash size={16} color="currentColor" /></span>
               Удалить колонку
             </button>
           </div>
@@ -836,7 +836,7 @@ function AddColumn() {
 // ---------- Иконки ----------
 
 function CheckIcon() {
-  return <IcoCheck size={13} aria-hidden />
+  return <IcoCheck size={13} color="currentColor" aria-hidden />
 }
 
 function CalendarIcon() {

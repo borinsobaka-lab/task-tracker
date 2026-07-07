@@ -199,6 +199,11 @@ svg {
   flex-shrink: 0;
   vertical-align: -0.15em;
 }
+.avatar.xs {
+  width: 17px;
+  height: 17px;
+  font-size: 7.5px;
+}
 .avatar.sm {
   width: 22px;
   height: 22px;

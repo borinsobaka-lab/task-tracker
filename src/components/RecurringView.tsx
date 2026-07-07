@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import type { CSSProperties } from 'react'
 import { useBoard } from '../store'
 import type { SeriesInput } from '../store'
 import type { Card, ID, Member, RecurFreq, RecurrenceRule, Series } from '../types'
@@ -6,6 +7,7 @@ import { describeRule, ruleIsValid, WEEKDAYS } from '../recurrence'
 import { fmtDayMonth, parseDateKey } from '../utils'
 import { IcoCheck, IcoClose, IcoOpen, IcoRecurring } from '../icons'
 import { Avatar, AvatarStack } from './Avatar'
+import { RichTextEditor } from './RichTextEditor'
 import './recurring.css'
 
 const DURATIONS: { v: number; label: string }[] = [
@@ -100,7 +102,10 @@ function RecRow({
     if (card.start) dateLabel += `, ${card.start}`
   }
   return (
-    <div className={'rec-row' + (done ? ' done' : '')}>
+    <div
+      className={'rec-row' + (done ? ' done' : '')}
+      style={members[0] ? ({ ['--rec-color' as string]: members[0].color } as CSSProperties) : undefined}
+    >
       <button
         type="button"
         className={'rec-check' + (done ? ' on' : '')}
@@ -108,7 +113,7 @@ function RecRow({
         aria-label={done ? 'Вернуть в невыполненные' : 'Отметить выполненной'}
         onClick={onToggle}
       >
-        <IcoCheck size={17} />
+        <IcoCheck size={17} color="currentColor" />
       </button>
       <button className="rec-body" onClick={onEdit} title="Настроить повторение">
         <div className="rec-title">
@@ -135,6 +140,7 @@ function RecRow({
 function RecurringEditor({ series, onClose }: { series: Series | null; onClose: () => void }) {
   const store = useBoard()
   const [title, setTitle] = useState(series?.title ?? '')
+  const [description, setDescription] = useState(series?.description ?? '')
   const [assignees, setAssignees] = useState<ID[]>(series?.assigneeIds ?? [])
   const [freq, setFreq] = useState<RecurFreq>(series?.rule.freq ?? 'weekly')
   const [weekdays, setWeekdays] = useState<number[]>(series?.rule.weekdays ?? [new Date().getDay()])
@@ -161,6 +167,7 @@ function RecurringEditor({ series, onClose }: { series: Series | null; onClose: 
     }
     const input: SeriesInput = {
       title,
+      description,
       assigneeIds: assignees,
       rule,
       ...(hasTime ? { start: time, durationMin: duration } : {}),
@@ -190,6 +197,11 @@ function RecurringEditor({ series, onClose }: { series: Series | null; onClose: 
 
         <label className="field-label">Название</label>
         <input className="input" placeholder="Например: Планёрка" value={title} autoFocus onChange={(e) => setTitle(e.target.value)} />
+
+        <label className="field-label" style={{ marginTop: 14 }}>
+          Описание
+        </label>
+        <RichTextEditor value={description} onChange={setDescription} placeholder="Добавьте описание… (появится в задаче в календаре)" />
 
         <label className="field-label" style={{ marginTop: 14 }}>
           Ответственные

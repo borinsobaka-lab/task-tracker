@@ -454,7 +454,7 @@ function CardModalInner({ card, store, onClose }: { card: Card; store: BoardStor
                 aria-label={card.done ? 'Отметить невыполненной' : 'Отметить выполненной'}
                 onClick={() => store.setCardDone(card.id, !card.done)}
               >
-                <IcoCheck size={18} />
+                <IcoCheck size={18} color="currentColor" />
               </button>
             )}
             <div className="cm-header-main">

@@ -1,7 +1,7 @@
 import type { Member } from '../types'
 import { initials } from '../utils'
 
-export function Avatar({ member, size, title }: { member: Member; size?: 'sm' | 'lg'; title?: string }) {
+export function Avatar({ member, size, title }: { member: Member; size?: 'xs' | 'sm' | 'lg'; title?: string }) {
   return (
     <span
       className={`avatar${size ? ' ' + size : ''}`}
@@ -13,7 +13,7 @@ export function Avatar({ member, size, title }: { member: Member; size?: 'sm' | 
   )
 }
 
-export function AvatarStack({ members, size }: { members: Member[]; size?: 'sm' | 'lg' }) {
+export function AvatarStack({ members, size }: { members: Member[]; size?: 'xs' | 'sm' | 'lg' }) {
   if (members.length === 0) return null
   return (
     <span className="avatar-stack">

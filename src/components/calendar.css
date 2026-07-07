@@ -373,9 +373,18 @@
 }
 
 .cal-chip-title {
+  flex: 1;
+  min-width: 0;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+}
+
+/* Аватарки исполнителей в закреплённой (all-day) карточке — справа, мельче */
+.cal-chip-avatars {
+  flex-shrink: 0;
+  display: inline-flex;
+  margin-left: auto;
 }
 
 .cal-chip.done .cal-chip-title {
@@ -491,6 +500,25 @@
 
 .cal-event.is-dragging {
   opacity: 0.35;
+}
+
+/* Встречи — серые, с цветной (по участнику) полосой слева; без участника — тёмной */
+.cal-event.meeting {
+  background: var(--surface-2);
+  box-shadow: inset 3px 0 0 var(--ev-color), 0 0 0 1px var(--border);
+}
+.cal-event.meeting:hover {
+  box-shadow: inset 3px 0 0 var(--ev-color), 0 0 0 1px var(--border-strong), var(--shadow-md);
+}
+.cal-chip.meeting {
+  background: var(--surface-2);
+  border-color: var(--border);
+}
+.cal-chip.meeting .cal-chip-dot {
+  background: var(--ev-color);
+}
+.cal-side-card.meeting {
+  background: var(--surface-2);
 }
 
 /* Верхняя строка: чекбокс + заголовок (заголовок с самого верха блока) */

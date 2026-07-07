@@ -132,7 +132,7 @@ function MemberRow({ member }: { member: Member }) {
                 title="Убрать аватарку"
                 aria-label="Убрать аватарку"
               >
-                <IcoClose size={13} />
+                <IcoClose size={13} color="currentColor" />
               </button>
             )}
             <input ref={fileRef} type="file" accept="image/*" hidden onChange={pickAvatar} />

@@ -33,7 +33,7 @@ export function PasswordScreen({
     <div className="login-screen">
       <div className="login-card">
         <div className="login-logo" aria-hidden>
-          <IcoBrand size={30} />
+          <IcoBrand size={30} color="currentColor" />
         </div>
         <h1>Задачи</h1>
         <p className="muted">Введите пароль, чтобы открыть общую доску и календарь.</p>

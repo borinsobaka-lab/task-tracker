@@ -13,7 +13,6 @@ import {
   fmtDayMonth,
   fmtFullDate,
   fmtWeekday,
-  MEETING_COLOR,
   minToTime,
   startOfWeek,
   timeToMin,
@@ -269,7 +268,10 @@ export function CalendarView({
     c.assigneeIds.map((id) => memberById.get(id)).filter((m): m is Member => !!m)
   const isMeeting = (c: Card): boolean => c.kind === 'meeting'
   // Встречи — фиксированного цвета, задачи — по цвету первого исполнителя.
-  const colorOf = (c: Card): string => (isMeeting(c) ? MEETING_COLOR : assigneesOf(c)[0]?.color ?? 'var(--accent)')
+  // Встречи — серые; цвет полосы слева зависит от участника (у кого встреча),
+  // без участников — тёмная («чёрная») полоса. Задачи — по цвету исполнителя.
+  const colorOf = (c: Card): string =>
+    isMeeting(c) ? assigneesOf(c)[0]?.color ?? '#334155' : assigneesOf(c)[0]?.color ?? 'var(--accent)'
 
   // ---------- Геометрия перетаскивания ----------
 
@@ -482,7 +484,7 @@ export function CalendarView({
     return (
       <div
         key={c.id}
-        className={`cal-chip${c.done ? ' done' : ''}${dragging ? ' is-dragging' : ''}${armed ? ' armed' : ''}`}
+        className={`cal-chip${c.done ? ' done' : ''}${dragging ? ' is-dragging' : ''}${armed ? ' armed' : ''}${isMeeting(c) ? ' meeting' : ''}`}
         style={{ '--ev-color': colorOf(c) } as React.CSSProperties}
         title={c.title}
         onPointerDown={(e) =>
@@ -497,6 +499,11 @@ export function CalendarView({
           {c.seriesId && <span className="inline-ico" aria-hidden><IcoRecurring size={13} /></span>}
           {c.title}
         </span>
+        {assigneesOf(c).length > 0 && (
+          <span className="cal-chip-avatars">
+            <AvatarStack members={assigneesOf(c)} size="xs" />
+          </span>
+        )}
       </div>
     )
   }
@@ -559,7 +566,7 @@ export function CalendarView({
                 store.setCardDone(c.id, !c.done)
               }}
             >
-              <IcoCheck size={13} />
+              <IcoCheck size={13} color="currentColor" />
             </button>
           )}
           <div className="cal-event-title">
@@ -618,7 +625,7 @@ export function CalendarView({
     return (
       <div
         key={c.id}
-        className={`cal-side-card${c.done ? ' done' : ''}${dragging ? ' is-dragging' : ''}${armed ? ' armed' : ''}`}
+        className={`cal-side-card${c.done ? ' done' : ''}${dragging ? ' is-dragging' : ''}${armed ? ' armed' : ''}${isMeeting(c) ? ' meeting' : ''}`}
         style={{ '--ev-color': colorOf(c) } as React.CSSProperties}
         onPointerDown={(e) => beginDrag(e, { kind: 'unscheduled', cardId: c.id }, { durationMin: 60 })}
         {...dragEvents}

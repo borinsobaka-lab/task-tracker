@@ -56,7 +56,7 @@ export function OwnerSetupScreen({ onDone }: { onDone: (token: string) => void }
     <div className="login-screen">
       <div className="login-card">
         <div className="login-logo" aria-hidden>
-          <IcoBrand size={30} />
+          <IcoBrand size={30} color="currentColor" />
         </div>
         <h1>Настройка (один раз)</h1>
         <p className="muted">

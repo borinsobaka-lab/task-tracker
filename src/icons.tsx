@@ -25,10 +25,15 @@ import {
   Widget,
 } from '@solar-icons/react'
 
-/** Оборачивает иконку: по умолчанию залитая двутональная, размер 18, цвет — currentColor. */
+/**
+ * Оборачивает иконку: залитая двутональная (BoldDuotone), размер 18.
+ * По умолчанию — фирменный фиолетовый (--accent): яркий контур + бледная заливка.
+ * Для контекстных иконок можно передать color="currentColor" (наследовать цвет),
+ * либо любой другой цвет.
+ */
 function duotone(Ico: ComponentType<IconProps>): ComponentType<IconProps> {
-  return function SolarIcon(props: IconProps) {
-    return <Ico weight="BoldDuotone" size={18} {...props} />
+  return function SolarIcon({ color, size = 18, style, ...rest }: IconProps) {
+    return <Ico weight="BoldDuotone" size={size} style={{ color: color ?? 'var(--accent)', ...style }} {...rest} />
   }
 }
 
