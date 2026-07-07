@@ -96,69 +96,73 @@ function MemberRow({ member }: { member: Member }) {
   return (
     <div>
       <div className="settings-member">
-        <Avatar member={member} />
-        {editing ? (
-          <input
-            className="input settings-name-input"
-            value={draft}
-            autoFocus
-            onChange={(e) => setDraft(e.target.value)}
-            onBlur={commit}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                commit()
-              } else if (e.key === 'Escape') {
-                e.stopPropagation() // не закрывать модалку — только отменить редактирование
-                setEditing(false)
-              }
-            }}
+        <div className="settings-member-row1">
+          <Avatar member={member} />
+          {editing ? (
+            <input
+              className="input settings-name-input"
+              value={draft}
+              autoFocus
+              onChange={(e) => setDraft(e.target.value)}
+              onBlur={commit}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  commit()
+                } else if (e.key === 'Escape') {
+                  e.stopPropagation() // не закрывать модалку — только отменить редактирование
+                  setEditing(false)
+                }
+              }}
+            />
+          ) : (
+            <button className="settings-member-name" onClick={startEdit} title="Нажмите, чтобы переименовать">
+              <span className="settings-name-text">{member.name}</span>
+              {isYou && <span className="settings-you">вы</span>}
+            </button>
+          )}
+          <button
+            className="settings-color-btn"
+            style={{ background: member.color }}
+            onClick={() => setColorsOpen((v) => !v)}
+            title="Сменить цвет"
+            aria-label={`Сменить цвет участника ${member.name}`}
           />
-        ) : (
-          <button className="settings-member-name" onClick={startEdit} title="Нажмите, чтобы переименовать">
-            <span className="settings-name-text">{member.name}</span>
-            {isYou && <span className="settings-you">вы</span>}
+          <button className="btn btn-ghost btn-sm settings-member-archive" onClick={archive}>
+            Архивировать
           </button>
-        )}
-        <button
-          className="settings-color-btn"
-          style={{ background: member.color }}
-          onClick={() => setColorsOpen((v) => !v)}
-          title="Сменить цвет"
-          aria-label={`Сменить цвет участника ${member.name}`}
-        />
-        <label className="settings-nick" title="Ник в Telegram — бот подставит его в уведомления, чтобы упоминать участника">
-          <span>Telegram</span>
-          <input
-            className="input settings-nick-input"
-            value={member.tgUsername ?? ''}
-            placeholder="@ник"
-            onChange={(e) => {
-              const v = e.target.value.trim()
-              store.updateMember(member.id, { tgUsername: v || undefined })
-            }}
-          />
-        </label>
-        <label className="settings-sleep" title="До скольки часов спит — в календаре это время будет серым">
-          <span>спит до</span>
-          <select
-            className="input settings-sleep-select"
-            value={member.sleepUntil ?? ''}
-            onChange={(e) => {
-              const v = e.target.value
-              store.updateMember(member.id, { sleepUntil: v === '' ? undefined : Number(v) })
-            }}
-          >
-            <option value="">—</option>
-            {Array.from({ length: 12 }, (_, i) => i + 1).map((h) => (
-              <option key={h} value={h}>
-                {String(h).padStart(2, '0')}:00
-              </option>
-            ))}
-          </select>
-        </label>
-        <button className="btn btn-ghost btn-sm" onClick={archive}>
-          Архивировать
-        </button>
+        </div>
+        <div className="settings-member-row2">
+          <label className="settings-nick" title="Ник в Telegram — бот подставит его в уведомления, чтобы упоминать участника">
+            <span>Telegram</span>
+            <input
+              className="input settings-nick-input"
+              value={member.tgUsername ?? ''}
+              placeholder="@ник"
+              onChange={(e) => {
+                const v = e.target.value.trim()
+                store.updateMember(member.id, { tgUsername: v || undefined })
+              }}
+            />
+          </label>
+          <label className="settings-sleep" title="До скольки часов спит — в календаре это время будет серым">
+            <span>спит до</span>
+            <select
+              className="input settings-sleep-select"
+              value={member.sleepUntil ?? ''}
+              onChange={(e) => {
+                const v = e.target.value
+                store.updateMember(member.id, { sleepUntil: v === '' ? undefined : Number(v) })
+              }}
+            >
+              <option value="">—</option>
+              {Array.from({ length: 12 }, (_, i) => i + 1).map((h) => (
+                <option key={h} value={h}>
+                  {String(h).padStart(2, '0')}:00
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
       </div>
       {colorsOpen && (
         <div className="color-row settings-swatch-row">

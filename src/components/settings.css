@@ -48,40 +48,71 @@
 .settings-members {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
   margin-bottom: 12px;
 }
 
+/* Каждый участник — вертикальный блок: строка 1 (кто) + строка 2 (поля) */
 .settings-member {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 5px 8px;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
   border-radius: var(--radius-sm);
-  flex-wrap: wrap;
 }
 .settings-member:hover {
   background: rgba(30, 33, 48, 0.045);
+}
+
+.settings-member-row1 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.settings-member-row2 {
+  display: flex;
+  align-items: center;
+  gap: 10px 16px;
+  flex-wrap: wrap;
+  padding-left: 42px; /* выравниваем под именем, за аватаром */
+}
+.settings-member-archive {
+  flex-shrink: 0;
 }
 
 .settings-sleep,
 .settings-nick {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   font-size: 12px;
   color: var(--text-soft);
   white-space: nowrap;
 }
+.settings-nick {
+  flex: 1 1 190px;
+  min-width: 0;
+}
 .settings-nick-input {
-  width: 110px;
-  padding: 3px 7px;
-  font-size: 12.5px;
+  flex: 1;
+  min-width: 0;
+  width: auto;
+  padding: 4px 8px;
+  font-size: 13px;
 }
 .settings-sleep-select {
   width: auto;
   padding: 3px 6px;
   font-size: 12.5px;
+}
+
+@media (max-width: 560px) {
+  .settings-member-row2 {
+    padding-left: 0;
+  }
+  .settings-nick {
+    flex-basis: 100%;
+  }
 }
 
 .settings-member-name {
