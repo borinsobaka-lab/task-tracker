@@ -1,0 +1,57 @@
+name: Android APK
+
+# Собирает APK (оболочка + виджет) и публикует его в релиз android-latest,
+# чтобы можно было скачать и установить на телефон.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [claude/task-tracker-service-lpv708, main]
+    paths:
+      - 'android/**'
+      - '.github/workflows/android.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: android-apk
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Build debug APK
+        working-directory: android
+        run: ./gradlew assembleDebug --no-daemon --stacktrace
+
+      - name: Rename APK
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk task-tracker.apk
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: task-tracker-apk
+          path: task-tracker.apk
+
+      - name: Publish to release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete android-latest --yes --cleanup-tag || true
+          gh release create android-latest task-tracker.apk \
+            --title "Android APK (последняя сборка)" \
+            --notes "Debug-сборка приложения-оболочки с виджетом «Таймлайн». Скачайте task-tracker.apk на телефон и установите (разрешите установку из этого источника)." \
+            --prerelease

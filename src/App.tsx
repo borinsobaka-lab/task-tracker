@@ -150,6 +150,22 @@ function Shell({ onLogout }: { onLogout: () => void }) {
     }
   }, [store])
 
+  // Диплинк из виджета Android: ссылка вида ...#card=<id> открывает эту задачу.
+  useEffect(() => {
+    const openFromHash = () => {
+      const m = location.hash.match(/^#card=(.+)$/)
+      if (!m || !store) return
+      const id = decodeURIComponent(m[1])
+      if (store.card(id)) {
+        setSelectedCardId(id)
+        history.replaceState(null, '', location.pathname + location.search)
+      }
+    }
+    openFromHash()
+    window.addEventListener('hashchange', openFromHash)
+    return () => window.removeEventListener('hashchange', openFromHash)
+  }, [store])
+
   if (!store) {
     if (status === 'error') {
       return (
