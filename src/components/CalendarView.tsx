@@ -11,7 +11,6 @@ import { IcoCheck, IcoChevronLeft, IcoChevronRight, IcoMeeting, IcoRecurring } f
 import { SubHeader } from './SubHeader'
 import {
   addDays,
-  cardMatchesQuery,
   clamp,
   fmtDayMonth,
   fmtFullDate,
@@ -147,7 +146,7 @@ function rangeTitle(start: Date, end: Date): string {
 
 // ---------- Компонент ----------
 
-export function CalendarView({ memberFilter, onMemberFilterChange, search, onSearchChange, onOpenCard }: ViewProps) {
+export function CalendarView({ memberFilter, onMemberFilterChange, onOpenCard }: ViewProps) {
   const store = useBoard()
   // Сколько дней показывать: 1 / 3 / 7 — выбор пользователя (сохраняется).
   const [nDays, setNDaysState] = useState<number>(() => getCalDays())
@@ -250,7 +249,7 @@ export function CalendarView({ memberFilter, onMemberFilterChange, search, onSea
   const memberById = useMemo(() => new Map(store.members.map((m) => [m.id, m])), [store.members])
 
   const passesFilter = (c: Card): boolean =>
-    (memberFilter.size === 0 || c.assigneeIds.some((id) => memberFilter.has(id))) && cardMatchesQuery(c, search)
+    memberFilter.size === 0 || c.assigneeIds.some((id) => memberFilter.has(id))
 
   const visible = store.liveCards().filter(passesFilter)
   const unscheduled = visible
@@ -692,15 +691,21 @@ export function CalendarView({ memberFilter, onMemberFilterChange, search, onSea
       className={`cal-root${drag?.moved ? ' is-dragging' : ''}`}
       style={{ ['--cal-days' as string]: String(nDays), ['--cal-gutter-w' as string]: `${gutterW}px` }}
     >
-      <SubHeader
-        memberFilter={memberFilter}
-        onMemberFilterChange={onMemberFilterChange}
-        search={search}
-        onSearchChange={onSearchChange}
-      >
+      <SubHeader memberFilter={memberFilter} onMemberFilterChange={onMemberFilterChange}>
         <button className="btn btn-sm" onClick={() => setAnchor(new Date())}>
           Сегодня
         </button>
+        <select
+          className="cal-view-select"
+          value={nDays}
+          onChange={(e) => setNDays(Number(e.target.value))}
+          title="Сколько дней показывать"
+          aria-label="Сколько дней показывать"
+        >
+          <option value={1}>Сегодня</option>
+          <option value={3}>3 дня</option>
+          <option value={7}>Неделя</option>
+        </select>
         <div className="cal-nav">
           <button
             className="icon-btn"
@@ -724,17 +729,6 @@ export function CalendarView({ memberFilter, onMemberFilterChange, search, onSea
             ? fmtFullDate(rangeStart).replace(/\s*г\.\s*$/, '')
             : rangeTitle(rangeStart, days[days.length - 1])}
         </h2>
-        <select
-          className="cal-view-select"
-          value={nDays}
-          onChange={(e) => setNDays(Number(e.target.value))}
-          title="Сколько дней показывать"
-          aria-label="Сколько дней показывать"
-        >
-          <option value={1}>Сегодня</option>
-          <option value={3}>3 дня</option>
-          <option value={7}>Неделя</option>
-        </select>
       </SubHeader>
 
       <div className="cal-body">

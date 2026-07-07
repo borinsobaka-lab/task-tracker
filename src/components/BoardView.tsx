@@ -34,7 +34,7 @@ import { useBoard } from '../store'
 import type { Card, Column, ColumnRole, ID, Member } from '../types'
 import { ROLE_META, ROLE_ORDER } from '../columnRoles'
 import { QUADRANT_COLOR, QUADRANT_LABEL } from '../eisenhower'
-import { cardMatchesQuery, COLUMN_COLORS, fmtDayMonth, hasContent, parseDateKey, toDateKey } from '../utils'
+import { COLUMN_COLORS, fmtDayMonth, hasContent, parseDateKey, toDateKey } from '../utils'
 import type { ViewProps } from '../viewProps'
 import { IcoCalendar, IcoCheck, IcoClose, IcoDescription, IcoMeeting, IcoMenu, IcoNone, IcoPaperclip, IcoSort, IcoTrash } from '../icons'
 import { Avatar, AvatarStack } from './Avatar'
@@ -58,7 +58,7 @@ function cardClassName(card: Card): string {
 
 // ---------- Корневой компонент ----------
 
-export function BoardView({ memberFilter, onMemberFilterChange, search, onSearchChange, onOpenCard }: ViewProps) {
+export function BoardView({ memberFilter, onMemberFilterChange, onOpenCard }: ViewProps) {
   const store = useBoard()
   const columns = store.columns
 
@@ -81,9 +81,8 @@ export function BoardView({ memberFilter, onMemberFilterChange, search, onSearch
     (card: Card) =>
       card.kind !== 'meeting' &&
       !card.seriesId &&
-      (memberFilter.size === 0 || card.assigneeIds.some((id) => memberFilter.has(id))) &&
-      cardMatchesQuery(card, search),
-    [memberFilter, search],
+      (memberFilter.size === 0 || card.assigneeIds.some((id) => memberFilter.has(id))),
+    [memberFilter],
   )
 
   const isColumnId = useCallback((id: string) => columns.some((c) => c.id === id), [columns])
@@ -238,12 +237,7 @@ export function BoardView({ memberFilter, onMemberFilterChange, search, onSearch
 
   return (
     <>
-      <SubHeader
-        memberFilter={memberFilter}
-        onMemberFilterChange={onMemberFilterChange}
-        search={search}
-        onSearchChange={onSearchChange}
-      />
+      <SubHeader memberFilter={memberFilter} onMemberFilterChange={onMemberFilterChange} />
       <DndContext
         sensors={sensors}
         collisionDetection={collisionDetection}

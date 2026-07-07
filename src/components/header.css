@@ -1,0 +1,172 @@
+/* Глобальный поиск в верхнем хедере */
+.header-search {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.header-search-field {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.header-search-ico {
+  position: absolute;
+  left: 9px;
+  display: inline-flex;
+  color: var(--text-faint);
+  pointer-events: none;
+}
+.header-search-input {
+  width: 220px;
+  height: 34px;
+  padding: 0 12px 0 32px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--surface-2);
+  font-size: 14px;
+  outline: none;
+}
+.header-search-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+  background: var(--surface);
+}
+
+/* Кнопка поиска (только мобильный). Специфичность выше .icon-btn. */
+.app-header .header-search-btn {
+  display: none;
+}
+
+/* Результаты — выпадашка на десктопе */
+.search-results {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  width: min(400px, 86vw);
+  max-height: 62vh;
+  overflow-y: auto;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-md);
+  padding: 4px;
+  z-index: 80;
+}
+.search-empty {
+  padding: 16px 12px;
+  font-size: 13.5px;
+  text-align: center;
+}
+.search-result {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: none;
+  border-radius: 8px;
+  padding: 9px 10px;
+  cursor: pointer;
+}
+.search-result:hover {
+  background: var(--surface-2);
+}
+.search-result-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+}
+.search-result-tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px 12px;
+  font-size: 12px;
+  color: var(--text-soft);
+}
+.search-result-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.search-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.search-result-prio {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Полноэкранный поиск (мобильный) */
+.search-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+}
+.search-overlay-bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+.search-overlay-bar .header-search-ico {
+  left: 22px;
+}
+.search-overlay-input {
+  flex: 1;
+  min-width: 0;
+  height: 42px;
+  padding: 0 12px 0 34px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-2);
+  font-size: 16px; /* 16px, чтобы iOS не приближал страницу */
+  outline: none;
+}
+.search-overlay-input:focus {
+  border-color: var(--accent);
+  background: var(--surface);
+}
+.search-overlay-results {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 6px 8px;
+}
+.search-overlay-results .search-results {
+  position: static;
+  width: auto;
+  max-height: none;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+}
+.search-overlay-results .search-result {
+  padding: 12px 10px;
+}
+.search-overlay-results .search-result-title {
+  font-size: 15px;
+}
+
+@media (max-width: 720px) {
+  .header-search {
+    margin-left: auto;
+  }
+  .header-search-field {
+    display: none;
+  }
+  .app-header .header-search-btn {
+    display: inline-flex;
+  }
+}

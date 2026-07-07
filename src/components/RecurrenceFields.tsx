@@ -26,7 +26,7 @@ export function RecurrenceFields({
       <div className="rec-freq">
         {(['daily', 'weekly', 'monthly'] as RecurFreq[]).map((f) => (
           <button key={f} type="button" className={'chip' + (freq === f ? ' active' : '')} onClick={() => setFreq(f)}>
-            {f === 'daily' ? 'Каждый день' : f === 'weekly' ? 'Раз в неделю' : 'Раз в месяц'}
+            {f === 'daily' ? 'Ежедневно' : f === 'weekly' ? 'Еженедельно' : 'Ежемесячно'}
           </button>
         ))}
       </div>

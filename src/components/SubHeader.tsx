@@ -1,25 +1,20 @@
 import type { ReactNode } from 'react'
 import { useBoard } from '../store'
 import type { ID } from '../types'
-import { IcoSearch } from '../icons'
 import { Avatar } from './Avatar'
 import './subheader.css'
 
 /**
- * Второй хедер (панель раздела): слева поиск, затем аватарки-фильтры участников,
- * затем — элементы конкретного раздела (children).
+ * Второй хедер (панель раздела): слева аватарки-фильтры участников,
+ * затем — элементы конкретного раздела (children). Поиск вынесен в верхний хедер.
  */
 export function SubHeader({
   memberFilter,
   onMemberFilterChange,
-  search,
-  onSearchChange,
   children,
 }: {
   memberFilter: ReadonlySet<ID>
   onMemberFilterChange: (f: ReadonlySet<ID>) => void
-  search: string
-  onSearchChange: (s: string) => void
   children?: ReactNode
 }) {
   const store = useBoard()
@@ -33,20 +28,6 @@ export function SubHeader({
 
   return (
     <div className="subheader">
-      <div className="subheader-search">
-        <span className="subheader-search-ico" aria-hidden>
-          <IcoSearch size={16} />
-        </span>
-        <input
-          className="subheader-search-input"
-          type="search"
-          placeholder="Поиск"
-          value={search}
-          onChange={(e) => onSearchChange(e.target.value)}
-          aria-label="Поиск задач"
-        />
-      </div>
-
       <div className="subheader-members" title="Фильтр по участникам">
         {store.members.map((m) => (
           <button

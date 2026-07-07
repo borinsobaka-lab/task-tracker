@@ -373,11 +373,17 @@
   .sync-status {
     display: none;
   }
-  /* Табы остаются, но только иконки — чтобы помещались 4 раздела */
-  .view-tab-label {
-    display: none;
+  /* Табы с подписями и на мобильном. Иконку прячем — так помещаются 4 подписи. */
+  .view-tabs {
+    gap: 1px;
+    padding: 2px;
   }
   .view-tabs button {
-    padding: 6px 10px;
+    padding: 5px 7px;
+    gap: 0;
+    font-size: 12px;
+  }
+  .view-tabs .view-ico {
+    display: none;
   }
 }

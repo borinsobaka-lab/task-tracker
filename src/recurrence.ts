@@ -23,6 +23,11 @@ function dayMatches(d: Date, rule: RecurrenceRule): boolean {
   }
 }
 
+/** Подходит ли конкретная дата (ключ YYYY-MM-DD) под правило повторения. */
+export function dateMatchesRule(dateKey: string, rule: RecurrenceRule): boolean {
+  return dayMatches(parseDateKey(dateKey), rule)
+}
+
 export function ruleIsValid(rule: RecurrenceRule): boolean {
   if (rule.freq === 'weekly') return (rule.weekdays?.length ?? 0) > 0
   if (rule.freq === 'monthly') return (rule.monthdays?.length ?? 0) > 0

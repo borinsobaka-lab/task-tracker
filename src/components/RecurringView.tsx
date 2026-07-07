@@ -5,7 +5,7 @@ import type { SeriesInput } from '../store'
 import type { Card, ID, Member, RecurFreq, RecurrenceRule, Series } from '../types'
 import { describeRule, ruleIsValid } from '../recurrence'
 import type { ViewProps } from '../viewProps'
-import { cardMatchesQuery, fmtDayMonth, parseDateKey } from '../utils'
+import { fmtDayMonth, parseDateKey } from '../utils'
 import { IcoCheck, IcoClose, IcoOpen, IcoRecurring } from '../icons'
 import { Avatar, AvatarStack } from './Avatar'
 import { RichTextEditor } from './RichTextEditor'
@@ -22,12 +22,12 @@ const DURATIONS: { v: number; label: string }[] = [
   { v: 240, label: '4 ч' },
 ]
 
-export function RecurringView({ memberFilter, onMemberFilterChange, search, onSearchChange, onOpenCard }: ViewProps) {
+export function RecurringView({ memberFilter, onMemberFilterChange, onOpenCard }: ViewProps) {
   const store = useBoard()
   const [editing, setEditing] = useState<Series | 'new' | null>(null)
 
   const inFilter = (c: Card) =>
-    (memberFilter.size === 0 || c.assigneeIds.some((id) => memberFilter.has(id))) && cardMatchesQuery(c, search)
+    memberFilter.size === 0 || c.assigneeIds.some((id) => memberFilter.has(id))
   // Раздел «Регулярное» — только задачи; повторяющиеся встречи живут в календаре
   const insts = store.recurringCards().filter((c) => c.kind !== 'meeting' && inFilter(c))
   const active = insts
@@ -46,12 +46,7 @@ export function RecurringView({ memberFilter, onMemberFilterChange, search, onSe
 
   return (
     <div className="rec-root">
-      <SubHeader
-        memberFilter={memberFilter}
-        onMemberFilterChange={onMemberFilterChange}
-        search={search}
-        onSearchChange={onSearchChange}
-      >
+      <SubHeader memberFilter={memberFilter} onMemberFilterChange={onMemberFilterChange}>
         <button className="btn btn-primary btn-sm" onClick={() => setEditing('new')}>
           + Регулярная задача
         </button>

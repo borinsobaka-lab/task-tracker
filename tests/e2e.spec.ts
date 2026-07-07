@@ -110,3 +110,27 @@ test('редактирование описания с форматирован�
   await page.getByText('Задача с описанием').click()
   await expect(page.locator('.ProseMirror')).toContainText('Важный текст')
 })
+
+test('глобальный поиск в шапке находит задачу и открывает её', async ({ page }) => {
+  await createIdentity(page)
+  await page.getByText('Добавить карточку').first().click()
+  await page.locator('textarea').first().fill('Уникальная задача поиска')
+  await page.keyboard.press('Enter')
+  await page.getByText('Добавить карточку').first().click()
+  await page.locator('textarea').first().fill('Другое дело')
+  await page.keyboard.press('Enter')
+
+  // Поле поиска — в верхнем хедере (десктоп)
+  const search = page.locator('.header-search-input')
+  await search.fill('Уникальная')
+  const result = page.locator('.search-result', { hasText: 'Уникальная задача поиска' })
+  await expect(result).toBeVisible()
+  // Статус (колонка) показан в результате
+  await expect(result.locator('.search-result-status')).toContainText('Нужно сделать')
+  // Нерелевантная задача не в выдаче
+  await expect(page.locator('.search-result', { hasText: 'Другое дело' })).toHaveCount(0)
+
+  // Клик открывает карточку
+  await result.click()
+  await expect(page.getByRole('button', { name: /Удалить карточку/ })).toBeVisible()
+})

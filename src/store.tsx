@@ -8,7 +8,7 @@ import type { Attachment, BoardData, Card, CardKind, ChecklistItem, Column, Colu
 import type { StorageAdapter } from './storage/adapter'
 import { ConflictError } from './storage/adapter'
 import { emptyBoard, mergeBoards, normalizeBoard } from './merge'
-import { firstOccurrence, nextOccurrence } from './recurrence'
+import { dateMatchesRule, firstOccurrence, nextOccurrence } from './recurrence'
 import { getIdentity, setIdentityId } from './config'
 import { clamp, nowISO, toDateKey, uid } from './utils'
 
@@ -60,6 +60,14 @@ function topUpMeetingSeries(d: BoardData, s: Series): void {
   if (s.deleted || s.kind !== 'meeting') return
   const today = toDateKey(new Date())
   const own = () => Object.values(d.cards).filter((c) => c.seriesId === s.id && !c.deleted)
+  // Правило могло измениться (например, поменяли дни недели) — удаляем будущие
+  // экземпляры, которые больше не попадают под текущее правило, чтобы они не «зависали».
+  for (const c of own()) {
+    if (c.date && c.date >= today && !dateMatchesRule(c.date, s.rule)) {
+      c.deleted = true
+      touch(c)
+    }
+  }
   const dates = new Set(own().map((c) => c.date).filter(Boolean) as string[])
   let future = own().filter((c) => (c.date ?? '') >= today)
   let lastDate = own().reduce((m, c) => (c.date && c.date > m ? c.date : m), '')

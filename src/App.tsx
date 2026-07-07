@@ -128,7 +128,6 @@ function Shell({ onLogout }: { onLogout: () => void }) {
   const [selectedCardId, setSelectedCardId] = useState<ID | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [memberFilter, setMemberFilter] = useState<ReadonlySet<ID>>(new Set())
-  const [search, setSearch] = useState('')
 
   // При загрузке один раз пополняем будущие экземпляры повторяющихся встреч
   const toppedUp = useRef(false)
@@ -176,14 +175,17 @@ function Shell({ onLogout }: { onLogout: () => void }) {
 
   return (
     <div className="app-shell">
-      <Header view={view} onViewChange={changeView} onOpenSettings={() => setSettingsOpen(true)} />
+      <Header
+        view={view}
+        onViewChange={changeView}
+        onOpenSettings={() => setSettingsOpen(true)}
+        onOpenCard={setSelectedCardId}
+      />
       <main className="app-main">
         {(() => {
           const shared = {
             memberFilter,
             onMemberFilterChange: setMemberFilter,
-            search,
-            onSearchChange: setSearch,
             onOpenCard: setSelectedCardId,
           }
           if (view === 'board') return <BoardView {...shared} />

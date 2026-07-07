@@ -159,7 +159,9 @@ function MeetingRecurrence({ card }: { card: Card }) {
   const isRec = !!series && series.kind === 'meeting' && !series.deleted
   const [on, setOn] = useState(isRec)
   const [freq, setFreq] = useState<RecurFreq>(series?.rule.freq ?? 'weekly')
-  const [weekdays, setWeekdays] = useState<number[]>(series?.rule.weekdays ?? [new Date().getDay()])
+  const [weekdays, setWeekdays] = useState<number[]>(
+    series?.rule.weekdays ?? [card.date ? parseDateKey(card.date).getDay() : new Date().getDay()],
+  )
   const [monthdays, setMonthdays] = useState<number[]>(
     series?.rule.monthdays ?? [card.date ? parseDateKey(card.date).getDate() : new Date().getDate()],
   )

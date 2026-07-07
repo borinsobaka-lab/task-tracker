@@ -1,8 +1,13 @@
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ComponentType } from 'react'
 import type { IconProps } from '@solar-icons/react'
 import type { ViewKind } from '../App'
 import { useBoard } from '../store'
-import { IcoBoard, IcoCalendar, IcoMatrix, IcoRecurring, IcoSettings } from '../icons'
+import type { ID } from '../types'
+import { QUADRANT_COLOR, QUADRANT_LABEL } from '../eisenhower'
+import { cardMatchesQuery } from '../utils'
+import { IcoBoard, IcoCalendar, IcoMatrix, IcoRecurring, IcoSearch, IcoSettings } from '../icons'
+import './header.css'
 
 const STATUS_LABEL: Record<string, { text: string; cls: string }> = {
   synced: { text: 'Сохранено', cls: 'ok' },
@@ -19,15 +24,17 @@ const VIEWS: { key: ViewKind; label: string; Icon: ComponentType<IconProps>; col
   { key: 'recurring', label: 'Повтор', Icon: IcoRecurring, color: '#22c55e' }, // зелёный
 ]
 
-/** Верхний хедер: только табы разделов и кнопка настроек. */
+/** Верхний хедер: табы разделов, глобальный поиск и кнопка настроек. */
 export function Header({
   view,
   onViewChange,
   onOpenSettings,
+  onOpenCard,
 }: {
   view: ViewKind
   onViewChange: (v: ViewKind) => void
   onOpenSettings: () => void
+  onOpenCard: (id: ID) => void
 }) {
   const store = useBoard()
   const status = STATUS_LABEL[store.status] ?? STATUS_LABEL.synced
@@ -50,6 +57,8 @@ export function Header({
         ))}
       </nav>
 
+      <SearchBox onOpenCard={onOpenCard} />
+
       <div className="header-right">
         <span
           className={`sync-status ${status.cls}`}
@@ -63,5 +72,121 @@ export function Header({
         </button>
       </div>
     </header>
+  )
+}
+
+/** Глобальный поиск задач: поле на десктопе, кнопка+полноэкранный оверлей на телефоне. */
+function SearchBox({ onOpenCard }: { onOpenCard: (id: ID) => void }) {
+  const store = useBoard()
+  const [query, setQuery] = useState('')
+  const [focused, setFocused] = useState(false)
+  const [mobileOpen, setMobileOpen] = useState(false)
+  const boxRef = useRef<HTMLDivElement>(null)
+
+  const results = useMemo(() => {
+    const q = query.trim()
+    if (!q) return []
+    const cols = new Map(store.columns.map((c) => [c.id, c]))
+    // Ищем задачи на доске (у них есть статус-колонка); встречи и регулярные вне доски пропускаем
+    return store
+      .liveCards()
+      .filter((c) => cols.has(c.columnId) && cardMatchesQuery(c, q))
+      .slice(0, 30)
+      .map((c) => ({ card: c, column: cols.get(c.columnId)! }))
+  }, [query, store])
+
+  // Клик вне — закрыть выпадашку на десктопе
+  useEffect(() => {
+    if (!focused) return
+    const onDown = (e: PointerEvent) => {
+      if (boxRef.current && !boxRef.current.contains(e.target as Node)) setFocused(false)
+    }
+    document.addEventListener('pointerdown', onDown)
+    return () => document.removeEventListener('pointerdown', onDown)
+  }, [focused])
+
+  const pick = (id: ID) => {
+    onOpenCard(id)
+    setQuery('')
+    setFocused(false)
+    setMobileOpen(false)
+  }
+
+  const closeMobile = () => {
+    setMobileOpen(false)
+    setQuery('')
+  }
+
+  const list = (
+    <div className="search-results" role="listbox">
+      {results.length === 0 ? (
+        <div className="search-empty muted">{query.trim() ? 'Ничего не найдено' : 'Начните вводить название задачи'}</div>
+      ) : (
+        results.map(({ card, column }) => (
+          <button key={card.id} type="button" className="search-result" role="option" onClick={() => pick(card.id)}>
+            <span className="search-result-title">{card.title}</span>
+            <span className="search-result-tags">
+              <span className="search-result-status" title="Статус">
+                {column.color && <span className="search-status-dot" style={{ background: column.color }} />}
+                {column.title}
+              </span>
+              {card.priority && (
+                <span className="search-result-prio" style={{ color: QUADRANT_COLOR[card.priority] }} title="Приоритет">
+                  ● {QUADRANT_LABEL[card.priority]}
+                </span>
+              )}
+            </span>
+          </button>
+        ))
+      )}
+    </div>
+  )
+
+  return (
+    <div className="header-search" ref={boxRef}>
+      {/* Десктоп: поле после табов */}
+      <div className="header-search-field">
+        <span className="header-search-ico" aria-hidden>
+          <IcoSearch size={16} />
+        </span>
+        <input
+          className="header-search-input"
+          type="search"
+          placeholder="Поиск задач"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          onFocus={() => setFocused(true)}
+          aria-label="Поиск задач"
+        />
+        {focused && query.trim() && list}
+      </div>
+
+      {/* Мобильный: квадратная кнопка → полноэкранный поиск */}
+      <button className="icon-btn header-search-btn" onClick={() => setMobileOpen(true)} title="Поиск" aria-label="Поиск">
+        <IcoSearch size={20} />
+      </button>
+      {mobileOpen && (
+        <div className="search-overlay" role="dialog" aria-modal="true">
+          <div className="search-overlay-bar">
+            <span className="header-search-ico" aria-hidden>
+              <IcoSearch size={18} />
+            </span>
+            <input
+              className="search-overlay-input"
+              type="search"
+              placeholder="Поиск задач"
+              value={query}
+              autoFocus
+              onChange={(e) => setQuery(e.target.value)}
+              aria-label="Поиск задач"
+            />
+            <button className="btn btn-ghost btn-sm" onClick={closeMobile}>
+              Отмена
+            </button>
+          </div>
+          <div className="search-overlay-results">{list}</div>
+        </div>
+      )}
+    </div>
   )
 }
