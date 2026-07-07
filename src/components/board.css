@@ -324,6 +324,81 @@
   display: inline-flex;
 }
 
+/* Быстрое назначение ответственного */
+.card-assign {
+  margin-left: auto;
+  display: inline-flex;
+  position: relative;
+}
+.card-assign-btn {
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  display: inline-flex;
+  border-radius: 999px;
+}
+.card-add-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1.5px dashed var(--border-strong);
+  color: var(--text-faint);
+  font-size: 15px;
+  line-height: 1;
+}
+.card-assign-btn:hover .card-add-avatar {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.card-assign-pop {
+  position: fixed;
+  z-index: 60;
+  min-width: 180px;
+  max-height: 260px;
+  overflow-y: auto;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  padding: 4px;
+}
+.card-assign-empty {
+  padding: 8px 10px;
+  font-size: 12.5px;
+}
+.card-assign-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: none;
+  border-radius: 6px;
+  padding: 6px 8px;
+  cursor: pointer;
+  font-size: 13px;
+}
+.card-assign-row:hover {
+  background: var(--surface-2);
+}
+.card-assign-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.card-assign-check {
+  color: var(--accent);
+  font-weight: 700;
+}
+
 /* ---------- Быстрое добавление карточки ---------- */
 
 .board-col-footer {

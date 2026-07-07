@@ -34,7 +34,7 @@ import type { Card, Column, ColumnRole, ID, Member } from '../types'
 import { ROLE_META, ROLE_ORDER } from '../columnRoles'
 import { QUADRANT_COLOR, QUADRANT_LABEL } from '../eisenhower'
 import { fmtDayMonth, hasContent, parseDateKey, toDateKey } from '../utils'
-import { AvatarStack } from './Avatar'
+import { Avatar, AvatarStack } from './Avatar'
 import './board.css'
 
 type CardsByCol = Record<ID, ID[]>
@@ -485,12 +485,82 @@ function BoardCard({
       {...attributes}
       {...listeners}
     >
-      <CardContent card={card} members={members} />
+      <CardContent card={card} members={members} interactive />
     </div>
   )
 }
 
-function CardContent({ card, members }: { card: Card; members: Member[] }) {
+// Быстрое назначение ответственного прямо на карточке доски
+function QuickAssign({ card, members, assignees }: { card: Card; members: Member[]; assignees: Member[] }) {
+  const store = useBoard()
+  const [pos, setPos] = useState<{ right: number; bottom: number } | null>(null)
+  const btnRef = useRef<HTMLButtonElement>(null)
+  const popRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!pos) return
+    const close = (e: Event) => {
+      const t = e.target as Node
+      if (popRef.current?.contains(t) || btnRef.current?.contains(t)) return
+      setPos(null)
+    }
+    const onScroll = () => setPos(null) // поповер fixed — при прокрутке закрываем
+    document.addEventListener('mousedown', close)
+    window.addEventListener('scroll', onScroll, true)
+    return () => {
+      document.removeEventListener('mousedown', close)
+      window.removeEventListener('scroll', onScroll, true)
+    }
+  }, [pos])
+
+  const openPop = () => {
+    if (pos) {
+      setPos(null)
+      return
+    }
+    const r = btnRef.current!.getBoundingClientRect()
+    setPos({ right: window.innerWidth - r.right, bottom: window.innerHeight - r.top + 6 })
+  }
+
+  const toggle = (id: ID) => {
+    const has = card.assigneeIds.includes(id)
+    store.updateCard(card.id, {
+      assigneeIds: has ? card.assigneeIds.filter((x) => x !== id) : [...card.assigneeIds, id],
+    })
+  }
+
+  return (
+    <div className="card-assign" onPointerDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}>
+      <button
+        ref={btnRef}
+        type="button"
+        className="card-assign-btn"
+        title="Назначить ответственного"
+        aria-label="Назначить ответственного"
+        onClick={openPop}
+      >
+        {assignees.length > 0 ? <AvatarStack members={assignees} size="sm" /> : <span className="card-add-avatar">+</span>}
+      </button>
+      {pos && (
+        <div className="card-assign-pop" role="menu" ref={popRef} style={{ right: pos.right, bottom: pos.bottom }}>
+          {store.members.length === 0 && <div className="muted card-assign-empty">Добавьте участников в настройках</div>}
+          {store.members.map((m) => {
+            const on = card.assigneeIds.includes(m.id)
+            return (
+              <button key={m.id} type="button" className="card-assign-row" onClick={() => toggle(m.id)}>
+                <Avatar member={m} size="sm" />
+                <span className="card-assign-name">{m.name}</span>
+                {on && <span className="card-assign-check">✓</span>}
+              </button>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function CardContent({ card, members, interactive }: { card: Card; members: Member[]; interactive?: boolean }) {
   const total = card.checklist.length
   const doneCount = card.checklist.reduce((n, i) => n + (i.done ? 1 : 0), 0)
   const attachments = card.attachments.length
@@ -531,7 +601,7 @@ function CardContent({ card, members }: { card: Card; members: Member[] }) {
         )}
         <span className="board-card-title-text">{card.title}</span>
       </div>
-      {hasMeta && (
+      {(hasMeta || interactive) && (
         <div className="board-card-meta">
           {dateLabel && (
             <span className={'card-badge' + (overdue ? ' overdue' : '')} title={overdue ? 'Срок прошёл' : 'Дата'}>
@@ -558,10 +628,14 @@ function CardContent({ card, members }: { card: Card; members: Member[] }) {
               <DescriptionIcon />
             </span>
           )}
-          {assignees.length > 0 && (
-            <span className="card-assignees">
-              <AvatarStack members={assignees} size="sm" />
-            </span>
+          {interactive ? (
+            <QuickAssign card={card} members={members} assignees={assignees} />
+          ) : (
+            assignees.length > 0 && (
+              <span className="card-assignees">
+                <AvatarStack members={assignees} size="sm" />
+              </span>
+            )
           )}
         </div>
       )}

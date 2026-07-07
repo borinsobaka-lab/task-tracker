@@ -206,6 +206,17 @@
   -webkit-box-orient: vertical;
 }
 
+/* Кружок приоритета (матрица Эйзенхауэра) на карточках/чипах календаря */
+.cal-prio-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 5px;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
 .cal-side-meta {
   margin-top: 5px;
   display: flex;

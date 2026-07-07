@@ -424,6 +424,7 @@ export function CalendarView({
         {...dragEvents}
       >
         <span className="cal-chip-dot" />
+        {c.priority && <span className="cal-prio-dot" style={{ background: QUADRANT_COLOR[c.priority] }} title="Приоритет" />}
         <span className="cal-chip-title">
           {isMeeting(c) && <span aria-hidden>📹 </span>}
           {c.seriesId && <span aria-hidden>🔁 </span>}
@@ -548,7 +549,9 @@ export function CalendarView({
         {...dragEvents}
       >
         <div className="cal-side-title">
+          {c.priority && <span className="cal-prio-dot" style={{ background: QUADRANT_COLOR[c.priority] }} title="Приоритет" />}
           {isMeeting(c) && <span aria-hidden>📹 </span>}
+          {c.seriesId && <span aria-hidden>🔁 </span>}
           {c.title}
         </div>
         {assignees.length > 0 && (
