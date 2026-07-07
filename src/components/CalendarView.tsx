@@ -7,7 +7,7 @@ import { getCalDays, getCalTimeline, setCalDays, setCalTimeline } from '../confi
 import type { Card, ID, Member } from '../types'
 import { QUADRANT_COLOR } from '../eisenhower'
 import type { ViewProps } from '../viewProps'
-import { IcoCheck, IcoChevronLeft, IcoChevronRight, IcoLink, IcoMeeting, IcoRecurring } from '../icons'
+import { IcoCheck, IcoChevronLeft, IcoChevronRight, IcoLink, IcoMeeting } from '../icons'
 import { SubHeader } from './SubHeader'
 import { TimelineView } from './TimelineView'
 import type { TimelineHandle } from './TimelineView'
@@ -615,14 +615,13 @@ export function CalendarView({ memberFilter, onMemberFilterChange, onOpenCard }:
             </div>
           )}
           <div className="cal-event-title">
-            {mtg && <span className="cal-meeting-ico inline-ico" aria-hidden><IcoMeeting size={13} /></span>}
-            {c.seriesId && <span className="inline-ico" aria-hidden><IcoRecurring size={13} /></span>}
+            {mtg && <span className="cal-meeting-ico inline-ico" aria-hidden><IcoMeeting size={16} /></span>}
             {c.title}
           </div>
         </div>
         <div className="cal-event-time">{label}</div>
         <div className="cal-event-avatars">
-          <AvatarStack members={assigneesOf(c)} size="sm" />
+          <AvatarStack members={assigneesOf(c)} size="xs" />
         </div>
         <div
           className="cal-event-resize"
@@ -676,13 +675,12 @@ export function CalendarView({ memberFilter, onMemberFilterChange, onOpenCard }:
       >
         <div className="cal-side-title">
           {c.priority && <span className="cal-prio-dot" style={{ background: QUADRANT_COLOR[c.priority] }} title="Приоритет" />}
-          {isMeeting(c) && <span className="inline-ico" aria-hidden><IcoMeeting size={13} /></span>}
-          {c.seriesId && <span className="inline-ico" aria-hidden><IcoRecurring size={13} /></span>}
+          {isMeeting(c) && <span className="inline-ico" aria-hidden><IcoMeeting size={16} /></span>}
           {c.title}
         </div>
         {assignees.length > 0 && (
           <div className="cal-side-meta">
-            <AvatarStack members={assignees} size="sm" />
+            <AvatarStack members={assignees} size="xs" />
           </div>
         )}
       </div>
