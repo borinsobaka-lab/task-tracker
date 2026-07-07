@@ -6,9 +6,12 @@ import { useBoard } from '../store'
 import { getCalDays, setCalDays } from '../config'
 import type { Card, ID, Member } from '../types'
 import { QUADRANT_COLOR } from '../eisenhower'
+import type { ViewProps } from '../viewProps'
 import { IcoCheck, IcoChevronLeft, IcoChevronRight, IcoMeeting, IcoRecurring } from '../icons'
+import { SubHeader } from './SubHeader'
 import {
   addDays,
+  cardMatchesQuery,
   clamp,
   fmtDayMonth,
   fmtFullDate,
@@ -144,13 +147,7 @@ function rangeTitle(start: Date, end: Date): string {
 
 // ---------- Компонент ----------
 
-export function CalendarView({
-  memberFilter,
-  onOpenCard,
-}: {
-  memberFilter: ReadonlySet<ID>
-  onOpenCard: (id: ID) => void
-}) {
+export function CalendarView({ memberFilter, onMemberFilterChange, search, onSearchChange, onOpenCard }: ViewProps) {
   const store = useBoard()
   // Сколько дней показывать: 1 / 3 / 7 — выбор пользователя (сохраняется).
   const [nDays, setNDaysState] = useState<number>(() => getCalDays())
@@ -253,7 +250,7 @@ export function CalendarView({
   const memberById = useMemo(() => new Map(store.members.map((m) => [m.id, m])), [store.members])
 
   const passesFilter = (c: Card): boolean =>
-    memberFilter.size === 0 || c.assigneeIds.some((id) => memberFilter.has(id))
+    (memberFilter.size === 0 || c.assigneeIds.some((id) => memberFilter.has(id))) && cardMatchesQuery(c, search)
 
   const visible = store.liveCards().filter(passesFilter)
   const unscheduled = visible
@@ -695,7 +692,12 @@ export function CalendarView({
       className={`cal-root${drag?.moved ? ' is-dragging' : ''}`}
       style={{ ['--cal-days' as string]: String(nDays), ['--cal-gutter-w' as string]: `${gutterW}px` }}
     >
-      <div className="cal-toolbar">
+      <SubHeader
+        memberFilter={memberFilter}
+        onMemberFilterChange={onMemberFilterChange}
+        search={search}
+        onSearchChange={onSearchChange}
+      >
         <button className="btn btn-sm" onClick={() => setAnchor(new Date())}>
           Сегодня
         </button>
@@ -733,7 +735,7 @@ export function CalendarView({
           <option value={3}>3 дня</option>
           <option value={7}>Неделя</option>
         </select>
-      </div>
+      </SubHeader>
 
       <div className="cal-body">
         {panelOpen ? (

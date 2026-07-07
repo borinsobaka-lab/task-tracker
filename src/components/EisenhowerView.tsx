@@ -3,7 +3,8 @@ import type { MutableRefObject } from 'react'
 import {
   DndContext,
   DragOverlay,
-  PointerSensor,
+  MouseSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   useDraggable,
@@ -14,28 +15,30 @@ import {
 } from '@dnd-kit/core'
 import { useBoard } from '../store'
 import type { Card, EisenhowerQuadrant, ID, Member } from '../types'
+import type { ViewProps } from '../viewProps'
 import { QUADRANTS } from '../eisenhower'
-import { IcoMeeting } from '../icons'
+import { cardMatchesQuery } from '../utils'
+import { IcoLaunch, IcoMeeting } from '../icons'
 import { AvatarStack } from './Avatar'
+import { SubHeader } from './SubHeader'
 import './eisenhower.css'
 
 const INBOX = 'inbox'
 
-export function EisenhowerView({
-  memberFilter,
-  onOpenCard,
-}: {
-  memberFilter: ReadonlySet<ID>
-  onOpenCard: (id: ID) => void
-}) {
+export function EisenhowerView({ memberFilter, onMemberFilterChange, search, onSearchChange, onOpenCard }: ViewProps) {
   const store = useBoard()
   const memberById = useMemo(() => new Map(store.members.map((m) => [m.id, m])), [store.members])
   const [activeId, setActiveId] = useState<ID | null>(null)
   const suppressClickRef = useRef(false)
 
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }))
+  // Мышь — тащим сразу; палец — только после удержания (~220 мс), чтобы не мешать прокрутке
+  const sensors = useSensors(
+    useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 220, tolerance: 6 } }),
+  )
 
-  const inFilter = (c: Card) => memberFilter.size === 0 || c.assigneeIds.some((id) => memberFilter.has(id))
+  const inFilter = (c: Card) =>
+    (memberFilter.size === 0 || c.assigneeIds.some((id) => memberFilter.has(id))) && cardMatchesQuery(c, search)
   // В матрице только обычные задачи: без встреч, без регулярных и без готовых
   const cards = store.liveCards().filter((c) => c.kind !== 'meeting' && !c.seriesId && !c.done && inFilter(c))
 
@@ -68,8 +71,22 @@ export function EisenhowerView({
   const activeCard = activeId ? store.card(activeId) : undefined
 
   return (
-    <DndContext sensors={sensors} collisionDetection={pointerWithin} onDragStart={onDragStart} onDragEnd={onDragEnd}>
-      <div className="eis-root">
+    <>
+      <SubHeader
+        memberFilter={memberFilter}
+        onMemberFilterChange={onMemberFilterChange}
+        search={search}
+        onSearchChange={onSearchChange}
+      >
+        <button className="btn btn-sm" type="button">
+          <span className="btn-ico" aria-hidden>
+            <IcoLaunch size={16} />
+          </span>
+          Пуск
+        </button>
+      </SubHeader>
+      <DndContext sensors={sensors} collisionDetection={pointerWithin} onDragStart={onDragStart} onDragEnd={onDragEnd}>
+        <div className="eis-root">
         <Zone id={INBOX} className="eis-inbox">
           <div className="eis-inbox-head">
             <span className="field-label">Без приоритета</span>
@@ -109,10 +126,11 @@ export function EisenhowerView({
         </div>
       </div>
 
-      <DragOverlay dropAnimation={null}>
-        {activeCard ? <EisCardBody card={activeCard} members={assigneesOf(activeCard)} dragging /> : null}
-      </DragOverlay>
-    </DndContext>
+        <DragOverlay dropAnimation={null}>
+          {activeCard ? <EisCardBody card={activeCard} members={assigneesOf(activeCard)} dragging /> : null}
+        </DragOverlay>
+      </DndContext>
+    </>
   )
 }
 

@@ -12,11 +12,13 @@ import {
   CheckCircle,
   ClipboardList,
   CloseCircle,
+  Magnifer,
   MenuDots,
   MinusCircle,
   Notes,
   Paperclip,
   Refresh,
+  Rocket,
   Settings,
   SortVertical,
   Target,
@@ -52,3 +54,5 @@ export const IcoSettings = duotone(Settings)
 export const IcoPaperclip = duotone(Paperclip)
 export const IcoDescription = duotone(Notes)
 export const IcoNone = duotone(MinusCircle)
+export const IcoSearch = duotone(Magnifer)
+export const IcoLaunch = duotone(Rocket)

@@ -143,6 +143,14 @@ export function imageFileToAvatar(file: File, size = 96): Promise<string> {
   })
 }
 
+/** Совпадение карточки с поисковым запросом (по заголовку и тексту описания). */
+export function cardMatchesQuery(c: { title: string; description?: string }, query: string): boolean {
+  const q = query.trim().toLowerCase()
+  if (!q) return true
+  const hay = (c.title + ' ' + (c.description ?? '').replace(/<[^>]*>/g, ' ')).toLowerCase()
+  return hay.includes(q)
+}
+
 export function initials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean)
   if (parts.length === 0) return '?'

@@ -367,18 +367,17 @@
 
 @media (max-width: 720px) {
   .app-header {
-    gap: 10px;
+    gap: 8px;
     padding: 0 10px;
-    overflow-x: auto;
   }
   .sync-status {
     display: none;
   }
-  /* На мобильном прячем ряд табов, показываем выпадающий список */
-  .view-tabs {
+  /* Табы остаются, но только иконки — чтобы помещались 4 раздела */
+  .view-tab-label {
     display: none;
   }
-  .view-switch {
-    display: block;
+  .view-tabs button {
+    padding: 6px 10px;
   }
 }

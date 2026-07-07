@@ -1,0 +1,70 @@
+/* Второй хедер раздела: поиск + фильтр участников + элементы раздела */
+.subheader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.subheader::-webkit-scrollbar {
+  display: none;
+}
+
+.subheader-search {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+.subheader-search-ico {
+  position: absolute;
+  left: 8px;
+  display: inline-flex;
+  color: var(--text-faint);
+  pointer-events: none;
+}
+.subheader-search-input {
+  width: 180px;
+  max-width: 46vw;
+  height: 32px;
+  padding: 0 10px 0 30px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-2);
+  font-size: 13.5px;
+  outline: none;
+}
+.subheader-search-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+  background: var(--surface);
+}
+
+.subheader-members {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.subheader-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+@media (max-width: 720px) {
+  .subheader {
+    padding: 7px 10px;
+    gap: 8px;
+  }
+  .subheader-controls {
+    margin-left: 8px;
+  }
+}

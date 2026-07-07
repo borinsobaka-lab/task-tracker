@@ -4,11 +4,13 @@ import { useBoard } from '../store'
 import type { SeriesInput } from '../store'
 import type { Card, ID, Member, RecurFreq, RecurrenceRule, Series } from '../types'
 import { describeRule, ruleIsValid } from '../recurrence'
-import { fmtDayMonth, parseDateKey } from '../utils'
+import type { ViewProps } from '../viewProps'
+import { cardMatchesQuery, fmtDayMonth, parseDateKey } from '../utils'
 import { IcoCheck, IcoClose, IcoOpen, IcoRecurring } from '../icons'
 import { Avatar, AvatarStack } from './Avatar'
 import { RichTextEditor } from './RichTextEditor'
 import { RecurrenceFields } from './RecurrenceFields'
+import { SubHeader } from './SubHeader'
 import './recurring.css'
 
 const DURATIONS: { v: number; label: string }[] = [
@@ -20,17 +22,12 @@ const DURATIONS: { v: number; label: string }[] = [
   { v: 240, label: '4 ч' },
 ]
 
-export function RecurringView({
-  memberFilter,
-  onOpenCard,
-}: {
-  memberFilter: ReadonlySet<ID>
-  onOpenCard: (id: ID) => void
-}) {
+export function RecurringView({ memberFilter, onMemberFilterChange, search, onSearchChange, onOpenCard }: ViewProps) {
   const store = useBoard()
   const [editing, setEditing] = useState<Series | 'new' | null>(null)
 
-  const inFilter = (c: Card) => memberFilter.size === 0 || c.assigneeIds.some((id) => memberFilter.has(id))
+  const inFilter = (c: Card) =>
+    (memberFilter.size === 0 || c.assigneeIds.some((id) => memberFilter.has(id))) && cardMatchesQuery(c, search)
   // Раздел «Регулярное» — только задачи; повторяющиеся встречи живут в календаре
   const insts = store.recurringCards().filter((c) => c.kind !== 'meeting' && inFilter(c))
   const active = insts
@@ -49,12 +46,16 @@ export function RecurringView({
 
   return (
     <div className="rec-root">
-      <div className="rec-toolbar">
+      <SubHeader
+        memberFilter={memberFilter}
+        onMemberFilterChange={onMemberFilterChange}
+        search={search}
+        onSearchChange={onSearchChange}
+      >
         <button className="btn btn-primary btn-sm" onClick={() => setEditing('new')}>
           + Регулярная задача
         </button>
-        <span className="rec-hint muted">Повторяющиеся задачи: выполнил — появляется следующая</span>
-      </div>
+      </SubHeader>
 
       <div className="rec-list">
         {active.length === 0 && completed.length === 0 && (

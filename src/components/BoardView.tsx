@@ -34,9 +34,11 @@ import { useBoard } from '../store'
 import type { Card, Column, ColumnRole, ID, Member } from '../types'
 import { ROLE_META, ROLE_ORDER } from '../columnRoles'
 import { QUADRANT_COLOR, QUADRANT_LABEL } from '../eisenhower'
-import { COLUMN_COLORS, fmtDayMonth, hasContent, parseDateKey, toDateKey } from '../utils'
+import { cardMatchesQuery, COLUMN_COLORS, fmtDayMonth, hasContent, parseDateKey, toDateKey } from '../utils'
+import type { ViewProps } from '../viewProps'
 import { IcoCalendar, IcoCheck, IcoClose, IcoDescription, IcoMeeting, IcoMenu, IcoNone, IcoPaperclip, IcoSort, IcoTrash } from '../icons'
 import { Avatar, AvatarStack } from './Avatar'
+import { SubHeader } from './SubHeader'
 import './board.css'
 
 type CardsByCol = Record<ID, ID[]>
@@ -56,7 +58,7 @@ function cardClassName(card: Card): string {
 
 // ---------- Корневой компонент ----------
 
-export function BoardView({ memberFilter, onOpenCard }: { memberFilter: ReadonlySet<ID>; onOpenCard: (id: ID) => void }) {
+export function BoardView({ memberFilter, onMemberFilterChange, search, onSearchChange, onOpenCard }: ViewProps) {
   const store = useBoard()
   const columns = store.columns
 
@@ -79,8 +81,9 @@ export function BoardView({ memberFilter, onOpenCard }: { memberFilter: Readonly
     (card: Card) =>
       card.kind !== 'meeting' &&
       !card.seriesId &&
-      (memberFilter.size === 0 || card.assigneeIds.some((id) => memberFilter.has(id))),
-    [memberFilter],
+      (memberFilter.size === 0 || card.assigneeIds.some((id) => memberFilter.has(id))) &&
+      cardMatchesQuery(card, search),
+    [memberFilter, search],
   )
 
   const isColumnId = useCallback((id: string) => columns.some((c) => c.id === id), [columns])
@@ -234,16 +237,23 @@ export function BoardView({ memberFilter, onOpenCard }: { memberFilter: Readonly
   const activeColumn = activeColumnId ? columns.find((c) => c.id === activeColumnId) ?? null : null
 
   return (
-    <DndContext
-      sensors={sensors}
-      collisionDetection={collisionDetection}
-      measuring={MEASURING}
-      onDragStart={handleDragStart}
-      onDragOver={handleDragOver}
-      onDragEnd={handleDragEnd}
-      onDragCancel={handleDragCancel}
-    >
-      <div className="board">
+    <>
+      <SubHeader
+        memberFilter={memberFilter}
+        onMemberFilterChange={onMemberFilterChange}
+        search={search}
+        onSearchChange={onSearchChange}
+      />
+      <DndContext
+        sensors={sensors}
+        collisionDetection={collisionDetection}
+        measuring={MEASURING}
+        onDragStart={handleDragStart}
+        onDragOver={handleDragOver}
+        onDragEnd={handleDragEnd}
+        onDragCancel={handleDragCancel}
+      >
+        <div className="board">
         <SortableContext items={columns.map((c) => c.id)} strategy={horizontalListSortingStrategy}>
           {columns.map((col) => (
             <BoardColumn
@@ -259,16 +269,17 @@ export function BoardView({ memberFilter, onOpenCard }: { memberFilter: Readonly
         </SortableContext>
         <AddColumn />
       </div>
-      <DragOverlay>
-        {activeCard ? (
-          <div className={cardClassName(activeCard) + ' card-overlay'}>
-            <CardContent card={activeCard} members={store.members} />
-          </div>
-        ) : activeColumn ? (
-          <ColumnGhost column={activeColumn} cards={cardsFor(activeColumn)} members={store.members} />
-        ) : null}
-      </DragOverlay>
-    </DndContext>
+        <DragOverlay>
+          {activeCard ? (
+            <div className={cardClassName(activeCard) + ' card-overlay'}>
+              <CardContent card={activeCard} members={store.members} />
+            </div>
+          ) : activeColumn ? (
+            <ColumnGhost column={activeColumn} cards={cardsFor(activeColumn)} members={store.members} />
+          ) : null}
+        </DragOverlay>
+      </DndContext>
+    </>
   )
 }
 

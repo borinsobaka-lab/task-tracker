@@ -128,6 +128,7 @@ function Shell({ onLogout }: { onLogout: () => void }) {
   const [selectedCardId, setSelectedCardId] = useState<ID | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [memberFilter, setMemberFilter] = useState<ReadonlySet<ID>>(new Set())
+  const [search, setSearch] = useState('')
 
   // При загрузке один раз пополняем будущие экземпляры повторяющихся встреч
   const toppedUp = useRef(false)
@@ -175,18 +176,21 @@ function Shell({ onLogout }: { onLogout: () => void }) {
 
   return (
     <div className="app-shell">
-      <Header
-        view={view}
-        onViewChange={changeView}
-        onOpenSettings={() => setSettingsOpen(true)}
-        memberFilter={memberFilter}
-        onMemberFilterChange={setMemberFilter}
-      />
+      <Header view={view} onViewChange={changeView} onOpenSettings={() => setSettingsOpen(true)} />
       <main className="app-main">
-        {view === 'board' && <BoardView memberFilter={memberFilter} onOpenCard={setSelectedCardId} />}
-        {view === 'calendar' && <CalendarView memberFilter={memberFilter} onOpenCard={setSelectedCardId} />}
-        {view === 'matrix' && <EisenhowerView memberFilter={memberFilter} onOpenCard={setSelectedCardId} />}
-        {view === 'recurring' && <RecurringView memberFilter={memberFilter} onOpenCard={setSelectedCardId} />}
+        {(() => {
+          const shared = {
+            memberFilter,
+            onMemberFilterChange: setMemberFilter,
+            search,
+            onSearchChange: setSearch,
+            onOpenCard: setSelectedCardId,
+          }
+          if (view === 'board') return <BoardView {...shared} />
+          if (view === 'calendar') return <CalendarView {...shared} />
+          if (view === 'matrix') return <EisenhowerView {...shared} />
+          return <RecurringView {...shared} />
+        })()}
       </main>
       {selectedCardId && <CardModal cardId={selectedCardId} onClose={() => setSelectedCardId(null)} />}
       {settingsOpen && <SettingsModal onClose={() => setSettingsOpen(false)} onLogout={onLogout} />}
