@@ -121,6 +121,8 @@ export interface Column {
   /** Порядок карточек в колонке — источник истины для расположения */
   cardIds: ID[]
   role?: ColumnRole
+  /** Цвет колонки (hex). Рисуется полоской сверху подложки. Нет — без полоски. */
+  color?: string
   deleted?: boolean
   createdAt: string
   updatedAt: string

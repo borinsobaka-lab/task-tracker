@@ -315,6 +315,7 @@ export interface BoardStore {
   addColumn(title: string): void
   renameColumn(id: ID, title: string): void
   setColumnRole(id: ID, role: ColumnRole | undefined): void
+  setColumnColor(id: ID, color: string | undefined): void
   deleteColumn(id: ID): void
   moveColumn(id: ID, toIndex: number): void
 
@@ -488,6 +489,14 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
             touch(card)
           }
         }
+      }),
+    setColumnColor: (id, color) =>
+      engine.update((d) => {
+        const col = d.columns.find((c) => c.id === id)
+        if (!col) return
+        if (color) col.color = color
+        else delete col.color
+        touch(col)
       }),
     deleteColumn: (id) =>
       engine.update((d) => {

@@ -33,7 +33,7 @@ import { useBoard } from '../store'
 import type { Card, Column, ColumnRole, ID, Member } from '../types'
 import { ROLE_META, ROLE_ORDER } from '../columnRoles'
 import { QUADRANT_COLOR, QUADRANT_LABEL } from '../eisenhower'
-import { fmtDayMonth, hasContent, parseDateKey, toDateKey } from '../utils'
+import { COLUMN_COLORS, fmtDayMonth, hasContent, parseDateKey, toDateKey } from '../utils'
 import { Avatar, AvatarStack } from './Avatar'
 import './board.css'
 
@@ -313,6 +313,7 @@ function BoardColumn({
       className={'board-col' + (isDragging ? ' col-dragging' : '')}
       style={{ transform: CSS.Translate.toString(transform), transition }}
     >
+      {column.color && <div className="board-col-strip" style={{ background: column.color }} />}
       <div className="board-col-header" ref={setActivatorNodeRef} {...attributes} {...listeners}>
         {editing ? (
           <input
@@ -388,6 +389,10 @@ function ColumnMenu({ column }: { column: Column }) {
     store.setColumnRole(column.id, role)
   }
 
+  const setColor = (color: string | undefined) => {
+    store.setColumnColor(column.id, color)
+  }
+
   return (
     <div className="col-menu-wrap" onPointerDown={(e) => e.stopPropagation()}>
       <button
@@ -427,6 +432,28 @@ function ColumnMenu({ column }: { column: Column }) {
               {!column.role && <span className="col-menu-check">✓</span>}
             </button>
             <div className="col-menu-sep" />
+            <div className="col-menu-label">Цвет колонки</div>
+            <div className="col-menu-colors">
+              <button
+                className={'col-color-swatch none' + (!column.color ? ' active' : '')}
+                onClick={() => setColor(undefined)}
+                title="Без цвета"
+                aria-label="Без цвета"
+              >
+                ✕
+              </button>
+              {COLUMN_COLORS.map((c) => (
+                <button
+                  key={c}
+                  className={'col-color-swatch' + (column.color === c ? ' active' : '')}
+                  style={{ background: c }}
+                  onClick={() => setColor(c)}
+                  title={c}
+                  aria-label={`Цвет ${c}`}
+                />
+              ))}
+            </div>
+            <div className="col-menu-sep" />
             <button className="col-menu-item danger" role="menuitem" onClick={remove}>
               🗑 Удалить колонку
             </button>
@@ -441,6 +468,7 @@ function ColumnMenu({ column }: { column: Column }) {
 function ColumnGhost({ column, cards, members }: { column: Column; cards: Card[]; members: Member[] }) {
   return (
     <div className="board-col col-overlay">
+      {column.color && <div className="board-col-strip" style={{ background: column.color }} />}
       <div className="board-col-header">
         <h3 className="board-col-title">{column.title}</h3>
         <span className="board-col-count">{cards.length}</span>
