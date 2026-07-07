@@ -1,7 +1,7 @@
 // Telegram-бот отчётов по задачам.
-// Запускается из GitHub Actions по расписанию:
-//   MODE=morning  — утренний список задач на сегодня (10:00 МСК)
-//   MODE=evening  — вечерний итог дня + задачи на завтра (20:00 МСК)
+// Запускается из GitHub Actions по расписанию (время — Тбилиси, UTC+4):
+//   MODE=morning  — утренний список задач на сегодня (10:00)
+//   MODE=evening  — вечерний итог дня + задачи на завтра (20:00)
 //   MODE=refresh  — обновляет (редактирует) утреннее сообщение под текущие статусы
 //
 // Читает board.json из ПРИВАТНОГО репозитория данных (DATA_TOKEN),
@@ -13,7 +13,7 @@ const CHAT_ID = process.env.TELEGRAM_CHAT_ID || '5360181823'
 const DATA_TOKEN = process.env.DATA_TOKEN || ''
 const STATE_TOKEN = process.env.STATE_TOKEN || ''
 const MODE = process.env.MODE || 'morning'
-const TZ = process.env.TZ_NAME || 'Europe/Moscow'
+const TZ = process.env.TZ_NAME || 'Asia/Tbilisi'
 
 const DATA = {
   owner: process.env.DATA_OWNER || 'borinsobaka-lab',
@@ -133,12 +133,25 @@ function fmtCardLine(card, colById) {
   return `${EMOJI[st]} ${time}${meeting}${title}${extra}`
 }
 
+/** Ник в Telegram → упоминание "@ник" (добавляем @, если пользователь его не поставил). */
+function tgHandle(raw) {
+  const n = String(raw || '').trim()
+  if (!n) return ''
+  return n.startsWith('@') ? n : '@' + n
+}
+
+/** Заголовок группы: «Имя (@ник)», чтобы Telegram тегал участника. */
+function groupHeader(g) {
+  const handle = tgHandle(g.nick)
+  return `<b>${esc(g.name)}</b>${handle ? ` (${esc(handle)})` : ''}`
+}
+
 /** Группирует карточки по исполнителям (+ группа «Без исполнителя»). */
 function groupByMember(cards, members) {
   const groups = []
   for (const m of members) {
     const list = cards.filter((c) => (c.assigneeIds || []).includes(m.id))
-    if (list.length) groups.push({ name: m.name, cards: list })
+    if (list.length) groups.push({ name: m.name, nick: m.tgUsername, cards: list })
   }
   const orphan = cards.filter((c) => !(c.assigneeIds || []).some((id) => members.find((m) => m.id === id)))
   if (orphan.length) groups.push({ name: 'Без исполнителя', cards: orphan })
@@ -147,7 +160,7 @@ function groupByMember(cards, members) {
 
 function renderGroups(groups, colById) {
   return groups
-    .map((g) => `<b>${esc(g.name)}</b>\n` + g.cards.map((c) => '   ' + fmtCardLine(c, colById)).join('\n'))
+    .map((g) => `${groupHeader(g)}\n` + g.cards.map((c) => '   ' + fmtCardLine(c, colById)).join('\n'))
     .join('\n\n')
 }
 
@@ -174,7 +187,7 @@ export function eveningText(board) {
   else {
     const groups = groupByMember(cards, members).map((g) => {
       const d = g.cards.filter((c) => statusOf(c, colById) === 'done').length
-      return `<b>${esc(g.name)}</b> — готово ${d} из ${g.cards.length}\n` + g.cards.map((c) => '   ' + fmtCardLine(c, colById)).join('\n')
+      return `${groupHeader(g)} — готово ${d} из ${g.cards.length}\n` + g.cards.map((c) => '   ' + fmtCardLine(c, colById)).join('\n')
     })
     summary = groups.join('\n\n')
   }

@@ -126,6 +126,18 @@ function MemberRow({ member }: { member: Member }) {
           title="Сменить цвет"
           aria-label={`Сменить цвет участника ${member.name}`}
         />
+        <label className="settings-nick" title="Ник в Telegram — бот подставит его в уведомления, чтобы упоминать участника">
+          <span>Telegram</span>
+          <input
+            className="input settings-nick-input"
+            value={member.tgUsername ?? ''}
+            placeholder="@ник"
+            onChange={(e) => {
+              const v = e.target.value.trim()
+              store.updateMember(member.id, { tgUsername: v || undefined })
+            }}
+          />
+        </label>
         <label className="settings-sleep" title="До скольки часов спит — в календаре это время будет серым">
           <span>спит до</span>
           <select

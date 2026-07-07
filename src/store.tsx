@@ -308,7 +308,7 @@ export interface BoardStore {
 
   // Участники
   addMember(name: string, color: string): Member
-  updateMember(id: ID, patch: Partial<Pick<Member, 'name' | 'color' | 'sleepUntil'>>): void
+  updateMember(id: ID, patch: Partial<Pick<Member, 'name' | 'color' | 'sleepUntil' | 'tgUsername'>>): void
   archiveMember(id: ID): void
 
   // Колонки
