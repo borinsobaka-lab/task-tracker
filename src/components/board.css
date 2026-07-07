@@ -267,8 +267,9 @@
   box-shadow: var(--shadow-sm);
   padding: 9px 11px;
   cursor: pointer;
-  /* pan-y — палец может вертикально прокручивать список; drag стартует по удержанию */
-  touch-action: pan-y;
+  /* pan-x pan-y — палец может прокручивать и список (вертикально), и доску
+     (горизонтально); перенос карточки стартует только по удержанию */
+  touch-action: pan-x pan-y;
   user-select: none;
   -webkit-user-select: none;
   transition: border-color 0.12s;
