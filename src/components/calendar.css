@@ -1058,6 +1058,110 @@
   padding: 2px 10px;
 }
 
+/* Виджет-режим публичной страницы: крупнее и во всю ширину, как виджет
+   Google Календаря — дни отдельными заголовками, большие читаемые карточки. */
+.public-tl .cal-timeline {
+  align-items: stretch;
+  padding: 6px 12px 40px;
+}
+.public-tl .tl-inner {
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  gap: 4px;
+}
+.public-tl .tl-day {
+  flex-direction: column; /* заголовок дня сверху, карточки во всю ширину */
+  gap: 8px;
+  margin-top: 12px;
+}
+.public-tl .tl-day:first-child {
+  margin-top: 2px;
+}
+.public-tl .tl-daylabel {
+  flex-direction: row;
+  align-items: baseline;
+  gap: 8px;
+  width: auto;
+  position: static;
+  padding: 2px 2px 2px;
+}
+.public-tl .tl-day-name {
+  font-size: 18px;
+  font-weight: 800;
+}
+.public-tl .tl-day-date {
+  font-size: 14px;
+}
+.public-tl .tl-day-cards {
+  gap: 8px;
+  padding-bottom: 0;
+  margin-bottom: 0;
+  border-bottom: none;
+}
+.public-tl .tl-card {
+  padding: 13px 15px;
+  gap: 12px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--ev-color) 20%, var(--surface));
+  border-left-width: 5px;
+}
+.public-tl .tl-overdue .tl-card {
+  background: color-mix(in srgb, var(--danger) 14%, var(--surface));
+}
+.public-tl .tl-card-title {
+  font-size: 16px;
+  line-height: 1.3;
+}
+.public-tl .tl-card-sub {
+  font-size: 14px;
+  margin-top: 5px;
+  gap: 5px 12px;
+}
+.public-tl .tl-card-left {
+  gap: 6px;
+  padding-top: 2px;
+}
+.public-tl .cal-chip-check {
+  width: 22px;
+  height: 22px;
+}
+.public-tl .cal-event-prio {
+  width: 12px;
+  height: 12px;
+}
+.public-tl .tl-avatar {
+  width: 24px;
+  height: 24px;
+  font-size: 11px;
+}
+.public-tl .tl-now-badge {
+  font-size: 11px;
+  padding: 2px 8px;
+}
+
+/* Узкий виджет: компактная шапка, чтобы больше места под задачи */
+@media (max-width: 440px) {
+  .public-tl-head {
+    padding: 9px 12px;
+    gap: 6px;
+  }
+  .public-tl-title {
+    font-size: 14px;
+  }
+  .public-tl-upd {
+    margin-left: auto;
+    font-size: 11px;
+  }
+  .public-tl-note {
+    display: none;
+  }
+}
+
 @media (max-width: 720px) {
   .cal-timeline {
     padding: 10px 8px 44px;
