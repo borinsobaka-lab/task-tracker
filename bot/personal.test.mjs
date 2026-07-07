@@ -1,8 +1,8 @@
-// Проверка чистой логики Worker в Node (без Cloudflare/Telegram).
-// Запуск: node bot/worker/test.mjs   (нужен Node ≥ 20 с глобальным Web Crypto)
+// Проверка чистой логики личного бота в Node (без Telegram/GitHub).
+// Запуск: node bot/personal.test.mjs   (Node ≥ 20 с глобальным Web Crypto)
 
 import assert from 'node:assert/strict'
-import { verifyPassword, assignedCardIds, upcomingWithin } from './worker.js'
+import { verifyPassword, assignedCardIds, upcomingWithin, activeMembers } from './personal.mjs'
 
 function b64(bytes) {
   let s = ''
@@ -10,7 +10,7 @@ function b64(bytes) {
   return btoa(s)
 }
 
-// Собираем auth.json ровно так же, как приложение (PBKDF2 250k SHA-256 + AES-GCM).
+// auth.json собираем ровно как приложение (PBKDF2 250k SHA-256 + AES-GCM)
 async function makeBlob(secret, password) {
   const salt = crypto.getRandomValues(new Uint8Array(16))
   const iv = crypto.getRandomValues(new Uint8Array(12))
@@ -43,13 +43,13 @@ function wall(ms, tz) {
 
 const tz = 'Asia/Tbilisi'
 
-// 1) Проверка пароля
+// 1) Пароль
 const blob = await makeBlob('ghp_secret_token', 'hunter2')
 assert.equal(await verifyPassword(blob, 'hunter2'), true, 'верный пароль принят')
 assert.equal(await verifyPassword(blob, 'wrong'), false, 'неверный пароль отклонён')
 assert.equal(await verifyPassword(blob, ''), false, 'пустой пароль отклонён')
 
-// 2) Назначенные задачи: только живые, не повторяющиеся, конкретного участника
+// 2) Участники и назначения
 const board = {
   members: [{ id: 'm1', name: 'Борис' }, { id: 'm2', name: 'Аня', archived: true }],
   cards: {
@@ -59,6 +59,7 @@ const board = {
     d: { id: 'd', title: 'Повтор', assigneeIds: ['m1'], seriesId: 's1' },
   },
 }
+assert.deepEqual(activeMembers(board).map((m) => m.id), ['m1'], 'архивные участники скрыты')
 assert.deepEqual([...assignedCardIds(board, 'm1')].sort(), ['a'], 'только живая разовая задача участника')
 
 // 3) Напоминание за 30 минут
@@ -66,16 +67,21 @@ const now = Date.now()
 const w20 = wall(now + 20 * 60000, tz)
 const soon = { cards: { e: { id: 'e', title: 'Скоро', assigneeIds: ['m1'], date: w20.date, start: w20.start } } }
 const up = upcomingWithin(soon, 'm1', tz, now, 30)
-assert.equal(up.length, 1, 'событие через 20 мин попадает в окно 30')
+assert.equal(up.length, 1, 'событие через 20 мин в окне 30')
 assert.ok(up[0].mins >= 18 && up[0].mins <= 22, 'осталось ~20 минут')
 
 const w40 = wall(now + 40 * 60000, tz)
-const later = { cards: { f: { id: 'f', title: 'Позже', assigneeIds: ['m1'], date: w40.date, start: w40.start } } }
-assert.equal(upcomingWithin(later, 'm1', tz, now, 30).length, 0, 'событие через 40 мин вне окна')
+assert.equal(
+  upcomingWithin({ cards: { f: { id: 'f', title: 'Позже', assigneeIds: ['m1'], date: w40.date, start: w40.start } } }, 'm1', tz, now, 30).length,
+  0,
+  'событие через 40 мин вне окна',
+)
 
-// событие в прошлом не напоминаем
 const wPast = wall(now - 5 * 60000, tz)
-const past = { cards: { g: { id: 'g', title: 'Прошло', assigneeIds: ['m1'], date: wPast.date, start: wPast.start } } }
-assert.equal(upcomingWithin(past, 'm1', tz, now, 30).length, 0, 'прошедшее не напоминаем')
+assert.equal(
+  upcomingWithin({ cards: { g: { id: 'g', title: 'Прошло', assigneeIds: ['m1'], date: wPast.date, start: wPast.start } } }, 'm1', tz, now, 30).length,
+  0,
+  'прошедшее не напоминаем',
+)
 
-console.log('OK: все проверки логики бота пройдены')
+console.log('OK: все проверки логики личного бота пройдены')

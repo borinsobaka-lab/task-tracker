@@ -1,0 +1,32 @@
+name: Личные уведомления (Telegram)
+
+on:
+  schedule:
+    - cron: '*/5 * * * *' # каждые 5 минут: читаем сообщения и шлём напоминания
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+# Не запускаем два экземпляра сразу (иначе задвоится офсет getUpdates)
+concurrency:
+  group: telegram-personal
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Обработать личные сообщения и отправить уведомления
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          DATA_TOKEN: ${{ secrets.DATA_REPO_TOKEN }}
+          STATE_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TZ_NAME: Asia/Tbilisi
+          APP_URL: https://borinsobaka-lab.github.io/task-tracker/
+        run: node bot/personal.mjs
