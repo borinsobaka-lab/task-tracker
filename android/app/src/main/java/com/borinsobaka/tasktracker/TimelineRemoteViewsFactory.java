@@ -4,6 +4,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
+import android.text.SpannableString;
+import android.text.style.StrikethroughSpan;
 import android.view.View;
 import android.widget.RemoteViews;
 import android.widget.RemoteViewsService;
@@ -76,7 +78,7 @@ public class TimelineRemoteViewsFactory implements RemoteViewsService.RemoteView
             if (isMeeting) {
                 if (it.endMs >= now) keep.add(it); // предстоящие/идущие встречи
             } else {
-                if (!it.done && cmp(it.date, today) >= 0) keep.add(it); // сегодня и позже, невыполненные
+                if (cmp(it.date, today) >= 0) keep.add(it); // сегодня и позже, включая выполненные (зачёркнутые)
             }
         }
         Collections.sort(keep, new Comparator<Item>() {
@@ -113,8 +115,23 @@ public class TimelineRemoteViewsFactory implements RemoteViewsService.RemoteView
         }
         Item it = row.item;
         RemoteViews rv = new RemoteViews(ctx.getPackageName(), R.layout.widget_item_task);
-        rv.setInt(R.id.item_bar, "setBackgroundColor", it.color);
-        rv.setTextViewText(R.id.item_title, it.title);
+        // Тонируем белую скруглённую полосу в цвет задачи
+        rv.setInt(R.id.item_bar, "setColorFilter", it.color);
+
+        if (it.done) {
+            // Выполненные — зачёркнуты и приглушены
+            SpannableString s = new SpannableString(it.title);
+            s.setSpan(new StrikethroughSpan(), 0, s.length(), 0);
+            rv.setTextViewText(R.id.item_title, s);
+            rv.setTextColor(R.id.item_title, 0xFF9AA0AE);
+            rv.setTextColor(R.id.item_time, 0xFFB3B8C4);
+            rv.setInt(R.id.item_bar, "setImageAlpha", 110);
+        } else {
+            rv.setTextViewText(R.id.item_title, it.title);
+            rv.setTextColor(R.id.item_title, 0xFF111827);
+            rv.setTextColor(R.id.item_time, 0xFF6B7280);
+            rv.setInt(R.id.item_bar, "setImageAlpha", 255);
+        }
 
         if (it.start != null && !it.start.isEmpty()) {
             rv.setViewVisibility(R.id.item_time, View.VISIBLE);

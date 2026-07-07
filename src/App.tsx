@@ -18,6 +18,8 @@ import { SettingsModal } from './components/SettingsModal'
 import { IdentityScreen } from './components/IdentityScreen'
 import { PublicTimeline } from './components/PublicTimeline'
 import { isLiveTimelineHash, parseTimelineHash } from './timelineShare'
+import { buildTimelineItems, publishTimeline } from './publicTimelinePublisher'
+import type { TLItem } from './timelineShare'
 import type { ID } from './types'
 import './app.css'
 
@@ -126,9 +128,49 @@ function AppWithSession({
 
   return (
     <BoardProvider adapter={adapter}>
+      {adapterKind === 'github' && token && <TimelinePublisher token={token} />}
       <Shell onLogout={onLogout} />
     </BoardProvider>
   )
+}
+
+/** Публикует публичный timeline.json при изменениях (для виджета на телефоне). */
+function TimelinePublisher({ token }: { token: string }) {
+  const store = useMaybeBoard()
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const pending = useRef<TLItem[] | null>(null)
+  const lastJson = useRef<string>('')
+
+  useEffect(() => {
+    if (!store) return
+    const items = buildTimelineItems(store)
+    const json = JSON.stringify(items)
+    if (json === lastJson.current) return
+    lastJson.current = json
+    pending.current = items
+    clearTimeout(timer.current)
+    timer.current = setTimeout(() => {
+      const it = pending.current
+      pending.current = null
+      if (it) void publishTimeline(token, it)
+    }, 4000)
+  }, [store, token])
+
+  // Уходим в фон (например, назад к виджету) — публикуем сразу, не ждём дебаунс
+  useEffect(() => {
+    const flush = () => {
+      if (document.visibilityState === 'hidden' && pending.current) {
+        const it = pending.current
+        pending.current = null
+        clearTimeout(timer.current)
+        void publishTimeline(token, it)
+      }
+    }
+    document.addEventListener('visibilitychange', flush)
+    return () => document.removeEventListener('visibilitychange', flush)
+  }, [token])
+
+  return null
 }
 
 export type ViewKind = 'board' | 'calendar' | 'matrix' | 'recurring'
@@ -150,15 +192,29 @@ function Shell({ onLogout }: { onLogout: () => void }) {
     }
   }, [store])
 
-  // Диплинк из виджета Android: ссылка вида ...#card=<id> открывает эту задачу.
+  // Диплинки из виджета Android: ...#card=<id> открывает задачу, ...#new — новая задача.
   useEffect(() => {
+    const clearHash = () => history.replaceState(null, '', location.pathname + location.search)
     const openFromHash = () => {
-      const m = location.hash.match(/^#card=(.+)$/)
-      if (!m || !store) return
-      const id = decodeURIComponent(m[1])
-      if (store.card(id)) {
-        setSelectedCardId(id)
-        history.replaceState(null, '', location.pathname + location.search)
+      if (!store) return
+      const cardM = location.hash.match(/^#card=(.+)$/)
+      if (cardM) {
+        const id = decodeURIComponent(cardM[1])
+        if (store.card(id)) {
+          setSelectedCardId(id)
+          clearHash()
+        }
+        return
+      }
+      if (location.hash === '#new') {
+        clearHash()
+        const col = store.columns.find((c) => c.role === 'todo') ?? store.columns[0]
+        if (col) {
+          const id = store.addCard(col.id, '')
+          setView('board')
+          setSavedView('board')
+          setSelectedCardId(id)
+        }
       }
     }
     openFromHash()

@@ -5,4 +5,5 @@
     <string name="widget_empty">Нет ближайших задач</string>
     <string name="widget_desc">Таймлайн ближайших задач</string>
     <string name="refresh">Обновить</string>
+    <string name="add_task">Новая задача</string>
 </resources>

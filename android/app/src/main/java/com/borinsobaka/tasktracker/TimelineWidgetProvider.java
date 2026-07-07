@@ -53,6 +53,14 @@ public class TimelineWidgetProvider extends AppWidgetProvider {
                 ctx, 0, refresh, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
         rv.setOnClickPendingIntent(R.id.widget_refresh, refreshPI);
 
+        // Кнопка «+» — быстрое добавление задачи (открывает приложение на форме новой задачи)
+        Intent add = new Intent(ctx, MainActivity.class)
+                .setData(Uri.parse(MainActivity.APP_URL + "#new"))
+                .setAction(Intent.ACTION_VIEW);
+        PendingIntent addPI = PendingIntent.getActivity(
+                ctx, 1, add, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+        rv.setOnClickPendingIntent(R.id.widget_add, addPI);
+
         mgr.updateAppWidget(widgetId, rv);
         mgr.notifyAppWidgetViewDataChanged(widgetId, R.id.widget_list);
     }

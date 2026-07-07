@@ -70,6 +70,15 @@ public class MainActivity extends Activity {
     }
 
     @Override
+    protected void onStop() {
+        super.onStop();
+        // Уходим из приложения — просим виджет перечитать список (подхватит свежие статусы)
+        sendBroadcast(new Intent(this, TimelineWidgetProvider.class)
+                .setAction(TimelineWidgetProvider.ACTION_REFRESH)
+                .setPackage(getPackageName()));
+    }
+
+    @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK && web != null && web.canGoBack()) {
             web.goBack();
