@@ -1,0 +1,32 @@
+name: Публикация таймлайна
+
+# Публикует публичный timeline.json, чтобы внешняя страница-виджет (#timeline)
+# показывала актуальные задачи и сама обновлялась. Расписание работает только
+# из ветки по умолчанию (main).
+
+on:
+  schedule:
+    - cron: '*/15 * * * *' # каждые 15 минут
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-timeline
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Публикация timeline.json
+        env:
+          DATA_TOKEN: ${{ secrets.DATA_REPO_TOKEN }}
+          STATE_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: node bot/publish-timeline.mjs

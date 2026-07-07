@@ -22,8 +22,32 @@ export interface TLItem {
 }
 
 const PREFIX = '#tl='
+const LIVE_HASH = '#timeline'
 
-/** UTF-8-safe base64 в hash. */
+/** Стабильная «живая» ссылка на публичный таймлайн (сам обновляется). */
+export function buildLiveTimelineUrl(): string {
+  return `${location.origin}${location.pathname}${LIVE_HASH}`
+}
+
+/** Это ссылка на живой таймлайн? */
+export function isLiveTimelineHash(hash: string): boolean {
+  return hash === LIVE_HASH || hash === LIVE_HASH + '/'
+}
+
+/** URL публичного timeline.json (raw.githubusercontent) — выводится из адреса Pages. */
+export function rawTimelineUrl(): string {
+  let owner = 'borinsobaka-lab'
+  let repo = 'task-tracker'
+  const host = location.hostname
+  if (host.endsWith('.github.io')) {
+    owner = host.split('.')[0] || owner
+    const seg = location.pathname.split('/').filter(Boolean)[0]
+    if (seg) repo = seg
+  }
+  return `https://raw.githubusercontent.com/${owner}/${repo}/app-config/timeline.json`
+}
+
+/** UTF-8-safe base64 в hash (устаревший снимок; актуальная ссылка — живая, см. buildLiveTimelineUrl). */
 export function buildTimelineUrl(items: TLItem[]): string {
   const json = JSON.stringify(items)
   const b64 = btoa(unescape(encodeURIComponent(json)))

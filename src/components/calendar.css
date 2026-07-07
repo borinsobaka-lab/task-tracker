@@ -1044,6 +1044,11 @@
   font-size: 15px;
   color: var(--text);
 }
+.public-tl-upd {
+  margin-left: 12px;
+  font-size: 12px;
+  color: var(--text-faint);
+}
 .public-tl-note {
   margin-left: auto;
   font-size: 12px;

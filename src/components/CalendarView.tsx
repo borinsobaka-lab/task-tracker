@@ -11,7 +11,7 @@ import { IcoCheck, IcoChevronLeft, IcoChevronRight, IcoLink, IcoMeeting, IcoRecu
 import { SubHeader } from './SubHeader'
 import { TimelineView } from './TimelineView'
 import type { TimelineHandle } from './TimelineView'
-import { buildTimelineUrl } from '../timelineShare'
+import { buildLiveTimelineUrl } from '../timelineShare'
 import type { TLItem } from '../timelineShare'
 import {
   addDays,
@@ -732,9 +732,9 @@ export function CalendarView({ memberFilter, onMemberFilterChange, onOpenCard }:
           timeline ? (
             <button
               className={'btn btn-sm' + (copied ? ' btn-ok' : '')}
-              title="Скопировать ссылку на таймлайн для показа (только просмотр)"
+              title="Скопировать живую ссылку на таймлайн (сама обновляется, только просмотр)"
               onClick={() => {
-                navigator.clipboard.writeText(buildTimelineUrl(timelineItems)).then(() => {
+                navigator.clipboard.writeText(buildLiveTimelineUrl()).then(() => {
                   setCopied(true)
                   window.setTimeout(() => setCopied(false), 1800)
                 })
