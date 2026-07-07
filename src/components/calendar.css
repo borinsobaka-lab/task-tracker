@@ -191,6 +191,20 @@
   opacity: 0.4;
 }
 
+/* «Взято» после удержания (тач): карточка приподнимается — сигнал, что теперь её можно тащить */
+.cal-event.armed,
+.cal-chip.armed,
+.cal-side-card.armed {
+  transform: scale(1.04);
+  box-shadow: var(--shadow-lg);
+  z-index: 5;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+.cal-event.armed {
+  outline: 2px solid var(--ev-color);
+  outline-offset: -1px;
+}
+
 .cal-side-card.done .cal-side-title {
   text-decoration: line-through;
   color: var(--text-faint);

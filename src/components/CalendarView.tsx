@@ -25,6 +25,10 @@ const HOUR_H = 48 // высота часа, px (синхронизировано
 const SNAP = 30 // шаг привязки, минут
 const DAY_MIN = 24 * 60
 const DRAG_THRESHOLD = 4 // px: меньше — это клик
+// Тач: сколько удерживать палец, прежде чем карточка «возьмётся» и начнётся drag.
+// Пока удержание не сработало, движение пальца прокручивает день, а не двигает задачу.
+const HOLD_MS = 220
+const PENDING_SLOP = 8 // px: сдвиг до срабатывания удержания трактуем как прокрутку
 
 // ---------- Перетаскивание ----------
 
@@ -47,6 +51,12 @@ interface DragState {
   startX: number
   startY: number
   moved: boolean
+  /** Перетаскивание активировано: для мыши — сразу, для тача — после удержания */
+  active: boolean
+  /** scrollTop контейнера в момент нажатия — для ручной прокрутки в фазе ожидания */
+  startScrollTop: number
+  /** В фазе ожидания палец повели — это прокрутка, значит не клик и не drag */
+  scrolled: boolean
   /** Смещение точки захвата от начала блока, минут (для kind='block') */
   grabOffsetMin: number
   durationMin: number
@@ -159,7 +169,20 @@ export function CalendarView({
   const headRef = useRef<HTMLDivElement>(null)
   const gridRef = useRef<HTMLDivElement>(null)
   const sidebarRef = useRef<HTMLElement>(null)
+  const sidebarListRef = useRef<HTMLDivElement>(null)
   const swipeRef = useRef<{ x: number; y: number; ignore: boolean } | null>(null)
+  // Таймер удержания перед началом перетаскивания (тач)
+  const pressTimerRef = useRef<number | null>(null)
+  const clearPressTimer = (): void => {
+    if (pressTimerRef.current !== null) {
+      clearTimeout(pressTimerRef.current)
+      pressTimerRef.current = null
+    }
+  }
+  // Контейнер, который прокручиваем пальцем в фазе ожидания (до начала drag)
+  const scrollElFor = (kind: DragKind): HTMLDivElement | null =>
+    kind === 'unscheduled' ? sidebarListRef.current : scrollRef.current
+  useEffect(() => clearPressTimer, [])
 
   // Красная линия «сейчас» — обновление раз в минуту
   useEffect(() => {
@@ -177,7 +200,10 @@ export function CalendarView({
   useEffect(() => {
     if (!drag) return
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setDrag(null)
+      if (e.key === 'Escape') {
+        clearPressTimer()
+        setDrag(null)
+      }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
@@ -195,7 +221,10 @@ export function CalendarView({
       // сбросит drag). Если через микротаск drag всё ещё висит — элемент исчез,
       // снимаем перетаскивание.
       setTimeout(() => {
-        if (dragRef.current && dragRef.current.pointerId === e.pointerId) setDrag(null)
+        if (dragRef.current && dragRef.current.pointerId === e.pointerId) {
+          clearPressTimer()
+          setDrag(null)
+        }
       }, 0)
     }
     window.addEventListener('pointerup', release)
@@ -310,12 +339,19 @@ export function CalendarView({
     e.preventDefault()
     e.stopPropagation()
     e.currentTarget.setPointerCapture(e.pointerId)
+    clearPressTimer()
+    // Мышь тащит сразу; палец — только после короткого удержания (иначе прокрутка дня
+    // случайно двигала бы задачу). До удержания движение пальца прокручивает контейнер.
+    const immediate = e.pointerType === 'mouse'
     setDrag({
       source,
       pointerId: e.pointerId,
       startX: e.clientX,
       startY: e.clientY,
       moved: false,
+      active: immediate,
+      startScrollTop: scrollElFor(source.kind)?.scrollTop ?? 0,
+      scrolled: false,
       grabOffsetMin: opts.grabOffsetMin ?? 0,
       durationMin: opts.durationMin,
       fixedDayIdx: opts.fixedDayIdx ?? 0,
@@ -325,12 +361,34 @@ export function CalendarView({
       origDur: opts.origDur,
       target: null,
     })
+    if (!immediate) {
+      const pid = e.pointerId
+      pressTimerRef.current = window.setTimeout(() => {
+        pressTimerRef.current = null
+        setDrag((prev) => (prev && prev.pointerId === pid ? { ...prev, active: true } : prev))
+        // Тактильный отклик «взял» (где поддерживается)
+        navigator.vibrate?.(12)
+      }, HOLD_MS)
+    }
   }
 
   const onDragMove = (e: React.PointerEvent): void => {
     if (!drag || e.pointerId !== drag.pointerId) return
     // Не даём событию всплыть к родительскому блоку (ручка ресайза вложена в блок)
     e.stopPropagation()
+
+    // Фаза ожидания удержания: карточка ещё не «взята» — палец прокручивает день.
+    if (!drag.active) {
+      const dy = e.clientY - drag.startY
+      if (!drag.scrolled && Math.hypot(e.clientX - drag.startX, dy) <= PENDING_SLOP) return
+      // Повели пальцем раньше, чем сработало удержание → это жест прокрутки на всё касание
+      clearPressTimer()
+      const sc = scrollElFor(drag.source.kind)
+      if (sc) sc.scrollTop = drag.startScrollTop - dy
+      if (!drag.scrolled) setDrag((prev) => (prev ? { ...prev, scrolled: true } : prev))
+      return
+    }
+
     if (!drag.moved) {
       const dist = Math.hypot(e.clientX - drag.startX, e.clientY - drag.startY)
       if (dist <= DRAG_THRESHOLD) return
@@ -344,11 +402,14 @@ export function CalendarView({
   const onDragUp = (e: React.PointerEvent): void => {
     if (!drag || e.pointerId !== drag.pointerId) return
     e.stopPropagation()
+    clearPressTimer()
     const d = drag
     setDrag(null)
 
+    if (d.scrolled) return // это была прокрутка пальцем, а не клик/перетаскивание
+
     if (!d.moved) {
-      // Порог не пройден — это клик
+      // Порог не пройден — это клик (в т.ч. удержание без сдвига)
       if (d.source.kind !== 'resize') onOpenCard(d.source.cardId)
       return
     }
@@ -376,6 +437,7 @@ export function CalendarView({
   const onDragCancel = (e: React.PointerEvent): void => {
     if (!drag || e.pointerId !== drag.pointerId) return
     e.stopPropagation()
+    clearPressTimer()
     setDrag(null)
   }
 
@@ -383,6 +445,8 @@ export function CalendarView({
 
   const draggedCardId = drag?.moved ? drag.source.cardId : null
   const ghostCard = draggedCardId ? store.card(draggedCardId) : undefined
+  // Карточка «взята» после удержания, но ещё не сдвинута — подсвечиваем как приподнятую
+  const armedCardId = drag?.active && !drag.moved ? drag.source.cardId : null
 
   // ---------- Создание карточек двойным кликом ----------
 
@@ -412,10 +476,11 @@ export function CalendarView({
 
   const renderChip = (c: Card): React.ReactNode => {
     const dragging = draggedCardId === c.id && drag?.source.kind === 'allday'
+    const armed = armedCardId === c.id && drag?.source.kind === 'allday'
     return (
       <div
         key={c.id}
-        className={`cal-chip${c.done ? ' done' : ''}${dragging ? ' is-dragging' : ''}`}
+        className={`cal-chip${c.done ? ' done' : ''}${dragging ? ' is-dragging' : ''}${armed ? ' armed' : ''}`}
         style={{ '--ev-color': colorOf(c) } as React.CSSProperties}
         title={c.title}
         onPointerDown={(e) =>
@@ -441,11 +506,12 @@ export function CalendarView({
     const height = Math.max(((ev.endMin - ev.startMin) / 60) * HOUR_H - 2, 18)
     const compact = height < 40
     const dragging = draggedCardId === c.id && (drag?.source.kind === 'block' || drag?.source.kind === 'resize')
+    const armed = armedCardId === c.id && (drag?.source.kind === 'block' || drag?.source.kind === 'resize')
     const label = timeRange(ev.startMin, ev.startMin + dur)
     return (
       <div
         key={c.id}
-        className={`cal-event${c.done ? ' done' : ''}${compact ? ' compact' : ''}${dragging ? ' is-dragging' : ''}${isMeeting(c) ? ' meeting' : ''}`}
+        className={`cal-event${c.done ? ' done' : ''}${compact ? ' compact' : ''}${dragging ? ' is-dragging' : ''}${armed ? ' armed' : ''}${isMeeting(c) ? ' meeting' : ''}`}
         style={
           {
             top,
@@ -539,11 +605,12 @@ export function CalendarView({
 
   const renderSideCard = (c: Card): React.ReactNode => {
     const dragging = draggedCardId === c.id && drag?.source.kind === 'unscheduled'
+    const armed = armedCardId === c.id && drag?.source.kind === 'unscheduled'
     const assignees = assigneesOf(c)
     return (
       <div
         key={c.id}
-        className={`cal-side-card${c.done ? ' done' : ''}${dragging ? ' is-dragging' : ''}`}
+        className={`cal-side-card${c.done ? ' done' : ''}${dragging ? ' is-dragging' : ''}${armed ? ' armed' : ''}`}
         style={{ '--ev-color': colorOf(c) } as React.CSSProperties}
         onPointerDown={(e) => beginDrag(e, { kind: 'unscheduled', cardId: c.id }, { durationMin: 60 })}
         {...dragEvents}
@@ -657,7 +724,7 @@ export function CalendarView({
                 ‹
               </button>
             </div>
-            <div className="cal-sidebar-list">
+            <div className="cal-sidebar-list" ref={sidebarListRef}>
               {unscheduled.map(renderSideCard)}
               {unscheduled.length === 0 && <div className="cal-sidebar-empty muted">Все задачи запланированы</div>}
             </div>
