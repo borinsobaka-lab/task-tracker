@@ -265,7 +265,7 @@
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 11px;
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-card);
   padding: 9px 11px;
   cursor: pointer;
   /* pan-x pan-y — палец может прокручивать и список (вертикально), и доску

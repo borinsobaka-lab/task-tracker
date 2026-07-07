@@ -57,13 +57,13 @@ function cardClassName(card: Card): string {
   return 'board-card' + (card.done ? ' done' : '')
 }
 
-/** Бледная подложка колонки под цвет её статуса (~8%) + чуть заметная рамка.
+/** Очень бледная подложка колонки под цвет её статуса (~4%) + чуть заметная рамка.
  *  Карточки на ней остаются белыми. */
 function colTint(color?: string): CSSProperties {
   if (!color) return {}
   return {
-    ['--col-bg' as string]: `color-mix(in srgb, ${color} 8%, var(--bg-panel))`,
-    ['--col-border' as string]: `color-mix(in srgb, ${color} 22%, var(--border))`,
+    ['--col-bg' as string]: `color-mix(in srgb, ${color} 4%, var(--bg-panel))`,
+    ['--col-border' as string]: `color-mix(in srgb, ${color} 11%, var(--border))`,
   }
 }
 
