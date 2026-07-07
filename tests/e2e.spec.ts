@@ -74,9 +74,8 @@ test('назначение даты и отображение в календа�
   await page.getByRole('button', { name: 'Сохранить' }).click()
   await page.keyboard.press('Escape')
 
-  // Переключаемся на календарь через выпадающий выбор вида — блок задачи виден на этой неделе
-  await page.locator('.view-switch-btn').click()
-  await page.getByRole('menuitemradio', { name: 'Календарь' }).click()
+  // Переключаемся на календарь (на десктопе — таб в шапке) — блок задачи виден на этой неделе
+  await page.getByRole('button', { name: 'Календарь' }).click()
   await expect(page.getByText('Встреча с командой')).toBeVisible()
   await expect(page.getByText(/14:00/).first()).toBeVisible()
 })

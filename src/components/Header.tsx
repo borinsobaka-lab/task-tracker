@@ -105,6 +105,17 @@ export function Header({
       <span className="app-brand" title="Task Tracker" aria-hidden>
         📋
       </span>
+      {/* На десктопе — табы, на мобильном — выпадающий список (переключается в CSS) */}
+      <nav className="view-tabs" aria-label="Вид">
+        {VIEWS.map((v) => (
+          <button key={v.key} className={v.key === view ? 'active' : ''} onClick={() => onViewChange(v.key)}>
+            <span className="view-ico" aria-hidden>
+              {v.icon}
+            </span>
+            <span className="view-tab-label">{v.label}</span>
+          </button>
+        ))}
+      </nav>
       <ViewSwitch view={view} onViewChange={onViewChange} />
 
       <div className="header-members" title="Фильтр по участникам">

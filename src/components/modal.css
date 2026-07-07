@@ -48,12 +48,124 @@
   gap: 8px;
 }
 
-/* Верхняя строка: переключатель типа слева, крестик справа */
+/* Верхняя строка: тип + приоритет слева, крестик справа */
 .cm-header-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+}
+.cm-header-top-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+/* ---------- Выбор приоритета (матрица Эйзенхауэра) ---------- */
+.cm-prio {
+  position: relative;
+  flex-shrink: 0;
+}
+.cm-prio-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  border-radius: 8px;
+  padding: 5px 10px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-soft);
+  max-width: 210px;
+}
+.cm-prio-btn:hover {
+  border-color: var(--border-strong);
+}
+.cm-prio-btn.set {
+  border-color: var(--pc);
+  background: color-mix(in srgb, var(--pc) 14%, var(--surface));
+  color: var(--text);
+}
+.cm-prio-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border-strong);
+  flex-shrink: 0;
+}
+.cm-prio-dot.none {
+  background: transparent;
+}
+.cm-prio-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cm-prio-caret {
+  color: var(--text-faint);
+  font-size: 11px;
+}
+.cm-prio-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+}
+.cm-prio-menu {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 5px);
+  z-index: 41;
+  min-width: 232px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-md);
+  padding: 4px;
+}
+.cm-prio-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: none;
+  border-radius: 7px;
+  padding: 7px 9px;
+  cursor: pointer;
+  color: var(--text);
+}
+.cm-prio-item:hover {
+  background: var(--surface-2);
+}
+.cm-prio-item.active {
+  background: var(--surface-2);
+}
+.cm-prio-item-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+  font-size: 13.5px;
+  font-weight: 500;
+}
+.cm-prio-hint {
+  font-size: 11.5px;
+  font-weight: 400;
+  color: var(--text-faint);
+}
+.cm-prio-check {
+  margin-left: auto;
+  color: var(--accent);
+  font-weight: 700;
+}
+.cm-prio-sep {
+  height: 1px;
+  background: var(--border);
+  margin: 4px 6px;
 }
 
 /* Строка заголовка: чекбокс + название во всю ширину */

@@ -54,10 +54,39 @@
   flex-shrink: 0;
 }
 
-/* Компактный выбор вида */
+/* Десктоп: ряд табов */
+.view-tabs {
+  display: flex;
+  background: var(--surface-2);
+  border-radius: 9px;
+  padding: 3px;
+  gap: 2px;
+  flex-shrink: 0;
+}
+.view-tabs button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: none;
+  background: transparent;
+  padding: 5px 14px;
+  border-radius: 7px;
+  cursor: pointer;
+  font-weight: 500;
+  color: var(--text-soft);
+  white-space: nowrap;
+}
+.view-tabs button.active {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Мобильный: компактный выпадающий выбор вида (по умолчанию скрыт) */
 .view-switch {
   position: relative;
   flex-shrink: 0;
+  display: none;
 }
 .view-ico {
   font-size: 15px;
@@ -346,5 +375,12 @@
   }
   .sync-status {
     display: none;
+  }
+  /* На мобильном прячем ряд табов, показываем выпадающий список */
+  .view-tabs {
+    display: none;
+  }
+  .view-switch {
+    display: block;
   }
 }

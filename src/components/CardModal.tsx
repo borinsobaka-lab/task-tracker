@@ -3,11 +3,12 @@
 // Все изменения данных — только через методы store (useBoard()).
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import type { DragEvent as ReactDragEvent, KeyboardEvent as ReactKeyboardEvent } from 'react'
+import type { CSSProperties, DragEvent as ReactDragEvent, KeyboardEvent as ReactKeyboardEvent } from 'react'
 import { useBoard } from '../store'
 import type { BoardStore } from '../store'
-import type { Attachment, Card, CardKind, ChecklistItem, ID, Member } from '../types'
+import type { Attachment, Card, CardKind, ChecklistItem, EisenhowerQuadrant, ID, Member } from '../types'
 import { fmtDayMonth, fmtFullDate, formatBytes, parseDateKey, toDateKey } from '../utils'
+import { QUADRANT_COLOR, QUADRANT_LABEL, QUADRANTS } from '../eisenhower'
 import { Avatar } from './Avatar'
 import { RichTextEditor } from './RichTextEditor'
 import './modal.css'
@@ -68,6 +69,85 @@ function useDebouncedValue(fn: (v: string) => void, ms: number): { run: (v: stri
 }
 
 // ---------- Корневой компонент ----------
+
+/** Выбор приоритета по матрице Эйзенхауэра прямо из карточки. */
+function PriorityPicker({ card }: { card: Card }) {
+  const store = useBoard()
+  const [open, setOpen] = useState(false)
+  const cur = card.priority
+
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false)
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [open])
+
+  const pick = (q: EisenhowerQuadrant | undefined) => {
+    store.setPriority(card.id, q)
+    setOpen(false)
+  }
+  const color = cur ? QUADRANT_COLOR[cur] : undefined
+
+  return (
+    <div className="cm-prio">
+      <button
+        type="button"
+        className={'cm-prio-btn' + (cur ? ' set' : '')}
+        style={color ? ({ ['--pc' as string]: color } as CSSProperties) : undefined}
+        onClick={() => setOpen((o) => !o)}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        title="Приоритет (матрица Эйзенхауэра)"
+      >
+        <span
+          className="cm-prio-dot"
+          style={{ background: color ?? 'transparent', borderColor: color ?? 'var(--border-strong)' }}
+        />
+        <span className="cm-prio-label">{cur ? QUADRANT_LABEL[cur] : 'Приоритет'}</span>
+        <span className="cm-prio-caret" aria-hidden>
+          ▾
+        </span>
+      </button>
+      {open && (
+        <>
+          <div className="cm-prio-backdrop" onClick={() => setOpen(false)} />
+          <div className="cm-prio-menu" role="menu">
+            {QUADRANTS.map((q) => (
+              <button
+                key={q.key}
+                type="button"
+                className={'cm-prio-item' + (cur === q.key ? ' active' : '')}
+                role="menuitemradio"
+                aria-checked={cur === q.key}
+                onClick={() => pick(q.key)}
+              >
+                <span className="cm-prio-dot" style={{ background: q.color, borderColor: q.color }} />
+                <span className="cm-prio-item-text">
+                  {q.title}
+                  <span className="cm-prio-hint">{q.hint}</span>
+                </span>
+                {cur === q.key && <span className="cm-prio-check">✓</span>}
+              </button>
+            ))}
+            <div className="cm-prio-sep" />
+            <button
+              type="button"
+              className={'cm-prio-item' + (!cur ? ' active' : '')}
+              role="menuitemradio"
+              aria-checked={!cur}
+              onClick={() => pick(undefined)}
+            >
+              <span className="cm-prio-dot none" />
+              <span className="cm-prio-item-text">Без приоритета</span>
+              {!cur && <span className="cm-prio-check">✓</span>}
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
 
 export function CardModal({ cardId, onClose }: { cardId: ID; onClose: () => void }) {
   const store = useBoard()
@@ -331,30 +411,34 @@ function CardModalInner({ card, store, onClose }: { card: Card; store: BoardStor
         {/* ---------- Шапка ---------- */}
         <header className="cm-header">
           <div className="cm-header-top">
-            {isRecurring ? (
-              <span className="cm-recur-label">🔁 Повторяется</span>
-            ) : (
-              <div className="cm-kind-toggle" role="tablist" aria-label="Тип">
-                <button
-                  type="button"
-                  role="tab"
-                  aria-selected={!isMeeting}
-                  className={!isMeeting ? 'active' : ''}
-                  onClick={() => setKind('task')}
-                >
-                  Задача
-                </button>
-                <button
-                  type="button"
-                  role="tab"
-                  aria-selected={isMeeting}
-                  className={isMeeting ? 'active' : ''}
-                  onClick={() => setKind('meeting')}
-                >
-                  📹 Встреча
-                </button>
-              </div>
-            )}
+            <div className="cm-header-top-left">
+              {isRecurring ? (
+                <span className="cm-recur-label">🔁 Повторяется</span>
+              ) : (
+                <div className="cm-kind-toggle" role="tablist" aria-label="Тип">
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={!isMeeting}
+                    className={!isMeeting ? 'active' : ''}
+                    onClick={() => setKind('task')}
+                  >
+                    Задача
+                  </button>
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={isMeeting}
+                    className={isMeeting ? 'active' : ''}
+                    onClick={() => setKind('meeting')}
+                  >
+                    📹 Встреча
+                  </button>
+                </div>
+              )}
+              {/* Приоритет по матрице — только у задач (не у встреч) */}
+              {!isMeeting && <PriorityPicker card={card} />}
+            </div>
             <button type="button" className="icon-btn" title="Закрыть" aria-label="Закрыть" onClick={onClose}>
               ✕
             </button>
