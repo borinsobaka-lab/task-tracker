@@ -9,10 +9,12 @@
     android:minHeight="52dp"
     android:padding="0dp">
 
-    <View
+    <!-- ImageView, а не View: в виджетах (RemoteViews) обычный View не поддерживается -->
+    <ImageView
         android:id="@+id/item_bar"
         android:layout_width="5dp"
         android:layout_height="match_parent"
+        android:contentDescription="@null"
         android:background="#5B5BD6" />
 
     <LinearLayout
