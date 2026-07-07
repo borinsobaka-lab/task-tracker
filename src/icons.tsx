@@ -12,6 +12,7 @@ import {
   CheckCircle,
   ClipboardList,
   CloseCircle,
+  Link,
   Magnifer,
   MenuDots,
   MinusCircle,
@@ -56,3 +57,4 @@ export const IcoDescription = duotone(Notes)
 export const IcoNone = duotone(MinusCircle)
 export const IcoSearch = duotone(Magnifer)
 export const IcoLaunch = duotone(Rocket)
+export const IcoLink = duotone(Link)

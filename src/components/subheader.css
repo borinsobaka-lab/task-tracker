@@ -34,6 +34,27 @@
   flex-shrink: 0;
 }
 
+/* Правый слот второго хедера (например, кнопка «Ссылка» в таймлайне) */
+.subheader-right {
+  margin-left: auto;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.subheader-right .btn {
+  height: 34px;
+}
+.subheader-right .btn-ico {
+  display: inline-flex;
+  align-items: center;
+}
+.subheader-right .btn-ok {
+  background: var(--ok, #16a34a);
+  border-color: var(--ok, #16a34a);
+  color: #fff;
+}
+
 @media (max-width: 720px) {
   .subheader {
     padding: 7px 10px;

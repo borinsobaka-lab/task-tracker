@@ -12,10 +12,12 @@ export function SubHeader({
   memberFilter,
   onMemberFilterChange,
   children,
+  right,
 }: {
   memberFilter: ReadonlySet<ID>
   onMemberFilterChange: (f: ReadonlySet<ID>) => void
   children?: ReactNode
+  right?: ReactNode
 }) {
   const store = useBoard()
 
@@ -47,6 +49,8 @@ export function SubHeader({
           </button>
         )}
       </div>
+
+      {right && <div className="subheader-right">{right}</div>}
     </div>
   )
 }

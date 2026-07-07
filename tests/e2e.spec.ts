@@ -158,3 +158,33 @@ test('таймлайн календаря: хронология с закреп�
   await expect(page.locator('.tl-card', { hasText: 'Задача таймлайна' })).toBeVisible()
   await expect(page.locator('.tl-daylabel').first()).toBeVisible()
 })
+
+test('публичная ссылка на таймлайн — внешняя страница только для просмотра', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write'])
+  await createIdentity(page)
+  await page.getByText('Добавить карточку').first().click()
+  await page.locator('textarea').first().fill('Публичная задача')
+  await page.keyboard.press('Enter')
+  await page.getByText('Публичная задача').click()
+  await page.getByRole('button', { name: /Добавить дату/ }).click()
+  const today = new Date()
+  const key = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+  await page.locator('input[type="date"]').fill(key)
+  await page.getByRole('button', { name: 'Сохранить' }).click()
+  await page.keyboard.press('Escape')
+
+  await page.getByRole('button', { name: 'Календарь' }).click()
+  await page.locator('.cal-view-select').selectOption('timeline')
+  // Кнопка «Ссылка» есть только в таймлайне
+  await page.getByRole('button', { name: 'Ссылка' }).click()
+  const url = await page.evaluate(() => navigator.clipboard.readText())
+  expect(url).toContain('#tl=')
+
+  // Открываем ссылку — внешняя страница: только таймлайн, без табов/логина, без интерактива
+  const pub = await context.newPage()
+  await pub.goto(url)
+  await expect(pub.locator('.public-tl')).toBeVisible()
+  await expect(pub.locator('.tl-card', { hasText: 'Публичная задача' })).toBeVisible()
+  await expect(pub.locator('.view-tabs')).toHaveCount(0)
+  await expect(pub.locator('.tl-card.clickable')).toHaveCount(0)
+})

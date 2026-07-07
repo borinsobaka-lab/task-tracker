@@ -16,6 +16,8 @@ import { RecurringView } from './components/RecurringView'
 import { CardModal } from './components/CardModal'
 import { SettingsModal } from './components/SettingsModal'
 import { IdentityScreen } from './components/IdentityScreen'
+import { PublicTimeline } from './components/PublicTimeline'
+import { parseTimelineHash } from './timelineShare'
 import type { ID } from './types'
 import './app.css'
 
@@ -28,6 +30,14 @@ type Phase =
   | { kind: 'error'; message: string }
 
 export default function App() {
+  // Публичная страница-таймлайн (только просмотр) — до всякой авторизации и загрузки данных.
+  const sharedTimeline = parseTimelineHash(location.hash)
+  if (sharedTimeline) return <PublicTimeline items={sharedTimeline} />
+
+  return <MainApp />
+}
+
+function MainApp() {
   const [phase, setPhase] = useState<Phase>({ kind: 'loading' })
 
   const bootstrap = useCallback(async () => {
