@@ -29,6 +29,7 @@ const STATE = { owner: stateOwner, repo: stateRepo, branch: 'app-config', path: 
 
 const EMOJI = { todo: '⬜', doing: '🔧', review: '👀', done: '✅' }
 const STATUS_LABEL = { todo: 'нужно сделать', doing: 'в работе', review: 'на проверке', done: 'готово' }
+const HR = '➖➖➖➖➖➖➖➖➖➖' // горизонтальный разделитель перед легендой
 
 // ---------- Мелкие утилиты ----------
 
@@ -156,21 +157,31 @@ function tgHandle(raw) {
   return n.startsWith('@') ? n : '@' + n
 }
 
-/** Заголовок группы: «Имя (@ник)», чтобы Telegram тегал участника. */
+/** Заголовок группы: «👤 Имя (@ник)» — эмодзи-человечек, чтобы людей было лучше видно. */
 function groupHeader(g) {
   const handle = tgHandle(g.nick)
-  return `<b>${esc(g.name)}</b>${handle ? ` (${esc(handle)})` : ''}`
+  const icon = g.isMember ? '👤 ' : '📭 '
+  return `${icon}<b>${esc(g.name)}</b>${handle ? ` (${esc(handle)})` : ''}`
 }
 
-/** Группирует карточки по исполнителям (+ группа «Без исполнителя»). */
+/** Хронологический порядок: задачи без времени сверху, затем по времени начала. */
+function byTime(a, b) {
+  const as = a.start || ''
+  const bs = b.start || ''
+  if (as && bs) return as.localeCompare(bs) || (a.title || '').localeCompare(b.title || '', 'ru')
+  if (!as && !bs) return (a.title || '').localeCompare(b.title || '', 'ru')
+  return as ? 1 : -1 // задачи «на весь день» (без времени) — выше
+}
+
+/** Группирует карточки по исполнителям (+ группа «Без исполнителя»), каждую по времени. */
 function groupByMember(cards, members) {
   const groups = []
   for (const m of members) {
-    const list = cards.filter((c) => (c.assigneeIds || []).includes(m.id))
-    if (list.length) groups.push({ name: m.name, nick: m.tgUsername, cards: list })
+    const list = cards.filter((c) => (c.assigneeIds || []).includes(m.id)).sort(byTime)
+    if (list.length) groups.push({ name: m.name, nick: m.tgUsername, isMember: true, cards: list })
   }
-  const orphan = cards.filter((c) => !(c.assigneeIds || []).some((id) => members.find((m) => m.id === id)))
-  if (orphan.length) groups.push({ name: 'Без исполнителя', cards: orphan })
+  const orphan = cards.filter((c) => !(c.assigneeIds || []).some((id) => members.find((m) => m.id === id))).sort(byTime)
+  if (orphan.length) groups.push({ name: 'Без исполнителя', isMember: false, cards: orphan })
   return groups
 }
 
@@ -180,18 +191,47 @@ function renderGroups(groups, colById) {
     .join('\n\n')
 }
 
-export function morningText(board) {
+/** Легенда статусов под горизонтальной чертой — чтобы не выглядела частью задач. */
+function legendBlock() {
+  return `\n\n${HR}\n<i>${EMOJI.todo} нужно сделать · ${EMOJI.doing} в работе · ${EMOJI.review} на проверке · ${EMOJI.done} готово</i>`
+}
+
+/** Задачи, которые утром были на сегодня, а теперь перенесены на другой день. */
+function movedCards(board, plannedIds, today) {
+  const byId = board.cards || {}
+  const moved = []
+  for (const id of plannedIds || []) {
+    const c = byId[id]
+    if (!c || c.deleted) continue // удалённые не считаем «перенесёнными»
+    if (c.date === today) continue // всё ещё на сегодня
+    moved.push(c)
+  }
+  return moved.sort((a, b) => (a.date || '').localeCompare(b.date || ''))
+}
+
+/** Блок «перенесённые»: название → на какую дату переехало. */
+function renderMoved(moved) {
+  if (!moved.length) return ''
+  const lines = moved.map((c) => {
+    const to = c.date ? ddmm(c.date) : 'без даты'
+    const meeting = c.kind === 'meeting' ? '📹 ' : ''
+    return `   ${meeting}${esc(c.title || 'Без названия')} ➡️ <b>${to}</b>`
+  })
+  return `\n\n🔀 <b>Перенесены на другой день:</b>\n` + lines.join('\n')
+}
+
+export function morningText(board, plannedIds = []) {
   const { colById, members } = buildIndex(board)
   const today = dateKey(0)
   const cards = cardsForDate(board, today)
   let body
   if (cards.length === 0) body = 'На сегодня задач не запланировано 🎉'
   else body = renderGroups(groupByMember(cards, members), colById)
-  const legend = `\n\n<i>${EMOJI.todo} нужно сделать · ${EMOJI.doing} в работе · ${EMOJI.review} на проверке · ${EMOJI.done} готово</i>`
-  return `☀️ <b>Доброе утро!</b>\nЗадачи на сегодня, ${ddmm(today)}:\n\n${body}${legend}`
+  const moved = renderMoved(movedCards(board, plannedIds, today))
+  return `☀️ <b>Доброе утро!</b>\nЗадачи на сегодня, ${ddmm(today)}:\n\n${body}${moved}${legendBlock()}`
 }
 
-export function eveningText(board) {
+export function eveningText(board, plannedIds = []) {
   const { colById, members } = buildIndex(board)
   const today = dateKey(0)
   const tomorrow = dateKey(1)
@@ -208,6 +248,8 @@ export function eveningText(board) {
     summary = groups.join('\n\n')
   }
 
+  const moved = renderMoved(movedCards(board, plannedIds, today))
+
   const tomCards = cardsForDate(board, tomorrow)
   let tomorrowBlock = ''
   if (tomCards.length) {
@@ -215,7 +257,7 @@ export function eveningText(board) {
   }
 
   const head = `🌙 <b>Итоги дня, ${ddmm(today)}</b>\nВыполнено ${done.length} из ${cards.length}.`
-  return `${head}\n\n${summary}${tomorrowBlock}`
+  return `${head}\n\n${summary}${moved}${tomorrowBlock}${legendBlock()}`
 }
 
 // ---------- Основной сценарий ----------
@@ -240,15 +282,20 @@ async function main() {
   const day = state.days[today] || {}
 
   if (MODE === 'morning') {
-    const id = await sendMessage(morningText(board))
+    // Запоминаем, какие задачи были запланированы на сегодня — чтобы позже
+    // показать «перенесённые» (те, что за день переехали на другой день).
+    const planned = cardsForDate(board, today).map((c) => c.id)
+    const id = await sendMessage(morningText(board, planned))
     day.morningMsgId = id
+    day.plannedIds = planned
     state.days[today] = day
     await ghPut(STATE, STATE_TOKEN, state, stateFile.sha)
     console.log(`Утреннее сообщение отправлено (id ${id}).`)
   } else if (MODE === 'evening') {
+    const planned = day.plannedIds || []
     // Обновим утреннее сообщение финальными статусами, затем пришлём итог
-    if (day.morningMsgId) await editMessage(day.morningMsgId, morningText(board))
-    const id = await sendMessage(eveningText(board))
+    if (day.morningMsgId) await editMessage(day.morningMsgId, morningText(board, planned))
+    const id = await sendMessage(eveningText(board, planned))
     day.eveningMsgId = id
     state.days[today] = day
     await ghPut(STATE, STATE_TOKEN, state, stateFile.sha)
@@ -259,7 +306,7 @@ async function main() {
       console.log('Утреннего сообщения ещё нет — обновлять нечего.')
       return
     }
-    await editMessage(day.morningMsgId, morningText(board))
+    await editMessage(day.morningMsgId, morningText(board, day.plannedIds || []))
     console.log('Утреннее сообщение обновлено.')
   }
 }

@@ -134,3 +134,27 @@ test('глобальный поиск в шапке находит задачу 
   await result.click()
   await expect(page.getByRole('button', { name: /Удалить карточку/ })).toBeVisible()
 })
+
+test('таймлайн календаря: хронология с закреплением просроченных', async ({ page }) => {
+  await createIdentity(page)
+  // Создаём задачу и ставим ей сегодняшнюю дату/время
+  await page.getByText('Добавить карточку').first().click()
+  await page.locator('textarea').first().fill('Задача таймлайна')
+  await page.keyboard.press('Enter')
+  await page.getByText('Задача таймлайна').click()
+  await page.getByRole('button', { name: /Добавить дату/ }).click()
+  const today = new Date()
+  const key = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+  await page.locator('input[type="date"]').fill(key)
+  await page.locator('input[type="time"]').fill('12:00')
+  await page.getByRole('button', { name: 'Сохранить' }).click()
+  await page.keyboard.press('Escape')
+
+  // Открываем календарь и переключаемся в «Таймлайн»
+  await page.getByRole('button', { name: 'Календарь' }).click()
+  await page.locator('.cal-view-select').selectOption('timeline')
+  await expect(page.locator('.cal-timeline')).toBeVisible()
+  // Задача видна в таймлайне (в блоке «Сегодня» или «Просрочено» — зависит от времени запуска)
+  await expect(page.locator('.tl-card', { hasText: 'Задача таймлайна' })).toBeVisible()
+  await expect(page.locator('.tl-daylabel').first()).toBeVisible()
+})

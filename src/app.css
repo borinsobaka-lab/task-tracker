@@ -387,7 +387,7 @@
     display: none;
   }
   .view-tabs button {
-    padding: 5px 9px;
+    padding: 9px 10px;
     gap: 5px;
     font-size: 13px;
     flex-shrink: 0;

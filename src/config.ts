@@ -90,6 +90,14 @@ export function setCalDays(n: number): void {
   localStorage.setItem('tt.calDays', String(n))
 }
 
+/** Режим «Таймлайн»: вертикальная хронология задач вместо сетки календаря. */
+export function getCalTimeline(): boolean {
+  return localStorage.getItem('tt.calTimeline') === '1'
+}
+export function setCalTimeline(on: boolean): void {
+  localStorage.setItem('tt.calTimeline', on ? '1' : '0')
+}
+
 /** Демо-режим: локальное хранилище вместо GitHub (для тестов и предпросмотра) */
 export function isDemoMode(): boolean {
   if (typeof location === 'undefined') return false

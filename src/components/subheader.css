@@ -21,10 +21,10 @@
   flex-shrink: 0;
 }
 
-/* Кнопки/селекты второго хедера — единая высота (как поиск в шапке) */
+/* Кнопки/селекты второго хедера — единая высота (как табы и поиск в шапке) */
 .subheader-controls .btn,
 .subheader-controls .cal-view-select {
-  height: 36px;
+  height: 34px;
 }
 
 .subheader-members {

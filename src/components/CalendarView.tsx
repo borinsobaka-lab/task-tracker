@@ -3,7 +3,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useBoard } from '../store'
-import { getCalDays, setCalDays } from '../config'
+import { getCalDays, getCalTimeline, setCalDays, setCalTimeline } from '../config'
 import type { Card, ID, Member } from '../types'
 import { QUADRANT_COLOR } from '../eisenhower'
 import type { ViewProps } from '../viewProps'
@@ -12,6 +12,7 @@ import { SubHeader } from './SubHeader'
 import {
   addDays,
   clamp,
+  parseDateKey,
   fmtDayMonth,
   fmtFullDate,
   fmtWeekday,
@@ -154,6 +155,14 @@ export function CalendarView({ memberFilter, onMemberFilterChange, onOpenCard }:
     setCalDays(n)
     setNDaysState(n)
   }
+  // Режим «Таймлайн» — вертикальная хронология вместо сетки
+  const [timeline, setTimelineState] = useState<boolean>(() => getCalTimeline())
+  const setTimeline = (on: boolean) => {
+    setCalTimeline(on)
+    setTimelineState(on)
+  }
+  const timelineRef = useRef<HTMLDivElement>(null)
+  const timelineTodayRef = useRef<HTMLDivElement>(null)
   const [anchor, setAnchor] = useState<Date>(() => new Date())
   const [panelOpen, setPanelOpen] = useState(true)
   const [drag, setDrag] = useState<DragState | null>(null)
@@ -273,6 +282,92 @@ export function CalendarView({ memberFilter, onMemberFilterChange, onOpenCard }:
   // Встречи — серые, полоса слева и текст всегда чёрные (независимо от участников).
   // Задачи — по цвету исполнителя.
   const colorOf = (c: Card): string => (isMeeting(c) ? '#1f2937' : assigneesOf(c)[0]?.color ?? 'var(--accent)')
+
+  // ---------- Данные «Таймлайна» (вертикальная хронология) ----------
+  const nowMs = now.getTime()
+  const tomorrowKey = toDateKey(addDays(now, 1))
+  const startMsOf = (c: Card): number => {
+    const d = parseDateKey(c.date!)
+    const [hh, mm] = c.start ? c.start.split(':').map(Number) : [0, 0]
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate(), hh, mm).getTime()
+  }
+  const endMsOf = (c: Card): number => {
+    const d = parseDateKey(c.date!)
+    if (c.start) return startMsOf(c) + (c.durationMin ?? 60) * 60000
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59).getTime()
+  }
+  const inProgress = (c: Card): boolean => !c.done && !!c.start && startMsOf(c) <= nowMs && nowMs < endMsOf(c)
+  const scheduledCards = visible.filter((c) => !!c.date)
+  // Просроченные: незавершённые задачи (не встречи), чьё время уже прошло — крепим вверху
+  const tlOverdue = scheduledCards
+    .filter((c) => !c.done && !isMeeting(c) && endMsOf(c) < nowMs)
+    .sort((a, b) => (a.date! + (a.start ?? '')).localeCompare(b.date! + (b.start ?? '')))
+  const tlOverdueSet = new Set(tlOverdue.map((c) => c.id))
+  // Остальное — сегодня и позже, сгруппировано по дням, внутри дня — по времени
+  const tlFuture = scheduledCards.filter((c) => !tlOverdueSet.has(c.id) && c.date! >= todayKey)
+  const tlDayKeys = Array.from(new Set(tlFuture.map((c) => c.date!))).sort()
+  const tlDays = tlDayKeys.map((key) => ({
+    key,
+    cards: tlFuture
+      .filter((c) => c.date === key)
+      .sort((a, b) => (a.start ?? '').localeCompare(b.start ?? '') || a.title.localeCompare(b.title, 'ru')),
+  }))
+  const tlDayLabel = (key: string): { name: string; date: string } => {
+    const d = parseDateKey(key)
+    return { name: key === todayKey ? 'Сегодня' : key === tomorrowKey ? 'Завтра' : fmtWeekday(d), date: fmtDayMonth(d) }
+  }
+
+  const renderTLCard = (c: Card, showDate: boolean): React.ReactNode => {
+    const mtg = isMeeting(c)
+    const active = inProgress(c)
+    return (
+      <div
+        key={c.id}
+        className={`tl-card${c.done ? ' done' : ''}${mtg ? ' meeting' : ''}${active ? ' now' : ''}`}
+        style={{ ['--ev-color' as string]: colorOf(c) } as React.CSSProperties}
+        role="button"
+        tabIndex={0}
+        onClick={() => onOpenCard(c.id)}
+        onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && onOpenCard(c.id)}
+      >
+        <div className="tl-card-left">
+          {!mtg && (
+            <button
+              type="button"
+              className={'cal-chip-check' + (c.done ? ' on' : '')}
+              title={c.done ? 'Снять отметку' : 'Отметить выполненной'}
+              aria-label={c.done ? 'Снять отметку' : 'Отметить выполненной'}
+              onClick={(e) => {
+                e.stopPropagation()
+                store.setCardDone(c.id, !c.done)
+              }}
+            >
+              <IcoCheck size={12} color="currentColor" />
+            </button>
+          )}
+          {c.priority && <span className="cal-event-prio" style={{ background: QUADRANT_COLOR[c.priority] }} title="Приоритет" />}
+        </div>
+        <div className="tl-card-main">
+          <div className="tl-card-title">
+            {mtg && <span className="inline-ico" aria-hidden><IcoMeeting size={13} /></span>}
+            {c.seriesId && <span className="inline-ico" aria-hidden><IcoRecurring size={13} /></span>}
+            {c.title}
+          </div>
+          <div className="tl-card-sub">
+            {active && <span className="tl-now-badge">сейчас</span>}
+            {c.start && <span className="tl-time">{timeRange(timeToMin(c.start), timeToMin(c.start) + (c.durationMin ?? 60))}</span>}
+            {showDate && <span className="tl-date">{fmtDayMonth(parseDateKey(c.date!))}</span>}
+            {assigneesOf(c).length > 0 && <AvatarStack members={assigneesOf(c)} size="xs" />}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  const scrollTimelineToToday = (): void => {
+    if (timelineTodayRef.current) timelineTodayRef.current.scrollIntoView({ block: 'start', behavior: 'smooth' })
+    else if (timelineRef.current) timelineRef.current.scrollTo({ top: 0 })
+  }
 
   // ---------- Геометрия перетаскивания ----------
 
@@ -697,45 +792,85 @@ export function CalendarView({ memberFilter, onMemberFilterChange, onOpenCard }:
       style={{ ['--cal-days' as string]: String(nDays), ['--cal-gutter-w' as string]: `${gutterW}px` }}
     >
       <SubHeader memberFilter={memberFilter} onMemberFilterChange={onMemberFilterChange}>
-        <button className="btn btn-sm" onClick={() => setAnchor(new Date())}>
+        <button className="btn btn-sm" onClick={() => (timeline ? scrollTimelineToToday() : setAnchor(new Date()))}>
           Сегодня
         </button>
         <select
           className="cal-view-select"
-          value={nDays}
-          onChange={(e) => setNDays(Number(e.target.value))}
-          title="Сколько дней показывать"
-          aria-label="Сколько дней показывать"
+          value={timeline ? 'timeline' : String(nDays)}
+          onChange={(e) => {
+            const v = e.target.value
+            if (v === 'timeline') setTimeline(true)
+            else {
+              setTimeline(false)
+              setNDays(Number(v))
+            }
+          }}
+          title="Как показывать календарь"
+          aria-label="Как показывать календарь"
         >
-          <option value={1}>Сегодня</option>
-          <option value={3}>3 дня</option>
-          <option value={7}>Неделя</option>
+          <option value="1">Сегодня</option>
+          <option value="3">3 дня</option>
+          <option value="7">Неделя</option>
+          <option value="timeline">Таймлайн</option>
         </select>
-        <div className="cal-nav">
-          <button
-            className="icon-btn"
-            title="Назад"
-            aria-label="Показать предыдущие дни"
-            onClick={() => setAnchor((a) => addDays(a, -nDays))}
-          >
-            <IcoChevronLeft size={18} />
-          </button>
-          <button
-            className="icon-btn"
-            title="Вперёд"
-            aria-label="Показать следующие дни"
-            onClick={() => setAnchor((a) => addDays(a, nDays))}
-          >
-            <IcoChevronRight size={18} />
-          </button>
-        </div>
-        <h2 className="cal-title">
-          {days.length === 1
-            ? fmtFullDate(rangeStart).replace(/\s*г\.\s*$/, '')
-            : rangeTitle(rangeStart, days[days.length - 1])}
-        </h2>
+        {!timeline && (
+          <>
+            <div className="cal-nav">
+              <button
+                className="icon-btn"
+                title="Назад"
+                aria-label="Показать предыдущие дни"
+                onClick={() => setAnchor((a) => addDays(a, -nDays))}
+              >
+                <IcoChevronLeft size={18} />
+              </button>
+              <button
+                className="icon-btn"
+                title="Вперёд"
+                aria-label="Показать следующие дни"
+                onClick={() => setAnchor((a) => addDays(a, nDays))}
+              >
+                <IcoChevronRight size={18} />
+              </button>
+            </div>
+            <h2 className="cal-title">
+              {days.length === 1
+                ? fmtFullDate(rangeStart).replace(/\s*г\.\s*$/, '')
+                : rangeTitle(rangeStart, days[days.length - 1])}
+            </h2>
+          </>
+        )}
       </SubHeader>
 
+      {timeline ? (
+        <div className="cal-timeline" ref={timelineRef}>
+          {tlOverdue.length > 0 && (
+            <div className="tl-day tl-overdue">
+              <div className="tl-daylabel">
+                <span className="tl-day-name">⚠️</span>
+                <span className="tl-day-date">просрочено</span>
+              </div>
+              <div className="tl-day-cards">{tlOverdue.map((c) => renderTLCard(c, true))}</div>
+            </div>
+          )}
+          {tlDays.map((g) => {
+            const lbl = tlDayLabel(g.key)
+            return (
+              <div className="tl-day" key={g.key} ref={g.key === todayKey ? timelineTodayRef : undefined}>
+                <div className={`tl-daylabel${g.key === todayKey ? ' today' : ''}`}>
+                  <span className="tl-day-name">{lbl.name}</span>
+                  <span className="tl-day-date">{lbl.date}</span>
+                </div>
+                <div className="tl-day-cards">{g.cards.map((c) => renderTLCard(c, false))}</div>
+              </div>
+            )
+          })}
+          {tlOverdue.length === 0 && tlDays.length === 0 && (
+            <div className="tl-empty muted">Запланированных задач нет 🎉</div>
+          )}
+        </div>
+      ) : (
       <div className="cal-body">
         {panelOpen ? (
           <aside
@@ -850,6 +985,7 @@ export function CalendarView({ memberFilter, onMemberFilterChange, onOpenCard }:
           </div>
         </div>
       </div>
+      )}
     </div>
   )
 }
