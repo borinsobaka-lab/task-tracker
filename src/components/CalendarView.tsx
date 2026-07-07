@@ -564,27 +564,32 @@ export function CalendarView({ memberFilter, onMemberFilterChange, onOpenCard }:
         {...dragEvents}
       >
         <div className="cal-event-toprow">
-          {!mtg && (
-            <button
-              type="button"
-              className={'cal-event-check' + (c.done ? ' on' : '')}
-              title={c.done ? 'Снять отметку' : 'Отметить выполненной'}
-              aria-label={c.done ? 'Снять отметку' : 'Отметить выполненной'}
-              onPointerDown={(e) => e.stopPropagation()}
-              onClick={(e) => {
-                e.stopPropagation()
-                store.setCardDone(c.id, !c.done)
-              }}
-            >
-              <IcoCheck size={13} color="currentColor" />
-            </button>
+          {(!mtg || c.priority) && (
+            // Слева: чекбокс, а под ним — точка приоритета (экономит место под заголовок)
+            <div className="cal-event-left">
+              {!mtg && (
+                <button
+                  type="button"
+                  className={'cal-event-check' + (c.done ? ' on' : '')}
+                  title={c.done ? 'Снять отметку' : 'Отметить выполненной'}
+                  aria-label={c.done ? 'Снять отметку' : 'Отметить выполненной'}
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    store.setCardDone(c.id, !c.done)
+                  }}
+                >
+                  <IcoCheck size={13} color="currentColor" />
+                </button>
+              )}
+              {c.priority && <span className="cal-event-prio" style={{ background: QUADRANT_COLOR[c.priority] }} title="Приоритет" />}
+            </div>
           )}
           <div className="cal-event-title">
             {mtg && <span className="cal-meeting-ico inline-ico" aria-hidden><IcoMeeting size={13} /></span>}
             {c.seriesId && <span className="inline-ico" aria-hidden><IcoRecurring size={13} /></span>}
             {c.title}
           </div>
-          {c.priority && <span className="cal-event-prio" style={{ background: QUADRANT_COLOR[c.priority] }} title="Приоритет" />}
         </div>
         <div className="cal-event-time">{label}</div>
         <div className="cal-event-avatars">

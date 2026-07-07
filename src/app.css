@@ -373,17 +373,23 @@
   .sync-status {
     display: none;
   }
-  /* Табы с подписями и на мобильном. Иконку прячем — так помещаются 4 подписи. */
+  /* Табы с иконками и подписями. Не помещаются — лента табов прокручивается вбок,
+     а поиск и настройки остаются прижатыми справа. */
   .view-tabs {
-    gap: 1px;
-    padding: 2px;
+    gap: 2px;
+    padding: 3px;
+    min-width: 0;
+    flex-shrink: 1;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .view-tabs::-webkit-scrollbar {
+    display: none;
   }
   .view-tabs button {
-    padding: 5px 7px;
-    gap: 0;
-    font-size: 12px;
-  }
-  .view-tabs .view-ico {
-    display: none;
+    padding: 5px 9px;
+    gap: 5px;
+    font-size: 13px;
+    flex-shrink: 0;
   }
 }

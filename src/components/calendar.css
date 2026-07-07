@@ -569,11 +569,20 @@
   flex-shrink: 0;
 }
 
+/* Левая колонка события: чекбокс, под ним — точка приоритета */
+.cal-event-left {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  margin-top: 1px;
+}
+
 .cal-event-check {
   flex-shrink: 0;
   width: 15px;
   height: 15px;
-  margin-top: 1px;
   border-radius: 50%;
   border: 1.5px solid color-mix(in srgb, var(--ev-color) 55%, var(--border-strong));
   background: rgba(255, 255, 255, 0.6);
@@ -611,7 +620,6 @@
   flex-shrink: 0;
   width: 9px;
   height: 9px;
-  margin-top: 3px;
   border-radius: 50%;
   box-shadow: 0 0 0 1.5px var(--surface);
 }
@@ -646,6 +654,13 @@
   flex: 1 1 auto;
   min-width: 0;
   align-items: center;
+}
+
+/* В коротком событии чекбокс и точку приоритета ставим в ряд — нет места по высоте */
+.cal-event.compact .cal-event-left {
+  flex-direction: row;
+  gap: 4px;
+  margin-top: 0;
 }
 
 .cal-event.compact .cal-event-time {

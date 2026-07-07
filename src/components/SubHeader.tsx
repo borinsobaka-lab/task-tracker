@@ -28,6 +28,8 @@ export function SubHeader({
 
   return (
     <div className="subheader">
+      {children && <div className="subheader-controls">{children}</div>}
+
       <div className="subheader-members" title="Фильтр по участникам">
         {store.members.map((m) => (
           <button
@@ -45,8 +47,6 @@ export function SubHeader({
           </button>
         )}
       </div>
-
-      {children && <div className="subheader-controls">{children}</div>}
     </div>
   )
 }

@@ -1,4 +1,4 @@
-/* Второй хедер раздела: поиск + фильтр участников + элементы раздела */
+/* Второй хедер раздела: элементы раздела (слева) + фильтр участников (после них) */
 .subheader {
   display: flex;
   align-items: center;
@@ -14,6 +14,19 @@
   display: none;
 }
 
+.subheader-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+/* Кнопки/селекты второго хедера — единая высота (как поиск в шапке) */
+.subheader-controls .btn,
+.subheader-controls .cal-view-select {
+  height: 36px;
+}
+
 .subheader-members {
   display: flex;
   align-items: center;
@@ -21,20 +34,9 @@
   flex-shrink: 0;
 }
 
-.subheader-controls {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-shrink: 0;
-  margin-left: auto;
-}
-
 @media (max-width: 720px) {
   .subheader {
     padding: 7px 10px;
     gap: 8px;
-  }
-  .subheader-controls {
-    margin-left: 8px;
   }
 }

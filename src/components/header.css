@@ -19,18 +19,16 @@
 }
 .header-search-input {
   width: 220px;
-  height: 34px;
+  height: 36px;
   padding: 0 12px 0 32px;
-  border: 1px solid var(--border);
+  border: none;
   border-radius: 9px;
-  background: var(--surface-2);
+  background: var(--surface-2); /* как фон у контейнера табов */
   font-size: 14px;
   outline: none;
 }
 .header-search-input:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-soft);
-  background: var(--surface);
+  box-shadow: 0 0 0 2px var(--accent-soft);
 }
 
 /* Кнопка поиска (только мобильный). Специфичность выше .icon-btn. */
@@ -160,8 +158,12 @@
 }
 
 @media (max-width: 720px) {
+  /* Поиск прижат вправо и стоит вплотную к настройкам (не «плавает») */
   .header-search {
     margin-left: auto;
+  }
+  .app-header .header-right {
+    margin-left: 0;
   }
   .header-search-field {
     display: none;
