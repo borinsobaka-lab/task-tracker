@@ -20,8 +20,9 @@
   width: 290px;
   min-width: 290px;
   max-height: 100%;
-  background: var(--bg-panel);
-  border: 1px solid var(--border);
+  /* Подложка колонки окрашивается в цвет статуса (бледно); карточки на ней — белые */
+  background: var(--col-bg, var(--bg-panel));
+  border: 1px solid var(--col-border, var(--border));
   border-radius: var(--radius);
   box-shadow: var(--shadow-sm);
 }
@@ -261,8 +262,8 @@
 /* ---------- Карточка ---------- */
 
 .board-card {
-  background: var(--card-bg, var(--surface));
-  border: 1px solid var(--card-border, var(--border));
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 11px;
   box-shadow: var(--shadow-sm);
   padding: 9px 11px;

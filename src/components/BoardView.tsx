@@ -57,12 +57,13 @@ function cardClassName(card: Card): string {
   return 'board-card' + (card.done ? ' done' : '')
 }
 
-/** Бледная подложка карточек под цвет колонки (~6%) + чуть заметная рамка. */
+/** Бледная подложка колонки под цвет её статуса (~8%) + чуть заметная рамка.
+ *  Карточки на ней остаются белыми. */
 function colTint(color?: string): CSSProperties {
   if (!color) return {}
   return {
-    ['--card-bg' as string]: `color-mix(in srgb, ${color} 6%, var(--surface))`,
-    ['--card-border' as string]: `color-mix(in srgb, ${color} 20%, var(--border))`,
+    ['--col-bg' as string]: `color-mix(in srgb, ${color} 8%, var(--bg-panel))`,
+    ['--col-border' as string]: `color-mix(in srgb, ${color} 22%, var(--border))`,
   }
 }
 
@@ -275,10 +276,7 @@ export function BoardView({ memberFilter, onMemberFilterChange, onOpenCard }: Vi
       </div>
         <DragOverlay>
           {activeCard ? (
-            <div
-              className={cardClassName(activeCard) + ' card-overlay'}
-              style={colTint(columns.find((c) => c.id === activeCard.columnId)?.color)}
-            >
+            <div className={cardClassName(activeCard) + ' card-overlay'}>
               <CardContent card={activeCard} members={store.members} />
             </div>
           ) : activeColumn ? (
