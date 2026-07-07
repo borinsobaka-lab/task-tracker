@@ -4,7 +4,7 @@
 // используется локальное optimistic-состояние, а в onDragEnd — один вызов moveCard/moveColumn.
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import type { MutableRefObject } from 'react'
+import type { CSSProperties, MutableRefObject } from 'react'
 import {
   closestCenter,
   closestCorners,
@@ -55,6 +55,15 @@ function findColumnOf(map: CardsByCol, cardId: ID): ID | undefined {
 
 function cardClassName(card: Card): string {
   return 'board-card' + (card.done ? ' done' : '')
+}
+
+/** Бледная подложка карточек под цвет колонки (~6%) + чуть заметная рамка. */
+function colTint(color?: string): CSSProperties {
+  if (!color) return {}
+  return {
+    ['--card-bg' as string]: `color-mix(in srgb, ${color} 6%, var(--surface))`,
+    ['--card-border' as string]: `color-mix(in srgb, ${color} 20%, var(--border))`,
+  }
 }
 
 // ---------- Корневой компонент ----------
@@ -266,7 +275,10 @@ export function BoardView({ memberFilter, onMemberFilterChange, onOpenCard }: Vi
       </div>
         <DragOverlay>
           {activeCard ? (
-            <div className={cardClassName(activeCard) + ' card-overlay'}>
+            <div
+              className={cardClassName(activeCard) + ' card-overlay'}
+              style={colTint(columns.find((c) => c.id === activeCard.columnId)?.color)}
+            >
               <CardContent card={activeCard} members={store.members} />
             </div>
           ) : activeColumn ? (
@@ -324,7 +336,7 @@ function BoardColumn({
     <section
       ref={setNodeRef}
       className={'board-col' + (isDragging ? ' col-dragging' : '')}
-      style={{ transform: CSS.Translate.toString(transform), transition }}
+      style={{ transform: CSS.Translate.toString(transform), transition, ...colTint(column.color) }}
     >
       {column.color && <div className="board-col-strip" style={{ background: column.color }} />}
       <div className="board-col-header" ref={setActivatorNodeRef} {...attributes} {...listeners}>
@@ -496,7 +508,7 @@ function ColumnMenu({ column }: { column: Column }) {
 // Копия колонки для DragOverlay
 function ColumnGhost({ column, cards, members }: { column: Column; cards: Card[]; members: Member[] }) {
   return (
-    <div className="board-col col-overlay">
+    <div className="board-col col-overlay" style={colTint(column.color)}>
       {column.color && <div className="board-col-strip" style={{ background: column.color }} />}
       <div className="board-col-header">
         <h3 className="board-col-title">{column.title}</h3>
