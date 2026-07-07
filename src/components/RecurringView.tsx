@@ -57,12 +57,12 @@ export function RecurringView({
         )}
 
         {active.map((c) => (
-          <RecRow key={c.id} card={c} rule={store.seriesById(c.seriesId!)?.rule} members={assigneesOf(c)} onEdit={() => openEdit(c)} onComplete={() => store.setCardDone(c.id, true)} onOpenCard={onOpenCard} />
+          <RecRow key={c.id} card={c} rule={store.seriesById(c.seriesId!)?.rule} members={assigneesOf(c)} onEdit={() => openEdit(c)} onToggle={() => store.setCardDone(c.id, true)} onOpenCard={onOpenCard} />
         ))}
 
         {completed.length > 0 && <div className="rec-sep">Выполненные</div>}
         {completed.map((c) => (
-          <RecRow key={c.id} card={c} rule={store.seriesById(c.seriesId!)?.rule} members={assigneesOf(c)} done onEdit={() => openEdit(c)} onOpenCard={onOpenCard} />
+          <RecRow key={c.id} card={c} rule={store.seriesById(c.seriesId!)?.rule} members={assigneesOf(c)} done onEdit={() => openEdit(c)} onToggle={() => store.setCardDone(c.id, false)} onOpenCard={onOpenCard} />
         ))}
       </div>
 
@@ -82,7 +82,7 @@ function RecRow({
   members,
   done,
   onEdit,
-  onComplete,
+  onToggle,
   onOpenCard,
 }: {
   card: Card
@@ -90,7 +90,7 @@ function RecRow({
   members: Member[]
   done?: boolean
   onEdit: () => void
-  onComplete?: () => void
+  onToggle: () => void
   onOpenCard: (id: ID) => void
 }) {
   let dateLabel = ''
@@ -103,10 +103,9 @@ function RecRow({
       <button
         type="button"
         className={'rec-check' + (done ? ' on' : '')}
-        title={done ? 'Выполнено' : 'Отметить выполненной'}
-        aria-label={done ? 'Выполнено' : 'Отметить выполненной'}
-        disabled={done}
-        onClick={() => onComplete?.()}
+        title={done ? 'Вернуть в невыполненные' : 'Отметить выполненной'}
+        aria-label={done ? 'Вернуть в невыполненные' : 'Отметить выполненной'}
+        onClick={onToggle}
       >
         ✓
       </button>

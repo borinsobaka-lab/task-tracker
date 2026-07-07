@@ -85,7 +85,12 @@
   background: var(--ok);
   border-color: var(--ok);
   color: #fff;
-  cursor: default;
+}
+/* Выполненную регулярную задачу можно вернуть — при наведении показываем «отжатие» */
+.rec-check.on:hover {
+  background: var(--surface);
+  border-color: var(--border-strong);
+  color: var(--text-faint);
 }
 
 .rec-body {

@@ -585,7 +585,20 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
         if (!card || card.deleted) return
         card.done = done
         touch(card)
-        if (!done) return
+        if (!done) {
+          // Отмена выполнения повторяющейся задачи — «шаг назад»: задача снова
+          // становится активной, а автоматически созданный следующий экземпляр
+          // (тот, что появился при отметке «выполнено») удаляется.
+          if (card.seriesId) {
+            for (const c of Object.values(d.cards)) {
+              if (c.seriesId === card.seriesId && !c.deleted && !c.done && c.id !== id) {
+                c.deleted = true
+                touch(c)
+              }
+            }
+          }
+          return
+        }
 
         // Экземпляр повторяющейся задачи: не переносим на доску, а порождаем
         // следующий экземпляр и подчищаем старые выполненные.
