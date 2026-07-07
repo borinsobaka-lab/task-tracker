@@ -508,10 +508,14 @@ export function CalendarView({
     const dragging = draggedCardId === c.id && (drag?.source.kind === 'block' || drag?.source.kind === 'resize')
     const armed = armedCardId === c.id && (drag?.source.kind === 'block' || drag?.source.kind === 'resize')
     const label = timeRange(ev.startMin, ev.startMin + dur)
+    const mtg = isMeeting(c)
+    // Встречи не отмечают выполненными — они просто «проходят». Прошедшие зачёркиваем.
+    const dayKey = dayKeys[dayIdx]
+    const meetingPast = mtg && (dayKey < todayKey || (dayKey === todayKey && ev.startMin + dur <= nowMin))
     return (
       <div
         key={c.id}
-        className={`cal-event${c.done ? ' done' : ''}${compact ? ' compact' : ''}${dragging ? ' is-dragging' : ''}${armed ? ' armed' : ''}${isMeeting(c) ? ' meeting' : ''}`}
+        className={`cal-event${c.done ? ' done' : ''}${meetingPast ? ' past' : ''}${compact ? ' compact' : ''}${dragging ? ' is-dragging' : ''}${armed ? ' armed' : ''}${mtg ? ' meeting' : ''}`}
         style={
           {
             top,
@@ -541,21 +545,23 @@ export function CalendarView({
         {...dragEvents}
       >
         <div className="cal-event-toprow">
-          <button
-            type="button"
-            className={'cal-event-check' + (c.done ? ' on' : '')}
-            title={c.done ? 'Снять отметку' : 'Отметить выполненной'}
-            aria-label={c.done ? 'Снять отметку' : 'Отметить выполненной'}
-            onPointerDown={(e) => e.stopPropagation()}
-            onClick={(e) => {
-              e.stopPropagation()
-              store.setCardDone(c.id, !c.done)
-            }}
-          >
-            ✓
-          </button>
+          {!mtg && (
+            <button
+              type="button"
+              className={'cal-event-check' + (c.done ? ' on' : '')}
+              title={c.done ? 'Снять отметку' : 'Отметить выполненной'}
+              aria-label={c.done ? 'Снять отметку' : 'Отметить выполненной'}
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={(e) => {
+                e.stopPropagation()
+                store.setCardDone(c.id, !c.done)
+              }}
+            >
+              ✓
+            </button>
+          )}
           <div className="cal-event-title">
-            {isMeeting(c) && <span className="cal-meeting-ico" aria-hidden>📹 </span>}
+            {mtg && <span className="cal-meeting-ico" aria-hidden>📹 </span>}
             {c.seriesId && <span aria-hidden>🔁 </span>}
             {c.title}
           </div>

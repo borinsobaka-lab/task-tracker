@@ -360,15 +360,18 @@ function CardModalInner({ card, store, onClose }: { card: Card; store: BoardStor
             </button>
           </div>
           <div className="cm-header-title-row">
-            <button
-              type="button"
-              className={'cm-done' + (card.done ? ' on' : '')}
-              title={card.done ? 'Отметить невыполненной' : 'Отметить выполненной'}
-              aria-label={card.done ? 'Отметить невыполненной' : 'Отметить выполненной'}
-              onClick={() => store.setCardDone(card.id, !card.done)}
-            >
-              ✓
-            </button>
+            {/* Встречи не отмечают выполненными — они просто проходят по времени */}
+            {!isMeeting && (
+              <button
+                type="button"
+                className={'cm-done' + (card.done ? ' on' : '')}
+                title={card.done ? 'Отметить невыполненной' : 'Отметить выполненной'}
+                aria-label={card.done ? 'Отметить невыполненной' : 'Отметить выполненной'}
+                onClick={() => store.setCardDone(card.id, !card.done)}
+              >
+                ✓
+              </button>
+            )}
             <div className="cm-header-main">
               <textarea
                 ref={titleRef}

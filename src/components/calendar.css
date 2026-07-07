@@ -602,6 +602,15 @@
   text-decoration: line-through;
 }
 
+/* Прошедшая встреча: без отметки выполнения — просто зачёркнута и приглушена */
+.cal-event.past {
+  opacity: 0.6;
+}
+.cal-event.past .cal-event-title,
+.cal-event.past .cal-event-time {
+  text-decoration: line-through;
+}
+
 .cal-event-resize {
   position: absolute;
   left: 0;
