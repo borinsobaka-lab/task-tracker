@@ -1041,12 +1041,12 @@
 }
 .public-tl-title {
   font-weight: 700;
-  font-size: 15px;
+  font-size: 20px;
   color: var(--text);
 }
 .public-tl-upd {
   margin-left: 12px;
-  font-size: 12px;
+  font-size: 14px;
   color: var(--text-faint);
 }
 .public-tl-note {
@@ -1076,86 +1076,90 @@
 }
 .public-tl .tl-day {
   flex-direction: column; /* заголовок дня сверху, карточки во всю ширину */
-  gap: 8px;
-  margin-top: 12px;
+  gap: 12px;
+  margin-top: 22px;
 }
 .public-tl .tl-day:first-child {
-  margin-top: 2px;
+  margin-top: 4px;
 }
 .public-tl .tl-daylabel {
   flex-direction: row;
   align-items: baseline;
-  gap: 8px;
+  gap: 10px;
   width: auto;
   position: static;
-  padding: 2px 2px 2px;
+  padding: 2px 2px 4px;
 }
 .public-tl .tl-day-name {
-  font-size: 18px;
+  font-size: 26px;
   font-weight: 800;
 }
 .public-tl .tl-day-date {
-  font-size: 14px;
+  font-size: 18px;
 }
 .public-tl .tl-day-cards {
-  gap: 8px;
+  gap: 12px;
   padding-bottom: 0;
   margin-bottom: 0;
   border-bottom: none;
 }
 .public-tl .tl-card {
-  padding: 13px 15px;
-  gap: 12px;
-  border-radius: 12px;
+  padding: 18px 20px;
+  gap: 16px;
+  border-radius: 16px;
   background: color-mix(in srgb, var(--ev-color) 20%, var(--surface));
-  border-left-width: 5px;
+  border-left-width: 7px;
 }
 .public-tl .tl-overdue .tl-card {
   background: color-mix(in srgb, var(--danger) 14%, var(--surface));
 }
 .public-tl .tl-card-title {
-  font-size: 16px;
+  font-size: 23px;
   line-height: 1.3;
 }
 .public-tl .tl-card-sub {
-  font-size: 14px;
-  margin-top: 5px;
-  gap: 5px 12px;
+  font-size: 19px;
+  margin-top: 9px;
+  gap: 7px 16px;
 }
 .public-tl .tl-card-left {
-  gap: 6px;
-  padding-top: 2px;
+  gap: 9px;
+  padding-top: 3px;
 }
 .public-tl .cal-chip-check {
-  width: 22px;
-  height: 22px;
+  width: 30px;
+  height: 30px;
+}
+.public-tl .cal-chip-check svg {
+  width: 18px;
+  height: 18px;
 }
 .public-tl .cal-event-prio {
-  width: 12px;
-  height: 12px;
+  width: 16px;
+  height: 16px;
 }
 .public-tl .tl-avatar {
-  width: 24px;
-  height: 24px;
-  font-size: 11px;
+  width: 32px;
+  height: 32px;
+  font-size: 14px;
 }
 .public-tl .tl-now-badge {
-  font-size: 11px;
-  padding: 2px 8px;
+  font-size: 14px;
+  padding: 3px 11px;
 }
 
 /* Узкий виджет: компактная шапка, чтобы больше места под задачи */
 @media (max-width: 440px) {
   .public-tl-head {
-    padding: 9px 12px;
-    gap: 6px;
+    padding: 10px 14px;
+    gap: 8px;
   }
   .public-tl-title {
-    font-size: 14px;
+    font-size: 18px;
   }
   .public-tl-upd {
     margin-left: auto;
-    font-size: 11px;
+    font-size: 13px;
   }
   .public-tl-note {
     display: none;
