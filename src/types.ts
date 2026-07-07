@@ -7,6 +7,8 @@ export interface Member {
   id: ID
   name: string
   color: string // hex, например "#7c5cff"
+  /** Аватарка: сжатая картинка data-URL (квадрат ~96px). Нет — показываем инициалы. */
+  avatar?: string
   /** Ник в Telegram (например "@ivan") — подставляется в уведомления бота для упоминания. */
   tgUsername?: string
   /** До скольки часов спит (0–12). Слоты 00:00–это_время в календаре серые. */

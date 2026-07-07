@@ -14,6 +14,9 @@ const DATA_TOKEN = process.env.DATA_TOKEN || ''
 const STATE_TOKEN = process.env.STATE_TOKEN || ''
 const MODE = process.env.MODE || 'morning'
 const TZ = process.env.TZ_NAME || 'Asia/Tbilisi'
+const APP_URL = process.env.APP_URL || 'https://borinsobaka-lab.github.io/task-tracker/'
+// Кнопка под каждым сообщением бота — переход в сервис
+const OPEN_BUTTON = { inline_keyboard: [[{ text: '📋 Открыть задачи', url: APP_URL }]] }
 
 const DATA = {
   owner: process.env.DATA_OWNER || 'borinsobaka-lab',
@@ -84,13 +87,26 @@ async function tg(method, body) {
 }
 
 async function sendMessage(text) {
-  const r = await tg('sendMessage', { chat_id: CHAT_ID, text, parse_mode: 'HTML', disable_web_page_preview: true })
+  const r = await tg('sendMessage', {
+    chat_id: CHAT_ID,
+    text,
+    parse_mode: 'HTML',
+    disable_web_page_preview: true,
+    reply_markup: OPEN_BUTTON,
+  })
   if (!r.ok) throw new Error(`sendMessage: ${JSON.stringify(r.data)}`)
   return r.data.result.message_id
 }
 
 async function editMessage(messageId, text) {
-  const r = await tg('editMessageText', { chat_id: CHAT_ID, message_id: messageId, text, parse_mode: 'HTML', disable_web_page_preview: true })
+  const r = await tg('editMessageText', {
+    chat_id: CHAT_ID,
+    message_id: messageId,
+    text,
+    parse_mode: 'HTML',
+    disable_web_page_preview: true,
+    reply_markup: OPEN_BUTTON,
+  })
   if (!r.ok) {
     const desc = r.data?.description || ''
     if (desc.includes('message is not modified')) return // содержимое не изменилось — это нормально

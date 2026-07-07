@@ -37,6 +37,7 @@ jobs:
           STATE_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
           TZ_NAME: Asia/Tbilisi
+          APP_URL: https://borinsobaka-lab.github.io/task-tracker/
           MODE: >-
             ${{ github.event_name == 'workflow_dispatch' && inputs.mode
                 || github.event.schedule == '0 6 * * *' && 'morning'

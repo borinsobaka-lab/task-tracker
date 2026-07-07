@@ -47,28 +47,88 @@
   font-size: 15px;
 }
 
-.view-tabs {
-  display: flex;
+/* Бренд-иконка (task tracker) */
+.app-brand {
+  font-size: 20px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+/* Компактный выбор вида */
+.view-switch {
+  position: relative;
+  flex-shrink: 0;
+}
+.view-ico {
+  font-size: 15px;
+  line-height: 1;
+}
+.view-switch-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid var(--border);
   background: var(--surface-2);
+  padding: 6px 10px;
   border-radius: 9px;
-  padding: 3px;
-  gap: 2px;
-}
-
-.view-tabs button {
-  border: none;
-  background: transparent;
-  padding: 5px 16px;
-  border-radius: 7px;
   cursor: pointer;
-  font-weight: 500;
-  color: var(--text-soft);
-}
-
-.view-tabs button.active {
-  background: var(--surface);
+  font-weight: 600;
   color: var(--text);
-  box-shadow: var(--shadow-sm);
+  font-size: 14px;
+}
+.view-switch-btn:hover {
+  background: var(--surface);
+  border-color: var(--border-strong);
+}
+.view-switch-caret {
+  color: var(--text-faint);
+  font-size: 11px;
+  margin-left: 2px;
+}
+.view-switch-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+}
+.view-switch-menu {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 5px);
+  z-index: 41;
+  min-width: 190px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-md);
+  padding: 4px;
+}
+.view-switch-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: none;
+  border-radius: 7px;
+  padding: 8px 10px;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--text);
+  white-space: nowrap;
+}
+.view-switch-item:hover {
+  background: var(--surface-2);
+}
+.view-switch-item.active {
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+  font-weight: 600;
+}
+.view-switch-check {
+  margin-left: auto;
+  color: var(--accent);
+  font-weight: 700;
 }
 
 .header-members {

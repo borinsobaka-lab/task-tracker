@@ -8,7 +8,7 @@ export function Avatar({ member, size, title }: { member: Member; size?: 'sm' | 
       style={{ background: member.color }}
       title={title ?? member.name}
     >
-      {initials(member.name)}
+      {member.avatar ? <img className="avatar-img" src={member.avatar} alt="" draggable={false} /> : initials(member.name)}
     </span>
   )
 }

@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import type { ViewKind } from '../App'
 import { useBoard } from '../store'
 import type { ID } from '../types'
@@ -9,6 +10,71 @@ const STATUS_LABEL: Record<string, { text: string; cls: string }> = {
   loading: { text: 'Загрузка…', cls: 'busy' },
   offline: { text: 'Офлайн — изменения сохранятся позже', cls: 'warn' },
   error: { text: 'Ошибка сохранения', cls: 'err' },
+}
+
+const VIEWS: { key: ViewKind; label: string; icon: string }[] = [
+  { key: 'board', label: 'Доска', icon: '🗂️' },
+  { key: 'calendar', label: 'Календарь', icon: '📅' },
+  { key: 'matrix', label: 'Матрица', icon: '🎯' },
+  { key: 'recurring', label: 'Регулярное', icon: '🔁' },
+]
+
+/** Компактный выбор вида вместо ряда табов — экономит место в шапке. */
+function ViewSwitch({ view, onViewChange }: { view: ViewKind; onViewChange: (v: ViewKind) => void }) {
+  const [open, setOpen] = useState(false)
+  const cur = VIEWS.find((v) => v.key === view) ?? VIEWS[0]
+
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false)
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [open])
+
+  return (
+    <div className="view-switch">
+      <button
+        className="view-switch-btn"
+        onClick={() => setOpen((o) => !o)}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        title="Сменить вид"
+      >
+        <span className="view-ico" aria-hidden>
+          {cur.icon}
+        </span>
+        <span className="view-switch-label">{cur.label}</span>
+        <span className="view-switch-caret" aria-hidden>
+          ▾
+        </span>
+      </button>
+      {open && (
+        <>
+          <div className="view-switch-backdrop" onClick={() => setOpen(false)} />
+          <div className="view-switch-menu" role="menu">
+            {VIEWS.map((v) => (
+              <button
+                key={v.key}
+                className={'view-switch-item' + (v.key === view ? ' active' : '')}
+                role="menuitemradio"
+                aria-checked={v.key === view}
+                onClick={() => {
+                  onViewChange(v.key)
+                  setOpen(false)
+                }}
+              >
+                <span className="view-ico" aria-hidden>
+                  {v.icon}
+                </span>
+                {v.label}
+                {v.key === view && <span className="view-switch-check">✓</span>}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  )
 }
 
 export function Header({
@@ -36,20 +102,10 @@ export function Header({
 
   return (
     <header className="app-header">
-      <nav className="view-tabs" aria-label="Вид">
-        <button className={view === 'board' ? 'active' : ''} onClick={() => onViewChange('board')}>
-          Доска
-        </button>
-        <button className={view === 'calendar' ? 'active' : ''} onClick={() => onViewChange('calendar')}>
-          Календарь
-        </button>
-        <button className={view === 'matrix' ? 'active' : ''} onClick={() => onViewChange('matrix')}>
-          Матрица
-        </button>
-        <button className={view === 'recurring' ? 'active' : ''} onClick={() => onViewChange('recurring')}>
-          Регулярное
-        </button>
-      </nav>
+      <span className="app-brand" title="Task Tracker" aria-hidden>
+        📋
+      </span>
+      <ViewSwitch view={view} onViewChange={onViewChange} />
 
       <div className="header-members" title="Фильтр по участникам">
         {store.members.map((m) => (

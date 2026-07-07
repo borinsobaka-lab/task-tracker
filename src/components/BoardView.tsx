@@ -678,9 +678,23 @@ function AddCard({ columnId }: { columnId: ID }) {
   const [open, setOpen] = useState(false)
   const [text, setText] = useState('')
   const taRef = useRef<HTMLTextAreaElement>(null)
+  const wrapRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (open) taRef.current?.focus()
+  }, [open])
+
+  // Клик мимо композера — сворачиваем и сбрасываем к исходному состоянию
+  useEffect(() => {
+    if (!open) return
+    const onDown = (e: Event) => {
+      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) {
+        setOpen(false)
+        setText('')
+      }
+    }
+    document.addEventListener('pointerdown', onDown)
+    return () => document.removeEventListener('pointerdown', onDown)
   }, [open])
 
   const close = () => {
@@ -711,7 +725,7 @@ function AddCard({ columnId }: { columnId: ID }) {
   }
 
   return (
-    <div className="card-composer">
+    <div className="card-composer" ref={wrapRef}>
       <textarea
         ref={taRef}
         className="input"

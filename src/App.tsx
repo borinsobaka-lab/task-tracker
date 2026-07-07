@@ -40,6 +40,11 @@ export default function App() {
       setPhase({ kind: 'token', token: cached })
       return
     }
+    // Скрытый вход владельца для перенастройки: ...?setup=1 (кнопки на экране больше нет)
+    if (new URLSearchParams(location.search).has('setup')) {
+      setPhase({ kind: 'setup' })
+      return
+    }
     setPhase({ kind: 'loading' })
     try {
       const state = await getAuthState()
@@ -87,7 +92,7 @@ export default function App() {
     case 'token':
       return <AppWithSession adapterKind="github" token={phase.token} onLogout={onLogout} />
     case 'password':
-      return <PasswordScreen blob={phase.blob} onUnlock={onAuthenticated} onReconfigure={() => setPhase({ kind: 'setup' })} />
+      return <PasswordScreen blob={phase.blob} onUnlock={onAuthenticated} />
     case 'setup':
       return <OwnerSetupScreen onDone={onAuthenticated} />
   }

@@ -109,6 +109,40 @@ export const COLUMN_COLORS = [
   '#e7e5e4', '#a8a29e', '#78716c', '#57534e', '#44403c',
 ]
 
+/**
+ * Читает картинку из файла, обрезает по центру в квадрат и сжимает в data-URL
+ * (JPEG), чтобы хранить аватарку прямо в board.json без раздувания.
+ */
+export function imageFileToAvatar(file: File, size = 96): Promise<string> {
+  return new Promise((resolve, reject) => {
+    if (!file.type.startsWith('image/')) return reject(new Error('Это не изображение'))
+    const url = URL.createObjectURL(file)
+    const img = new Image()
+    img.onload = () => {
+      URL.revokeObjectURL(url)
+      try {
+        const canvas = document.createElement('canvas')
+        canvas.width = size
+        canvas.height = size
+        const ctx = canvas.getContext('2d')
+        if (!ctx) return reject(new Error('Canvas недоступен'))
+        const scale = Math.max(size / img.width, size / img.height)
+        const w = img.width * scale
+        const h = img.height * scale
+        ctx.drawImage(img, (size - w) / 2, (size - h) / 2, w, h)
+        resolve(canvas.toDataURL('image/jpeg', 0.82))
+      } catch (e) {
+        reject(e instanceof Error ? e : new Error(String(e)))
+      }
+    }
+    img.onerror = () => {
+      URL.revokeObjectURL(url)
+      reject(new Error('Не удалось открыть изображение'))
+    }
+    img.src = url
+  })
+}
+
 export function initials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean)
   if (parts.length === 0) return '?'

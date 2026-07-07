@@ -7,11 +7,9 @@ import { unlockToken } from '../auth'
 export function PasswordScreen({
   blob,
   onUnlock,
-  onReconfigure,
 }: {
   blob: EncryptedBlob
   onUnlock: (token: string) => void
-  onReconfigure: () => void
 }) {
   const [password, setPassword] = useState('')
   const [checking, setChecking] = useState(false)
@@ -61,15 +59,6 @@ export function PasswordScreen({
         <p className="muted login-note">
           Пароль вам сообщает владелец доски. Он открывает доступ к задачам, но нигде не сохраняется в открытом виде.
         </p>
-        <button
-          className="btn btn-ghost btn-sm"
-          style={{ marginTop: 4 }}
-          onClick={() => {
-            if (confirm('Настроить приложение заново может только владелец — понадобится токен GitHub. Продолжить?')) onReconfigure()
-          }}
-        >
-          Я владелец — настроить заново
-        </button>
       </div>
     </div>
   )

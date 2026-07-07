@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState, type ChangeEvent } from 'react'
 import { useBoard } from '../store'
 import { getDataRepoConfig, getToken, setDataRepoConfig } from '../config'
 import { saveEncryptedToken } from '../auth'
-import { MEMBER_COLORS } from '../utils'
+import { imageFileToAvatar, MEMBER_COLORS } from '../utils'
 import type { Member } from '../types'
 import { Avatar } from './Avatar'
 import './settings.css'
@@ -72,6 +72,19 @@ function MemberRow({ member }: { member: Member }) {
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(member.name)
   const [colorsOpen, setColorsOpen] = useState(false)
+  const fileRef = useRef<HTMLInputElement>(null)
+
+  const pickAvatar = async (e: ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0]
+    e.target.value = '' // позволяем выбрать тот же файл снова
+    if (!f) return
+    try {
+      const avatar = await imageFileToAvatar(f)
+      store.updateMember(member.id, { avatar })
+    } catch {
+      alert('Не удалось загрузить изображение. Попробуйте другой файл.')
+    }
+  }
 
   const startEdit = () => {
     setDraft(member.name)
@@ -97,7 +110,32 @@ function MemberRow({ member }: { member: Member }) {
     <div>
       <div className="settings-member">
         <div className="settings-member-row1">
-          <Avatar member={member} />
+          <span className="settings-avatar-wrap">
+            <button
+              type="button"
+              className="settings-avatar-btn"
+              onClick={() => fileRef.current?.click()}
+              title="Загрузить аватарку"
+              aria-label={`Загрузить аватарку для ${member.name}`}
+            >
+              <Avatar member={member} size="lg" />
+              <span className="settings-avatar-cam" aria-hidden>
+                📷
+              </span>
+            </button>
+            {member.avatar && (
+              <button
+                type="button"
+                className="settings-avatar-remove"
+                onClick={() => store.updateMember(member.id, { avatar: undefined })}
+                title="Убрать аватарку"
+                aria-label="Убрать аватарку"
+              >
+                ✕
+              </button>
+            )}
+            <input ref={fileRef} type="file" accept="image/*" hidden onChange={pickAvatar} />
+          </span>
           {editing ? (
             <input
               className="input settings-name-input"
