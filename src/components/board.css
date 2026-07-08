@@ -20,9 +20,11 @@
   width: 290px;
   min-width: 290px;
   max-height: 100%;
-  /* Подложка колонки окрашивается в цвет статуса (бледно); карточки на ней — белые */
-  background: var(--col-bg, var(--bg-panel));
-  border: 1px solid var(--col-border, var(--border));
+  /* Подложка колонки — светло-серая, независимо от статуса (карточки на ней белые,
+     а цвет статуса показывает полоса сверху). Так цветные полосы приоритета на
+     карточках не сливаются с фоном. */
+  background: var(--surface-2);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
   box-shadow: var(--shadow-sm);
 }

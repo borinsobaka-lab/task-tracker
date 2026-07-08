@@ -62,16 +62,6 @@ function cardStyle(card: Card): CSSProperties {
   return { ['--prio-color' as string]: priorityStripeColor(card.priority) }
 }
 
-/** Очень бледная подложка колонки под цвет её статуса (~4%) + чуть заметная рамка.
- *  Карточки на ней остаются белыми. */
-function colTint(color?: string): CSSProperties {
-  if (!color) return {}
-  return {
-    ['--col-bg' as string]: `color-mix(in srgb, ${color} 4%, var(--bg-panel))`,
-    ['--col-border' as string]: `color-mix(in srgb, ${color} 11%, var(--border))`,
-  }
-}
-
 // ---------- Корневой компонент ----------
 
 export function BoardView({ memberFilter, onMemberFilterChange, onOpenCard }: ViewProps) {
@@ -339,7 +329,7 @@ function BoardColumn({
     <section
       ref={setNodeRef}
       className={'board-col' + (isDragging ? ' col-dragging' : '')}
-      style={{ transform: CSS.Translate.toString(transform), transition, ...colTint(column.color) }}
+      style={{ transform: CSS.Translate.toString(transform), transition }}
     >
       {column.color && <div className="board-col-strip" style={{ background: column.color }} />}
       <div className="board-col-header" ref={setActivatorNodeRef} {...attributes} {...listeners}>
@@ -515,7 +505,7 @@ function ColumnMenu({ column }: { column: Column }) {
 // Копия колонки для DragOverlay
 function ColumnGhost({ column, cards, members }: { column: Column; cards: Card[]; members: Member[] }) {
   return (
-    <div className="board-col col-overlay" style={colTint(column.color)}>
+    <div className="board-col col-overlay">
       {column.color && <div className="board-col-strip" style={{ background: column.color }} />}
       <div className="board-col-header">
         <h3 className="board-col-title">{column.title}</h3>
@@ -688,7 +678,7 @@ function CardContent({ card, members, interactive }: { card: Card; members: Memb
               className={'card-badge' + (doneCount === total ? ' complete' : '')}
               title={`Чек-лист: ${doneCount} из ${total}`}
             >
-              <IcoCheck size={12} /> {doneCount}/{total}
+              <IcoCheck size={15} /> {doneCount}/{total}
             </span>
           )}
           {attachments > 0 && (
@@ -707,7 +697,7 @@ function CardContent({ card, members, interactive }: { card: Card; members: Memb
               className={'card-badge' + (unseenComments ? ' unseen' : ' plain')}
               title={unseenComments ? 'Есть непрочитанные комментарии' : `Комментариев: ${commentCount}`}
             >
-              <IcoComment size={12} /> {commentCount}
+              <IcoComment size={15} /> {commentCount}
             </span>
           )}
           {interactive ? (
@@ -881,9 +871,9 @@ function CalendarIcon() {
 }
 
 function PaperclipIcon() {
-  return <IcoPaperclip size={12} aria-hidden />
+  return <IcoPaperclip size={15} aria-hidden />
 }
 
 function DescriptionIcon() {
-  return <IcoDescription size={13} aria-hidden />
+  return <IcoDescription size={16} aria-hidden />
 }

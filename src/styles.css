@@ -71,10 +71,11 @@ select {
   gap: 6px;
   padding: 7px 14px;
   border: 1px solid var(--border-strong);
-  border-radius: var(--radius-sm);
+  /* Единый вид кнопок во всей системе — скругление и жирность как у «Добавить задачу» */
+  border-radius: 999px;
   background: var(--surface);
   cursor: pointer;
-  font-weight: 500;
+  font-weight: 600;
   transition: background 0.12s, border-color 0.12s, box-shadow 0.12s;
   white-space: nowrap;
   user-select: none;
