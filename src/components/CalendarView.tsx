@@ -3,7 +3,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useBoard } from '../store'
-import { getCalDays, getCalTimeline, setCalDays, setCalTimeline } from '../config'
+import { getCalDays, getCalPanelOpen, getCalTimeline, isMobileViewport, setCalDays, setCalPanelOpen, setCalTimeline } from '../config'
 import type { Card, ID, Member } from '../types'
 import { QUADRANT_COLOR } from '../eisenhower'
 import type { ViewProps } from '../viewProps'
@@ -168,7 +168,12 @@ export function CalendarView({ memberFilter, onMemberFilterChange, onOpenCard }:
   const tlRef = useRef<TimelineHandle>(null)
   const [copied, setCopied] = useState(false)
   const [anchor, setAnchor] = useState<Date>(() => new Date())
-  const [panelOpen, setPanelOpen] = useState(true)
+  // На телефоне запоминаем состояние панели «Без даты»; на десктопе всегда открыта.
+  const [panelOpen, setPanelOpen] = useState<boolean>(() => (isMobileViewport() ? getCalPanelOpen() : true))
+  const togglePanel = (open: boolean) => {
+    setPanelOpen(open)
+    if (isMobileViewport()) setCalPanelOpen(open)
+  }
   const [drag, setDrag] = useState<DragState | null>(null)
   const dragRef = useRef<DragState | null>(null)
   dragRef.current = drag
@@ -819,7 +824,7 @@ export function CalendarView({ memberFilter, onMemberFilterChange, onOpenCard }:
                 className="icon-btn cal-collapse"
                 title="Свернуть панель"
                 aria-label="Свернуть панель"
-                onClick={() => setPanelOpen(false)}
+                onClick={() => togglePanel(false)}
               >
                 <IcoChevronLeft size={16} />
               </button>
@@ -847,7 +852,7 @@ export function CalendarView({ memberFilter, onMemberFilterChange, onOpenCard }:
               className="icon-btn cal-collapse"
               title="Развернуть панель «Без даты»"
               aria-label="Развернуть панель «Без даты»"
-              onClick={() => setPanelOpen(true)}
+              onClick={() => togglePanel(true)}
             >
               <IcoChevronRight size={16} />
             </button>

@@ -125,6 +125,22 @@ export function setCommentsSeen(map: Record<string, string>): void {
   }
 }
 
+/**
+ * Свёрнута ли панель «Без даты» в календаре. Запоминаем только на телефоне —
+ * на десктопе панель всегда открыта (это состояние не читается на десктопе).
+ */
+export function getCalPanelOpen(): boolean {
+  return localStorage.getItem('tt.calPanel') !== '0' // по умолчанию открыта
+}
+export function setCalPanelOpen(open: boolean): void {
+  localStorage.setItem('tt.calPanel', open ? '1' : '0')
+}
+
+/** Мобильная ширина экрана (телефон) — тот же порог, что у нижней навигации. */
+export function isMobileViewport(): boolean {
+  return typeof window !== 'undefined' && window.matchMedia('(max-width: 720px)').matches
+}
+
 /** Демо-режим: локальное хранилище вместо GitHub (для тестов и предпросмотра) */
 export function isDemoMode(): boolean {
   if (typeof location === 'undefined') return false

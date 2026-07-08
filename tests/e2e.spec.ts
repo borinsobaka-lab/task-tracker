@@ -250,13 +250,57 @@ test('мобильная навигация: разделы в нижнем ме
   // Верхние табы скрыты, снизу — навигация из 4 разделов
   await expect(page.locator('.view-tabs')).toBeHidden()
   await expect(page.locator('.bottom-nav')).toBeVisible()
-  await expect(page.locator('.bottom-nav-item')).toHaveCount(4)
+  await expect(page.locator('.bottom-nav-item:not(.bottom-nav-add)')).toHaveCount(4)
   // В шапке — название текущего раздела
   await expect(page.locator('.header-title-mobile')).toHaveText('Доска')
   // Переключаемся на «Календарь» через нижнее меню
   await page.locator('.bottom-nav-item', { hasText: 'Календарь' }).click()
   await expect(page.locator('.cal-view-select')).toBeVisible()
   await expect(page.locator('.header-title-mobile')).toHaveText('Календарь')
+})
+
+test('десктоп: плавающая кнопка «Добавить задачу» открывает модалку новой задачи', async ({ page }) => {
+  await createIdentity(page)
+  const fab = page.locator('.fab')
+  await expect(fab).toBeVisible()
+  await expect(fab).toContainText('Добавить задачу')
+  await fab.click()
+  // Открылась модалка создания задачи
+  await expect(page.getByRole('button', { name: /Удалить карточку/ })).toBeVisible()
+})
+
+test('мобильное меню: кнопка «+» справа создаёт задачу', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 780 })
+  await createIdentity(page)
+  // Плавающей кнопки на телефоне нет — только «+» в нижнем меню
+  await expect(page.locator('.fab')).toBeHidden()
+  await page.locator('.bottom-nav-add').click()
+  await expect(page.getByRole('button', { name: /Удалить карточку/ })).toBeVisible()
+})
+
+test('мобильный календарь запоминает свёрнутую панель «Без даты»', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 780 })
+  await createIdentity(page)
+  await page.waitForTimeout(1500) // дождаться сохранения участника (демо-дебаунс), чтобы пережить reload
+  await page.locator('.bottom-nav-item', { hasText: 'Календарь' }).click()
+  // Панель развёрнута, сворачиваем её
+  await expect(page.locator('.cal-sidebar-title')).toBeVisible()
+  await page.locator('.cal-sidebar .cal-collapse').click()
+  await expect(page.locator('.cal-sidebar.collapsed')).toBeVisible()
+  await page.waitForTimeout(300)
+
+  // После перезагрузки (тот же вид) панель осталась свёрнутой
+  await page.reload()
+  await expect(page.locator('.cal-sidebar.collapsed')).toBeVisible()
+})
+
+test('десктоп: панель «Без даты» всегда развёрнута', async ({ page }) => {
+  await createIdentity(page)
+  // Помечаем панель как свёрнутую (как будто с телефона) — на десктопе это игнорируется
+  await page.evaluate(() => localStorage.setItem('tt.calPanel', '0'))
+  await page.getByRole('button', { name: 'Календарь' }).click()
+  await expect(page.locator('.cal-sidebar-title')).toBeVisible()
+  await expect(page.locator('.cal-sidebar.collapsed')).toHaveCount(0)
 })
 
 test('живая публичная ссылка на таймлайн — внешняя страница только для просмотра', async ({ page, context }) => {

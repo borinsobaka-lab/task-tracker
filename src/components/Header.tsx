@@ -82,8 +82,17 @@ export function Header({
   )
 }
 
-/** Нижняя навигация по разделам — только в мобильной версии (иконка + подпись). */
-export function BottomNav({ view, onViewChange }: { view: ViewKind; onViewChange: (v: ViewKind) => void }) {
+/** Нижняя навигация по разделам — только в мобильной версии (иконка + подпись).
+ *  Справа после разделов — кнопка «+» для быстрого создания задачи. */
+export function BottomNav({
+  view,
+  onViewChange,
+  onNewTask,
+}: {
+  view: ViewKind
+  onViewChange: (v: ViewKind) => void
+  onNewTask: () => void
+}) {
   return (
     <nav className="bottom-nav" aria-label="Разделы">
       {VIEWS.map((v) => {
@@ -104,6 +113,16 @@ export function BottomNav({ view, onViewChange }: { view: ViewKind; onViewChange
           </button>
         )
       })}
+      <button
+        type="button"
+        className="bottom-nav-item bottom-nav-add"
+        onClick={onNewTask}
+        title="Добавить задачу"
+        aria-label="Добавить задачу"
+      >
+        <span className="bottom-nav-add-circle" aria-hidden>+</span>
+        <span className="bottom-nav-label">Задача</span>
+      </button>
     </nav>
   )
 }

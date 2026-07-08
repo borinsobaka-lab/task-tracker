@@ -262,6 +262,14 @@ function Shell({ onLogout }: { onLogout: () => void }) {
     setSavedView(v)
   }
 
+  // Быстрое создание задачи (плавающая кнопка на десктопе / «+» в нижнем меню на телефоне).
+  // Создаёт пустую задачу в колонке «Нужно сделать» и сразу открывает её модалку —
+  // тип (задача/встреча) можно переключить уже внутри окна.
+  const createTask = () => {
+    const col = store.columns.find((c) => c.role === 'todo') ?? store.columns[0]
+    if (col) setSelectedCardId(store.addCard(col.id, ''))
+  }
+
   return (
     <div className="app-shell">
       <Header
@@ -284,7 +292,12 @@ function Shell({ onLogout }: { onLogout: () => void }) {
           return <RecurringView {...shared} />
         })()}
       </main>
-      <BottomNav view={view} onViewChange={changeView} />
+      <BottomNav view={view} onViewChange={changeView} onNewTask={createTask} />
+      {/* Десктоп: плавающая кнопка быстрого создания задачи (во всех разделах) */}
+      <button className="fab" onClick={createTask} title="Добавить задачу" aria-label="Добавить задачу">
+        <span className="fab-plus" aria-hidden>+</span>
+        <span className="fab-text">Добавить задачу</span>
+      </button>
       {selectedCardId && <CardModal cardId={selectedCardId} onClose={() => setSelectedCardId(null)} />}
       {settingsOpen && <SettingsModal onClose={() => setSettingsOpen(false)} onLogout={onLogout} />}
       {historyOpen && (
