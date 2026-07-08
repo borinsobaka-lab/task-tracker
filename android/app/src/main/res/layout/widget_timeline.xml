@@ -6,12 +6,31 @@
     android:background="@drawable/widget_bg"
     android:padding="8dp">
 
+    <!-- Шапка: сегодняшняя дата + количество задач слева, кнопки «+» и «Обновить» справа -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:gravity="end"
-        android:paddingBottom="2dp">
+        android:gravity="center_vertical"
+        android:paddingStart="2dp"
+        android:paddingBottom="4dp">
+
+        <TextView
+            android:id="@+id/widget_today"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="#111827"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/widget_today_count"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"
+            android:textColor="#6B7280"
+            android:textSize="14sp" />
 
         <ImageView
             android:id="@+id/widget_add"

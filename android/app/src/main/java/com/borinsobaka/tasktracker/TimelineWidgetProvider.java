@@ -10,10 +10,24 @@ import android.net.Uri;
 import android.os.Build;
 import android.widget.RemoteViews;
 
+import java.util.Calendar;
+
 /** Виджет-таймлайн на рабочем столе: список задач из публичного timeline.json. */
 public class TimelineWidgetProvider extends AppWidgetProvider {
 
     static final String ACTION_REFRESH = "com.borinsobaka.tasktracker.ACTION_REFRESH";
+    static final String ACTION_BAR = "com.borinsobaka.tasktracker.ACTION_BAR"; // обновить число задач в шапке
+
+    private static final String[] MON = {"янв", "фев", "мар", "апр", "мая", "июн", "июл", "авг", "сен", "окт", "ноя", "дек"};
+
+    private static String todayLabel() {
+        Calendar c = Calendar.getInstance();
+        return "Сегодня · " + c.get(Calendar.DAY_OF_MONTH) + " " + MON[c.get(Calendar.MONTH)];
+    }
+
+    private static int todayCount(Context ctx) {
+        return ctx.getSharedPreferences("widget", Context.MODE_PRIVATE).getInt("today_count", 0);
+    }
 
     @Override
     public void onUpdate(Context ctx, AppWidgetManager mgr, int[] ids) {
@@ -23,15 +37,31 @@ public class TimelineWidgetProvider extends AppWidgetProvider {
     @Override
     public void onReceive(Context ctx, Intent intent) {
         super.onReceive(ctx, intent);
-        if (ACTION_REFRESH.equals(intent.getAction())) {
-            AppWidgetManager mgr = AppWidgetManager.getInstance(ctx);
-            int[] ids = mgr.getAppWidgetIds(new ComponentName(ctx, TimelineWidgetProvider.class));
+        String action = intent.getAction();
+        AppWidgetManager mgr = AppWidgetManager.getInstance(ctx);
+        int[] ids = mgr.getAppWidgetIds(new ComponentName(ctx, TimelineWidgetProvider.class));
+
+        if (ACTION_REFRESH.equals(action)) {
             mgr.notifyAppWidgetViewDataChanged(ids, R.id.widget_list);
+        } else if (ACTION_BAR.equals(action)) {
+            // Фабрика посчитала задачи на сегодня — обновляем только число в шапке
+            int count = todayCount(ctx);
+            for (int id : ids) {
+                RemoteViews rv = new RemoteViews(ctx.getPackageName(), R.layout.widget_timeline);
+                rv.setTextViewText(R.id.widget_today, todayLabel());
+                rv.setTextViewText(R.id.widget_today_count, count > 0 ? String.valueOf(count) : "");
+                mgr.partiallyUpdateAppWidget(id, rv);
+            }
         }
     }
 
     static void updateWidget(Context ctx, AppWidgetManager mgr, int widgetId) {
         RemoteViews rv = new RemoteViews(ctx.getPackageName(), R.layout.widget_timeline);
+
+        // Шапка: сегодняшняя дата + количество задач
+        rv.setTextViewText(R.id.widget_today, todayLabel());
+        int count = todayCount(ctx);
+        rv.setTextViewText(R.id.widget_today_count, count > 0 ? String.valueOf(count) : "");
 
         // Список задач заполняет TimelineWidgetService/Factory
         Intent svc = new Intent(ctx, TimelineWidgetService.class);
@@ -47,13 +77,13 @@ public class TimelineWidgetProvider extends AppWidgetProvider {
                 ctx, 0, click, PendingIntent.FLAG_UPDATE_CURRENT | mutable);
         rv.setPendingIntentTemplate(R.id.widget_list, clickPI);
 
-        // Кнопка «обновить»
+        // Кнопка «Обновить»
         Intent refresh = new Intent(ctx, TimelineWidgetProvider.class).setAction(ACTION_REFRESH);
         PendingIntent refreshPI = PendingIntent.getBroadcast(
                 ctx, 0, refresh, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
         rv.setOnClickPendingIntent(R.id.widget_refresh, refreshPI);
 
-        // Кнопка «+» — быстрое добавление задачи (открывает приложение на форме новой задачи)
+        // Кнопка «+» — быстрое добавление задачи
         Intent add = new Intent(ctx, MainActivity.class)
                 .setData(Uri.parse(MainActivity.APP_URL + "#new"))
                 .setAction(Intent.ACTION_VIEW);
