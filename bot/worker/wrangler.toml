@@ -1,0 +1,35 @@
+# Конфигурация Cloudflare Worker для Telegram-бота задач.
+# После создания KV-хранилища впишите его id ниже, а GROUP_CHAT_ID — id вашего
+# группового чата (см. инструкцию SETUP.md).
+
+name = "tasktracker-bot"
+main = "worker.js"
+compatibility_date = "2024-09-01"
+
+# Проверка раз в минуту: личные уведомления + обновление статусов в группе
+[triggers]
+crons = ["* * * * *"]
+
+# Хранилище состояния (диалоги, подписки, состояние отчётов).
+# id получите командой: npx wrangler kv namespace create BOT_KV
+[[kv_namespaces]]
+binding = "BOT_KV"
+id = "ЗАМЕНИТЬ_НА_ID_KV"
+
+[vars]
+DATA_OWNER = "borinsobaka-lab"
+DATA_REPO = "task-tracker-data"
+DATA_BRANCH = "tasks-data"
+AUTH_OWNER = "borinsobaka-lab"
+AUTH_REPO = "task-tracker"
+AUTH_BRANCH = "app-config"
+TZ_NAME = "Asia/Tbilisi"
+APP_URL = "https://borinsobaka-lab.github.io/task-tracker/"
+MORNING = "10:00"   # время утреннего сообщения (по TZ_NAME)
+EVENING = "20:00"   # время вечернего сообщения (по TZ_NAME)
+GROUP_CHAT_ID = "ЗАМЕНИТЬ_НА_ID_ГРУППЫ"  # напр. -1001234567890
+
+# Секреты НЕ храните в этом файле — задайте отдельно (см. SETUP.md):
+#   TELEGRAM_BOT_TOKEN — токен бота от @BotFather
+#   DATA_TOKEN         — GitHub-токен на чтение приватного репозитория данных
+#   WEBHOOK_SECRET     — любая длинная случайная строка (защита вебхука)

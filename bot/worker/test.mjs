@@ -1,0 +1,80 @@
+// Проверка чистой логики Worker в Node (без Cloudflare/Telegram).
+// Запуск: node bot/worker/test.mjs   (Node ≥ 20 с глобальным Web Crypto)
+
+import assert from 'node:assert/strict'
+import { verifyPassword, assignedCardIds, upcomingWithin, activeMembers, morningText, eveningText } from './worker.js'
+
+function b64(bytes) {
+  let s = ''
+  for (const b of bytes) s += String.fromCharCode(b)
+  return btoa(s)
+}
+async function makeBlob(secret, password) {
+  const salt = crypto.getRandomValues(new Uint8Array(16))
+  const iv = crypto.getRandomValues(new Uint8Array(12))
+  const baseKey = await crypto.subtle.importKey('raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveKey'])
+  const key = await crypto.subtle.deriveKey(
+    { name: 'PBKDF2', salt, iterations: 250000, hash: 'SHA-256' },
+    baseKey,
+    { name: 'AES-GCM', length: 256 },
+    false,
+    ['encrypt'],
+  )
+  const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, new TextEncoder().encode(secret))
+  return { v: 1, configured: true, salt: b64(salt), iv: b64(iv), ct: b64(new Uint8Array(ct)) }
+}
+function wall(ms, tz) {
+  const p = {}
+  for (const x of new Intl.DateTimeFormat('en-CA', {
+    timeZone: tz,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).formatToParts(new Date(ms)))
+    p[x.type] = x.value
+  return { date: `${p.year}-${p.month}-${p.day}`, start: `${p.hour}:${p.minute}` }
+}
+
+const tz = 'Asia/Tbilisi'
+const env = { TZ_NAME: tz }
+
+// 1) Пароль
+const blob = await makeBlob('ghp_secret_token', 'hunter2')
+assert.equal(await verifyPassword(blob, 'hunter2'), true, 'верный пароль принят')
+assert.equal(await verifyPassword(blob, 'wrong'), false, 'неверный пароль отклонён')
+
+// 2) Личные уведомления
+const board = {
+  members: [{ id: 'm1', name: 'Вова' }, { id: 'm2', name: 'Аня', archived: true }],
+  columns: [{ id: 'todo', title: 'Нужно сделать', role: 'todo' }],
+  cards: {
+    a: { id: 'a', title: 'Задача 1', assigneeIds: ['m1'], columnId: 'todo' },
+    d: { id: 'd', title: 'Повтор', assigneeIds: ['m1'], seriesId: 's1', columnId: 'todo' },
+  },
+}
+assert.deepEqual(activeMembers(board).map((m) => m.id), ['m1'], 'архивные скрыты')
+assert.deepEqual([...assignedCardIds(board, 'm1')].sort(), ['a'], 'разовая задача участника (без повторяющихся)')
+
+const now = Date.now()
+const w20 = wall(now + 20 * 60000, tz)
+const soon = { cards: { e: { id: 'e', title: 'Скоро', assigneeIds: ['m1'], date: w20.date, start: w20.start } } }
+assert.equal(upcomingWithin(soon, 'm1', tz, now, 30).length, 1, 'событие через 20 мин в окне 30')
+
+// 3) Тексты групповых отчётов
+const today = wall(now, tz).date
+const boardToday = {
+  members: [{ id: 'm1', name: 'Вова' }],
+  columns: [{ id: 'todo', title: 'Нужно сделать', role: 'todo' }],
+  cards: { t: { id: 't', title: 'Позвонить в банк', assigneeIds: ['m1'], columnId: 'todo', date: today } },
+}
+const mt = morningText(env, boardToday, [])
+assert.ok(mt.includes('Доброе утро'), 'утренний заголовок')
+assert.ok(mt.includes('Позвонить в банк'), 'утренний список содержит задачу')
+assert.ok(mt.includes('Вова'), 'группировка по исполнителю')
+const et = eveningText(env, boardToday, [])
+assert.ok(et.includes('Итоги дня'), 'вечерний заголовок')
+
+console.log('OK: все проверки логики Worker пройдены')
