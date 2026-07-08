@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-08T13:15:16.847Z",
+  "generatedAt": "2026-07-08T13:27:52.199Z",
   "items": [
     {
       "id": "2c23ac8a-8875-4b23-9d1d-7724145cf55c",
@@ -169,6 +169,20 @@
       "durationMin": 60,
       "kind": "task",
       "priorityColor": "#ef4444",
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        }
+      ]
+    },
+    {
+      "id": "111e42c7-2627-4a75-a4b4-a761cbc044a3",
+      "title": "Кино",
+      "date": "2026-07-08",
+      "start": "19:45",
+      "durationMin": 120,
+      "kind": "meeting",
       "members": [
         {
           "name": "Вова",
