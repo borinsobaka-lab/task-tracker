@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-08T14:37:01.288Z",
+  "generatedAt": "2026-07-08T15:25:45.174Z",
   "items": [
     {
       "id": "2c23ac8a-8875-4b23-9d1d-7724145cf55c",
@@ -162,6 +162,21 @@
       ]
     },
     {
+      "id": "271651f5-f48a-48d7-b336-df9b31baea1b",
+      "title": "Подготовить новые базы для рассылки и тексты для рассылок",
+      "date": "2026-07-08",
+      "start": "19:00",
+      "durationMin": 60,
+      "kind": "task",
+      "priorityColor": "#ef4444",
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        }
+      ]
+    },
+    {
       "id": "111e42c7-2627-4a75-a4b4-a761cbc044a3",
       "title": "Кино",
       "date": "2026-07-08",
@@ -217,21 +232,6 @@
       "date": "2026-07-09",
       "start": "10:00",
       "durationMin": 90,
-      "priorityColor": "#ef4444",
-      "members": [
-        {
-          "name": "Вова",
-          "color": "#84cc16"
-        }
-      ]
-    },
-    {
-      "id": "271651f5-f48a-48d7-b336-df9b31baea1b",
-      "title": "Подготовить новые базы для рассылки и тексты для рассылок",
-      "date": "2026-07-09",
-      "start": "11:30",
-      "durationMin": 60,
-      "kind": "task",
       "priorityColor": "#ef4444",
       "members": [
         {
