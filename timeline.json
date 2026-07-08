@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-08T06:04:49.987Z",
+  "generatedAt": "2026-07-08T08:13:07.134Z",
   "items": [
     {
       "id": "2c23ac8a-8875-4b23-9d1d-7724145cf55c",
@@ -358,6 +358,15 @@
           "color": "#f97316"
         }
       ]
+    },
+    {
+      "id": "2402ddea-2832-4b1a-b14e-022a9eca58a8",
+      "title": "Новая задача",
+      "date": "2026-07-15",
+      "start": "14:00",
+      "durationMin": 60,
+      "kind": "meeting",
+      "members": []
     },
     {
       "id": "c6d7f4c1-18c6-48a1-84c7-dd7625dc4e06",
