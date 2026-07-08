@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-08T06:04:37.635Z",
+  "generatedAt": "2026-07-08T06:04:49.987Z",
   "items": [
     {
       "id": "2c23ac8a-8875-4b23-9d1d-7724145cf55c",
@@ -116,11 +116,16 @@
     },
     {
       "id": "c7f90cd5-8b35-40ec-adcc-6281f33c35d7",
-      "title": "Новая задача",
+      "title": "Заказать водичку",
       "date": "2026-07-08",
       "start": "12:30",
-      "durationMin": 60,
-      "members": []
+      "durationMin": 30,
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        }
+      ]
     },
     {
       "id": "f3ed3214-d0d8-4f37-9f17-48c2de91bd4e",
