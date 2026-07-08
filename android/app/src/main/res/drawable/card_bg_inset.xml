@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Фон карточки с боковым отступом 8dp: сама карточка отступает от краёв, а
+     корень строки остаётся во всю ширину — чтобы красная полоса «сейчас» шла
+     от края до края поверх строки. -->
+<inset xmlns:android="http://schemas.android.com/apk/res/android"
+    android:drawable="@drawable/card_bg"
+    android:insetLeft="8dp"
+    android:insetRight="8dp" />

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Сплошная красная полоса «сейчас» (рисуется как src у ImageView — надёжно
+     отображается в RemoteViews, в отличие от голого background у ImageView). -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="#E11D2E" />
+</shape>
