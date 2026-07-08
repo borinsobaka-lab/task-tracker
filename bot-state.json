@@ -3,6 +3,21 @@
     "2026-07-07": {
       "morningMsgId": 2,
       "eveningMsgId": 6
+    },
+    "2026-07-08": {
+      "morningMsgId": 7,
+      "plannedIds": [
+        "27c23fc0-455c-4028-90a6-140b867ee5c1",
+        "4fc0b591-5d57-4612-9927-957f51a8c37f",
+        "a3068b7f-5671-4b31-9de1-083a971846ba",
+        "f1328b38-be22-4287-8a85-06d4c200fdaa",
+        "271651f5-f48a-48d7-b336-df9b31baea1b",
+        "90a979f2-a068-4780-ad14-a4d60a100474",
+        "e1bc40f8-8d13-4fee-a226-ad2067c56f33",
+        "f3ed3214-d0d8-4f37-9f17-48c2de91bd4e",
+        "bb7d2970-25ee-420e-8dee-6818beb8f8ba",
+        "c7f90cd5-8b35-40ec-adcc-6281f33c35d7"
+      ]
     }
   }
 }
