@@ -28,7 +28,8 @@ import java.util.Locale;
 /**
  * Наполняет список виджета данными из публичного timeline.json.
  * Сверху закреплены просроченные невыполненные задачи (красным), затем задачи
- * сегодня и далее с заголовками дней и счётчиком задач у каждого дня.
+ * сегодня и далее с заголовками дней и счётчиком. У идущей сейчас задачи —
+ * красная горизонтальная линия, показывающая, сколько её времени прошло.
  */
 public class TimelineRemoteViewsFactory implements RemoteViewsService.RemoteViewsFactory {
 
@@ -38,9 +39,15 @@ public class TimelineRemoteViewsFactory implements RemoteViewsService.RemoteView
     static final int RED = 0xFFDC2626;
     static final int ACCENT = 0xFF5B5BD6;
     static final int MEETING_COLOR = 0xFF1F2937; // тёмная полоса у встреч
+    static final int CARD_H_DP = 58; // высота карточки — для позиционирования красной линии
+
+    // Кэш загруженного timeline.json, чтобы поминутный тик не дёргал сеть каждую минуту
+    private static List<Item> sCache = null;
+    private static long sCacheAt = 0;
 
     private final Context ctx;
     private final List<Row> rows = new ArrayList<>();
+    private long now = System.currentTimeMillis();
 
     TimelineRemoteViewsFactory(Context c) {
         this.ctx = c;
@@ -51,7 +58,7 @@ public class TimelineRemoteViewsFactory implements RemoteViewsService.RemoteView
         int durationMin = 60;
         boolean done;
         int color = ACCENT; // цвет полосы ответственности (исполнитель / встреча)
-        long endMs;
+        long startMs, endMs;
     }
 
     private static class Row {
@@ -74,20 +81,22 @@ public class TimelineRemoteViewsFactory implements RemoteViewsService.RemoteView
     @Override
     public void onDataSetChanged() {
         rows.clear();
-        List<Item> items = fetch();
-        long now = System.currentTimeMillis();
+        now = System.currentTimeMillis();
+        List<Item> items = load();
         String today = dayKey(now);
 
         List<Item> overdue = new ArrayList<>();
         List<Item> future = new ArrayList<>();
+        boolean hasCurrent = false;
         for (Item it : items) {
             boolean isMeeting = "meeting".equals(it.kind);
+            if (isCurrent(it)) hasCurrent = true;
             if (isMeeting) {
-                if (it.endMs >= now) future.add(it); // предстоящие/идущие встречи
+                if (it.endMs >= now) future.add(it);
             } else if (cmp(it.date, today) >= 0) {
-                future.add(it); // сегодня и позже, включая выполненные
+                future.add(it);
             } else if (!it.done) {
-                overdue.add(it); // просроченные невыполненные задачи
+                overdue.add(it);
             }
         }
         Comparator<Item> byDate = new Comparator<Item>() {
@@ -99,15 +108,17 @@ public class TimelineRemoteViewsFactory implements RemoteViewsService.RemoteView
         Collections.sort(overdue, byDate);
         Collections.sort(future, byDate);
 
-        // Количество задач на сегодня — для шапки виджета
         int todayCount = 0;
         for (Item it : future) if (today.equals(it.date)) todayCount++;
-        ctx.getSharedPreferences("widget", Context.MODE_PRIVATE).edit().putInt("today_count", todayCount).apply();
+        ctx.getSharedPreferences("widget", Context.MODE_PRIVATE).edit()
+                .putInt("today_count", todayCount)
+                .putBoolean("has_current", hasCurrent)
+                .apply();
+        // Просим провайдер обновить число в шапке и (пере)запланировать поминутный тик
         ctx.sendBroadcast(new Intent(ctx, TimelineWidgetProvider.class)
                 .setAction(TimelineWidgetProvider.ACTION_BAR)
                 .setPackage(ctx.getPackageName()));
 
-        // Просроченные — закреплены сверху
         if (!overdue.isEmpty()) {
             Row h = new Row();
             h.header = true;
@@ -123,14 +134,12 @@ public class TimelineRemoteViewsFactory implements RemoteViewsService.RemoteView
             }
         }
 
-        // Счётчики по дням
         HashMap<String, Integer> dayCount = new HashMap<>();
         for (Item it : future) {
             Integer n = dayCount.get(it.date);
             dayCount.put(it.date, n == null ? 1 : n + 1);
         }
 
-        // Задачи сегодня и далее; у сегодняшнего дня заголовка нет — он в шапке
         String lastDay = null;
         for (Item it : future) {
             if (!it.date.equals(lastDay)) {
@@ -148,6 +157,11 @@ public class TimelineRemoteViewsFactory implements RemoteViewsService.RemoteView
             r.item = it;
             rows.add(r);
         }
+    }
+
+    private boolean isCurrent(Item it) {
+        return it.start != null && !it.start.isEmpty() && it.startMs > 0
+                && now >= it.startMs && now < it.endMs;
     }
 
     @Override
@@ -168,25 +182,26 @@ public class TimelineRemoteViewsFactory implements RemoteViewsService.RemoteView
         boolean isMeeting = "meeting".equals(it.kind);
         RemoteViews rv = new RemoteViews(ctx.getPackageName(), R.layout.widget_item_task);
 
-        // Полоса слева — цвет ответственного (у встречи тёмная)
+        // Полоса ответственности (цвет исполнителя; у встречи тёмная)
         rv.setInt(R.id.item_bar, "setColorFilter", it.color);
         rv.setInt(R.id.item_bar, "setImageAlpha", it.done ? 110 : 255);
 
-        // Значок прямо перед названием: у встречи — иконка, у задачи с приоритетом — цветная точка
+        // Иконка встречи — перед названием; точка приоритета — под названием, слева от времени
         if (isMeeting) {
             rv.setViewVisibility(R.id.item_meeting, View.VISIBLE);
             rv.setViewVisibility(R.id.item_dot, View.GONE);
-        } else if (it.priorityColor != null) {
-            rv.setViewVisibility(R.id.item_meeting, View.GONE);
-            rv.setViewVisibility(R.id.item_dot, View.VISIBLE);
-            rv.setInt(R.id.item_dot, "setColorFilter", parseColor(it.priorityColor));
-            rv.setInt(R.id.item_dot, "setImageAlpha", it.done ? 110 : 255);
         } else {
             rv.setViewVisibility(R.id.item_meeting, View.GONE);
-            rv.setViewVisibility(R.id.item_dot, View.GONE);
+            if (it.priorityColor != null) {
+                rv.setViewVisibility(R.id.item_dot, View.VISIBLE);
+                rv.setInt(R.id.item_dot, "setColorFilter", parseColor(it.priorityColor));
+                rv.setInt(R.id.item_dot, "setImageAlpha", it.done ? 110 : 255);
+            } else {
+                rv.setViewVisibility(R.id.item_dot, View.GONE);
+            }
         }
 
-        // Заголовок: просроченные — красным; выполненные — зачёркнуты и приглушены
+        // Название (одна строка); просроченные — красным, выполненные — зачёркнуты
         if (row.overdue) {
             rv.setTextViewText(R.id.item_title, it.title);
             rv.setTextColor(R.id.item_title, RED);
@@ -210,13 +225,43 @@ public class TimelineRemoteViewsFactory implements RemoteViewsService.RemoteView
             rv.setViewVisibility(R.id.item_time, View.GONE);
         }
 
+        // Красная линия текущего времени внутри идущей сейчас задачи
+        if (isCurrent(it)) {
+            float p = (float) (now - it.startMs) / (float) (it.endMs - it.startMs);
+            if (p < 0f) p = 0f;
+            if (p > 1f) p = 1f;
+            int cardPx = dp(CARD_H_DP);
+            int top = (int) (p * (cardPx - dp(3)));
+            rv.setViewVisibility(R.id.item_now_holder, View.VISIBLE);
+            rv.setViewPadding(R.id.item_now_holder, 0, top, 0, 0);
+        } else {
+            rv.setViewVisibility(R.id.item_now_holder, View.GONE);
+        }
+
         Intent fill = new Intent();
         fill.setData(Uri.parse(APP_URL + "#card=" + Uri.encode(it.id)));
         rv.setOnClickFillInIntent(R.id.item_root, fill);
         return rv;
     }
 
-    // ---------- Сеть + разбор ----------
+    private int dp(int v) {
+        return Math.round(v * ctx.getResources().getDisplayMetrics().density);
+    }
+
+    // ---------- Загрузка (с кэшем) ----------
+
+    private List<Item> load() {
+        if (sCache == null || now - sCacheAt >= 100000) {
+            List<Item> f = fetch();
+            if (!f.isEmpty()) {
+                sCache = f;
+                sCacheAt = now;
+            } else if (sCache == null) {
+                sCache = f; // первый раз сеть недоступна — пусто, повторим на следующем тике
+            }
+        }
+        return sCache != null ? sCache : new ArrayList<Item>();
+    }
 
     private List<Item> fetch() {
         List<Item> out = new ArrayList<>();
@@ -257,13 +302,13 @@ public class TimelineRemoteViewsFactory implements RemoteViewsService.RemoteView
                 } else {
                     it.color = ACCENT;
                 }
-                it.endMs = (it.start != null && !it.start.isEmpty())
-                        ? computeMs(it.date, it.start, it.durationMin)
-                        : endOfDay(it.date);
+                boolean timed = it.start != null && !it.start.isEmpty();
+                it.startMs = timed ? computeMs(it.date, it.start, 0) : 0;
+                it.endMs = timed ? computeMs(it.date, it.start, it.durationMin) : endOfDay(it.date);
                 out.add(it);
             }
         } catch (Exception e) {
-            // сеть недоступна — покажем пусто
+            // сеть недоступна — вернём пусто (используем кэш, если был)
         } finally {
             if (conn != null) conn.disconnect();
         }

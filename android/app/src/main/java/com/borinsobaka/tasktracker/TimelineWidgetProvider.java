@@ -1,5 +1,6 @@
 package com.borinsobaka.tasktracker;
 
+import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
@@ -52,6 +53,29 @@ public class TimelineWidgetProvider extends AppWidgetProvider {
                 rv.setTextViewText(R.id.widget_today_count, count > 0 ? String.valueOf(count) : "");
                 mgr.partiallyUpdateAppWidget(id, rv);
             }
+            // Пока идёт какая-то задача — тикаем раз в минуту (двигаем красную линию),
+            // иначе отключаем частые обновления (экономим батарею).
+            boolean hasCurrent = ctx.getSharedPreferences("widget", Context.MODE_PRIVATE).getBoolean("has_current", false);
+            scheduleTick(ctx, hasCurrent && ids.length > 0);
+        }
+    }
+
+    @Override
+    public void onDisabled(Context ctx) {
+        scheduleTick(ctx, false); // последний виджет удалён — гасим тик
+    }
+
+    /** Планирует (или отменяет) поминутное обновление для движения красной линии. */
+    private static void scheduleTick(Context ctx, boolean on) {
+        AlarmManager am = (AlarmManager) ctx.getSystemService(Context.ALARM_SERVICE);
+        if (am == null) return;
+        int flags = PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= 23 ? PendingIntent.FLAG_IMMUTABLE : 0);
+        PendingIntent pi = PendingIntent.getBroadcast(
+                ctx, 7, new Intent(ctx, TimelineWidgetProvider.class).setAction(ACTION_REFRESH), flags);
+        if (on) {
+            am.set(AlarmManager.RTC, System.currentTimeMillis() + 60000, pi); // неточный — без спец-разрешений и экономно
+        } else {
+            am.cancel(pi);
         }
     }
 

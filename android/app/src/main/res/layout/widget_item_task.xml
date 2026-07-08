@@ -1,79 +1,97 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/item_root"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginBottom="8dp"
-    android:orientation="horizontal"
-    android:gravity="center_vertical"
     android:background="@drawable/card_bg"
-    android:minHeight="52dp"
-    android:paddingStart="10dp"
-    android:paddingEnd="14dp"
-    android:paddingTop="11dp"
-    android:paddingBottom="11dp">
-
-    <!-- Полоса ответственности: цвет исполнителя (у встречи — тёмная); тон через colorFilter -->
-    <ImageView
-        android:id="@+id/item_bar"
-        android:layout_width="6dp"
-        android:layout_height="match_parent"
-        android:layout_marginEnd="12dp"
-        android:contentDescription="@null"
-        android:scaleType="fitXY"
-        android:src="@drawable/stripe" />
+    android:minHeight="58dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:paddingStart="12dp"
+        android:paddingEnd="14dp"
+        android:paddingTop="9dp"
+        android:paddingBottom="9dp">
 
-        <!-- Первая строка: значок (точка приоритета / иконка встречи) прямо перед названием -->
+        <!-- Название: одна строка сверху, обрезается с многоточием -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:baselineAligned="false"
-            android:gravity="top">
+            android:gravity="center_vertical">
 
             <ImageView
                 android:id="@+id/item_meeting"
-                android:layout_width="18dp"
-                android:layout_height="18dp"
-                android:layout_marginEnd="7dp"
-                android:layout_marginTop="1dp"
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:layout_marginEnd="6dp"
                 android:contentDescription="@null"
                 android:visibility="gone"
                 android:src="@drawable/ic_meeting" />
-
-            <ImageView
-                android:id="@+id/item_dot"
-                android:layout_width="10dp"
-                android:layout_height="10dp"
-                android:layout_marginEnd="7dp"
-                android:layout_marginTop="4dp"
-                android:contentDescription="@null"
-                android:visibility="gone"
-                android:src="@drawable/dot" />
 
             <TextView
                 android:id="@+id/item_title"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
+                android:fontFamily="sans-serif-medium"
                 android:textColor="#111827"
-                android:textSize="15sp"
-                android:textStyle="bold"
-                android:maxLines="3"
-                android:ellipsize="end" />
+                android:textSize="14sp"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:paddingEnd="4dp" />
         </LinearLayout>
 
-        <TextView
-            android:id="@+id/item_time"
+        <!-- Под названием: полоса ответственности + точка приоритета + время -->
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="3dp"
-            android:textColor="#6B7280"
-            android:textSize="13sp" />
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginTop="5dp">
+
+            <ImageView
+                android:id="@+id/item_bar"
+                android:layout_width="4dp"
+                android:layout_height="14dp"
+                android:layout_marginEnd="8dp"
+                android:contentDescription="@null"
+                android:scaleType="fitXY"
+                android:src="@drawable/stripe" />
+
+            <ImageView
+                android:id="@+id/item_dot"
+                android:layout_width="9dp"
+                android:layout_height="9dp"
+                android:layout_marginEnd="7dp"
+                android:contentDescription="@null"
+                android:visibility="gone"
+                android:src="@drawable/dot" />
+
+            <TextView
+                android:id="@+id/item_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#6B7280"
+                android:textSize="13sp" />
+        </LinearLayout>
     </LinearLayout>
-</LinearLayout>
+
+    <!-- Красная линия текущего времени (видна только у идущей сейчас задачи) -->
+    <FrameLayout
+        android:id="@+id/item_now_holder"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone">
+
+        <ImageView
+            android:id="@+id/item_now_line"
+            android:layout_width="match_parent"
+            android:layout_height="3dp"
+            android:contentDescription="@null"
+            android:background="#E11D2E" />
+    </FrameLayout>
+</FrameLayout>
