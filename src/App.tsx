@@ -16,6 +16,7 @@ import { RecurringView } from './components/RecurringView'
 import { CardModal } from './components/CardModal'
 import { SettingsModal } from './components/SettingsModal'
 import { HistoryModal } from './components/HistoryModal'
+import { Confetti } from './components/Confetti'
 import { IdentityScreen } from './components/IdentityScreen'
 import { PublicTimeline } from './components/PublicTimeline'
 import { CommentsSeenProvider } from './components/Comments'
@@ -347,6 +348,7 @@ function Shell({ onLogout }: { onLogout: () => void }) {
       {historyOpen && (
         <HistoryModal onClose={() => setHistoryOpen(false)} onOpenCard={(id) => setSelectedCardId(id)} />
       )}
+      <Confetti />
     </div>
   )
 }

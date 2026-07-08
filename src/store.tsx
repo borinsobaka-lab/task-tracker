@@ -13,6 +13,7 @@ import { getIdentity, setIdentityId } from './config'
 import { clamp, nowISO, plainSnippet, toDateKey, uid } from './utils'
 import { logActivity } from './activity'
 import { QUADRANT_LABEL } from './eisenhower'
+import { celebrate } from './confetti'
 
 export interface SeriesInput {
   title: string
@@ -126,6 +127,9 @@ export class SyncEngine {
   private errorBackoffMs = 5000
   private listeners = new Set<() => void>()
   private snapshot: StoreSnapshot
+  /** Взводится мутатором, когда задача перешла в «Готово»; после применения
+   *  изменений выпускаем конфетти. */
+  private pendingCelebrate = false
 
   status: SyncStatus = 'loading'
   lastSyncAt: number | null = null
@@ -227,6 +231,7 @@ export class SyncEngine {
 
   update(mutator: (d: BoardData) => void): void {
     if (!this.data) return
+    this.pendingCelebrate = false
     this.data = produce(this.data, (draft) => {
       mutator(draft)
       draft.updatedAt = nowISO()
@@ -235,6 +240,16 @@ export class SyncEngine {
     this.conflictRetries = 0
     this.emit()
     this.scheduleSave()
+    // Конфетти — после применения и рендера состояния (вне мутатора immer).
+    if (this.pendingCelebrate) {
+      this.pendingCelebrate = false
+      celebrate()
+    }
+  }
+
+  /** Пометить, что в текущем update() задача выполнена — выпустить конфетти. */
+  requestCelebrate(): void {
+    this.pendingCelebrate = true
   }
 
   setIdentity(id: ID | null): void {
@@ -691,8 +706,10 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
         card.columnId = toColumnId
         // Перемещение в колонку с ролью синхронизирует отметку «выполнено»:
         // в «Готово» → выполнено; в любую другую колонку с ролью → не выполнено.
+        const wasDone = !!card.done
         if (to.role === 'done') card.done = true
         else if (to.role) card.done = false
+        if (card.done && !wasDone) engine.requestCelebrate() // задача стала «Готово» → конфетти
         touch(card)
         touch(to)
         if (changedColumn) logActivity(d, identity, 'card.move', { cardId: id, cardTitle: card.title, detail: to.title })
@@ -701,7 +718,9 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
       engine.update((d) => {
         const card = d.cards[id]
         if (!card || card.deleted) return
+        const wasDone = !!card.done
         card.done = done
+        if (done && !wasDone) engine.requestCelebrate() // задача выполнена → конфетти
         touch(card)
         logActivity(d, identity, done ? 'card.done' : 'card.undone', { cardId: id, cardTitle: card.title })
         if (!done) {

@@ -172,6 +172,54 @@ test('крупная кнопка закрытия модалки работае
   await expect(page.getByRole('button', { name: /Удалить карточку/ })).toBeHidden()
 })
 
+test('конфетти: кнопка «Готово» в модалке запускает анимацию', async ({ page }) => {
+  await createIdentity(page)
+  await page.getByText('Добавить карточку').first().click()
+  await page.locator('textarea').first().fill('Готово из модалки')
+  await page.keyboard.press('Enter')
+  await page.getByText('Готово из модалки').click()
+  await page.locator('.cm-done').click()
+  await expect(page.locator('.confetti-canvas')).toHaveAttribute('data-active', '1')
+})
+
+test('конфетти: смена статуса на «Готово» в модалке запускает анимацию', async ({ page }) => {
+  await createIdentity(page)
+  await page.getByText('Добавить карточку').first().click()
+  await page.locator('textarea').first().fill('Статус в Готово')
+  await page.keyboard.press('Enter')
+  await page.getByText('Статус в Готово').click()
+  await page.locator('.cm-col-select').selectOption({ label: 'Готово' })
+  await expect(page.locator('.confetti-canvas')).toHaveAttribute('data-active', '1')
+})
+
+test('конфетти: чекбокс в календаре запускает анимацию', async ({ page }) => {
+  await createIdentity(page)
+  await page.getByText('Добавить карточку').first().click()
+  await page.locator('textarea').first().fill('Задача на сегодня')
+  await page.keyboard.press('Enter')
+  await page.getByText('Задача на сегодня').click()
+  await page.getByRole('button', { name: /Добавить дату/ }).click()
+  const today = new Date()
+  const key = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+  await page.locator('input[type="date"]').fill(key)
+  await page.getByRole('button', { name: 'Сохранить' }).click()
+  await page.keyboard.press('Escape')
+
+  await page.getByRole('button', { name: 'Календарь' }).click()
+  await page.locator('.cal-chip-check').first().click()
+  await expect(page.locator('.confetti-canvas')).toHaveAttribute('data-active', '1')
+})
+
+test('конфетти: отметка в разделе «Повтор» запускает анимацию', async ({ page }) => {
+  await createIdentity(page)
+  await page.getByRole('button', { name: 'Повтор' }).click()
+  await page.getByRole('button', { name: /Регулярная задача/ }).click()
+  await page.getByPlaceholder(/Планёрка/).fill('Регулярная задача')
+  await page.getByRole('button', { name: 'Сохранить' }).click()
+  await page.locator('.rec-check').first().click()
+  await expect(page.locator('.confetti-canvas')).toHaveAttribute('data-active', '1')
+})
+
 test('комментарии: добавление, бейдж, правка и удаление', async ({ page }) => {
   await createIdentity(page, 'Борис')
   await page.getByText('Добавить карточку').first().click()
