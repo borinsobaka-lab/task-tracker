@@ -958,7 +958,9 @@
     overflow: visible;
     border-left: none;
     border-top: 1px solid var(--border);
-    background: transparent;
+    /* Белый фон — как у панели комментариев на десктопе: блок визуально
+       отделяется от контента задачи (у неё фон --bg-panel), а не сливается с ним. */
+    background: var(--surface);
   }
 }
 
