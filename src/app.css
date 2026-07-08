@@ -466,20 +466,23 @@
     line-height: 1;
   }
 
-  /* Кнопка «+» справа в нижнем меню — только круглая кнопка с иконкой, без подписи */
+  /* Кнопка «+» справа в нижнем меню — крупная круглая кнопка почти во всю высоту
+     меню (только иконка, без подписи) */
   .bottom-nav-add {
     justify-content: center;
+    padding-top: 5px;
+    padding-bottom: 5px;
   }
   .bottom-nav-add-circle {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 36px;
-    height: 36px;
+    width: 54px;
+    height: 54px;
     border-radius: 50%;
     background: var(--accent);
     color: #fff;
-    font-size: 26px;
+    font-size: 36px;
     font-weight: 400;
     line-height: 1;
   }
