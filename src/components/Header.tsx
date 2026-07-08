@@ -121,7 +121,6 @@ export function BottomNav({
         aria-label="Добавить задачу"
       >
         <span className="bottom-nav-add-circle" aria-hidden>+</span>
-        <span className="bottom-nav-label">Задача</span>
       </button>
     </nav>
   )

@@ -456,22 +456,22 @@
     line-height: 1;
   }
 
-  /* Кнопка «+» справа в нижнем меню — быстрое создание задачи */
+  /* Кнопка «+» справа в нижнем меню — только круглая кнопка с иконкой, без подписи */
+  .bottom-nav-add {
+    justify-content: center;
+  }
   .bottom-nav-add-circle {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 27px;
-    height: 27px;
+    width: 36px;
+    height: 36px;
     border-radius: 50%;
     background: var(--accent);
     color: #fff;
-    font-size: 21px;
+    font-size: 26px;
     font-weight: 400;
     line-height: 1;
-  }
-  .bottom-nav-add .bottom-nav-label {
-    color: var(--accent-strong);
   }
 
   /* Плавающая кнопка — только десктоп */
