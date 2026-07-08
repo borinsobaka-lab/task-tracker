@@ -442,16 +442,19 @@
     background: var(--surface);
     border-top: 1px solid var(--border);
     padding-bottom: env(safe-area-inset-bottom);
+    /* чтобы приподнятая кнопка «+» была поверх контента */
+    position: relative;
+    z-index: 20;
   }
   .bottom-nav-item {
     flex: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 5px;
+    gap: 3px;
     border: none;
     background: none;
-    padding: 13px 2px 12px;
+    padding: 7px 2px 6px;
     cursor: pointer;
     color: var(--text-faint);
     -webkit-tap-highlight-color: transparent;
@@ -466,14 +469,20 @@
     line-height: 1;
   }
 
-  /* Кнопка «+» справа в нижнем меню — крупная круглая кнопка почти во всю высоту
-     меню (только иконка, без подписи) */
+  /* Кнопка «+» справа в нижнем меню — крупная круглая кнопка, приподнята так, что
+     половина на меню, половина над ним (выходит за верхний край). Кружок позициони-
+     рован абсолютно, поэтому не увеличивает высоту меню; клики по нему всё равно
+     срабатывают на кнопке (всплытие события). */
   .bottom-nav-add {
     justify-content: center;
-    padding-top: 5px;
-    padding-bottom: 5px;
+    position: relative;
   }
   .bottom-nav-add-circle {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    transform: translate(-50%, -50%);
+    z-index: 5;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -485,6 +494,7 @@
     font-size: 36px;
     font-weight: 400;
     line-height: 1;
+    box-shadow: 0 4px 12px rgba(91, 91, 214, 0.4);
   }
 
   /* Плавающая кнопка — только десктоп */
