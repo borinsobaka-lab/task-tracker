@@ -270,14 +270,22 @@ export function CalendarView({ memberFilter, onMemberFilterChange, onOpenCard }:
     memberFilter.size === 0 || c.assigneeIds.some((id) => memberFilter.has(id))
 
   const visible = store.liveCards().filter(passesFilter)
-  const unscheduled = visible
-    .filter((c) => !c.date)
-    .sort((a, b) => a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id))
-  // Группируем «Без даты» по статусу (колонке доски) в порядке колонок
   const liveColumns = store.columns.filter((c) => !c.deleted)
+  // Задачи со статусом «Готово» в панель «Без даты» не показываем — они уже
+  // сделаны, распределять их по датам не нужно.
+  const doneColIds = new Set(liveColumns.filter((c) => c.role === 'done').map((c) => c.id))
+  const unscheduled = visible
+    .filter((c) => !c.date && !c.done && !doneColIds.has(c.columnId))
+    .sort((a, b) => a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id))
+  // Группируем «Без даты» по статусу колонки. Порядок: Нужно сделать → В работе →
+  // Ожидает проверки → колонки без роли. «Готово» уже отфильтровано выше.
+  const UNSCHED_RANK: Record<string, number> = { todo: 0, doing: 1, review: 2 }
+  const colRank = (role?: string): number => (role && role in UNSCHED_RANK ? UNSCHED_RANK[role] : 3)
   const unscheduledGroups = liveColumns
+    .filter((col) => col.role !== 'done')
     .map((col) => ({ col, cards: unscheduled.filter((c) => c.columnId === col.id) }))
     .filter((g) => g.cards.length > 0)
+    .sort((a, b) => colRank(a.col.role) - colRank(b.col.role))
   const unscheduledOther = unscheduled.filter((c) => !liveColumns.some((col) => col.id === c.columnId))
   const allDayByDay = dayKeys.map((key) =>
     visible.filter((c) => c.date === key && !c.start).sort((a, b) => a.title.localeCompare(b.title, 'ru')),

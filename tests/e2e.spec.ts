@@ -355,6 +355,30 @@ test('десктоп: панель «Без даты» всегда развёр
   await expect(page.locator('.cal-sidebar.collapsed')).toHaveCount(0)
 })
 
+test('календарь: панель «Без даты» скрывает готовые задачи', async ({ page }) => {
+  await createIdentity(page)
+  // Активная задача остаётся в «Нужно сделать»
+  await page.getByText('Добавить карточку').first().click()
+  await page.locator('textarea').first().fill('Активная задача')
+  await page.keyboard.press('Enter')
+  // Вторую помечаем выполненной — уезжает в «Готово»
+  await page.getByText('Добавить карточку').first().click()
+  await page.locator('textarea').first().fill('Готовая задача')
+  await page.keyboard.press('Enter')
+  await page.getByText('Готовая задача').click()
+  await page.locator('.cm-done').click()
+  await page.keyboard.press('Escape')
+
+  await page.getByRole('button', { name: 'Календарь' }).click()
+  const sidebar = page.locator('.cal-sidebar')
+  await expect(sidebar.locator('.cal-sidebar-title')).toBeVisible()
+  // Активная — в панели, готовая — скрыта, заголовка «Готово» нет
+  await expect(sidebar.getByText('Активная задача')).toBeVisible()
+  await expect(sidebar.getByText('Готовая задача')).toHaveCount(0)
+  await expect(sidebar.locator('.cal-side-status', { hasText: 'Готово' })).toHaveCount(0)
+  await expect(sidebar.locator('.cal-side-status', { hasText: 'Нужно сделать' })).toBeVisible()
+})
+
 test('живая публичная ссылка на таймлайн — внешняя страница только для просмотра', async ({ page, context }) => {
   await context.grantPermissions(['clipboard-read', 'clipboard-write'])
   await createIdentity(page)
