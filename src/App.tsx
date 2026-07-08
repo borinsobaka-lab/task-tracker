@@ -8,7 +8,7 @@ import { getAuthState } from './auth'
 import type { EncryptedBlob } from './crypto'
 import { PasswordScreen } from './components/PasswordScreen'
 import { OwnerSetupScreen } from './components/OwnerSetupScreen'
-import { Header } from './components/Header'
+import { Header, BottomNav } from './components/Header'
 import { BoardView } from './components/BoardView'
 import { CalendarView } from './components/CalendarView'
 import { EisenhowerView } from './components/EisenhowerView'
@@ -284,6 +284,7 @@ function Shell({ onLogout }: { onLogout: () => void }) {
           return <RecurringView {...shared} />
         })()}
       </main>
+      <BottomNav view={view} onViewChange={changeView} />
       {selectedCardId && <CardModal cardId={selectedCardId} onClose={() => setSelectedCardId(null)} />}
       {settingsOpen && <SettingsModal onClose={() => setSettingsOpen(false)} onLogout={onLogout} />}
       {historyOpen && (

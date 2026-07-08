@@ -365,31 +365,63 @@
   box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--border-strong);
 }
 
+/* Название текущего раздела в шапке и нижняя навигация — только на телефоне */
+.header-title-mobile {
+  display: none;
+}
+.bottom-nav {
+  display: none;
+}
+
 @media (max-width: 720px) {
   .app-header {
     gap: 8px;
-    padding: 0 10px;
+    padding: 0 12px;
   }
   .sync-status {
     display: none;
   }
-  /* Только иконки, без подписей — переключаемся по иконкам. Кнопки чуть шире
-     квадрата, чтобы удобно попадать пальцем. */
+  /* Разделы переехали в нижнюю навигацию — верхние табы прячем */
   .view-tabs {
-    gap: 2px;
-    padding: 3px;
-    flex-shrink: 0;
-  }
-  .view-tab-label {
     display: none;
   }
-  .view-tabs button {
-    padding: 9px 16px;
-    gap: 0;
-    justify-content: center;
-    flex-shrink: 0;
+  .header-title-mobile {
+    display: block;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--text);
+    white-space: nowrap;
   }
-  .view-ico {
-    font-size: 17px;
+
+  /* Нижняя навигация: 4 раздела, иконка сверху + подпись снизу */
+  .bottom-nav {
+    display: flex;
+    flex-shrink: 0;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .bottom-nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    border: none;
+    background: none;
+    padding: 7px 2px 6px;
+    cursor: pointer;
+    color: var(--text-faint);
+    -webkit-tap-highlight-color: transparent;
+  }
+  .bottom-nav-ico {
+    display: inline-flex;
+    line-height: 1;
+  }
+  .bottom-nav-label {
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1;
   }
 }

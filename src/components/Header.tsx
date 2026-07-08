@@ -43,6 +43,8 @@ export function Header({
 
   return (
     <header className="app-header">
+      {/* Мобильная версия: разделы переехали в нижнюю навигацию, в шапке — название текущего */}
+      <div className="header-title-mobile">{VIEWS.find((v) => v.key === view)?.label}</div>
       <nav className="view-tabs" aria-label="Вид">
         {VIEWS.map((v) => (
           <button
@@ -77,6 +79,32 @@ export function Header({
         </button>
       </div>
     </header>
+  )
+}
+
+/** Нижняя навигация по разделам — только в мобильной версии (иконка + подпись). */
+export function BottomNav({ view, onViewChange }: { view: ViewKind; onViewChange: (v: ViewKind) => void }) {
+  return (
+    <nav className="bottom-nav" aria-label="Разделы">
+      {VIEWS.map((v) => {
+        const active = v.key === view
+        return (
+          <button
+            key={v.key}
+            type="button"
+            className={'bottom-nav-item' + (active ? ' active' : '')}
+            style={active ? { color: v.color } : undefined}
+            onClick={() => onViewChange(v.key)}
+            aria-current={active ? 'page' : undefined}
+          >
+            <span className="bottom-nav-ico" aria-hidden>
+              <v.Icon size={23} />
+            </span>
+            <span className="bottom-nav-label">{v.label}</span>
+          </button>
+        )
+      })}
+    </nav>
   )
 }
 

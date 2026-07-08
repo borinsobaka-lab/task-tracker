@@ -244,15 +244,19 @@ test('история проекта фиксирует события и отк�
   await expect(page.getByRole('button', { name: /Удалить карточку/ })).toBeVisible()
 })
 
-test('мобильные табы — только иконки, переключение работает', async ({ page }) => {
+test('мобильная навигация: разделы в нижнем меню', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 780 })
   await createIdentity(page)
-  // Подписи скрыты, иконки видны
-  await expect(page.locator('.view-tab-label').first()).toBeHidden()
-  await expect(page.locator('.view-tabs button').first().locator('.view-ico')).toBeVisible()
-  // Переключение по иконке (2-я кнопка — Календарь)
-  await page.locator('.view-tabs button').nth(1).click()
+  // Верхние табы скрыты, снизу — навигация из 4 разделов
+  await expect(page.locator('.view-tabs')).toBeHidden()
+  await expect(page.locator('.bottom-nav')).toBeVisible()
+  await expect(page.locator('.bottom-nav-item')).toHaveCount(4)
+  // В шапке — название текущего раздела
+  await expect(page.locator('.header-title-mobile')).toHaveText('Доска')
+  // Переключаемся на «Календарь» через нижнее меню
+  await page.locator('.bottom-nav-item', { hasText: 'Календарь' }).click()
   await expect(page.locator('.cal-view-select')).toBeVisible()
+  await expect(page.locator('.header-title-mobile')).toHaveText('Календарь')
 })
 
 test('живая публичная ссылка на таймлайн — внешняя страница только для просмотра', async ({ page, context }) => {
