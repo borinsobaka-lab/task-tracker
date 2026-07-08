@@ -6,8 +6,8 @@
     android:gravity="center_vertical"
     android:paddingTop="12dp"
     android:paddingBottom="6dp"
-    android:paddingStart="2dp"
-    android:paddingEnd="4dp">
+    android:paddingStart="10dp"
+    android:paddingEnd="12dp">
 
     <TextView
         android:id="@+id/header_text"

@@ -1,105 +1,116 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Корень во всю ширину (без боковых отступов), чтобы красная линия «сейчас»
+     шла от края до края. Сама карточка внутри отступает на 8dp по бокам. -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/item_root"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="8dp"
-    android:background="@drawable/card_bg"
-    android:minHeight="58dp">
+    android:layout_marginBottom="8dp">
 
-    <LinearLayout
+    <!-- Видимая карточка: отступает по бокам, у неё фон и скругление -->
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:paddingStart="12dp"
-        android:paddingEnd="14dp"
-        android:paddingTop="9dp"
-        android:paddingBottom="9dp">
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:background="@drawable/card_bg"
+        android:minHeight="58dp">
 
-        <!-- Название: одна строка сверху, обрезается с многоточием -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
+            android:orientation="vertical"
+            android:paddingStart="12dp"
+            android:paddingEnd="14dp"
+            android:paddingTop="9dp"
+            android:paddingBottom="9dp">
 
-            <ImageView
-                android:id="@+id/item_meeting"
-                android:layout_width="16dp"
-                android:layout_height="16dp"
-                android:layout_marginEnd="6dp"
-                android:contentDescription="@null"
-                android:visibility="gone"
-                android:src="@drawable/ic_meeting" />
-
-            <TextView
-                android:id="@+id/item_title"
-                android:layout_width="0dp"
+            <!-- Название: одна строка сверху, обрезается с многоточием -->
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:fontFamily="sans-serif-medium"
-                android:textColor="#111827"
-                android:textSize="14sp"
-                android:maxLines="1"
-                android:ellipsize="end"
-                android:paddingEnd="4dp" />
-        </LinearLayout>
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
 
-        <!-- Под названием: полоса ответственности + точка приоритета + время -->
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:layout_marginTop="5dp">
+                <ImageView
+                    android:id="@+id/item_meeting"
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:layout_marginEnd="6dp"
+                    android:contentDescription="@null"
+                    android:visibility="gone"
+                    android:src="@drawable/ic_meeting" />
 
-            <ImageView
-                android:id="@+id/item_bar"
-                android:layout_width="4dp"
-                android:layout_height="14dp"
-                android:layout_marginEnd="8dp"
-                android:contentDescription="@null"
-                android:scaleType="fitXY"
-                android:src="@drawable/stripe" />
+                <TextView
+                    android:id="@+id/item_title"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:fontFamily="sans-serif-medium"
+                    android:textColor="#111827"
+                    android:textSize="14sp"
+                    android:maxLines="1"
+                    android:ellipsize="end"
+                    android:paddingEnd="4dp" />
+            </LinearLayout>
 
-            <ImageView
-                android:id="@+id/item_dot"
-                android:layout_width="9dp"
-                android:layout_height="9dp"
-                android:layout_marginEnd="7dp"
-                android:contentDescription="@null"
-                android:visibility="gone"
-                android:src="@drawable/dot" />
-
-            <TextView
-                android:id="@+id/item_time"
+            <!-- Под названием: полоса ответственности + точка приоритета + время -->
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="#6B7280"
-                android:textSize="13sp" />
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginTop="5dp">
+
+                <ImageView
+                    android:id="@+id/item_bar"
+                    android:layout_width="4dp"
+                    android:layout_height="14dp"
+                    android:layout_marginEnd="8dp"
+                    android:contentDescription="@null"
+                    android:scaleType="fitXY"
+                    android:src="@drawable/stripe" />
+
+                <ImageView
+                    android:id="@+id/item_dot"
+                    android:layout_width="9dp"
+                    android:layout_height="9dp"
+                    android:layout_marginEnd="7dp"
+                    android:contentDescription="@null"
+                    android:visibility="gone"
+                    android:src="@drawable/dot" />
+
+                <TextView
+                    android:id="@+id/item_time"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="#6B7280"
+                    android:textSize="13sp" />
+            </LinearLayout>
         </LinearLayout>
-    </LinearLayout>
 
-    <!-- Тег «просрочено» — в правом нижнем углу карточки (виден только у просроченных) -->
-    <TextView
-        android:id="@+id/item_overdue_tag"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_marginEnd="12dp"
-        android:layout_marginBottom="8dp"
-        android:background="@drawable/overdue_tag_bg"
-        android:paddingStart="6dp"
-        android:paddingEnd="6dp"
-        android:paddingTop="1dp"
-        android:paddingBottom="1dp"
-        android:text="просрочено"
-        android:textColor="#DC2626"
-        android:textSize="10sp"
-        android:fontFamily="sans-serif-medium"
-        android:visibility="gone" />
+        <!-- Тег «просрочено» — в правом нижнем углу карточки (виден только у просроченных) -->
+        <TextView
+            android:id="@+id/item_overdue_tag"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end"
+            android:layout_marginEnd="12dp"
+            android:layout_marginBottom="8dp"
+            android:background="@drawable/overdue_tag_bg"
+            android:paddingStart="6dp"
+            android:paddingEnd="6dp"
+            android:paddingTop="1dp"
+            android:paddingBottom="1dp"
+            android:text="просрочено"
+            android:textColor="#DC2626"
+            android:textSize="10sp"
+            android:fontFamily="sans-serif-medium"
+            android:visibility="gone" />
+    </FrameLayout>
 
-    <!-- Красная линия текущего времени (видна только у идущей сейчас задачи) -->
+    <!-- Красная линия текущего времени: во всю ширину виджета (поверх карточки,
+         с выходом за её боковые отступы). Видна только у идущей сейчас задачи. -->
     <FrameLayout
         android:id="@+id/item_now_holder"
         android:layout_width="match_parent"
