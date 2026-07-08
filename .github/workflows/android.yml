@@ -49,9 +49,20 @@ jobs:
       - name: Publish to release
         env:
           GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
         run: |
-          gh release delete android-latest --yes --cleanup-tag || true
+          # Удаляем ВСЕ прошлые релизы с этим тегом, включая «черновики»
+          # (untagged), которые иногда оставались после гонки delete+create.
+          gh api "repos/$REPO/releases" --paginate \
+            | jq -r '.[] | select(.tag_name=="android-latest") | .id' \
+            | while read -r id; do gh api -X DELETE "repos/$REPO/releases/$id" || true; done
+          git push origin :refs/tags/android-latest 2>/dev/null || true
+          # Явно создаём тег на текущем коммите и пушим ДО создания релиза —
+          # иначе из-за незавершённого удаления тега релиз создаётся как черновик.
+          git tag -f android-latest
+          git push -f origin refs/tags/android-latest
+          # Публикуем релиз (--verify-tag: тег уже есть, новый не создаём) + APK
           gh release create android-latest task-tracker.apk \
             --title "Android APK (последняя сборка)" \
             --notes "Debug-сборка приложения-оболочки с виджетом «Таймлайн». Скачайте task-tracker.apk на телефон и установите (разрешите установку из этого источника)." \
-            --prerelease
+            --prerelease --verify-tag
