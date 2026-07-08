@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-08T11:14:14.899Z",
+  "generatedAt": "2026-07-08T12:13:42.559Z",
   "items": [
     {
       "id": "2c23ac8a-8875-4b23-9d1d-7724145cf55c",
@@ -176,20 +176,6 @@
       ]
     },
     {
-      "id": "a3068b7f-5671-4b31-9de1-083a971846ba",
-      "title": "Забрать гамаки и веревку в студии Ваке",
-      "date": "2026-07-08",
-      "start": "16:30",
-      "durationMin": 60,
-      "priorityColor": "#eab308",
-      "members": [
-        {
-          "name": "Вова",
-          "color": "#84cc16"
-        }
-      ]
-    },
-    {
       "id": "4fc0b591-5d57-4612-9927-957f51a8c37f",
       "title": "Paddle",
       "date": "2026-07-08",
@@ -264,6 +250,20 @@
       "start": "14:30",
       "durationMin": 30,
       "priorityColor": "#22c55e",
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        }
+      ]
+    },
+    {
+      "id": "a3068b7f-5671-4b31-9de1-083a971846ba",
+      "title": "Забрать гамаки и веревку в студии Ваке",
+      "date": "2026-07-09",
+      "start": "16:00",
+      "durationMin": 60,
+      "priorityColor": "#eab308",
       "members": [
         {
           "name": "Вова",
