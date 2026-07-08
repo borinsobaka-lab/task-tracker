@@ -93,11 +93,12 @@ public class TimelineRemoteViewsFactory implements RemoteViewsService.RemoteView
             if (isCurrent(it)) hasCurrent = true;
             if (isMeeting) {
                 if (it.endMs >= now) future.add(it);
+            } else if (isOverdue(it) && cmp(it.date, today) < 0) {
+                overdue.add(it);            // просрочено с прошлых дней — закрепляем сверху
             } else if (cmp(it.date, today) >= 0) {
-                future.add(it);
-            } else if (!it.done) {
-                overdue.add(it);
+                future.add(it);             // сегодня и дальше (в т.ч. сегодняшние просроченные)
             }
+            // прошлый день и уже выполнено — не показываем
         }
         Comparator<Item> byDate = new Comparator<Item>() {
             @Override public int compare(Item a, Item b) {
@@ -155,6 +156,7 @@ public class TimelineRemoteViewsFactory implements RemoteViewsService.RemoteView
             }
             Row r = new Row();
             r.item = it;
+            r.overdue = isOverdue(it); // сегодняшняя задача, у которой уже прошло время
             rows.add(r);
         }
     }
@@ -162,6 +164,18 @@ public class TimelineRemoteViewsFactory implements RemoteViewsService.RemoteView
     private boolean isCurrent(Item it) {
         return it.start != null && !it.start.isEmpty() && it.startMs > 0
                 && now >= it.startMs && now < it.endMs;
+    }
+
+    /**
+     * Просрочено: невыполненная задача (не встреча), у которой:
+     *  - есть время и оно уже прошло (endMs < now), либо
+     *  - времени нет, а её дата уже прошла (date < сегодня).
+     */
+    private boolean isOverdue(Item it) {
+        if ("meeting".equals(it.kind) || it.done) return false;
+        boolean timed = it.start != null && !it.start.isEmpty();
+        if (timed) return it.endMs < now;
+        return cmp(it.date, dayKey(now)) < 0;
     }
 
     @Override
@@ -200,6 +214,9 @@ public class TimelineRemoteViewsFactory implements RemoteViewsService.RemoteView
                 rv.setViewVisibility(R.id.item_dot, View.GONE);
             }
         }
+
+        // Тег «просрочено» в правом нижнем углу — только у просроченных
+        rv.setViewVisibility(R.id.item_overdue_tag, row.overdue ? View.VISIBLE : View.GONE);
 
         // Название (одна строка); просроченные — красным, выполненные — зачёркнуты
         if (row.overdue) {

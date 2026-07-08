@@ -80,6 +80,25 @@
         </LinearLayout>
     </LinearLayout>
 
+    <!-- Тег «просрочено» — в правом нижнем углу карточки (виден только у просроченных) -->
+    <TextView
+        android:id="@+id/item_overdue_tag"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_marginEnd="12dp"
+        android:layout_marginBottom="8dp"
+        android:background="@drawable/overdue_tag_bg"
+        android:paddingStart="6dp"
+        android:paddingEnd="6dp"
+        android:paddingTop="1dp"
+        android:paddingBottom="1dp"
+        android:text="просрочено"
+        android:textColor="#DC2626"
+        android:textSize="10sp"
+        android:fontFamily="sans-serif-medium"
+        android:visibility="gone" />
+
     <!-- Красная линия текущего времени (видна только у идущей сейчас задачи) -->
     <FrameLayout
         android:id="@+id/item_now_holder"
