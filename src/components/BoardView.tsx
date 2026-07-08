@@ -416,7 +416,7 @@ function ColumnMenu({ column }: { column: Column }) {
     store.setColumnColor(column.id, color)
   }
 
-  const sortBy = (by: 'due' | 'created') => {
+  const sortBy = (by: 'due' | 'created' | 'priority') => {
     store.sortColumn(column.id, by)
     setOpen(false)
   }
@@ -443,6 +443,10 @@ function ColumnMenu({ column }: { column: Column }) {
             <button className="col-menu-item" role="menuitem" onClick={() => sortBy('created')}>
               <span className="col-menu-emoji"><IcoSort size={16} /></span>
               Сортировать по дате создания
+            </button>
+            <button className="col-menu-item" role="menuitem" onClick={() => sortBy('priority')}>
+              <span className="col-menu-emoji"><IcoSort size={16} /></span>
+              Сортировать по приоритету
             </button>
             <div className="col-menu-sep" />
             <div className="col-menu-label">Статус для отчётов</div>

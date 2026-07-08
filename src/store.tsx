@@ -368,7 +368,7 @@ export interface BoardStore {
   setColumnRole(id: ID, role: ColumnRole | undefined): void
   setColumnColor(id: ID, color: string | undefined): void
   /** Разовая сортировка карточек колонки (порядок сохраняется в cardIds) */
-  sortColumn(id: ID, by: 'due' | 'created'): void
+  sortColumn(id: ID, by: 'due' | 'created' | 'priority'): void
   deleteColumn(id: ID): void
   moveColumn(id: ID, toIndex: number): void
 
@@ -571,11 +571,14 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
           .map((cid) => d.cards[cid])
           .filter((c): c is Card => !!c && !c.deleted)
         const dueKey = (c: Card) => (c.date ? `${c.date}T${c.start ?? '99:99'}` : '￿') // без даты — в конец
-        live.sort((a, b) =>
-          by === 'created'
-            ? a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id)
-            : dueKey(a).localeCompare(dueKey(b)) || a.createdAt.localeCompare(b.createdAt),
-        )
+        // Приоритет: q1 (срочно и важно) → q4 (не срочно, не важно), без приоритета — в конец
+        const RANK: Record<string, number> = { q1: 0, q2: 1, q3: 2, q4: 3 }
+        const prioRank = (c: Card) => (c.priority ? RANK[c.priority] : 4)
+        live.sort((a, b) => {
+          if (by === 'created') return a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id)
+          if (by === 'priority') return prioRank(a) - prioRank(b) || a.createdAt.localeCompare(b.createdAt)
+          return dueKey(a).localeCompare(dueKey(b)) || a.createdAt.localeCompare(b.createdAt)
+        })
         col.cardIds = live.map((c) => c.id)
         touch(col)
       }),

@@ -259,6 +259,40 @@ test('мобильная навигация: разделы в нижнем ме
   await expect(page.locator('.header-title-mobile')).toHaveText('Календарь')
 })
 
+test('доска: сортировка колонки по приоритету', async ({ page }) => {
+  await createIdentity(page)
+  const col = page.locator('.board-col').first()
+  const addCard = async (title: string) => {
+    await col.getByText('Добавить карточку').click()
+    await col.locator('textarea').fill(title)
+    await page.keyboard.press('Enter')
+    await page.keyboard.press('Escape')
+  }
+  await addCard('Без приоритета')
+  await addCard('Низкий')
+  await addCard('Высокий')
+
+  const setPrio = async (title: string, idx: number) => {
+    await page.locator('.board-card-title-text', { hasText: title }).click()
+    await page.locator('.cm-prio-btn').click()
+    await page.locator('.cm-prio-item').nth(idx).click()
+    await page.keyboard.press('Escape')
+  }
+  await setPrio('Высокий', 0) // q1 — срочно и важно
+  await setPrio('Низкий', 3) // q4 — не срочно, не важно
+  // «Без приоритета» остаётся без приоритета
+
+  // Сортируем колонку по приоритету
+  await col.locator('.col-menu-wrap .icon-btn').click()
+  await page.getByRole('menuitem', { name: 'Сортировать по приоритету' }).click()
+
+  // Порядок: высший приоритет → низший → без приоритета
+  const titles = col.locator('.board-card-title-text')
+  await expect(titles.nth(0)).toHaveText('Высокий')
+  await expect(titles.nth(1)).toHaveText('Низкий')
+  await expect(titles.nth(2)).toHaveText('Без приоритета')
+})
+
 test('десктоп: плавающая кнопка «Добавить задачу» открывает модалку новой задачи', async ({ page }) => {
   await createIdentity(page)
   const fab = page.locator('.fab')
