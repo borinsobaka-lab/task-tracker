@@ -7,7 +7,7 @@ import { getCalDays, getCalPanelOpen, getCalTimeline, isMobileViewport, setCalDa
 import type { Card, ID, Member } from '../types'
 import { QUADRANT_COLOR } from '../eisenhower'
 import type { ViewProps } from '../viewProps'
-import { IcoCheck, IcoChevronLeft, IcoChevronRight, IcoLink, IcoMeeting } from '../icons'
+import { IcoArrowLeft, IcoArrowRight, IcoCheck, IcoLink, IcoMeeting } from '../icons'
 import { SubHeader } from './SubHeader'
 import { TimelineView } from './TimelineView'
 import type { TimelineHandle } from './TimelineView'
@@ -782,7 +782,7 @@ export function CalendarView({ memberFilter, onMemberFilterChange, onOpenCard }:
                 aria-label="Показать предыдущие дни"
                 onClick={() => setAnchor((a) => addDays(a, -nDays))}
               >
-                <IcoChevronLeft size={18} />
+                <IcoArrowLeft size={20} />
               </button>
               <button
                 className="icon-btn"
@@ -790,7 +790,7 @@ export function CalendarView({ memberFilter, onMemberFilterChange, onOpenCard }:
                 aria-label="Показать следующие дни"
                 onClick={() => setAnchor((a) => addDays(a, nDays))}
               >
-                <IcoChevronRight size={18} />
+                <IcoArrowRight size={20} />
               </button>
             </div>
             <h2 className="cal-title">
@@ -826,7 +826,7 @@ export function CalendarView({ memberFilter, onMemberFilterChange, onOpenCard }:
                 aria-label="Свернуть панель"
                 onClick={() => togglePanel(false)}
               >
-                <IcoChevronLeft size={16} />
+                <IcoArrowLeft size={18} />
               </button>
             </div>
             <div className="cal-sidebar-list" ref={sidebarListRef}>
@@ -854,7 +854,7 @@ export function CalendarView({ memberFilter, onMemberFilterChange, onOpenCard }:
               aria-label="Развернуть панель «Без даты»"
               onClick={() => togglePanel(true)}
             >
-              <IcoChevronRight size={16} />
+              <IcoArrowRight size={18} />
             </button>
             <span className="cal-sidebar-vlabel">
               Без даты{unscheduled.length > 0 ? ` · ${unscheduled.length}` : ''}

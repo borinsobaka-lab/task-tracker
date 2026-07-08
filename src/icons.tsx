@@ -71,3 +71,19 @@ export function IcoX({ size = 22, color = 'currentColor' }: { size?: number; col
     </svg>
   )
 }
+
+/** Простые понятные стрелки-«шевроны» (крупнее и жирнее набора Solar). */
+export function IcoArrowLeft({ size = 22, color = 'currentColor' }: { size?: number; color?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M15 4.5 7.5 12 15 19.5" stroke={color} strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+export function IcoArrowRight({ size = 22, color = 'currentColor' }: { size?: number; color?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M9 4.5 16.5 12 9 19.5" stroke={color} strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}

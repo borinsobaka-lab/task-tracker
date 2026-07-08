@@ -22,8 +22,28 @@ import { CommentsSeenProvider } from './components/Comments'
 import { isLiveTimelineHash, parseTimelineHash } from './timelineShare'
 import { buildTimelineItems, publishTimeline } from './publicTimelinePublisher'
 import type { TLItem } from './timelineShare'
-import type { ID } from './types'
+import type { Card, ID } from './types'
+import { hasContent } from './utils'
 import './app.css'
+
+/** Пустой черновик задачи (создан кнопкой «+», но ничего не заполнено) — такой при закрытии удаляем. */
+function isEmptyDraft(card: Card): boolean {
+  const title = card.title.trim()
+  const titleEmpty = title === '' || title === 'Без названия'
+  const liveComments = card.comments ? card.comments.filter((c) => !c.deleted).length : 0
+  return (
+    titleEmpty &&
+    !hasContent(card.description) &&
+    card.checklist.length === 0 &&
+    card.attachments.length === 0 &&
+    liveComments === 0 &&
+    card.assigneeIds.length === 0 &&
+    !card.date &&
+    !card.priority &&
+    (card.kind ?? 'task') === 'task' &&
+    !card.meetingUrl
+  )
+}
 
 type Phase =
   | { kind: 'loading' }
@@ -187,6 +207,11 @@ function Shell({ onLogout }: { onLogout: () => void }) {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [historyOpen, setHistoryOpen] = useState(false)
   const [memberFilter, setMemberFilter] = useState<ReadonlySet<ID>>(new Set())
+  // Карточка, созданная кнопкой «+» и ещё не заполненная (черновик). Ref на
+  // свежий store — чтобы после закрытия увидеть досохранённые название/описание.
+  const draftIdRef = useRef<ID | null>(null)
+  const storeRef = useRef(store)
+  storeRef.current = store
 
   // При загрузке один раз пополняем будущие экземпляры повторяющихся встреч
   const toppedUp = useRef(false)
@@ -216,6 +241,7 @@ function Shell({ onLogout }: { onLogout: () => void }) {
         const col = store.columns.find((c) => c.role === 'todo') ?? store.columns[0]
         if (col) {
           const id = store.addCard(col.id, '')
+          draftIdRef.current = id // черновик: удалим при закрытии, если останется пустым
           setView('board')
           setSavedView('board')
           setSelectedCardId(id)
@@ -267,7 +293,25 @@ function Shell({ onLogout }: { onLogout: () => void }) {
   // тип (задача/встреча) можно переключить уже внутри окна.
   const createTask = () => {
     const col = store.columns.find((c) => c.role === 'todo') ?? store.columns[0]
-    if (col) setSelectedCardId(store.addCard(col.id, ''))
+    if (!col) return
+    const id = store.addCard(col.id, '')
+    draftIdRef.current = id // черновик: удалим при закрытии, если так и останется пустым
+    setSelectedCardId(id)
+  }
+
+  // Закрытие карточки. Если это был пустой черновик от кнопки «+» — не оставляем его.
+  const closeCard = () => {
+    const id = selectedCardId
+    setSelectedCardId(null)
+    if (id && id === draftIdRef.current) {
+      draftIdRef.current = null
+      // Небольшая задержка — чтобы модалка успела досохранить название/описание при закрытии.
+      setTimeout(() => {
+        const s = storeRef.current
+        const card = s?.card(id)
+        if (s && card && isEmptyDraft(card)) s.deleteCard(id)
+      }, 60)
+    }
   }
 
   return (
@@ -298,7 +342,7 @@ function Shell({ onLogout }: { onLogout: () => void }) {
         <span className="fab-plus" aria-hidden>+</span>
         <span className="fab-text">Добавить задачу</span>
       </button>
-      {selectedCardId && <CardModal cardId={selectedCardId} onClose={() => setSelectedCardId(null)} />}
+      {selectedCardId && <CardModal cardId={selectedCardId} onClose={closeCard} />}
       {settingsOpen && <SettingsModal onClose={() => setSettingsOpen(false)} onLogout={onLogout} />}
       {historyOpen && (
         <HistoryModal onClose={() => setHistoryOpen(false)} onOpenCard={(id) => setSelectedCardId(id)} />

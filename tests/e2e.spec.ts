@@ -303,6 +303,24 @@ test('десктоп: плавающая кнопка «Добавить зад�
   await expect(page.getByRole('button', { name: /Удалить карточку/ })).toBeVisible()
 })
 
+test('пустой черновик от «+» не сохраняется, а с названием — сохраняется при закрытии', async ({ page }) => {
+  await createIdentity(page)
+  // Открываем новую задачу и закрываем, ничего не введя — пустышка не остаётся
+  await page.locator('.fab').click()
+  await expect(page.getByRole('button', { name: /Удалить карточку/ })).toBeVisible()
+  await page.locator('.cm-close').click()
+  await expect(page.getByRole('button', { name: /Удалить карточку/ })).toBeHidden()
+  await page.waitForTimeout(200) // отложенная проверка пустоты черновика
+  await expect(page.locator('.board-card')).toHaveCount(0)
+
+  // Теперь вводим название — задача фиксируется при закрытии
+  await page.locator('.fab').click()
+  await page.locator('.cm-title').fill('Черновик с названием')
+  await page.locator('.cm-close').click()
+  await page.waitForTimeout(200)
+  await expect(page.locator('.board-card', { hasText: 'Черновик с названием' })).toBeVisible()
+})
+
 test('мобильное меню: кнопка «+» справа создаёт задачу', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 780 })
   await createIdentity(page)
