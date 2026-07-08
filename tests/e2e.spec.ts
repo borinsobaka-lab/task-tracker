@@ -341,6 +341,47 @@ test('доска: сортировка колонки по приоритету'
   await expect(titles.nth(2)).toHaveText('Без приоритета')
 })
 
+test('доска: приоритет показывается полосой слева, а не точкой', async ({ page }) => {
+  await createIdentity(page)
+  const col = page.locator('.board-col').first()
+  const addCard = async (title: string) => {
+    await col.getByText('Добавить карточку').click()
+    await col.locator('textarea').fill(title)
+    await page.keyboard.press('Enter')
+    await page.keyboard.press('Escape')
+  }
+  await addCard('Красная задача')
+  await addCard('Серая задача')
+
+  // Ставим «Красной задаче» приоритет q1 (красный)
+  await page.locator('.board-card-title-text', { hasText: 'Красная задача' }).click()
+  await page.locator('.cm-prio-btn').click()
+  await page.locator('.cm-prio-item').nth(0).click()
+  await page.keyboard.press('Escape')
+
+  // Точек приоритета больше нет — приоритет теперь полоса слева
+  await expect(page.locator('.card-prio-dot')).toHaveCount(0)
+  const stripe = (title: string) =>
+    page.locator('.board-card', { hasText: title }).evaluate((el) => getComputedStyle(el).borderLeftColor)
+  expect(await stripe('Красная задача')).toBe('rgb(239, 68, 68)') // q1 #ef4444
+  expect(await stripe('Серая задача')).toBe('rgb(201, 204, 221)') // без приоритета — серый #c9ccdd
+})
+
+test('повтор: описание одной строкой и новый крестик в редакторе', async ({ page }) => {
+  await createIdentity(page)
+  await page.getByRole('button', { name: 'Повтор' }).click()
+  await page.getByRole('button', { name: /Регулярная задача/ }).click()
+  await page.getByPlaceholder(/Планёрка/).fill('Планёрка')
+  const editor = page.locator('.rec-editor .ProseMirror').first()
+  await editor.click()
+  await editor.pressSequentially('Короткое описание планёрки')
+  // Крестик — такой же, как в модалке задачи (.cm-close с тонким IcoX)
+  await expect(page.locator('.rec-editor .cm-close')).toBeVisible()
+  await page.getByRole('button', { name: 'Сохранить' }).click()
+  // Описание показано одной строкой под названием
+  await expect(page.locator('.rec-desc')).toHaveText('Короткое описание планёрки')
+})
+
 test('десктоп: плавающая кнопка «Добавить задачу» открывает модалку новой задачи', async ({ page }) => {
   await createIdentity(page)
   const fab = page.locator('.fab')

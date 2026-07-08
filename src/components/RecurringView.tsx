@@ -1,12 +1,11 @@
 import { useState } from 'react'
-import type { CSSProperties } from 'react'
 import { useBoard } from '../store'
 import type { SeriesInput } from '../store'
 import type { Card, ID, Member, RecurFreq, RecurrenceRule, Series } from '../types'
 import { describeRule, ruleIsValid } from '../recurrence'
 import type { ViewProps } from '../viewProps'
-import { fmtDayMonth, parseDateKey } from '../utils'
-import { IcoCheck, IcoClose, IcoOpen, IcoRecurring } from '../icons'
+import { fmtDayMonth, hasContent, parseDateKey, plainSnippet } from '../utils'
+import { IcoCheck, IcoOpen, IcoRecurring, IcoX } from '../icons'
 import { Avatar, AvatarStack } from './Avatar'
 import { RichTextEditor } from './RichTextEditor'
 import { RecurrenceFields } from './RecurrenceFields'
@@ -100,10 +99,7 @@ function RecRow({
     if (card.start) dateLabel += `, ${card.start}`
   }
   return (
-    <div
-      className={'rec-row' + (done ? ' done' : '')}
-      style={members[0] ? ({ ['--rec-color' as string]: members[0].color } as CSSProperties) : undefined}
-    >
+    <div className={'rec-row' + (done ? ' done' : '')}>
       <button
         type="button"
         className={'rec-check' + (done ? ' on' : '')}
@@ -118,6 +114,7 @@ function RecRow({
           <span className="inline-ico" aria-hidden><IcoRecurring size={15} /></span>
           {card.title}
         </div>
+        {hasContent(card.description) && <div className="rec-desc">{plainSnippet(card.description)}</div>}
         <div className="rec-meta">
           {dateLabel && <span className="rec-date">{dateLabel}</span>}
           {rule && <span className="rec-rule">{describeRule(rule)}</span>}
@@ -185,8 +182,8 @@ function RecurringEditor({ series, onClose }: { series: Series | null; onClose: 
       <div className="modal rec-editor" role="dialog" aria-modal="true">
         <header className="rec-editor-head">
           <h3>{series ? 'Регулярная задача' : 'Новая регулярная задача'}</h3>
-          <button className="icon-btn" onClick={onClose} aria-label="Закрыть">
-            <IcoClose size={20} />
+          <button type="button" className="cm-close" onClick={onClose} title="Закрыть" aria-label="Закрыть">
+            <IcoX size={22} />
           </button>
         </header>
 

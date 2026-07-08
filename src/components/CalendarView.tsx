@@ -5,7 +5,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useBoard } from '../store'
 import { getCalDays, getCalPanelOpen, getCalTimeline, isMobileViewport, setCalDays, setCalPanelOpen, setCalTimeline } from '../config'
 import type { Card, ID, Member } from '../types'
-import { QUADRANT_COLOR } from '../eisenhower'
+import { QUADRANT_COLOR, priorityStripeColor } from '../eisenhower'
 import type { ViewProps } from '../viewProps'
 import { IcoArrowLeft, IcoArrowRight, IcoCheck, IcoLink, IcoMeeting } from '../icons'
 import { SubHeader } from './SubHeader'
@@ -528,7 +528,7 @@ export function CalendarView({ memberFilter, onMemberFilterChange, onOpenCard }:
       <div
         key={c.id}
         className={`cal-chip${c.done ? ' done' : ''}${dragging ? ' is-dragging' : ''}${armed ? ' armed' : ''}${isMeeting(c) ? ' meeting' : ''}`}
-        style={{ '--ev-color': colorOf(c) } as React.CSSProperties}
+        style={{ '--ev-color': colorOf(c), '--prio-color': priorityStripeColor(c.priority) } as React.CSSProperties}
         title={c.title}
         onPointerDown={(e) =>
           beginDrag(e, { kind: 'allday', cardId: c.id }, { durationMin: 60, origDate: c.date })
@@ -584,6 +584,7 @@ export function CalendarView({ memberFilter, onMemberFilterChange, onOpenCard }:
             left: `calc(${(ev.col * 100) / ev.cols}% + 2px)`,
             width: `calc(${100 / ev.cols}% - 5px)`,
             '--ev-color': colorOf(c),
+            '--prio-color': priorityStripeColor(c.priority),
           } as React.CSSProperties
         }
         title={`${c.title}\n${label}`}
@@ -606,25 +607,22 @@ export function CalendarView({ memberFilter, onMemberFilterChange, onOpenCard }:
         {...dragEvents}
       >
         <div className="cal-event-toprow">
-          {(!mtg || c.priority) && (
-            // Слева: чекбокс, а под ним — точка приоритета (экономит место под заголовок)
+          {!mtg && (
+            // Приоритет теперь показывает полоса слева, здесь остаётся только чекбокс
             <div className="cal-event-left">
-              {!mtg && (
-                <button
-                  type="button"
-                  className={'cal-event-check' + (c.done ? ' on' : '')}
-                  title={c.done ? 'Снять отметку' : 'Отметить выполненной'}
-                  aria-label={c.done ? 'Снять отметку' : 'Отметить выполненной'}
-                  onPointerDown={(e) => e.stopPropagation()}
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    store.setCardDone(c.id, !c.done)
-                  }}
-                >
-                  <IcoCheck size={13} color="currentColor" />
-                </button>
-              )}
-              {c.priority && <span className="cal-event-prio" style={{ background: QUADRANT_COLOR[c.priority] }} title="Приоритет" />}
+              <button
+                type="button"
+                className={'cal-event-check' + (c.done ? ' on' : '')}
+                title={c.done ? 'Снять отметку' : 'Отметить выполненной'}
+                aria-label={c.done ? 'Снять отметку' : 'Отметить выполненной'}
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  store.setCardDone(c.id, !c.done)
+                }}
+              >
+                <IcoCheck size={13} color="currentColor" />
+              </button>
             </div>
           )}
           <div className="cal-event-title">
@@ -682,12 +680,11 @@ export function CalendarView({ memberFilter, onMemberFilterChange, onOpenCard }:
       <div
         key={c.id}
         className={`cal-side-card${c.done ? ' done' : ''}${dragging ? ' is-dragging' : ''}${armed ? ' armed' : ''}${isMeeting(c) ? ' meeting' : ''}`}
-        style={{ '--ev-color': colorOf(c) } as React.CSSProperties}
+        style={{ '--ev-color': colorOf(c), '--prio-color': priorityStripeColor(c.priority) } as React.CSSProperties}
         onPointerDown={(e) => beginDrag(e, { kind: 'unscheduled', cardId: c.id }, { durationMin: 60 })}
         {...dragEvents}
       >
         <div className="cal-side-title">
-          {c.priority && <span className="cal-prio-dot" style={{ background: QUADRANT_COLOR[c.priority] }} title="Приоритет" />}
           {isMeeting(c) && <span className="inline-ico" aria-hidden><IcoMeeting size={16} /></span>}
           {c.title}
         </div>

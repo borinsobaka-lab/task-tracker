@@ -29,3 +29,15 @@ export const QUADRANT_LABEL: Record<EisenhowerQuadrant, string> = {
   q3: 'Срочно, не важно',
   q4: 'Не срочно, не важно',
 }
+
+/** Серый цвет левой полосы у задач без приоритета (как у «инбокса» матрицы). */
+export const NO_PRIORITY_COLOR = 'var(--border-strong)'
+
+/**
+ * Единый цвет левой полосы карточки по приоритету — общий для всех разделов
+ * (доска, календарь, матрица). Есть приоритет → его цвет, нет → серый.
+ * Это единственный источник логики покраски полосы во всей системе.
+ */
+export function priorityStripeColor(priority?: EisenhowerQuadrant): string {
+  return priority ? QUADRANT_COLOR[priority] : NO_PRIORITY_COLOR
+}

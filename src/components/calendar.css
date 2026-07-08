@@ -188,9 +188,11 @@
 
 .cal-side-card {
   --ev-color: var(--accent);
+  --prio-color: var(--border-strong);
   background: var(--surface);
   border: 1px solid var(--border);
-  border-left: 3px solid var(--ev-color);
+  /* Полоса слева — по приоритету (серая, если приоритета нет), едино со всеми разделами */
+  border-left: 3px solid var(--prio-color);
   border-radius: 10px;
   box-shadow: var(--shadow-sm);
   padding: 7px 9px;
@@ -202,7 +204,7 @@
 
 .cal-side-card:hover {
   border-color: var(--border-strong);
-  border-left-color: var(--ev-color);
+  border-left-color: var(--prio-color);
   box-shadow: var(--shadow-md);
 }
 
@@ -237,17 +239,6 @@
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
-}
-
-/* Кружок приоритета (матрица Эйзенхауэра) на карточках/чипах календаря */
-.cal-prio-dot {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  margin-right: 5px;
-  vertical-align: middle;
-  flex-shrink: 0;
 }
 
 .cal-side-meta {
@@ -363,14 +354,16 @@
 
 .cal-chip {
   --ev-color: var(--accent);
+  --prio-color: var(--border-strong);
   display: flex;
   align-items: center;
   gap: 5px;
   padding: 2px 8px;
   border-radius: 8px;
+  /* Заливка — по исполнителю (для различения в календаре), полоса слева — по приоритету */
   background: color-mix(in srgb, var(--ev-color) 14%, white);
   border: 1px solid color-mix(in srgb, var(--ev-color) 30%, white);
-  border-left: 3px solid var(--ev-color); /* цветная полоса слева (по исполнителю) */
+  border-left: 3px solid var(--prio-color);
   font-size: 12px;
   font-weight: 500;
   color: var(--text);
@@ -514,6 +507,7 @@
 
 .cal-event {
   --ev-color: var(--accent);
+  --prio-color: var(--border-strong);
   position: absolute;
   z-index: 2;
   display: flex;
@@ -521,8 +515,9 @@
   gap: 1px;
   padding: 3px 7px 4px 8px;
   border-radius: 9px;
+  /* Заливка — по исполнителю (различать задачи в календаре), полоса слева — по приоритету */
   background: color-mix(in srgb, var(--ev-color) 18%, white);
-  box-shadow: inset 3px 0 0 var(--ev-color), 0 0 0 1px color-mix(in srgb, var(--ev-color) 30%, white);
+  box-shadow: inset 3px 0 0 var(--prio-color), 0 0 0 1px color-mix(in srgb, var(--ev-color) 30%, white);
   overflow: hidden;
   cursor: pointer;
   user-select: none;
@@ -532,7 +527,7 @@
 
 .cal-event:hover {
   z-index: 3;
-  box-shadow: inset 3px 0 0 var(--ev-color), 0 0 0 1px color-mix(in srgb, var(--ev-color) 45%, white),
+  box-shadow: inset 3px 0 0 var(--prio-color), 0 0 0 1px color-mix(in srgb, var(--ev-color) 45%, white),
     var(--shadow-md);
 }
 

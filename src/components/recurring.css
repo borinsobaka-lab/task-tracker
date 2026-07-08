@@ -52,7 +52,9 @@
   gap: 10px;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-left: 4px solid var(--rec-color, var(--border-strong));
+  /* Регулярные задачи не распределяются по приоритетам — полоса всегда серая
+     (как у нераспределённых в матрице) */
+  border-left: 4px solid var(--border-strong);
   border-radius: var(--radius);
   padding: 8px 10px;
   box-shadow: var(--shadow-card);
@@ -109,6 +111,18 @@
   word-break: break-word;
 }
 .rec-row.done .rec-title {
+  text-decoration: line-through;
+}
+/* Описание задачи — одной строкой под названием, лишнее обрезаем «…» */
+.rec-desc {
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--text-soft);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.rec-row.done .rec-desc {
   text-decoration: line-through;
 }
 .rec-meta {

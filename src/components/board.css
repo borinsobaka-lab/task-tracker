@@ -264,6 +264,9 @@
 .board-card {
   background: var(--surface);
   border: 1px solid var(--border);
+  /* Левая полоса по приоритету задачи (серая, если приоритета нет) — единая
+     логика со всеми разделами. */
+  border-left: 4px solid var(--prio-color, var(--border-strong));
   border-radius: 11px;
   box-shadow: var(--shadow-card);
   padding: 9px 11px;
@@ -276,8 +279,11 @@
   transition: border-color 0.12s;
   outline: none;
 }
+/* Ховер подсвечивает только тонкие грани — левую полосу приоритета не трогаем */
 .board-card:hover {
-  border-color: var(--border-strong);
+  border-top-color: var(--border-strong);
+  border-right-color: var(--border-strong);
+  border-bottom-color: var(--border-strong);
 }
 
 /* Исходная позиция во время перетаскивания (под DragOverlay) */
@@ -323,13 +329,6 @@
   margin-top: 2px;
 }
 
-.card-prio-dot {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  flex-shrink: 0;
-  margin-top: 4px;
-}
 
 .card-meeting-ico {
   flex-shrink: 0;

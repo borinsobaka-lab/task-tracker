@@ -33,7 +33,7 @@ import { CSS } from '@dnd-kit/utilities'
 import { useBoard } from '../store'
 import type { Card, Column, ColumnRole, ID, Member } from '../types'
 import { ROLE_META, ROLE_ORDER } from '../columnRoles'
-import { QUADRANT_COLOR, QUADRANT_LABEL } from '../eisenhower'
+import { priorityStripeColor } from '../eisenhower'
 import { COLUMN_COLORS, fmtDayMonth, hasContent, parseDateKey, toDateKey } from '../utils'
 import type { ViewProps } from '../viewProps'
 import { IcoCalendar, IcoCheck, IcoClose, IcoComment, IcoDescription, IcoMeeting, IcoMenu, IcoNone, IcoPaperclip, IcoSort, IcoTrash } from '../icons'
@@ -55,6 +55,11 @@ function findColumnOf(map: CardsByCol, cardId: ID): ID | undefined {
 
 function cardClassName(card: Card): string {
   return 'board-card' + (card.done ? ' done' : '')
+}
+
+/** Цвет левой полосы карточки по её приоритету (серая — если приоритета нет). */
+function cardStyle(card: Card): CSSProperties {
+  return { ['--prio-color' as string]: priorityStripeColor(card.priority) }
 }
 
 /** Очень бледная подложка колонки под цвет её статуса (~4%) + чуть заметная рамка.
@@ -276,7 +281,7 @@ export function BoardView({ memberFilter, onMemberFilterChange, onOpenCard }: Vi
       </div>
         <DragOverlay>
           {activeCard ? (
-            <div className={cardClassName(activeCard) + ' card-overlay'}>
+            <div className={cardClassName(activeCard) + ' card-overlay'} style={cardStyle(activeCard)}>
               <CardContent card={activeCard} members={store.members} />
             </div>
           ) : activeColumn ? (
@@ -518,7 +523,7 @@ function ColumnGhost({ column, cards, members }: { column: Column; cards: Card[]
       </div>
       <div className="board-col-cards">
         {cards.map((c) => (
-          <div key={c.id} className={cardClassName(c)}>
+          <div key={c.id} className={cardClassName(c)} style={cardStyle(c)}>
             <CardContent card={c} members={members} />
           </div>
         ))}
@@ -548,7 +553,7 @@ function BoardCard({
   return (
     <div
       ref={setNodeRef}
-      style={{ transform: CSS.Translate.toString(transform), transition }}
+      style={{ transform: CSS.Translate.toString(transform), transition, ...cardStyle(card) }}
       className={cardClassName(card) + (isDragging ? ' card-source' : '')}
       onClick={() => {
         if (!suppressClickRef.current) onOpen()
@@ -662,13 +667,6 @@ function CardContent({ card, members, interactive }: { card: Card; members: Memb
           <span className="card-done-check" title="Выполнено" aria-label="Выполнено">
             <CheckIcon />
           </span>
-        )}
-        {card.priority && (
-          <span
-            className="card-prio-dot"
-            style={{ background: QUADRANT_COLOR[card.priority] }}
-            title={`Приоритет: ${QUADRANT_LABEL[card.priority]}`}
-          />
         )}
         {card.kind === 'meeting' && (
           <span className="card-meeting-ico" aria-hidden>
