@@ -8,45 +8,65 @@
     android:gravity="center_vertical"
     android:background="@drawable/card_bg"
     android:minHeight="52dp"
-    android:paddingStart="12dp"
+    android:paddingStart="10dp"
     android:paddingEnd="14dp"
     android:paddingTop="11dp"
     android:paddingBottom="11dp">
 
-    <!-- Иконка встречи (у встреч) -->
+    <!-- Полоса ответственности: цвет исполнителя (у встречи — тёмная); тон через colorFilter -->
     <ImageView
-        android:id="@+id/item_meeting"
-        android:layout_width="20dp"
-        android:layout_height="20dp"
-        android:layout_marginEnd="10dp"
+        android:id="@+id/item_bar"
+        android:layout_width="6dp"
+        android:layout_height="match_parent"
+        android:layout_marginEnd="12dp"
         android:contentDescription="@null"
-        android:visibility="gone"
-        android:src="@drawable/ic_meeting" />
-
-    <!-- Точка приоритета (у задач); цвет задаётся через colorFilter -->
-    <ImageView
-        android:id="@+id/item_dot"
-        android:layout_width="11dp"
-        android:layout_height="11dp"
-        android:layout_marginEnd="11dp"
-        android:contentDescription="@null"
-        android:visibility="gone"
-        android:src="@drawable/dot" />
+        android:scaleType="fitXY"
+        android:src="@drawable/stripe" />
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/item_title"
+        <!-- Первая строка: значок (точка приоритета / иконка встречи) прямо перед названием -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textColor="#111827"
-            android:textSize="15sp"
-            android:textStyle="bold"
-            android:maxLines="3"
-            android:ellipsize="end" />
+            android:orientation="horizontal"
+            android:baselineAligned="false"
+            android:gravity="top">
+
+            <ImageView
+                android:id="@+id/item_meeting"
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:layout_marginEnd="7dp"
+                android:layout_marginTop="1dp"
+                android:contentDescription="@null"
+                android:visibility="gone"
+                android:src="@drawable/ic_meeting" />
+
+            <ImageView
+                android:id="@+id/item_dot"
+                android:layout_width="10dp"
+                android:layout_height="10dp"
+                android:layout_marginEnd="7dp"
+                android:layout_marginTop="4dp"
+                android:contentDescription="@null"
+                android:visibility="gone"
+                android:src="@drawable/dot" />
+
+            <TextView
+                android:id="@+id/item_title"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textColor="#111827"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:maxLines="3"
+                android:ellipsize="end" />
+        </LinearLayout>
 
         <TextView
             android:id="@+id/item_time"

@@ -36,7 +36,8 @@ public class TimelineRemoteViewsFactory implements RemoteViewsService.RemoteView
             "https://raw.githubusercontent.com/borinsobaka-lab/task-tracker/app-config/timeline.json";
     static final String APP_URL = "https://borinsobaka-lab.github.io/task-tracker/";
     static final int RED = 0xFFDC2626;
-    static final int NO_PRIORITY = 0xFFCBD0DA; // бледный серый — приоритет не задан
+    static final int ACCENT = 0xFF5B5BD6;
+    static final int MEETING_COLOR = 0xFF1F2937; // тёмная полоса у встреч
 
     private final Context ctx;
     private final List<Row> rows = new ArrayList<>();
@@ -49,6 +50,7 @@ public class TimelineRemoteViewsFactory implements RemoteViewsService.RemoteView
         String id, title, date, start, kind, priorityColor;
         int durationMin = 60;
         boolean done;
+        int color = ACCENT; // цвет полосы ответственности (исполнитель / встреча)
         long endMs;
     }
 
@@ -166,16 +168,22 @@ public class TimelineRemoteViewsFactory implements RemoteViewsService.RemoteView
         boolean isMeeting = "meeting".equals(it.kind);
         RemoteViews rv = new RemoteViews(ctx.getPackageName(), R.layout.widget_item_task);
 
-        // Ведущий значок: у встречи — иконка, у задачи — точка приоритета
+        // Полоса слева — цвет ответственного (у встречи тёмная)
+        rv.setInt(R.id.item_bar, "setColorFilter", it.color);
+        rv.setInt(R.id.item_bar, "setImageAlpha", it.done ? 110 : 255);
+
+        // Значок прямо перед названием: у встречи — иконка, у задачи с приоритетом — цветная точка
         if (isMeeting) {
             rv.setViewVisibility(R.id.item_meeting, View.VISIBLE);
             rv.setViewVisibility(R.id.item_dot, View.GONE);
-        } else {
+        } else if (it.priorityColor != null) {
             rv.setViewVisibility(R.id.item_meeting, View.GONE);
             rv.setViewVisibility(R.id.item_dot, View.VISIBLE);
-            int dot = it.priorityColor != null ? parseColor(it.priorityColor) : NO_PRIORITY;
-            rv.setInt(R.id.item_dot, "setColorFilter", dot);
-            rv.setInt(R.id.item_dot, "setImageAlpha", 255);
+            rv.setInt(R.id.item_dot, "setColorFilter", parseColor(it.priorityColor));
+            rv.setInt(R.id.item_dot, "setImageAlpha", it.done ? 110 : 255);
+        } else {
+            rv.setViewVisibility(R.id.item_meeting, View.GONE);
+            rv.setViewVisibility(R.id.item_dot, View.GONE);
         }
 
         // Заголовок: просроченные — красным; выполненные — зачёркнуты и приглушены
@@ -189,7 +197,6 @@ public class TimelineRemoteViewsFactory implements RemoteViewsService.RemoteView
             rv.setTextViewText(R.id.item_title, s);
             rv.setTextColor(R.id.item_title, 0xFF9AA0AE);
             rv.setTextColor(R.id.item_time, 0xFFB3B8C4);
-            if (!isMeeting) rv.setInt(R.id.item_dot, "setImageAlpha", 110);
         } else {
             rv.setTextViewText(R.id.item_title, it.title);
             rv.setTextColor(R.id.item_title, 0xFF111827);
@@ -242,6 +249,14 @@ public class TimelineRemoteViewsFactory implements RemoteViewsService.RemoteView
                 it.kind = o.isNull("kind") ? null : o.optString("kind", null);
                 it.done = o.optBoolean("done", false);
                 it.priorityColor = o.isNull("priorityColor") ? null : o.optString("priorityColor", null);
+                JSONArray mem = o.optJSONArray("members");
+                if ("meeting".equals(it.kind)) {
+                    it.color = MEETING_COLOR;
+                } else if (mem != null && mem.length() > 0) {
+                    it.color = parseColor(mem.getJSONObject(0).optString("color", "#5B5BD6"));
+                } else {
+                    it.color = ACCENT;
+                }
                 it.endMs = (it.start != null && !it.start.isEmpty())
                         ? computeMs(it.date, it.start, it.durationMin)
                         : endOfDay(it.date);
@@ -333,7 +348,7 @@ public class TimelineRemoteViewsFactory implements RemoteViewsService.RemoteView
         try {
             return Color.parseColor(hex);
         } catch (Exception e) {
-            return NO_PRIORITY;
+            return ACCENT;
         }
     }
 }
