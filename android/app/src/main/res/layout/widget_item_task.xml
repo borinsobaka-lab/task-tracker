@@ -4,15 +4,15 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/item_root"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_height="58dp"
     android:layout_marginBottom="8dp"
-    android:background="@drawable/card_bg_inset"
-    android:minHeight="58dp">
+    android:background="@drawable/card_bg_inset">
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:orientation="vertical"
+        android:gravity="center_vertical"
         android:paddingStart="20dp"
         android:paddingEnd="22dp"
         android:paddingTop="9dp"

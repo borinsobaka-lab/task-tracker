@@ -18,12 +18,19 @@
         android:textSize="17sp"
         android:textStyle="bold" />
 
-    <!-- Количество задач в этот день -->
+    <!-- Количество задач в этот день — число на светло-серой подложке -->
     <TextView
         android:id="@+id/header_count"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
-        android:textColor="#9095A8"
+        android:background="@drawable/count_pill"
+        android:minWidth="22dp"
+        android:gravity="center"
+        android:paddingStart="7dp"
+        android:paddingEnd="7dp"
+        android:paddingTop="1dp"
+        android:paddingBottom="1dp"
+        android:textColor="#6B7280"
         android:textSize="13sp" />
 </LinearLayout>

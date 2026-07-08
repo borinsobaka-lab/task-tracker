@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
+import android.view.View;
 import android.widget.RemoteViews;
 
 import java.util.Calendar;
@@ -43,14 +44,27 @@ public class TimelineWidgetProvider extends AppWidgetProvider {
         int[] ids = mgr.getAppWidgetIds(new ComponentName(ctx, TimelineWidgetProvider.class));
 
         if (ACTION_REFRESH.equals(action)) {
+            // «Обновить»: форсим свежую загрузку и крутим индикатор вместо кнопки,
+            // чтобы было видно, что нажатие сработало. Крутилку снимем в ACTION_BAR.
+            TimelineRemoteViewsFactory.invalidate();
+            for (int id : ids) {
+                RemoteViews rv = new RemoteViews(ctx.getPackageName(), R.layout.widget_timeline);
+                rv.setViewVisibility(R.id.widget_refresh, View.GONE);
+                rv.setViewVisibility(R.id.widget_refreshing, View.VISIBLE);
+                mgr.partiallyUpdateAppWidget(id, rv);
+            }
             mgr.notifyAppWidgetViewDataChanged(ids, R.id.widget_list);
         } else if (ACTION_BAR.equals(action)) {
-            // Фабрика посчитала задачи на сегодня — обновляем только число в шапке
+            // Фабрика посчитала задачи на сегодня — обновляем число в шапке и
+            // возвращаем кнопку «Обновить» вместо крутилки.
             int count = todayCount(ctx);
             for (int id : ids) {
                 RemoteViews rv = new RemoteViews(ctx.getPackageName(), R.layout.widget_timeline);
                 rv.setTextViewText(R.id.widget_today, todayLabel());
                 rv.setTextViewText(R.id.widget_today_count, count > 0 ? String.valueOf(count) : "");
+                rv.setViewVisibility(R.id.widget_today_count, count > 0 ? View.VISIBLE : View.GONE);
+                rv.setViewVisibility(R.id.widget_refreshing, View.GONE);
+                rv.setViewVisibility(R.id.widget_refresh, View.VISIBLE);
                 mgr.partiallyUpdateAppWidget(id, rv);
             }
             // Тикаем раз в минуту, пока идёт задача (двигаем красную линию по ней) или
@@ -90,10 +104,22 @@ public class TimelineWidgetProvider extends AppWidgetProvider {
         rv.setTextViewText(R.id.widget_today, todayLabel());
         int count = todayCount(ctx);
         rv.setTextViewText(R.id.widget_today_count, count > 0 ? String.valueOf(count) : "");
+        rv.setViewVisibility(R.id.widget_today_count, count > 0 ? View.VISIBLE : View.GONE);
+        rv.setViewVisibility(R.id.widget_refreshing, View.GONE);
+        rv.setViewVisibility(R.id.widget_refresh, View.VISIBLE);
 
         // Список задач заполняет TimelineWidgetService/Factory
         Intent svc = new Intent(ctx, TimelineWidgetService.class);
         svc.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId);
+        // Токен сборки: при обновлении APK меняется data-URI адаптера, и хост
+        // пересоздаёт список с НОВОЙ раскладкой (иначе кэширует старую — из-за
+        // этого карточки/полоса выглядели по-старому после обновления).
+        long token = 0L;
+        try {
+            token = ctx.getPackageManager().getPackageInfo(ctx.getPackageName(), 0).lastUpdateTime;
+        } catch (Exception ignored) {
+        }
+        svc.putExtra("build_token", token);
         svc.setData(Uri.parse(svc.toUri(Intent.URI_INTENT_SCHEME)));
         rv.setRemoteAdapter(R.id.widget_list, svc);
         rv.setEmptyView(R.id.widget_list, R.id.widget_empty);

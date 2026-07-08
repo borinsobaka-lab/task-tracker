@@ -45,6 +45,11 @@ public class TimelineRemoteViewsFactory implements RemoteViewsService.RemoteView
     private static List<Item> sCache = null;
     private static long sCacheAt = 0;
 
+    /** Сбросить кэш — следующая загрузка сходит в сеть (нажатие «Обновить»). */
+    static void invalidate() {
+        sCacheAt = 0;
+    }
+
     private final Context ctx;
     private final List<Row> rows = new ArrayList<>();
     private long now = System.currentTimeMillis();
@@ -223,8 +228,10 @@ public class TimelineRemoteViewsFactory implements RemoteViewsService.RemoteView
             RemoteViews rv = new RemoteViews(ctx.getPackageName(), R.layout.widget_item_header);
             rv.setTextViewText(R.id.header_text, row.headerText);
             rv.setTextViewText(R.id.header_count, row.count > 0 ? String.valueOf(row.count) : "");
-            rv.setTextColor(R.id.header_text, row.overdueHeader ? RED : 0xFF3B3F66);
-            rv.setTextColor(R.id.header_count, row.overdueHeader ? RED : 0xFF9095A8);
+            rv.setViewVisibility(R.id.header_count, row.count > 0 ? View.VISIBLE : View.GONE);
+            // Дата дня — чёрная (как основная дата вверху); просрочено — красным
+            rv.setTextColor(R.id.header_text, row.overdueHeader ? RED : 0xFF111827);
+            rv.setTextColor(R.id.header_count, row.overdueHeader ? RED : 0xFF6B7280);
             return rv;
         }
 

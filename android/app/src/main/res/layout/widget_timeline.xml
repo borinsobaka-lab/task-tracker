@@ -28,14 +28,27 @@
             android:textSize="18sp"
             android:textStyle="bold" />
 
+        <!-- Число задач на сегодня — на светло-серой подложке -->
         <TextView
             android:id="@+id/widget_today_count"
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
             android:layout_marginStart="8dp"
+            android:background="@drawable/count_pill"
+            android:minWidth="24dp"
+            android:gravity="center"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp"
             android:textColor="#6B7280"
             android:textSize="14sp" />
+
+        <!-- Распорка, чтобы кнопки ушли вправо -->
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1" />
 
         <ImageView
             android:id="@+id/widget_add"
@@ -53,6 +66,18 @@
             android:padding="6dp"
             android:contentDescription="@string/refresh"
             android:src="@drawable/ic_refresh" />
+
+        <!-- Крутящийся индикатор во время обновления (на месте кнопки «Обновить») -->
+        <ProgressBar
+            android:id="@+id/widget_refreshing"
+            style="?android:attr/progressBarStyleSmall"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:layout_marginStart="2dp"
+            android:padding="6dp"
+            android:indeterminate="true"
+            android:indeterminateTint="#5B5BD6"
+            android:visibility="gone" />
     </LinearLayout>
 
     <FrameLayout
