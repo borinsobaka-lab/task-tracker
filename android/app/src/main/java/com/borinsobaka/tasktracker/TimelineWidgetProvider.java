@@ -53,10 +53,14 @@ public class TimelineWidgetProvider extends AppWidgetProvider {
                 rv.setTextViewText(R.id.widget_today_count, count > 0 ? String.valueOf(count) : "");
                 mgr.partiallyUpdateAppWidget(id, rv);
             }
-            // Пока идёт какая-то задача — тикаем раз в минуту (двигаем красную линию),
-            // иначе отключаем частые обновления (экономим батарею).
-            boolean hasCurrent = ctx.getSharedPreferences("widget", Context.MODE_PRIVATE).getBoolean("has_current", false);
-            scheduleTick(ctx, hasCurrent && ids.length > 0);
+            // Тикаем раз в минуту, пока идёт задача (двигаем красную линию по ней) или
+            // впереди сегодня ещё есть задачи (чтобы полоса «сейчас» между задачами
+            // вовремя переходила в нужный промежуток). Когда сегодня всё позади —
+            // отключаем частые обновления (экономим батарею).
+            var prefs = ctx.getSharedPreferences("widget", Context.MODE_PRIVATE);
+            boolean hasCurrent = prefs.getBoolean("has_current", false);
+            boolean hasUpcoming = prefs.getBoolean("has_upcoming", false);
+            scheduleTick(ctx, (hasCurrent || hasUpcoming) && ids.length > 0);
         }
     }
 

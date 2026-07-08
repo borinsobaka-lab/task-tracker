@@ -64,6 +64,7 @@ public class TimelineRemoteViewsFactory implements RemoteViewsService.RemoteView
     private static class Row {
         boolean header;
         boolean overdueHeader;
+        boolean nowLine;   // полоса «сейчас» во всю ширину (между задачами, когда ни одна не идёт)
         String headerText;
         int count;
         Item item;
@@ -75,7 +76,7 @@ public class TimelineRemoteViewsFactory implements RemoteViewsService.RemoteView
     @Override public int getCount() { return rows.size(); }
     @Override public long getItemId(int position) { return position; }
     @Override public boolean hasStableIds() { return false; }
-    @Override public int getViewTypeCount() { return 2; }
+    @Override public int getViewTypeCount() { return 3; }
     @Override public RemoteViews getLoadingView() { return null; }
 
     @Override
@@ -110,10 +111,17 @@ public class TimelineRemoteViewsFactory implements RemoteViewsService.RemoteView
         Collections.sort(future, byDate);
 
         int todayCount = 0;
-        for (Item it : future) if (today.equals(it.date)) todayCount++;
+        boolean hasUpcoming = false; // есть сегодняшняя задача, время которой ещё не наступило
+        for (Item it : future) {
+            if (today.equals(it.date)) {
+                todayCount++;
+                if (afterNow(it, today)) hasUpcoming = true;
+            }
+        }
         ctx.getSharedPreferences("widget", Context.MODE_PRIVATE).edit()
                 .putInt("today_count", todayCount)
                 .putBoolean("has_current", hasCurrent)
+                .putBoolean("has_upcoming", hasUpcoming)
                 .apply();
         // Просим провайдер обновить число в шапке и (пере)запланировать поминутный тик
         ctx.sendBroadcast(new Intent(ctx, TimelineWidgetProvider.class)
@@ -142,7 +150,16 @@ public class TimelineRemoteViewsFactory implements RemoteViewsService.RemoteView
         }
 
         String lastDay = null;
+        // Если ни одна задача не идёт прямо сейчас — покажем, между какими задачами
+        // мы находимся: полоса «сейчас» во всю ширину перед первой ещё не начавшейся.
+        boolean nowLineDone = hasCurrent;
         for (Item it : future) {
+            if (!nowLineDone && afterNow(it, today)) {
+                Row nl = new Row();
+                nl.nowLine = true;
+                rows.add(nl);
+                nowLineDone = true;
+            }
             if (!it.date.equals(lastDay)) {
                 lastDay = it.date;
                 if (!today.equals(it.date)) {
@@ -159,6 +176,21 @@ public class TimelineRemoteViewsFactory implements RemoteViewsService.RemoteView
             r.overdue = isOverdue(it); // сегодняшняя задача, у которой уже прошло время
             rows.add(r);
         }
+        // Сейчас позже всех показанных задач — полосу ставим в самый низ списка
+        if (!nowLineDone && !future.isEmpty()) {
+            Row nl = new Row();
+            nl.nowLine = true;
+            rows.add(nl);
+        }
+    }
+
+    /** Задача идёт позже «сейчас»: будущий день, либо сегодняшняя ещё не начавшаяся. */
+    private boolean afterNow(Item it, String today) {
+        int c = cmp(it.date, today);
+        if (c > 0) return true;   // будущий день
+        if (c < 0) return false;  // прошлый день
+        boolean timed = it.start != null && !it.start.isEmpty();
+        return timed && it.startMs > now; // сегодня, но время ещё не наступило
     }
 
     private boolean isCurrent(Item it) {
@@ -182,6 +214,10 @@ public class TimelineRemoteViewsFactory implements RemoteViewsService.RemoteView
     public RemoteViews getViewAt(int position) {
         if (position < 0 || position >= rows.size()) return null;
         Row row = rows.get(position);
+
+        if (row.nowLine) {
+            return new RemoteViews(ctx.getPackageName(), R.layout.widget_item_nowline);
+        }
 
         if (row.header) {
             RemoteViews rv = new RemoteViews(ctx.getPackageName(), R.layout.widget_item_header);
