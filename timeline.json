@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-08T08:23:55.411Z",
+  "generatedAt": "2026-07-08T08:48:00.406Z",
   "items": [
     {
       "id": "2c23ac8a-8875-4b23-9d1d-7724145cf55c",
@@ -177,6 +177,7 @@
       "date": "2026-07-08",
       "start": "16:00",
       "durationMin": 30,
+      "done": true,
       "priorityColor": "#22c55e",
       "members": [
         {
