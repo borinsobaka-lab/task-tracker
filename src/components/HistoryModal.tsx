@@ -8,6 +8,7 @@ import { useBoard } from '../store'
 import type { ActivityEntry, ActivityKind, ID } from '../types'
 import { fmtFullDate, parseDateKey, toDateKey } from '../utils'
 import { IcoX } from '../icons'
+import { SheetGrabber } from './SheetGrabber'
 import './history.css'
 
 const ACT: Record<ActivityKind, { icon: string; verb: string }> = {
@@ -79,6 +80,7 @@ export function HistoryModal({ onClose, onOpenCard }: { onClose: () => void; onO
   return (
     <div className="modal-overlay" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
       <div className="modal history-modal" role="dialog" aria-modal="true" aria-label="История проекта">
+        <SheetGrabber onClose={onClose} />
         <header className="history-header">
           <h2>История проекта</h2>
           <button className="cm-close" onClick={onClose} title="Закрыть" aria-label="Закрыть">

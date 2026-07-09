@@ -6,6 +6,7 @@ import { imageFileToAvatar, MEMBER_COLORS } from '../utils'
 import { IcoCamera, IcoChevronRight, IcoClose, IcoX } from '../icons'
 import type { Member } from '../types'
 import { Avatar } from './Avatar'
+import { SheetGrabber } from './SheetGrabber'
 import './settings.css'
 
 /** Модальное окно настроек: участники, идентификация, хранилище данных, аккаунт */
@@ -26,6 +27,7 @@ export function SettingsModal({ onClose, onLogout }: { onClose: () => void; onLo
       }}
     >
       <div className="modal settings-modal" role="dialog" aria-modal="true" aria-label="Настройки">
+        <SheetGrabber onClose={onClose} />
         <header className="settings-header">
           <h2>Настройки</h2>
           <button className="cm-close" onClick={onClose} title="Закрыть" aria-label="Закрыть">

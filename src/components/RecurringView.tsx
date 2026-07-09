@@ -10,6 +10,7 @@ import { Avatar, AvatarStack } from './Avatar'
 import { RichTextEditor } from './RichTextEditor'
 import { RecurrenceFields } from './RecurrenceFields'
 import { SubHeader } from './SubHeader'
+import { SheetGrabber } from './SheetGrabber'
 import './recurring.css'
 
 const DURATIONS: { v: number; label: string }[] = [
@@ -180,6 +181,7 @@ function RecurringEditor({ series, onClose }: { series: Series | null; onClose: 
   return (
     <div className="modal-overlay" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
       <div className="modal rec-editor" role="dialog" aria-modal="true">
+        <SheetGrabber onClose={onClose} />
         <header className="rec-editor-head">
           <h3>{series ? 'Регулярная задача' : 'Новая регулярная задача'}</h3>
           <button type="button" className="cm-close" onClick={onClose} title="Закрыть" aria-label="Закрыть">

@@ -426,6 +426,21 @@ test('мобильное меню: кнопка «+» открывает быс�
   await expect(page.locator('.board-card', { hasText: 'Быстрая задача' })).toBeVisible()
 })
 
+test('мобильная модалка-лист: грабер виден и закрывает окно', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 800 })
+  await createIdentity(page)
+  await page.getByText('Добавить карточку').first().click()
+  await page.locator('textarea').first().fill('Задача-лист')
+  await page.keyboard.press('Enter')
+  await page.getByText('Задача-лист').click()
+  await expect(page.getByRole('button', { name: /Удалить карточку/ })).toBeVisible()
+  // Полоска-грабер вверху видна на мобильном и закрывает окно по нажатию
+  const grab = page.locator('.sheet-grabber')
+  await expect(grab).toBeVisible()
+  await grab.click()
+  await expect(page.getByRole('button', { name: /Удалить карточку/ })).toBeHidden()
+})
+
 test('быстрое добавление: приоритет и статус применяются', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 780 })
   await createIdentity(page)

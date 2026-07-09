@@ -14,6 +14,7 @@ import { IcoCalendar, IcoCheck, IcoChevronDown, IcoClose, IcoMeeting, IcoRecurri
 import { Avatar } from './Avatar'
 import { RichTextEditor } from './RichTextEditor'
 import { RecurrenceFields } from './RecurrenceFields'
+import { SheetGrabber } from './SheetGrabber'
 import { CommentsPanel } from './Comments'
 import './modal.css'
 
@@ -479,6 +480,7 @@ function CardModalInner({ card, store, onClose }: { card: Card; store: BoardStor
         onDragLeave={onDragLeave}
         onDrop={onDrop}
       >
+        <SheetGrabber onClose={onClose} />
         {dragActive && <div className="cm-drop-hint">Отпустите, чтобы прикрепить файлы</div>}
 
         {/* ---------- Шапка ---------- */}

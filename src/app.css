@@ -575,7 +575,59 @@
   margin-top: -1px;
 }
 
+/* Полоска-«грабер» вверху модалки — только на мобильном (см. media ниже) */
+.sheet-grabber {
+  display: none;
+}
+.sheet-grabber-bar {
+  width: 40px;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--border-strong);
+}
+@keyframes sheet-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
 @media (max-width: 720px) {
+  /* ---------- Модалки как «лист» снизу на всю ширину ---------- */
+  .modal-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+  .modal {
+    max-width: none;
+    max-height: 92vh;
+    border-radius: 18px 18px 0 0; /* скругление только сверху */
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    animation: sheet-up 0.24s ease-out;
+  }
+  .modal.cm {
+    overflow: hidden; /* у карточки задачи свой внутренний скролл (cm-body) */
+  }
+  .modal.cm.cm-wide {
+    max-width: none;
+  }
+  .sheet-grabber {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 9px 0 5px;
+    flex-shrink: 0;
+    cursor: grab;
+    touch-action: none;
+    position: sticky;
+    top: 0;
+    z-index: 4;
+    background: var(--bg-panel);
+  }
+
   .app-header {
     gap: 8px;
     padding: 0 12px;
