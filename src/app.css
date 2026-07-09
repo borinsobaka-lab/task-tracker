@@ -595,12 +595,14 @@
 }
 
 @media (max-width: 720px) {
-  /* ---------- Модалки как «лист» снизу на всю ширину ---------- */
-  .modal-overlay {
+  /* ---------- Модалки как «лист» снизу на всю ширину ----------
+     Удвоенные/вложенные селекторы — чтобы перебить базовые .modal/.modal-overlay
+     из styles.css (он грузится позже в бандле; при равной специфичности победил бы). */
+  .modal-overlay.modal-overlay {
     align-items: flex-end;
     padding: 0;
   }
-  .modal {
+  .modal-overlay > .modal {
     max-width: none;
     max-height: 92vh;
     border-radius: 18px 18px 0 0; /* скругление только сверху */
@@ -608,10 +610,10 @@
     -webkit-overflow-scrolling: touch;
     animation: sheet-up 0.24s ease-out;
   }
-  .modal.cm {
+  .modal-overlay > .modal.cm {
     overflow: hidden; /* у карточки задачи свой внутренний скролл (cm-body) */
   }
-  .modal.cm.cm-wide {
+  .modal-overlay > .modal.cm.cm-wide {
     max-width: none;
   }
   .sheet-grabber {
