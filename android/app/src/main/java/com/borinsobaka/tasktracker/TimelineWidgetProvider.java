@@ -19,6 +19,7 @@ public class TimelineWidgetProvider extends AppWidgetProvider {
 
     static final String ACTION_REFRESH = "com.borinsobaka.tasktracker.ACTION_REFRESH"; // тихо перечитать список
     static final String ACTION_RELOAD = "com.borinsobaka.tasktracker.ACTION_RELOAD";   // кнопка «Обновить»: с крутилкой
+    static final String ACTION_STOP_SPINNER = "com.borinsobaka.tasktracker.ACTION_STOP_SPINNER"; // гарантированно убрать крутилку
     static final String ACTION_BAR = "com.borinsobaka.tasktracker.ACTION_BAR"; // обновить число задач в шапке
 
     private static final String[] MON = {"янв", "фев", "мар", "апр", "мая", "июн", "июл", "авг", "сен", "окт", "ноя", "дек"};
@@ -49,7 +50,7 @@ public class TimelineWidgetProvider extends AppWidgetProvider {
             mgr.notifyAppWidgetViewDataChanged(ids, R.id.widget_list);
         } else if (ACTION_RELOAD.equals(action)) {
             // Нажата кнопка «Обновить»: форсим свежую загрузку и показываем крутилку
-            // вместо кнопки, чтобы было видно, что нажатие сработало (снимем в ACTION_BAR).
+            // вместо кнопки, чтобы было видно, что нажатие сработало.
             TimelineRemoteViewsFactory.invalidate();
             for (int id : ids) {
                 RemoteViews rv = new RemoteViews(ctx.getPackageName(), R.layout.widget_timeline);
@@ -58,6 +59,16 @@ public class TimelineWidgetProvider extends AppWidgetProvider {
                 mgr.partiallyUpdateAppWidget(id, rv);
             }
             mgr.notifyAppWidgetViewDataChanged(ids, R.id.widget_list);
+            // Гарантированно вернуть кнопку через 4с, даже если загрузка зависнет
+            // или ACTION_BAR не придёт (чтобы крутилка не осталась висеть навсегда).
+            scheduleStopSpinner(ctx);
+        } else if (ACTION_STOP_SPINNER.equals(action)) {
+            for (int id : ids) {
+                RemoteViews rv = new RemoteViews(ctx.getPackageName(), R.layout.widget_timeline);
+                rv.setViewVisibility(R.id.widget_refreshing, View.GONE);
+                rv.setViewVisibility(R.id.widget_refresh, View.VISIBLE);
+                mgr.partiallyUpdateAppWidget(id, rv);
+            }
         } else if (ACTION_BAR.equals(action)) {
             // Фабрика посчитала задачи на сегодня — обновляем число в шапке и
             // возвращаем кнопку «Обновить» вместо крутилки.
@@ -85,6 +96,16 @@ public class TimelineWidgetProvider extends AppWidgetProvider {
     @Override
     public void onDisabled(Context ctx) {
         scheduleTick(ctx, false); // последний виджет удалён — гасим тик
+    }
+
+    /** Через 4с гарантированно убираем крутилку «Обновить» (страховка от зависания). */
+    private static void scheduleStopSpinner(Context ctx) {
+        AlarmManager am = (AlarmManager) ctx.getSystemService(Context.ALARM_SERVICE);
+        if (am == null) return;
+        int flags = PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= 23 ? PendingIntent.FLAG_IMMUTABLE : 0);
+        PendingIntent pi = PendingIntent.getBroadcast(
+                ctx, 8, new Intent(ctx, TimelineWidgetProvider.class).setAction(ACTION_STOP_SPINNER), flags);
+        am.set(AlarmManager.RTC, System.currentTimeMillis() + 4000, pi);
     }
 
     /** Планирует (или отменяет) поминутное обновление для движения красной линии. */
