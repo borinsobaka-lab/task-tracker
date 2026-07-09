@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-09T10:07:33.140Z",
+  "generatedAt": "2026-07-09T10:08:09.416Z",
   "items": [
     {
       "id": "2c23ac8a-8875-4b23-9d1d-7724145cf55c",
@@ -350,6 +350,20 @@
       ]
     },
     {
+      "id": "53588c8a-da9d-4ec4-bdab-6331a6249338",
+      "title": "Полить цветы",
+      "date": "2026-07-10",
+      "start": "17:00",
+      "durationMin": 120,
+      "priorityColor": "#22c55e",
+      "members": [
+        {
+          "name": "Настя",
+          "color": "#f97316"
+        }
+      ]
+    },
+    {
       "id": "49df120b-249c-4698-bdce-4ff72cb5e324",
       "title": "Paddle",
       "date": "2026-07-10",
@@ -360,21 +374,6 @@
         {
           "name": "Вова",
           "color": "#84cc16"
-        }
-      ]
-    },
-    {
-      "id": "53588c8a-da9d-4ec4-bdab-6331a6249338",
-      "title": "Полить цветы",
-      "date": "2026-07-11",
-      "start": "14:00",
-      "durationMin": 120,
-      "done": true,
-      "priorityColor": "#22c55e",
-      "members": [
-        {
-          "name": "Настя",
-          "color": "#f97316"
         }
       ]
     },
