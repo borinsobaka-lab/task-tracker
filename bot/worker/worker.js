@@ -584,7 +584,21 @@ export default {
         await onMessage(update.message, env)
       }
     } catch (e) {
-      console.log('handler error:', e && e.message)
+      const emsg = (e && e.message) || String(e)
+      console.log('handler error:', emsg)
+      // Не молчим при внутренней ошибке: сообщаем пользователю (частая причина —
+      // не привязано KV-хранилище BOT_KV или не заданы переменные). tgSend от KV
+      // не зависит, поэтому такое уведомление дойдёт даже при сломанном KV.
+      const chatId =
+        (update.callback_query && update.callback_query.message && update.callback_query.message.chat && update.callback_query.message.chat.id) ||
+        (update.message && update.message.chat && update.message.chat.id)
+      if (chatId) {
+        try {
+          await tgSend(env, String(chatId), '⚠️ Внутренняя ошибка бота: ' + esc(emsg) + '\n\nЕсли повторяется — проверьте, что к воркеру привязано KV-хранилище BOT_KV и заданы все переменные.')
+        } catch {
+          /* и уведомить не вышло — тогда только лог */
+        }
+      }
     }
     return new Response('OK')
   },
