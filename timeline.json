@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-09T13:38:27.191Z",
+  "generatedAt": "2026-07-09T17:15:59.681Z",
   "items": [
     {
       "id": "2c23ac8a-8875-4b23-9d1d-7724145cf55c",
@@ -283,6 +283,19 @@
       "durationMin": 90,
       "kind": "task",
       "priorityColor": "#ef4444",
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        }
+      ]
+    },
+    {
+      "id": "b72c3a35-7f9f-40a6-808c-db50e939d1c2",
+      "title": "Посмотреть план Насти по SMM",
+      "date": "2026-07-09",
+      "start": "22:30",
+      "durationMin": 30,
       "members": [
         {
           "name": "Вова",
