@@ -122,9 +122,14 @@ export function QuickAddSheet({ onClose }: { onClose: () => void }) {
           <button type="button" className={'qa-chip' + (date ? ' on' : '')} onClick={() => setPop(pop === 'date' ? null : 'date')}>
             {date ? fmtDayMonth(parseDateKey(date)) : 'Дата'}
           </button>
-          <button type="button" className={'qa-chip' + (assigneeIds.length ? ' on' : '')} onClick={() => setPop(pop === 'who' ? null : 'who')}>
-            {chosen.length ? chosen.map((m) => m.name).join(', ') : 'Ответственный'}
-          </button>
+          <div className="qa-who">
+            {chosen.map((m) => (
+              <Avatar key={m.id} member={m} size="sm" />
+            ))}
+            <button type="button" className="qa-add-avatar" onClick={() => setPop(pop === 'who' ? null : 'who')} aria-label="Ответственный">
+              +
+            </button>
+          </div>
           <span className="qa-spacer" />
           <button type="button" className="qa-send" disabled={!canSubmit} onClick={submit} aria-label="Создать задачу">
             <IcoCheck size={20} color="currentColor" />

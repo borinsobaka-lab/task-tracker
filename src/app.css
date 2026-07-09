@@ -455,6 +455,33 @@
   background: transparent;
   border: 1.5px solid var(--border-strong);
 }
+/* Ответственные: аватарки выбранных + кружок «+» для добавления (как в карточке задачи) */
+.qa-who {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.qa-add-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px dashed var(--border-strong);
+  background: var(--surface);
+  color: var(--text-soft);
+  font-size: 18px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.qa-add-avatar:hover {
+  border-color: var(--accent);
+  color: var(--accent-strong);
+  background: var(--accent-soft);
+}
 .qa-spacer {
   flex: 1 0 8px;
 }
@@ -601,6 +628,10 @@
   .modal-overlay.modal-overlay {
     align-items: flex-end;
     padding: 0;
+    /* Без прокрутки самого оверлея: когда лист выезжает/тянется вниз (translateY),
+       он выходит за нижнюю грань экрана и у fixed-оверлея появлялся правый скроллбар,
+       из-за которого модалка на время анимации становилась уже (не во всю ширину). */
+    overflow: hidden;
   }
   .modal-overlay > .modal {
     max-width: none;
