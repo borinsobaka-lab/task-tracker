@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-09T23:17:06.447Z",
+  "generatedAt": "2026-07-09T23:17:15.617Z",
   "items": [
     {
       "id": "2c23ac8a-8875-4b23-9d1d-7724145cf55c",
@@ -435,10 +435,11 @@
     },
     {
       "id": "2038c2c7-220f-43c7-8752-8e0f7514c6be",
-      "title": "Новая задача",
+      "title": "Padel",
       "date": "2026-07-15",
       "start": "18:00",
       "durationMin": 60,
+      "kind": "meeting",
       "members": []
     },
     {
