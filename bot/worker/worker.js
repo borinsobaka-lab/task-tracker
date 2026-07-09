@@ -73,9 +73,19 @@ async function kvPut(env, key, obj) {
 // ---------- Данные из GitHub ----------
 
 export async function loadAuthBlob(env) {
-  const url = `https://raw.githubusercontent.com/${env.AUTH_OWNER}/${env.AUTH_REPO}/${env.AUTH_BRANCH}/auth.json`
-  const res = await fetch(url, { headers: { 'User-Agent': 'tasktracker-bot' }, cf: { cacheTtl: 0 } })
-  if (!res.ok) throw new Error('auth.json: ' + res.status)
+  const missing = ['AUTH_OWNER', 'AUTH_REPO', 'AUTH_BRANCH'].filter((k) => !env[k])
+  if (missing.length) throw new Error('не заданы переменные ' + missing.join(', '))
+  // Публичный файл — читаем без токена. Свежесть обеспечиваем уникальным query
+  // (иначе можно получить старый ключ из кэша и не увидеть обновление пароля).
+  const path = `${env.AUTH_OWNER}/${env.AUTH_REPO}/${env.AUTH_BRANCH}/auth.json`
+  const url = `https://raw.githubusercontent.com/${path}?ts=${Date.now()}`
+  let res
+  try {
+    res = await fetch(url, { headers: { 'User-Agent': 'tasktracker-bot', Accept: 'application/json' } })
+  } catch (e) {
+    throw new Error('нет сети до GitHub (' + ((e && e.message) || e) + ')')
+  }
+  if (!res.ok) throw new Error(`GitHub вернул ${res.status} для ${path}`)
   return res.json()
 }
 
@@ -463,8 +473,8 @@ async function onMessage(msg, env) {
     let blob
     try {
       blob = await loadAuthBlob(env)
-    } catch {
-      await tgSend(env, chatId, 'Не удалось получить настройки входа (связь с GitHub). Попробуйте ещё раз чуть позже.')
+    } catch (e) {
+      await tgSend(env, chatId, 'Не удалось получить настройки входа: ' + esc((e && e.message) || String(e)))
       return
     }
     // Старый ключ (250 000 итераций) воркер не проверит — просим владельца один
