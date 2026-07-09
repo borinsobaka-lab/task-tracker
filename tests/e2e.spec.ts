@@ -410,13 +410,40 @@ test('пустой черновик от «+» не сохраняется, а �
   await expect(page.locator('.board-card', { hasText: 'Черновик с названием' })).toBeVisible()
 })
 
-test('мобильное меню: кнопка «+» справа создаёт задачу', async ({ page }) => {
+test('мобильное меню: кнопка «+» открывает быстрое добавление и создаёт задачу', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 780 })
   await createIdentity(page)
   // Плавающей кнопки на телефоне нет — только «+» в нижнем меню
   await expect(page.locator('.fab')).toBeHidden()
   await page.locator('.bottom-nav-add').click()
-  await expect(page.getByRole('button', { name: /Удалить карточку/ })).toBeVisible()
+  // Открылся лист быстрого добавления (а не полная модалка)
+  await expect(page.locator('.qa-sheet')).toBeVisible()
+  await page.locator('.qa-title').fill('Быстрая задача')
+  await page.locator('.qa-desc').fill('Короткое описание')
+  await page.locator('.qa-send').click()
+  // Лист закрылся, карточка появилась на доске
+  await expect(page.locator('.qa-sheet')).toBeHidden()
+  await expect(page.locator('.board-card', { hasText: 'Быстрая задача' })).toBeVisible()
+})
+
+test('быстрое добавление: приоритет и статус применяются', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 780 })
+  await createIdentity(page)
+  await page.locator('.bottom-nav-add').click()
+  await page.locator('.qa-title').fill('Срочная')
+  // приоритет q1 (красный)
+  await page.locator('.qa-chip', { hasText: 'Приоритет' }).click()
+  await page.locator('.qa-pop-item', { hasText: 'Срочно и важно' }).click()
+  // статус «В работе»
+  await page.locator('.qa-chip', { hasText: 'Нужно сделать' }).click()
+  await page.locator('.qa-pop-item', { hasText: 'В работе' }).click()
+  await page.locator('.qa-send').click()
+  // карточка в колонке «В работе», левая полоса — красная (q1)
+  const doingCol = page.locator('.board-col', { hasText: 'В работе' })
+  const card = doingCol.locator('.board-card', { hasText: 'Срочная' })
+  await expect(card).toBeVisible()
+  const color = await card.evaluate((el) => getComputedStyle(el).borderLeftColor)
+  expect(color).toBe('rgb(239, 68, 68)')
 })
 
 test('мобильный календарь запоминает свёрнутую панель «Без даты»', async ({ page }) => {

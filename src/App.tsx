@@ -17,6 +17,7 @@ import { CardModal } from './components/CardModal'
 import { SettingsModal } from './components/SettingsModal'
 import { HistoryModal } from './components/HistoryModal'
 import { Confetti } from './components/Confetti'
+import { QuickAddSheet } from './components/QuickAddSheet'
 import { IdentityScreen } from './components/IdentityScreen'
 import { PublicTimeline } from './components/PublicTimeline'
 import { CommentsSeenProvider } from './components/Comments'
@@ -207,6 +208,7 @@ function Shell({ onLogout }: { onLogout: () => void }) {
   const [selectedCardId, setSelectedCardId] = useState<ID | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [historyOpen, setHistoryOpen] = useState(false)
+  const [quickAddOpen, setQuickAddOpen] = useState(false)
   const [memberFilter, setMemberFilter] = useState<ReadonlySet<ID>>(new Set())
   // Карточка, созданная кнопкой «+» и ещё не заполненная (черновик). Ref на
   // свежий store — чтобы после закрытия увидеть досохранённые название/описание.
@@ -337,7 +339,7 @@ function Shell({ onLogout }: { onLogout: () => void }) {
           return <RecurringView {...shared} />
         })()}
       </main>
-      <BottomNav view={view} onViewChange={changeView} onNewTask={createTask} />
+      <BottomNav view={view} onViewChange={changeView} onNewTask={() => setQuickAddOpen(true)} />
       {/* Десктоп: плавающая кнопка быстрого создания задачи (во всех разделах) */}
       <button className="fab" onClick={createTask} title="Добавить задачу" aria-label="Добавить задачу">
         <span className="fab-plus" aria-hidden>+</span>
@@ -348,6 +350,7 @@ function Shell({ onLogout }: { onLogout: () => void }) {
       {historyOpen && (
         <HistoryModal onClose={() => setHistoryOpen(false)} onOpenCard={(id) => setSelectedCardId(id)} />
       )}
+      {quickAddOpen && <QuickAddSheet onClose={() => setQuickAddOpen(false)} />}
       <Confetti />
     </div>
   )

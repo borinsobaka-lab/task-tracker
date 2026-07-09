@@ -373,6 +373,167 @@
   display: none;
 }
 
+/* ---------- Быстрое добавление задачи (мобильный лист над клавиатурой) ---------- */
+.qa-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 22, 34, 0.45);
+  z-index: 300;
+}
+.qa-sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0; /* переопределяется inline на высоту клавиатуры */
+  background: var(--surface);
+  border-radius: 16px 16px 0 0;
+  padding: 14px 14px 12px;
+  box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.2);
+}
+.qa-title {
+  width: 100%;
+  border: none;
+  outline: none;
+  resize: none;
+  background: none;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.35;
+  font-family: inherit;
+}
+.qa-desc {
+  width: 100%;
+  border: none;
+  outline: none;
+  resize: none;
+  background: none;
+  font-size: 14px;
+  color: var(--text-soft);
+  line-height: 1.35;
+  margin-top: 4px;
+  font-family: inherit;
+}
+.qa-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.qa-controls::-webkit-scrollbar {
+  display: none;
+}
+.qa-chip {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  background: var(--surface);
+  color: var(--text-soft);
+  white-space: nowrap;
+  cursor: pointer;
+}
+.qa-chip.on {
+  border-color: var(--accent);
+  color: var(--accent-strong);
+  background: var(--accent-soft);
+}
+.qa-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.qa-dot.none {
+  background: transparent;
+  border: 1.5px solid var(--border-strong);
+}
+.qa-spacer {
+  flex: 1 0 8px;
+}
+.qa-send {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.qa-send:disabled {
+  opacity: 0.4;
+}
+/* Всплывашки выбора открываются ВВЕРХ (внизу клавиатура) */
+.qa-pop {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 100%;
+  margin-bottom: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow-lg);
+  padding: 6px;
+  max-height: 44vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.qa-pop-pad {
+  padding: 12px;
+  gap: 10px;
+}
+.qa-pop-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 10px 10px;
+  border: none;
+  background: none;
+  border-radius: 8px;
+  font-size: 14.5px;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+.qa-pop-item.on {
+  background: var(--accent-soft);
+}
+.qa-pop-check {
+  margin-left: auto;
+  display: inline-flex;
+  color: var(--accent);
+}
+.qa-pop-empty {
+  padding: 10px;
+  font-size: 13px;
+  color: var(--text-soft);
+}
+.qa-pop-clear {
+  border: none;
+  background: none;
+  color: var(--danger);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  padding: 4px 2px;
+}
+
 /* Десктоп: плавающая кнопка быстрого создания задачи (внизу справа, во всех разделах) */
 /* Слой конфетти при выполнении задачи — поверх всего, клики проходят сквозь */
 .confetti-canvas {
