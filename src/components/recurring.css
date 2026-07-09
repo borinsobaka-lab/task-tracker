@@ -55,7 +55,7 @@
   /* Регулярные задачи не распределяются по приоритетам — полоса всегда серая
      (как у нераспределённых в матрице) */
   border-left: 4px solid var(--border-strong);
-  border-radius: var(--radius);
+  border-radius: 16px;
   padding: 8px 10px;
   box-shadow: var(--shadow-card);
 }

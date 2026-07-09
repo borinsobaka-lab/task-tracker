@@ -269,7 +269,7 @@
   /* Левая полоса по приоритету задачи (серая, если приоритета нет) — единая
      логика со всеми разделами. */
   border-left: 4px solid var(--prio-color, var(--border-strong));
-  border-radius: 11px;
+  border-radius: 16px;
   box-shadow: var(--shadow-card);
   padding: 9px 11px;
   cursor: pointer;

@@ -193,7 +193,7 @@
   border: 1px solid var(--border);
   /* Полоса слева — по приоритету (серая, если приоритета нет), едино со всеми разделами */
   border-left: 3px solid var(--prio-color);
-  border-radius: 10px;
+  border-radius: 16px;
   box-shadow: var(--shadow-sm);
   padding: 7px 9px;
   cursor: grab;
@@ -359,7 +359,7 @@
   align-items: center;
   gap: 5px;
   padding: 2px 8px;
-  border-radius: 8px;
+  border-radius: 12px;
   /* Заливка — по исполнителю (для различения в календаре), полоса слева — по приоритету */
   background: color-mix(in srgb, var(--ev-color) 14%, white);
   border: 1px solid color-mix(in srgb, var(--ev-color) 30%, white);
@@ -514,7 +514,7 @@
   flex-direction: column;
   gap: 1px;
   padding: 3px 7px 4px 8px;
-  border-radius: 9px;
+  border-radius: 14px;
   /* Заливка — по исполнителю (различать задачи в календаре), полоса слева — по приоритету */
   background: color-mix(in srgb, var(--ev-color) 18%, white);
   box-shadow: inset 3px 0 0 var(--prio-color), 0 0 0 1px color-mix(in srgb, var(--ev-color) 30%, white);
