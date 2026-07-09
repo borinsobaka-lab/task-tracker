@@ -105,11 +105,26 @@ function b64ToBytes(b64) {
   return out
 }
 
+// Cloudflare Workers поддерживают не более 100 000 итераций PBKDF2 (иначе бросают
+// NotSupportedError). Приложение шифрует ключ ровно этим числом; у совсем старых
+// файлов поля iter нет — там 250 000, и такой ключ бот проверить не может, пока
+// владелец один раз не войдёт в приложение (оно пере-шифрует ключ). См. authNeedsAppLogin.
+export const MAX_ITERATIONS = 100000
+
+export function blobIterations(blob) {
+  return blob && typeof blob.iter === 'number' ? blob.iter : 250000
+}
+
+/** true — ключ зашифрован числом итераций, которое воркер не осилит (нужен вход в приложение). */
+export function authNeedsAppLogin(blob) {
+  return blobIterations(blob) > MAX_ITERATIONS
+}
+
 export async function verifyPassword(blob, password) {
   if (!blob || typeof blob.salt !== 'string' || typeof blob.iv !== 'string' || typeof blob.ct !== 'string') return false
   const baseKey = await crypto.subtle.importKey('raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveKey'])
   const key = await crypto.subtle.deriveKey(
-    { name: 'PBKDF2', salt: b64ToBytes(blob.salt), iterations: 250000, hash: 'SHA-256' },
+    { name: 'PBKDF2', salt: b64ToBytes(blob.salt), iterations: blobIterations(blob), hash: 'SHA-256' },
     baseKey,
     { name: 'AES-GCM', length: 256 },
     false,
@@ -445,9 +460,27 @@ async function onMessage(msg, env) {
   }
 
   if (s.stage === 'pw') {
+    let blob
+    try {
+      blob = await loadAuthBlob(env)
+    } catch {
+      await tgSend(env, chatId, 'Не удалось получить настройки входа (связь с GitHub). Попробуйте ещё раз чуть позже.')
+      return
+    }
+    // Старый ключ (250 000 итераций) воркер не проверит — просим владельца один
+    // раз войти в приложение: оно молча пере-шифрует ключ под лимит воркера.
+    if (authNeedsAppLogin(blob)) {
+      await tgSend(
+        env,
+        chatId,
+        'Почти готово. Откройте приложение и войдите по паролю один раз — это обновит настройки безопасности. После этого пришлите пароль сюда ещё раз.',
+        openBtn(env),
+      )
+      return
+    }
     let ok = false
     try {
-      ok = await verifyPassword(await loadAuthBlob(env), text)
+      ok = await verifyPassword(blob, text)
     } catch {
       await tgSend(env, chatId, 'Не удалось проверить пароль (проблема со связью). Попробуйте ещё раз чуть позже.')
       return

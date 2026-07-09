@@ -4,7 +4,13 @@
 // расшифровать его нельзя. Целостность проверяет тег GCM: неверный пароль ->
 // ошибка расшифровки, по ней и понимаем, что пароль неправильный.
 
-const PBKDF2_ITERATIONS = 250_000
+// Число итераций PBKDF2. Ограничено 100 000: столько же (и не больше) поддерживает
+// WebCrypto в Cloudflare Workers, где Telegram-бот проверяет пароль тем же способом.
+// Больше ста тысяч воркер бросает NotSupportedError и не может проверить пароль.
+const PBKDF2_ITERATIONS = 100_000
+// Старые ключи (до введения поля iter) шифровались 250 000 итераций — их ещё
+// нужно уметь расшифровывать в браузере; при входе они молча пере-шифруются.
+const LEGACY_ITERATIONS = 250_000
 const SALT_BYTES = 16
 const IV_BYTES = 12
 
@@ -14,6 +20,17 @@ export interface EncryptedBlob {
   salt: string // base64
   iv: string // base64
   ct: string // base64 (ciphertext + GCM-тег)
+  iter?: number // число итераций PBKDF2 (нет поля — старый ключ на 250 000)
+}
+
+/** Итерации, которыми зашифрован ключ (для обратной совместимости старых файлов). */
+export function blobIterations(blob: EncryptedBlob): number {
+  return typeof blob.iter === 'number' ? blob.iter : LEGACY_ITERATIONS
+}
+
+/** Нужно ли пере-шифровать ключ на текущее (меньшее) число итераций. */
+export function blobNeedsRehash(blob: EncryptedBlob): boolean {
+  return blobIterations(blob) !== PBKDF2_ITERATIONS
 }
 
 function bytesToB64(bytes: Uint8Array): string {
@@ -33,10 +50,10 @@ function b64ToBytes(b64: string): Uint8Array {
 // backed, а WebCrypto хочет ArrayBuffer-backed BufferSource — приводим явно.
 const bs = (u: Uint8Array): BufferSource => u as unknown as BufferSource
 
-async function deriveKey(password: string, salt: Uint8Array): Promise<CryptoKey> {
+async function deriveKey(password: string, salt: Uint8Array, iterations: number): Promise<CryptoKey> {
   const baseKey = await crypto.subtle.importKey('raw', bs(new TextEncoder().encode(password)), 'PBKDF2', false, ['deriveKey'])
   return crypto.subtle.deriveKey(
-    { name: 'PBKDF2', salt: bs(salt), iterations: PBKDF2_ITERATIONS, hash: 'SHA-256' },
+    { name: 'PBKDF2', salt: bs(salt), iterations, hash: 'SHA-256' },
     baseKey,
     { name: 'AES-GCM', length: 256 },
     false,
@@ -47,7 +64,7 @@ async function deriveKey(password: string, salt: Uint8Array): Promise<CryptoKey>
 export async function encryptSecret(secret: string, password: string): Promise<EncryptedBlob> {
   const salt = crypto.getRandomValues(new Uint8Array(SALT_BYTES))
   const iv = crypto.getRandomValues(new Uint8Array(IV_BYTES))
-  const key = await deriveKey(password, salt)
+  const key = await deriveKey(password, salt, PBKDF2_ITERATIONS)
   const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv: bs(iv) }, key, bs(new TextEncoder().encode(secret)))
   return {
     v: 1,
@@ -55,6 +72,7 @@ export async function encryptSecret(secret: string, password: string): Promise<E
     salt: bytesToB64(salt),
     iv: bytesToB64(iv),
     ct: bytesToB64(new Uint8Array(ct)),
+    iter: PBKDF2_ITERATIONS,
   }
 }
 
@@ -66,7 +84,7 @@ export class WrongPasswordError extends Error {
 }
 
 export async function decryptSecret(blob: EncryptedBlob, password: string): Promise<string> {
-  const key = await deriveKey(password, b64ToBytes(blob.salt))
+  const key = await deriveKey(password, b64ToBytes(blob.salt), blobIterations(blob))
   try {
     const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: bs(b64ToBytes(blob.iv)) }, key, bs(b64ToBytes(blob.ct)))
     return new TextDecoder().decode(pt)

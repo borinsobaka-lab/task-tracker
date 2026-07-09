@@ -3,7 +3,7 @@
 // пишется владельцем с токеном при первичной настройке / смене пароля.
 
 import { b64DecodeUtf8, b64EncodeUtf8 } from './utils'
-import { decryptSecret, encryptSecret, isEncryptedBlob, type EncryptedBlob } from './crypto'
+import { blobNeedsRehash, decryptSecret, encryptSecret, isEncryptedBlob, type EncryptedBlob } from './crypto'
 import { AUTH_REPO } from './config'
 
 const API = 'https://api.github.com'
@@ -57,7 +57,17 @@ export async function getAuthState(): Promise<AuthState> {
 
 /** Проверяет пароль и возвращает расшифрованный токен. Бросает WrongPasswordError. */
 export async function unlockToken(blob: EncryptedBlob, password: string): Promise<string> {
-  return decryptSecret(blob, password)
+  const token = await decryptSecret(blob, password)
+  // Одноразовая тихая миграция: старый auth.json (250 000 итераций PBKDF2)
+  // не может проверить Telegram-бот на Cloudflare Workers (там лимит 100 000).
+  // При первом же входе с паролем пере-шифровываем ключ на новое число итераций —
+  // в фоне, не задерживая вход; ошибки (нет прав на запись/сеть) не мешают входу.
+  if (blobNeedsRehash(blob)) {
+    void saveEncryptedToken(token, password).catch(() => {
+      /* миграцию повторит следующий вход */
+    })
+  }
+  return token
 }
 
 /**

@@ -2,26 +2,30 @@
 // Запуск: node bot/worker/test.mjs   (Node ≥ 20 с глобальным Web Crypto)
 
 import assert from 'node:assert/strict'
-import { verifyPassword, assignedCardIds, upcomingWithin, activeMembers, morningText, eveningText } from './worker.js'
+import { verifyPassword, authNeedsAppLogin, assignedCardIds, upcomingWithin, activeMembers, morningText, eveningText } from './worker.js'
 
 function b64(bytes) {
   let s = ''
   for (const b of bytes) s += String.fromCharCode(b)
   return btoa(s)
 }
-async function makeBlob(secret, password) {
+// iterations по умолчанию 100 000 — как теперь шифрует приложение (лимит воркера).
+// Передайте 250000 и iter=false, чтобы сымитировать старый файл без поля iter.
+async function makeBlob(secret, password, iterations = 100000, withIter = true) {
   const salt = crypto.getRandomValues(new Uint8Array(16))
   const iv = crypto.getRandomValues(new Uint8Array(12))
   const baseKey = await crypto.subtle.importKey('raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveKey'])
   const key = await crypto.subtle.deriveKey(
-    { name: 'PBKDF2', salt, iterations: 250000, hash: 'SHA-256' },
+    { name: 'PBKDF2', salt, iterations, hash: 'SHA-256' },
     baseKey,
     { name: 'AES-GCM', length: 256 },
     false,
     ['encrypt'],
   )
   const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, new TextEncoder().encode(secret))
-  return { v: 1, configured: true, salt: b64(salt), iv: b64(iv), ct: b64(new Uint8Array(ct)) }
+  const blob = { v: 1, configured: true, salt: b64(salt), iv: b64(iv), ct: b64(new Uint8Array(ct)) }
+  if (withIter) blob.iter = iterations
+  return blob
 }
 function wall(ms, tz) {
   const p = {}
@@ -41,10 +45,15 @@ function wall(ms, tz) {
 const tz = 'Asia/Tbilisi'
 const env = { TZ_NAME: tz }
 
-// 1) Пароль
+// 1) Пароль (новый формат: 100 000 итераций + поле iter — как шифрует приложение)
 const blob = await makeBlob('ghp_secret_token', 'hunter2')
+assert.equal(authNeedsAppLogin(blob), false, 'новый ключ (100k) воркер проверяет сам')
 assert.equal(await verifyPassword(blob, 'hunter2'), true, 'верный пароль принят')
 assert.equal(await verifyPassword(blob, 'wrong'), false, 'неверный пароль отклонён')
+
+// 1b) Старый ключ (250 000 итераций, без поля iter) воркер не осилит — просит вход в приложение
+const legacy = await makeBlob('ghp_secret_token', 'hunter2', 250000, false)
+assert.equal(authNeedsAppLogin(legacy), true, 'старый ключ требует входа в приложение')
 
 // 2) Личные уведомления
 const board = {
