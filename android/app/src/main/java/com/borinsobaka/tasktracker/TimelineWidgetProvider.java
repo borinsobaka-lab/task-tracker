@@ -17,7 +17,8 @@ import java.util.Calendar;
 /** Виджет-таймлайн на рабочем столе: список задач из публичного timeline.json. */
 public class TimelineWidgetProvider extends AppWidgetProvider {
 
-    static final String ACTION_REFRESH = "com.borinsobaka.tasktracker.ACTION_REFRESH";
+    static final String ACTION_REFRESH = "com.borinsobaka.tasktracker.ACTION_REFRESH"; // тихо перечитать список
+    static final String ACTION_RELOAD = "com.borinsobaka.tasktracker.ACTION_RELOAD";   // кнопка «Обновить»: с крутилкой
     static final String ACTION_BAR = "com.borinsobaka.tasktracker.ACTION_BAR"; // обновить число задач в шапке
 
     private static final String[] MON = {"янв", "фев", "мар", "апр", "мая", "июн", "июл", "авг", "сен", "окт", "ноя", "дек"};
@@ -44,8 +45,11 @@ public class TimelineWidgetProvider extends AppWidgetProvider {
         int[] ids = mgr.getAppWidgetIds(new ComponentName(ctx, TimelineWidgetProvider.class));
 
         if (ACTION_REFRESH.equals(action)) {
-            // «Обновить»: форсим свежую загрузку и крутим индикатор вместо кнопки,
-            // чтобы было видно, что нажатие сработало. Крутилку снимем в ACTION_BAR.
+            // Тихое обновление (поминутный тик, уход из приложения) — без крутилки.
+            mgr.notifyAppWidgetViewDataChanged(ids, R.id.widget_list);
+        } else if (ACTION_RELOAD.equals(action)) {
+            // Нажата кнопка «Обновить»: форсим свежую загрузку и показываем крутилку
+            // вместо кнопки, чтобы было видно, что нажатие сработало (снимем в ACTION_BAR).
             TimelineRemoteViewsFactory.invalidate();
             for (int id : ids) {
                 RemoteViews rv = new RemoteViews(ctx.getPackageName(), R.layout.widget_timeline);
@@ -131,8 +135,8 @@ public class TimelineWidgetProvider extends AppWidgetProvider {
                 ctx, 0, click, PendingIntent.FLAG_UPDATE_CURRENT | mutable);
         rv.setPendingIntentTemplate(R.id.widget_list, clickPI);
 
-        // Кнопка «Обновить»
-        Intent refresh = new Intent(ctx, TimelineWidgetProvider.class).setAction(ACTION_REFRESH);
+        // Кнопка «Обновить» — с крутилкой (ACTION_RELOAD, отдельно от тихого тика)
+        Intent refresh = new Intent(ctx, TimelineWidgetProvider.class).setAction(ACTION_RELOAD);
         PendingIntent refreshPI = PendingIntent.getBroadcast(
                 ctx, 0, refresh, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
         rv.setOnClickPendingIntent(R.id.widget_refresh, refreshPI);
