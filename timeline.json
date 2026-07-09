@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-09T10:00:56.297Z",
+  "generatedAt": "2026-07-09T10:01:10.682Z",
   "items": [
     {
       "id": "2c23ac8a-8875-4b23-9d1d-7724145cf55c",
@@ -249,7 +249,7 @@
       "id": "a3068b7f-5671-4b31-9de1-083a971846ba",
       "title": "Забрать гамаки и веревку в студии Ваке",
       "date": "2026-07-09",
-      "start": "16:00",
+      "start": "15:00",
       "durationMin": 60,
       "priorityColor": "#eab308",
       "members": [
@@ -263,7 +263,7 @@
       "id": "271651f5-f48a-48d7-b336-df9b31baea1b",
       "title": "Подготовить новые базы для рассылки и тексты для рассылок",
       "date": "2026-07-09",
-      "start": "17:00",
+      "start": "16:00",
       "durationMin": 60,
       "kind": "task",
       "priorityColor": "#ef4444",
@@ -364,6 +364,20 @@
       ]
     },
     {
+      "id": "53588c8a-da9d-4ec4-bdab-6331a6249338",
+      "title": "Полить цветы",
+      "date": "2026-07-11",
+      "start": "14:00",
+      "durationMin": 60,
+      "priorityColor": "#22c55e",
+      "members": [
+        {
+          "name": "Настя",
+          "color": "#f97316"
+        }
+      ]
+    },
+    {
       "id": "6f41f6a1-b55f-430d-9137-500c7ec8c69b",
       "title": "Paddle",
       "date": "2026-07-11",
@@ -374,20 +388,6 @@
         {
           "name": "Вова",
           "color": "#84cc16"
-        }
-      ]
-    },
-    {
-      "id": "53588c8a-da9d-4ec4-bdab-6331a6249338",
-      "title": "Полить цветы",
-      "date": "2026-07-12",
-      "start": "16:00",
-      "durationMin": 60,
-      "priorityColor": "#22c55e",
-      "members": [
-        {
-          "name": "Настя",
-          "color": "#f97316"
         }
       ]
     },
