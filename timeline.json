@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-09T10:03:34.105Z",
+  "generatedAt": "2026-07-09T10:05:33.523Z",
   "items": [
     {
       "id": "2c23ac8a-8875-4b23-9d1d-7724145cf55c",
@@ -267,6 +267,20 @@
       "durationMin": 60,
       "kind": "task",
       "priorityColor": "#ef4444",
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        }
+      ]
+    },
+    {
+      "id": "26358020-2bda-4be4-a684-c148f824c8a2",
+      "title": "Наклеить нумирацию на шкафчике",
+      "date": "2026-07-09",
+      "start": "18:00",
+      "durationMin": 30,
+      "priorityColor": "#eab308",
       "members": [
         {
           "name": "Вова",
