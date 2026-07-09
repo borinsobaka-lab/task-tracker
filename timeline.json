@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-09T07:21:53.892Z",
+  "generatedAt": "2026-07-09T07:22:28.463Z",
   "items": [
     {
       "id": "2c23ac8a-8875-4b23-9d1d-7724145cf55c",
@@ -377,20 +377,6 @@
       ]
     },
     {
-      "id": "2402ddea-2832-4b1a-b14e-022a9eca58a8",
-      "title": "Встреча с владельцем Lady Stretch Дмитрием",
-      "date": "2026-07-14",
-      "start": "12:30",
-      "durationMin": 60,
-      "kind": "meeting",
-      "members": [
-        {
-          "name": "Вова",
-          "color": "#84cc16"
-        }
-      ]
-    },
-    {
       "id": "c6d7f4c1-18c6-48a1-84c7-dd7625dc4e06",
       "title": "Оплата помещения Ваке",
       "date": "2026-07-16",
@@ -556,6 +542,20 @@
       "id": "e146e040-5ad9-4caf-a816-b8a906033daf",
       "title": "Встреча с владельцем Lady Stretch Дмитрием",
       "date": "2026-08-19",
+      "start": "14:00",
+      "durationMin": 60,
+      "kind": "meeting",
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        }
+      ]
+    },
+    {
+      "id": "3234bcf3-8046-46e2-9f29-34bb8d841559",
+      "title": "Встреча с владельцем Lady Stretch Дмитрием",
+      "date": "2026-08-26",
       "start": "14:00",
       "durationMin": 60,
       "kind": "meeting",
