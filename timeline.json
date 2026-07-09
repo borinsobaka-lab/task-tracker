@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-09T10:13:56.464Z",
+  "generatedAt": "2026-07-09T10:14:04.117Z",
   "items": [
     {
       "id": "2c23ac8a-8875-4b23-9d1d-7724145cf55c",
@@ -266,6 +266,7 @@
       "start": "16:00",
       "durationMin": 60,
       "kind": "task",
+      "priorityColor": "#ef4444",
       "members": [
         {
           "name": "Вова",
