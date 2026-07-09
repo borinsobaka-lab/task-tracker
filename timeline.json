@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-09T10:01:10.682Z",
+  "generatedAt": "2026-07-09T10:01:25.247Z",
   "items": [
     {
       "id": "2c23ac8a-8875-4b23-9d1d-7724145cf55c",
@@ -368,7 +368,7 @@
       "title": "Полить цветы",
       "date": "2026-07-11",
       "start": "14:00",
-      "durationMin": 60,
+      "durationMin": 120,
       "priorityColor": "#22c55e",
       "members": [
         {
