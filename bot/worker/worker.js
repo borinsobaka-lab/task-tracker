@@ -90,19 +90,33 @@ export async function loadAuthBlob(env) {
 }
 
 export async function loadBoard(env) {
+  const missing = ['DATA_OWNER', 'DATA_REPO', 'DATA_BRANCH'].filter((k) => !env[k])
+  if (missing.length) throw new Error('не заданы переменные ' + missing.join(', '))
+  if (!env.DATA_TOKEN) throw new Error('не задан секрет DATA_TOKEN')
+  const where = `${env.DATA_OWNER}/${env.DATA_REPO}@${env.DATA_BRANCH}/board.json`
   const url = `https://api.github.com/repos/${env.DATA_OWNER}/${env.DATA_REPO}/contents/board.json?ref=${encodeURIComponent(
     env.DATA_BRANCH,
-  )}`
-  const res = await fetch(url, {
-    headers: {
-      Authorization: `Bearer ${env.DATA_TOKEN}`,
-      Accept: 'application/vnd.github.raw+json',
-      'X-GitHub-Api-Version': '2022-11-28',
-      'User-Agent': 'tasktracker-bot',
-    },
-    cf: { cacheTtl: 0 },
-  })
-  if (!res.ok) throw new Error('board.json: ' + res.status)
+  )}&ts=${Date.now()}`
+  let res
+  try {
+    res = await fetch(url, {
+      headers: {
+        Authorization: `Bearer ${env.DATA_TOKEN}`,
+        Accept: 'application/vnd.github.raw+json',
+        'X-GitHub-Api-Version': '2022-11-28',
+        'User-Agent': 'tasktracker-bot',
+      },
+    })
+  } catch (e) {
+    throw new Error('нет сети до GitHub (' + ((e && e.message) || e) + ')')
+  }
+  if (!res.ok) {
+    const hint =
+      res.status === 401 ? ' — токен DATA_TOKEN неверный или просрочен'
+      : res.status === 404 ? ' — токену нет доступа к приватному репозиторию данных, либо нет board.json на этой ветке'
+      : ''
+    throw new Error(`GitHub вернул ${res.status} для ${where}${hint}`)
+  }
   return res.json()
 }
 
@@ -503,8 +517,8 @@ async function onMessage(msg, env) {
     let board
     try {
       board = await loadBoard(env)
-    } catch {
-      await tgSend(env, chatId, 'Пароль верный, но не удалось получить список участников. Попробуйте позже.')
+    } catch (e) {
+      await tgSend(env, chatId, 'Пароль верный, но не удалось получить список участников: ' + esc((e && e.message) || String(e)))
       return
     }
     const members = activeMembers(board)
