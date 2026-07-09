@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-09T17:29:46.231Z",
+  "generatedAt": "2026-07-09T23:08:41.246Z",
   "items": [
     {
       "id": "2c23ac8a-8875-4b23-9d1d-7724145cf55c",
@@ -696,6 +696,24 @@
       "id": "3495f2c9-bee6-46f2-9afb-6da774c9a007",
       "title": "Настя и Вова // Дейли",
       "date": "2026-12-09",
+      "start": "13:30",
+      "durationMin": 60,
+      "kind": "meeting",
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        },
+        {
+          "name": "Настя",
+          "color": "#ec4899"
+        }
+      ]
+    },
+    {
+      "id": "3dcfec61-c215-4e53-9a8f-b023b22ecd17",
+      "title": "Настя и Вова // Дейли",
+      "date": "2027-01-09",
       "start": "13:30",
       "durationMin": 60,
       "kind": "meeting",
