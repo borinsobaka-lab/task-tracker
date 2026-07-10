@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-10T10:05:31.972Z",
+  "generatedAt": "2026-07-10T10:09:45.750Z",
   "items": [
     {
       "id": "2c23ac8a-8875-4b23-9d1d-7724145cf55c",
@@ -182,17 +182,6 @@
       "start": "22:00",
       "durationMin": 120,
       "kind": "meeting",
-      "members": [
-        {
-          "name": "Вова",
-          "color": "#84cc16"
-        }
-      ]
-    },
-    {
-      "id": "babb9d1a-b98d-4096-909e-8ad712bbacf4",
-      "title": "Оплата ИП Грузии и декларации",
-      "date": "2026-07-09",
       "members": [
         {
           "name": "Вова",
@@ -388,6 +377,17 @@
       "start": "22:00",
       "durationMin": 120,
       "kind": "meeting",
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        }
+      ]
+    },
+    {
+      "id": "babb9d1a-b98d-4096-909e-8ad712bbacf4",
+      "title": "Оплата ИП Грузии и декларации",
+      "date": "2026-07-11",
       "members": [
         {
           "name": "Вова",
