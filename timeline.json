@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-10T11:56:35.157Z",
+  "generatedAt": "2026-07-10T11:56:58.098Z",
   "items": [
     {
       "id": "2c23ac8a-8875-4b23-9d1d-7724145cf55c",
@@ -489,7 +489,12 @@
       "start": "20:00",
       "durationMin": 120,
       "kind": "meeting",
-      "members": []
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        }
+      ]
     },
     {
       "id": "11185ab7-3dea-4802-8d20-9229a6ef65a2",
