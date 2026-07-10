@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-10T11:55:40.983Z",
+  "generatedAt": "2026-07-10T11:55:48.635Z",
   "items": [
     {
       "id": "2c23ac8a-8875-4b23-9d1d-7724145cf55c",
@@ -470,11 +470,16 @@
     },
     {
       "id": "41e1f0d7-ed62-4abc-93ad-7c3e4525d5a0",
-      "title": "Новая задача",
+      "title": "Падел",
       "date": "2026-07-16",
       "start": "20:00",
-      "durationMin": 60,
-      "members": []
+      "durationMin": 120,
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        }
+      ]
     },
     {
       "id": "11185ab7-3dea-4802-8d20-9229a6ef65a2",
