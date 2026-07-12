@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-12T08:35:56.248Z",
+  "generatedAt": "2026-07-12T08:36:03.154Z",
   "items": [
     {
       "id": "2c23ac8a-8875-4b23-9d1d-7724145cf55c",
@@ -427,6 +427,7 @@
       "id": "3d0ff9b4-2cb2-4eca-9bef-cd5cfa156472",
       "title": "Обновить данные по ТБС",
       "date": "2026-07-12",
+      "priorityColor": "#ef4444",
       "members": [
         {
           "name": "Вова",
