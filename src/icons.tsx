@@ -19,12 +19,12 @@ import {
   MenuDots,
   MinusCircle,
   Notes,
+  NotesMinimalistic,
   Paperclip,
   Refresh,
   Rocket,
   Settings,
   SortVertical,
-  Target,
   TrashBinMinimalistic,
   Videocamera,
   Widget,
@@ -40,7 +40,7 @@ function duotone(Ico: ComponentType<IconProps>): ComponentType<IconProps> {
 export const IcoBrand = duotone(ClipboardList)
 export const IcoBoard = duotone(Widget)
 export const IcoCalendar = duotone(Calendar)
-export const IcoMatrix = duotone(Target)
+export const IcoMatrix = duotone(NotesMinimalistic)
 export const IcoRecurring = duotone(Refresh)
 export const IcoMeeting = duotone(Videocamera)
 export const IcoCamera = duotone(Camera)
