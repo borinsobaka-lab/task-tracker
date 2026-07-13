@@ -3,7 +3,7 @@
 // удаления — через надгробия (deleted: true). После слияния доска нормализуется:
 // каждая живая карточка лежит ровно в одной живой колонке.
 
-import type { ActivityEntry, Attachment, BoardData, Card, ChecklistItem, Column, Comment, Member, ID, Series } from './types'
+import type { Attachment, BoardData, Card, ChecklistItem, Column, Comment, Member, ID, Series } from './types'
 import { nowISO } from './utils'
 
 const TOMBSTONE_TTL_MS = 45 * 24 * 60 * 60 * 1000
@@ -87,20 +87,6 @@ function mergeById<T extends { id: ID; updatedAt: string }>(local: T[], remote: 
   return out
 }
 
-/** Журнал истории — объединение по id (события почти неизменны; при коалесценции
- *  побеждает запись с более поздним ts), сортировка по времени, ограничение хвоста. */
-function mergeActivity(a?: ActivityEntry[], b?: ActivityEntry[]): ActivityEntry[] | undefined {
-  if (!a && !b) return undefined
-  const byId = new Map<ID, ActivityEntry>()
-  for (const e of a ?? []) byId.set(e.id, e)
-  for (const e of b ?? []) {
-    const cur = byId.get(e.id)
-    if (!cur || e.ts > cur.ts) byId.set(e.id, e)
-  }
-  const merged = [...byId.values()].sort((x, y) => x.ts.localeCompare(y.ts))
-  return merged.length > 500 ? merged.slice(merged.length - 500) : merged
-}
-
 export function mergeBoards(local: BoardData, remote: BoardData): BoardData {
   const members: Member[] = mergeById(local.members, remote.members)
   const columns: Column[] = mergeById(local.columns, remote.columns)
@@ -127,7 +113,6 @@ export function mergeBoards(local: BoardData, remote: BoardData): BoardData {
     columns,
     cards,
     series,
-    activity: mergeActivity(local.activity, remote.activity),
     updatedAt: local.updatedAt >= remote.updatedAt ? local.updatedAt : remote.updatedAt,
   })
 }
@@ -213,7 +198,11 @@ export function normalizeBoard(data: BoardData): BoardData {
     series[id] = s
   }
 
-  return { ...data, columns: keptColumns, cards, series }
+  const result = { ...data, columns: keptColumns, cards, series }
+  // Журнал истории проекта убран из приложения — вычищаем его из старых данных,
+  // чтобы не хранить и не тащить при загрузке.
+  delete (result as { activity?: unknown }).activity
+  return result
 }
 
 export function emptyBoard(): BoardData {

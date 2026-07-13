@@ -154,43 +154,6 @@ export interface Column {
   updatedAt: string
 }
 
-/** Виды событий журнала истории проекта. */
-export type ActivityKind =
-  | 'card.create'
-  | 'card.delete'
-  | 'card.rename'
-  | 'card.describe'
-  | 'card.move'
-  | 'card.done'
-  | 'card.undone'
-  | 'card.schedule'
-  | 'card.assign'
-  | 'comment.add'
-  | 'comment.edit'
-  | 'comment.delete'
-  | 'checklist.add'
-  | 'meeting.create'
-  | 'meeting.delete'
-  | 'meeting.recurring'
-  | 'series.add'
-  | 'series.delete'
-  | 'priority.change'
-  | 'attachment.add'
-
-/** Одна запись в журнале истории (кто, что, когда, над какой задачей). */
-export interface ActivityEntry {
-  id: ID
-  ts: string
-  actorId?: ID
-  actorName: string
-  kind: ActivityKind
-  cardId?: ID
-  /** Снимок названия задачи (карточку могли позже удалить). */
-  cardTitle?: string
-  /** Доп. деталь: колонка, приоритет, срок, текст пункта/комментария и т.п. */
-  detail?: string
-}
-
 export interface BoardData {
   schemaVersion: 1
   members: Member[]
@@ -198,7 +161,5 @@ export interface BoardData {
   cards: Record<ID, Card>
   /** Шаблоны повторяющихся задач (может отсутствовать в старых данных) */
   series?: Record<ID, Series>
-  /** Журнал истории проекта (может отсутствовать в старых данных) */
-  activity?: ActivityEntry[]
   updatedAt: string
 }

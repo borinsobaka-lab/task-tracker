@@ -13,7 +13,6 @@ import {
   CheckCircle,
   ClipboardList,
   CloseCircle,
-  History,
   Link,
   Magnifer,
   MenuDots,
@@ -61,7 +60,6 @@ export const IcoSearch = duotone(Magnifer)
 export const IcoLaunch = duotone(Rocket)
 export const IcoLink = duotone(Link)
 export const IcoComment = duotone(ChatRoundLine)
-export const IcoHistory = duotone(History)
 
 /** Чистый тонкий крестик закрытия (аккуратнее и крупнее, чем залитый кружок). */
 export function IcoX({ size = 22, color = 'currentColor' }: { size?: number; color?: string }) {

@@ -6,7 +6,7 @@ import { useBoard } from '../store'
 import type { ID } from '../types'
 import { QUADRANT_COLOR, QUADRANT_LABEL } from '../eisenhower'
 import { cardMatchesQuery } from '../utils'
-import { IcoBoard, IcoCalendar, IcoHistory, IcoMatrix, IcoRecurring, IcoSearch, IcoSettings } from '../icons'
+import { IcoBoard, IcoCalendar, IcoMatrix, IcoRecurring, IcoSearch, IcoSettings } from '../icons'
 import './header.css'
 
 const STATUS_LABEL: Record<string, { text: string; cls: string }> = {
@@ -29,13 +29,11 @@ export function Header({
   view,
   onViewChange,
   onOpenSettings,
-  onOpenHistory,
   onOpenCard,
 }: {
   view: ViewKind
   onViewChange: (v: ViewKind) => void
   onOpenSettings: () => void
-  onOpenHistory: () => void
   onOpenCard: (id: ID) => void
 }) {
   const store = useBoard()
@@ -71,9 +69,6 @@ export function Header({
           <span className="sync-dot" />
           {status.text}
         </span>
-        <button className="icon-btn" onClick={onOpenHistory} title="История проекта" aria-label="История проекта">
-          <IcoHistory size={20} />
-        </button>
         <button className="icon-btn" onClick={onOpenSettings} title="Настройки" aria-label="Настройки">
           <IcoSettings size={20} />
         </button>

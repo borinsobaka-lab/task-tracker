@@ -15,7 +15,6 @@ import { EisenhowerView } from './components/EisenhowerView'
 import { RecurringView } from './components/RecurringView'
 import { CardModal } from './components/CardModal'
 import { SettingsModal } from './components/SettingsModal'
-import { HistoryModal } from './components/HistoryModal'
 import { Confetti } from './components/Confetti'
 import { TaskStartChime } from './components/TaskStartChime'
 import { QuickAddSheet } from './components/QuickAddSheet'
@@ -211,7 +210,6 @@ function Shell({ onLogout }: { onLogout: () => void }) {
   const [view, setView] = useState<ViewKind>(getSavedView)
   const [selectedCardId, setSelectedCardId] = useState<ID | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
-  const [historyOpen, setHistoryOpen] = useState(false)
   const [quickAddOpen, setQuickAddOpen] = useState(false)
   const [memberFilter, setMemberFilter] = useState<ReadonlySet<ID>>(new Set())
   // Карточка, созданная кнопкой «+» и ещё не заполненная (черновик). Ref на
@@ -333,7 +331,6 @@ function Shell({ onLogout }: { onLogout: () => void }) {
         view={view}
         onViewChange={changeView}
         onOpenSettings={() => setSettingsOpen(true)}
-        onOpenHistory={() => setHistoryOpen(true)}
         onOpenCard={setSelectedCardId}
       />
       <main className="app-main">
@@ -358,9 +355,6 @@ function Shell({ onLogout }: { onLogout: () => void }) {
       </button>
       {selectedCardId && <CardModal cardId={selectedCardId} onClose={closeCard} />}
       {settingsOpen && <SettingsModal onClose={() => setSettingsOpen(false)} onLogout={onLogout} />}
-      {historyOpen && (
-        <HistoryModal onClose={() => setHistoryOpen(false)} onOpenCard={(id) => setSelectedCardId(id)} />
-      )}
       {quickAddOpen && <QuickAddSheet onClose={() => setQuickAddOpen(false)} />}
       <Confetti />
       <TaskStartChime />
