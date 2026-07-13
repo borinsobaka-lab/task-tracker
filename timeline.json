@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-13T06:52:14.253Z",
+  "generatedAt": "2026-07-13T06:52:43.845Z",
   "items": [
     {
       "id": "2c23ac8a-8875-4b23-9d1d-7724145cf55c",
@@ -512,12 +512,21 @@
     },
     {
       "id": "1f92f5ab-a2de-4082-bcae-1778b5dfb198",
-      "title": "Без названия",
+      "title": "Еженедельная встреча // Вова Настя",
       "date": "2026-07-13",
       "start": "13:30",
       "durationMin": 60,
       "kind": "meeting",
-      "members": []
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        },
+        {
+          "name": "Настя",
+          "color": "#ec4899"
+        }
+      ]
     },
     {
       "id": "9ddccf02-f82c-46a6-afbd-c095f5f558cf",
@@ -644,6 +653,24 @@
       ]
     },
     {
+      "id": "8021fa6e-70ab-49ba-84aa-08d6fc0d374b",
+      "title": "Еженедельная встреча // Вова Настя",
+      "date": "2026-07-16",
+      "start": "13:30",
+      "durationMin": 60,
+      "kind": "meeting",
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        },
+        {
+          "name": "Настя",
+          "color": "#ec4899"
+        }
+      ]
+    },
+    {
       "id": "41e1f0d7-ed62-4abc-93ad-7c3e4525d5a0",
       "title": "Падел",
       "date": "2026-07-16",
@@ -717,6 +744,24 @@
       "members": []
     },
     {
+      "id": "e41d92da-3a1a-4caa-a04b-cd55703c6482",
+      "title": "Еженедельная встреча // Вова Настя",
+      "date": "2026-07-23",
+      "start": "13:30",
+      "durationMin": 60,
+      "kind": "meeting",
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        },
+        {
+          "name": "Настя",
+          "color": "#ec4899"
+        }
+      ]
+    },
+    {
       "id": "34717cd2-0aaf-4d7f-8503-edabee107111",
       "title": "Составление расписания тренировок на следующий месяц",
       "date": "2026-07-25",
@@ -735,6 +780,24 @@
       "durationMin": 60,
       "kind": "meeting",
       "members": []
+    },
+    {
+      "id": "a5a8f590-1b03-4232-a22d-23428e2ad6df",
+      "title": "Еженедельная встреча // Вова Настя",
+      "date": "2026-07-30",
+      "start": "13:30",
+      "durationMin": 60,
+      "kind": "meeting",
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        },
+        {
+          "name": "Настя",
+          "color": "#ec4899"
+        }
+      ]
     },
     {
       "id": "003ae705-dc70-473c-bff4-39e5d8c942e1",
@@ -768,6 +831,24 @@
         {
           "name": "Вова",
           "color": "#84cc16"
+        }
+      ]
+    },
+    {
+      "id": "2c01a748-4e65-4e10-a519-e68cd854a3df",
+      "title": "Еженедельная встреча // Вова Настя",
+      "date": "2026-08-06",
+      "start": "13:30",
+      "durationMin": 60,
+      "kind": "meeting",
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        },
+        {
+          "name": "Настя",
+          "color": "#ec4899"
         }
       ]
     },
