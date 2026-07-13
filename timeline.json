@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-13T05:19:53.515Z",
+  "generatedAt": "2026-07-13T05:19:55.078Z",
   "items": [
     {
       "id": "2c23ac8a-8875-4b23-9d1d-7724145cf55c",
@@ -486,7 +486,7 @@
       "date": "2026-07-13",
       "start": "12:00",
       "durationMin": 60,
-      "kind": "meeting",
+      "kind": "task",
       "priorityColor": "#ef4444",
       "members": [
         {
