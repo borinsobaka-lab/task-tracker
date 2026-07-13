@@ -35,26 +35,32 @@ export function initAudioUnlock(): () => void {
   }
 }
 
-/** Мягкий двухнотный «дзинь» — сигнал о начале запланированной задачи. */
+/** Приятный трёхнотный «дзинь» — сигнал о начале запланированной задачи.
+ *  Подольше и погромче прежнего (чистая синусоида терялась на ноутбучных
+ *  динамиках): три восходящие ноты треугольной волной, последняя дольше звенит. */
 export function playTaskChime(): void {
   const c = getCtx()
   if (!c) return
   if (c.state === 'suspended') void c.resume()
   const t0 = c.currentTime
-  // Две восходящие ноты (A5 → D6), короткие, с мягкой атакой и спадом.
-  const notes = [880, 1174.66]
+  // Восходящее трезвучие A5 → D6 → G6.
+  const notes = [880, 1174.66, 1567.98]
   notes.forEach((freq, i) => {
-    const t = t0 + i * 0.16
+    const last = i === notes.length - 1
+    const t = t0 + i * 0.2
     const osc = c.createOscillator()
     const gain = c.createGain()
-    osc.type = 'sine'
+    // Треугольник богаче обертонами, чем синус, — заметнее на слабых динамиках,
+    // но мягче квадрата, так что сигнал остаётся приятным.
+    osc.type = 'triangle'
     osc.frequency.value = freq
+    const tail = last ? 0.8 : 0.5 // последняя нота звенит дольше — «хвост»
     gain.gain.setValueAtTime(0.0001, t)
-    gain.gain.exponentialRampToValueAtTime(0.22, t + 0.02)
-    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.34)
+    gain.gain.exponentialRampToValueAtTime(last ? 0.34 : 0.3, t + 0.03)
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + tail)
     osc.connect(gain)
     gain.connect(c.destination)
     osc.start(t)
-    osc.stop(t + 0.38)
+    osc.stop(t + tail + 0.05)
   })
 }
