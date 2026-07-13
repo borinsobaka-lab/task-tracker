@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-13T05:19:55.078Z",
+  "generatedAt": "2026-07-13T05:20:01.695Z",
   "items": [
     {
       "id": "2c23ac8a-8875-4b23-9d1d-7724145cf55c",
@@ -570,7 +570,7 @@
       "title": "Встреча с владельцем Lady Stretch Дмитрием",
       "date": "2026-07-14",
       "start": "12:30",
-      "durationMin": 60,
+      "durationMin": 90,
       "kind": "meeting",
       "members": [
         {
@@ -583,7 +583,7 @@
       "id": "f28cdf52-4d33-41d3-b9cf-bdd4fbbfe231",
       "title": "Узнать, кто поставил негативный отзыв на карте и связаться с клиентом",
       "date": "2026-07-14",
-      "start": "13:30",
+      "start": "14:30",
       "durationMin": 60,
       "priorityColor": "#22c55e",
       "members": [
