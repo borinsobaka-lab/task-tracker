@@ -89,12 +89,47 @@ function topUpMeetingSeries(d: BoardData, s: Series): void {
     count++
     key = nextOccurrence(key, s.rule)
   }
+  // Приводим «шапку» будущих экземпляров к шаблону серии (на случай, если они
+  // разошлись — например, старые экземпляры остались без названия).
+  applySharedToInstances(d, s, today)
   const past = own()
     .filter((c) => (c.date ?? '') < today)
     .sort((a, b) => (a.date ?? '').localeCompare(b.date ?? ''))
   for (let i = 0; i < past.length - MEETING_MAX_PAST; i++) {
     past[i].deleted = true
     touch(past[i])
+  }
+}
+
+/**
+ * Приводит общие поля (название, описание, ответственные, ссылка на созвон) всех
+ * живых экземпляров серии-встречи к шаблону серии — у одной встречи «шапка»
+ * одинакова везде. sinceKey — синхронизировать только начиная с этой даты.
+ * Время и дату не трогаем: они у каждого экземпляра свои.
+ */
+function applySharedToInstances(d: BoardData, s: Series, sinceKey = ''): void {
+  for (const c of Object.values(d.cards)) {
+    if (c.seriesId !== s.id || c.deleted) continue
+    if (sinceKey && (c.date ?? '') < sinceKey) continue
+    let ch = false
+    if (c.title !== s.title) {
+      c.title = s.title
+      ch = true
+    }
+    if (c.description !== s.description) {
+      c.description = s.description
+      ch = true
+    }
+    if (c.assigneeIds.join(',') !== s.assigneeIds.join(',')) {
+      c.assigneeIds = [...s.assigneeIds]
+      ch = true
+    }
+    if ((s.meetingUrl ?? '') !== (c.meetingUrl ?? '')) {
+      if (s.meetingUrl) c.meetingUrl = s.meetingUrl
+      else delete c.meetingUrl
+      ch = true
+    }
+    if (ch) touch(c)
   }
 }
 
@@ -664,6 +699,20 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
         }
         Object.assign(card, patch)
         touch(card)
+        // Повторяющаяся встреча: название/описание/ответственные/ссылка одинаковы
+        // у всех экземпляров серии — распространяем правку на серию и остальные.
+        if (card.kind === 'meeting' && card.seriesId && ('title' in patch || 'description' in patch || 'assigneeIds' in patch || 'meetingUrl' in patch)) {
+          const s = d.series?.[card.seriesId]
+          if (s && !s.deleted) {
+            s.title = card.title
+            s.description = card.description
+            s.assigneeIds = [...card.assigneeIds]
+            if (card.meetingUrl) s.meetingUrl = card.meetingUrl
+            else delete s.meetingUrl
+            touch(s)
+            applySharedToInstances(d, s)
+          }
+        }
         // Журнал: осмысленные изменения
         if (patch.kind === 'meeting' && before.kind !== 'meeting') {
           logActivity(d, identity, 'meeting.create', { cardId: id, cardTitle: card.title })
