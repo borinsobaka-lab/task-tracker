@@ -171,10 +171,22 @@ function MeetingRecurrence({ card }: { card: Card }) {
   const [monthdays, setMonthdays] = useState<number[]>(
     series?.rule.monthdays ?? [card.date ? parseDateKey(card.date).getDate() : new Date().getDate()],
   )
+  const [month, setMonth] = useState<number>(
+    series?.rule.month ?? (card.date ? parseDateKey(card.date).getMonth() + 1 : new Date().getMonth() + 1),
+  )
+  const [day, setDay] = useState<number>(
+    series?.rule.day ?? (card.date ? parseDateKey(card.date).getDate() : new Date().getDate()),
+  )
   const first = useRef(true)
 
   const buildRule = (): RecurrenceRule =>
-    freq === 'weekly' ? { freq, weekdays } : freq === 'monthly' ? { freq, monthdays } : { freq: 'daily' }
+    freq === 'weekly'
+      ? { freq, weekdays }
+      : freq === 'monthly'
+        ? { freq, monthdays }
+        : freq === 'yearly'
+          ? { freq, month, day }
+          : { freq: 'daily' }
 
   // Применяем изменения частоты/дней, когда повтор включён (первый рендер пропускаем)
   useEffect(() => {
@@ -186,7 +198,7 @@ function MeetingRecurrence({ card }: { card: Card }) {
     const rule = buildRule()
     if (ruleIsValid(rule)) store.applyMeetingRecurrence(card.id, rule)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [freq, weekdays, monthdays])
+  }, [freq, weekdays, monthdays, month, day])
 
   const toggle = (checked: boolean) => {
     setOn(checked)
@@ -214,6 +226,10 @@ function MeetingRecurrence({ card }: { card: Card }) {
             setWeekdays={setWeekdays}
             monthdays={monthdays}
             setMonthdays={setMonthdays}
+            month={month}
+            setMonth={setMonth}
+            day={day}
+            setDay={setDay}
           />
           {!ruleIsValid(rule) && (
             <div className="login-error" style={{ marginTop: 8 }}>

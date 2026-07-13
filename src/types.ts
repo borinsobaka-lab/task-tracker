@@ -58,7 +58,7 @@ export type CardKind = 'task' | 'meeting'
 
 // ---------- Повторяющиеся (регулярные) задачи ----------
 
-export type RecurFreq = 'daily' | 'weekly' | 'monthly'
+export type RecurFreq = 'daily' | 'weekly' | 'monthly' | 'yearly'
 
 export interface RecurrenceRule {
   freq: RecurFreq
@@ -66,6 +66,10 @@ export interface RecurrenceRule {
   weekdays?: number[]
   /** для monthly: числа месяца 1..31 */
   monthdays?: number[]
+  /** для yearly: месяц 1..12 */
+  month?: number
+  /** для yearly: число месяца 1..31 (если такого дня в месяце нет — последний день) */
+  day?: number
 }
 
 /** Шаблон повторяющейся задачи или встречи. Экземпляры — обычные Card со seriesId. */

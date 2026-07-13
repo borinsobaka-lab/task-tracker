@@ -219,6 +219,22 @@
   color: #fff;
 }
 
+/* Ежегодно: выбор дня и месяца (напр. для дней рождения) */
+.rec-yearly {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+.rec-yearly .input {
+  width: auto;
+}
+.rec-yearly .input:first-child {
+  flex: 0 0 84px;
+}
+.rec-yearly .input:last-child {
+  flex: 1;
+}
+
 .rec-monthdays {
   display: grid;
   grid-template-columns: repeat(7, 1fr);

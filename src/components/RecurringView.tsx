@@ -28,6 +28,7 @@ const FREQ_FILTERS: { v: 'all' | RecurFreq; label: string }[] = [
   { v: 'daily', label: 'Ежедневные' },
   { v: 'weekly', label: 'Еженедельные' },
   { v: 'monthly', label: 'Ежемесячные' },
+  { v: 'yearly', label: 'Ежегодные' },
 ]
 
 export function RecurringView({ memberFilter, onMemberFilterChange, onOpenCard }: ViewProps) {
@@ -172,6 +173,8 @@ function RecurringEditor({ series, onClose }: { series: Series | null; onClose: 
   const [freq, setFreq] = useState<RecurFreq>(series?.rule.freq ?? 'weekly')
   const [weekdays, setWeekdays] = useState<number[]>(series?.rule.weekdays ?? [new Date().getDay()])
   const [monthdays, setMonthdays] = useState<number[]>(series?.rule.monthdays ?? [new Date().getDate()])
+  const [month, setMonth] = useState<number>(series?.rule.month ?? new Date().getMonth() + 1)
+  const [day, setDay] = useState<number>(series?.rule.day ?? new Date().getDate())
   const [hasTime, setHasTime] = useState(!!series?.start)
   const [time, setTime] = useState(series?.start ?? '10:00')
   const [duration, setDuration] = useState(series?.durationMin ?? 60)
@@ -180,6 +183,7 @@ function RecurringEditor({ series, onClose }: { series: Series | null; onClose: 
   const buildRule = (): RecurrenceRule => {
     if (freq === 'weekly') return { freq, weekdays }
     if (freq === 'monthly') return { freq, monthdays }
+    if (freq === 'yearly') return { freq, month, day }
     return { freq: 'daily' }
   }
 
@@ -260,6 +264,10 @@ function RecurringEditor({ series, onClose }: { series: Series | null; onClose: 
           setWeekdays={setWeekdays}
           monthdays={monthdays}
           setMonthdays={setMonthdays}
+          month={month}
+          setMonth={setMonth}
+          day={day}
+          setDay={setDay}
         />
 
         <label className="rec-time-toggle" style={{ marginTop: 14 }}>
