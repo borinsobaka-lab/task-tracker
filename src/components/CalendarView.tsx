@@ -18,7 +18,6 @@ import {
   clamp,
   parseDateKey,
   fmtDayMonth,
-  fmtFullDate,
   fmtWeekday,
   minToTime,
   startOfWeek,
@@ -143,10 +142,10 @@ function timeRange(startMin: number, endMin: number): string {
 }
 
 function rangeTitle(start: Date, end: Date): string {
-  const full = (d: Date) => fmtFullDate(d).replace(/\s*г\.\s*$/, '')
-  if (start.getFullYear() !== end.getFullYear()) return `${full(start)} – ${full(end)}`
-  if (start.getMonth() !== end.getMonth()) return `${fmtDayMonth(start)} – ${full(end)}`
-  return `${start.getDate()} – ${full(end)}`
+  // Год не показываем — только число и месяц.
+  if (start.getMonth() !== end.getMonth() || start.getFullYear() !== end.getFullYear())
+    return `${fmtDayMonth(start)} – ${fmtDayMonth(end)}`
+  return `${start.getDate()} – ${fmtDayMonth(end)}`
 }
 
 // ---------- Компонент ----------
@@ -828,29 +827,25 @@ export function CalendarView({ memberFilter, onMemberFilterChange, onOpenCard, o
         </select>
         {!timeline && (
           <>
-            <div className="cal-nav">
-              <button
-                className="icon-btn"
-                title="Назад"
-                aria-label="Показать предыдущие дни"
-                onClick={() => setAnchor((a) => addDays(a, -nDays))}
-              >
-                <IcoArrowLeft size={20} />
-              </button>
-              <button
-                className="icon-btn"
-                title="Вперёд"
-                aria-label="Показать следующие дни"
-                onClick={() => setAnchor((a) => addDays(a, nDays))}
-              >
-                <IcoArrowRight size={20} />
-              </button>
-            </div>
+            <button
+              className="icon-btn cal-arrow"
+              title="Назад"
+              aria-label="Показать предыдущие дни"
+              onClick={() => setAnchor((a) => addDays(a, -nDays))}
+            >
+              <IcoArrowLeft size={20} />
+            </button>
             <h2 className="cal-title">
-              {days.length === 1
-                ? fmtFullDate(rangeStart).replace(/\s*г\.\s*$/, '')
-                : rangeTitle(rangeStart, days[days.length - 1])}
+              {days.length === 1 ? fmtDayMonth(rangeStart) : rangeTitle(rangeStart, days[days.length - 1])}
             </h2>
+            <button
+              className="icon-btn cal-arrow"
+              title="Вперёд"
+              aria-label="Показать следующие дни"
+              onClick={() => setAnchor((a) => addDays(a, nDays))}
+            >
+              <IcoArrowRight size={20} />
+            </button>
           </>
         )}
       </SubHeader>

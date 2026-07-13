@@ -38,9 +38,9 @@ function duotone(Ico: ComponentType<IconProps>): ComponentType<IconProps> {
 }
 
 export const IcoBrand = duotone(ClipboardList)
-export const IcoBoard = duotone(Widget)
+export const IcoBoard = duotone(NotesMinimalistic)
 export const IcoCalendar = duotone(Calendar)
-export const IcoMatrix = duotone(NotesMinimalistic)
+export const IcoMatrix = duotone(Widget)
 export const IcoRecurring = duotone(Refresh)
 export const IcoMeeting = duotone(Videocamera)
 export const IcoCamera = duotone(Camera)

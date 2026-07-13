@@ -519,6 +519,11 @@
   display: flex;
   flex-direction: column;
 }
+/* Пустой список не должен добавлять лишний отступ (gap секции) до поля ввода —
+   чтобы расстояние было таким же, как у «Описания». */
+.cm-check-list:empty {
+  display: none;
+}
 
 .cm-check-row {
   display: flex;
@@ -571,7 +576,6 @@
 }
 
 .cm-check-add {
-  margin-top: 4px;
   background: var(--surface);
 }
 
