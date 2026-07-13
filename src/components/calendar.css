@@ -33,7 +33,8 @@
 
 .cal-nav {
   display: flex;
-  gap: 2px;
+  align-items: center;
+  gap: 3px; /* небольшой отступ между стрелками и диапазоном дат */
 }
 
 .cal-nav .icon-btn,

@@ -826,7 +826,7 @@ export function CalendarView({ memberFilter, onMemberFilterChange, onOpenCard, o
           <option value="timeline">Таймлайн</option>
         </select>
         {!timeline && (
-          <>
+          <div className="cal-nav">
             <button
               className="icon-btn cal-arrow"
               title="Назад"
@@ -846,7 +846,7 @@ export function CalendarView({ memberFilter, onMemberFilterChange, onOpenCard, o
             >
               <IcoArrowRight size={20} />
             </button>
-          </>
+          </div>
         )}
       </SubHeader>
 
