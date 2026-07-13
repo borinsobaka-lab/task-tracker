@@ -141,6 +141,17 @@ export function isMobileViewport(): boolean {
   return typeof window !== 'undefined' && window.matchMedia('(max-width: 720px)').matches
 }
 
+/**
+ * Звуковой сигнал в момент начала запланированной задачи (только на этом
+ * устройстве, где открыто приложение). По умолчанию включён.
+ */
+export function getSoundOn(): boolean {
+  return localStorage.getItem('tt.sound') !== '0'
+}
+export function setSoundOn(on: boolean): void {
+  localStorage.setItem('tt.sound', on ? '1' : '0')
+}
+
 /** Демо-режим: локальное хранилище вместо GitHub (для тестов и предпросмотра) */
 export function isDemoMode(): boolean {
   if (typeof location === 'undefined') return false

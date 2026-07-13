@@ -17,6 +17,7 @@ import { CardModal } from './components/CardModal'
 import { SettingsModal } from './components/SettingsModal'
 import { HistoryModal } from './components/HistoryModal'
 import { Confetti } from './components/Confetti'
+import { TaskStartChime } from './components/TaskStartChime'
 import { QuickAddSheet } from './components/QuickAddSheet'
 import { IdentityScreen } from './components/IdentityScreen'
 import { PublicTimeline } from './components/PublicTimeline'
@@ -352,6 +353,7 @@ function Shell({ onLogout }: { onLogout: () => void }) {
       )}
       {quickAddOpen && <QuickAddSheet onClose={() => setQuickAddOpen(false)} />}
       <Confetti />
+      <TaskStartChime />
     </div>
   )
 }

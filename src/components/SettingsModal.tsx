@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ChangeEvent } from 'react'
 import { useBoard } from '../store'
-import { getDataRepoConfig, getToken, setDataRepoConfig } from '../config'
+import { getDataRepoConfig, getSoundOn, getToken, setDataRepoConfig, setSoundOn } from '../config'
+import { playTaskChime } from '../sound'
 import { saveEncryptedToken } from '../auth'
 import { imageFileToAvatar, MEMBER_COLORS } from '../utils'
 import { IcoCamera, IcoChevronRight, IcoClose, IcoX } from '../icons'
@@ -38,6 +39,7 @@ export function SettingsModal({ onClose, onLogout }: { onClose: () => void; onLo
         <div className="settings-body">
           <MembersSection />
           <IdentitySection />
+          <NotificationsSection />
           <DataSection />
           <AccountSection onLogout={onLogout} />
         </div>
@@ -298,6 +300,29 @@ function IdentitySection() {
         ))}
       </select>
       <p className="settings-hint">От этого зависит метка «вы» и авторство вложений.</p>
+    </section>
+  )
+}
+
+// ---------- Уведомления ----------
+
+function NotificationsSection() {
+  const [soundOn, setSoundOnState] = useState<boolean>(() => getSoundOn())
+  const toggle = (on: boolean) => {
+    setSoundOn(on)
+    setSoundOnState(on)
+    if (on) playTaskChime() // клик — это жест: заодно разблокируем звук и даём послушать сигнал
+  }
+  return (
+    <section className="settings-section">
+      <h3 className="field-label settings-section-title">Уведомления</h3>
+      <label className="settings-check">
+        <input type="checkbox" checked={soundOn} onChange={(e) => toggle(e.target.checked)} />
+        <span>Звук в начале задачи</span>
+      </label>
+      <p className="settings-hint">
+        Пока приложение открыто в браузере, в момент начала вашей задачи со временем прозвучит сигнал.
+      </p>
     </section>
   )
 }
