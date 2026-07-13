@@ -601,6 +601,23 @@ export default {
     } catch {
       return new Response('bad request', { status: 400 })
     }
+    // /id или /chatid в любом чате (в т.ч. в группе) — сообщить id чата.
+    // Нужен, чтобы узнать GROUP_CHAT_ID группы: добавьте бота в группу и напишите
+    // там «/id@ИмяБота». В личке достаточно «/id».
+    const idMsg = update.message
+    if (idMsg && idMsg.chat && typeof idMsg.text === 'string' && /^\/(id|chatid)(@[\w]+)?(\s|$)/i.test(idMsg.text.trim())) {
+      const where = idMsg.chat.type === 'private' ? 'этого чата' : 'этой группы'
+      try {
+        await tgApi(env, 'sendMessage', {
+          chat_id: idMsg.chat.id,
+          text: `ID ${where}: <code>${idMsg.chat.id}</code>\n\nВпишите его в переменную <b>GROUP_CHAT_ID</b> воркера — туда будут приходить утренний и вечерний отчёты.`,
+          parse_mode: 'HTML',
+        })
+      } catch {
+        /* не вышло — ничего страшного */
+      }
+      return new Response('OK')
+    }
     try {
       if (update.callback_query) {
         await onCallback(update.callback_query, env)
