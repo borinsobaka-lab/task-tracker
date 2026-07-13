@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-13T06:46:35.998Z",
+  "generatedAt": "2026-07-13T06:49:01.451Z",
   "items": [
     {
       "id": "2c23ac8a-8875-4b23-9d1d-7724145cf55c",
@@ -611,6 +611,15 @@
           "color": "#84cc16"
         }
       ]
+    },
+    {
+      "id": "f270ebe3-9cfc-4bd8-be17-1c7ddfc54008",
+      "title": "Без названия",
+      "date": "2026-07-14",
+      "start": "16:00",
+      "durationMin": 60,
+      "kind": "meeting",
+      "members": []
     },
     {
       "id": "05923e3a-f038-452b-816d-129d9406fe69",
