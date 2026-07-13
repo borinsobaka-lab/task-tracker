@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-13T04:35:34.175Z",
+  "generatedAt": "2026-07-13T04:36:10.869Z",
   "items": [
     {
       "id": "2c23ac8a-8875-4b23-9d1d-7724145cf55c",
@@ -470,6 +470,20 @@
       "date": "2026-07-13",
       "start": "13:00",
       "durationMin": 180,
+      "priorityColor": "#ef4444",
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        }
+      ]
+    },
+    {
+      "id": "9ddccf02-f82c-46a6-afbd-c095f5f558cf",
+      "title": "Добавить регулярные задачи по отправке рассылок клиентам - push и email",
+      "date": "2026-07-13",
+      "start": "16:00",
+      "durationMin": 60,
       "priorityColor": "#ef4444",
       "members": [
         {
