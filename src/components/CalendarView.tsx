@@ -151,7 +151,7 @@ function rangeTitle(start: Date, end: Date): string {
 
 // ---------- Компонент ----------
 
-export function CalendarView({ memberFilter, onMemberFilterChange, onOpenCard }: ViewProps) {
+export function CalendarView({ memberFilter, onMemberFilterChange, onOpenCard, onCreateDraft }: ViewProps) {
   const store = useBoard()
   // Сколько дней показывать: 1 / 3 / 7 — выбор пользователя (сохраняется).
   const [nDays, setNDaysState] = useState<number>(() => getCalDays())
@@ -518,28 +518,50 @@ export function CalendarView({ memberFilter, onMemberFilterChange, onOpenCard }:
   // Карточка «взята» после удержания, но ещё не сдвинута — подсвечиваем как приподнятую
   const armedCardId = drag?.active && !drag.moved ? drag.source.cardId : null
 
-  // ---------- Создание карточек двойным кликом ----------
+  // ---------- Создание карточек одним кликом/тапом ----------
 
+  // Пустой черновик с курсором в поле названия; сразу планируем на дату/время.
   const createCard = (dayIdx: number, startMin: number | null): void => {
-    // По умолчанию — в колонку со статусом «нужно сделать» (роль todo), иначе первая
-    const col = store.columns.find((c) => c.role === 'todo') ?? store.columns[0]
-    if (!col) return
-    const id = store.addCard(col.id, 'Новая задача')
-    if (startMin === null) store.scheduleCard(id, dayKeys[dayIdx], null)
-    else store.scheduleCard(id, dayKeys[dayIdx], minToTime(startMin), 60)
-    onOpenCard(id)
+    onCreateDraft({ date: dayKeys[dayIdx], start: startMin === null ? null : minToTime(startMin) })
   }
 
-  const onColDblClick = (dayIdx: number) => (e: React.MouseEvent) => {
-    if ((e.target as HTMLElement).closest('.cal-event, .cal-ghost')) return
+  // Отличаем клик/тап от прокрутки: если палец/курсор сдвинулся больше порога
+  // между нажатием и отпусканием — это прокрутка (или перетаскивание), не создаём.
+  const TAP_SLOP = 8
+  const tapStart = useRef<{ x: number; y: number } | null>(null)
+  const isTap = (e: React.PointerEvent): boolean => {
+    const s = tapStart.current
+    tapStart.current = null
+    return !!s && Math.hypot(e.clientX - s.x, e.clientY - s.y) <= TAP_SLOP
+  }
+  const cancelTap = (): void => {
+    tapStart.current = null
+  }
+
+  // Часовая сетка дня
+  const onColPointerDown = (e: React.PointerEvent): void => {
+    tapStart.current =
+      e.button === 0 && !(e.target as HTMLElement).closest('.cal-event, .cal-ghost')
+        ? { x: e.clientX, y: e.clientY }
+        : null
+  }
+  const onColPointerUp = (dayIdx: number) => (e: React.PointerEvent): void => {
+    if ((e.target as HTMLElement).closest('.cal-event, .cal-ghost')) return cancelTap()
+    if (!isTap(e)) return
     const grect = gridRef.current?.getBoundingClientRect()
     if (!grect) return
     const pMin = ((e.clientY - grect.top) / HOUR_H) * 60
     createCard(dayIdx, clamp(Math.floor(pMin / SNAP) * SNAP, 0, DAY_MIN - 60))
   }
 
-  const onAllDayDblClick = (dayIdx: number) => (e: React.MouseEvent) => {
-    if ((e.target as HTMLElement).closest('.cal-chip')) return
+  // Зона «весь день»
+  const onAllDayPointerDown = (e: React.PointerEvent): void => {
+    tapStart.current =
+      e.button === 0 && !(e.target as HTMLElement).closest('.cal-chip') ? { x: e.clientX, y: e.clientY } : null
+  }
+  const onAllDayPointerUp = (dayIdx: number) => (e: React.PointerEvent): void => {
+    if ((e.target as HTMLElement).closest('.cal-chip')) return cancelTap()
+    if (!isTap(e)) return
     createCard(dayIdx, null)
   }
 
@@ -908,8 +930,10 @@ export function CalendarView({ memberFilter, onMemberFilterChange, onOpenCard }:
                     </div>
                     <div
                       className={`cal-allday${dropHere ? ' drop-hint' : ''}`}
-                      onDoubleClick={onAllDayDblClick(i)}
-                      title="Двойной клик — новая задача на весь день"
+                      onPointerDown={onAllDayPointerDown}
+                      onPointerUp={onAllDayPointerUp(i)}
+                      onPointerCancel={cancelTap}
+                      title="Нажмите, чтобы добавить задачу на весь день"
                     >
                       {allDayByDay[i].map(renderChip)}
                       {dropHere && (
@@ -936,7 +960,9 @@ export function CalendarView({ memberFilter, onMemberFilterChange, onOpenCard }:
                 <div
                   key={dayKeys[i]}
                   className={`cal-day-col${dayKeys[i] === todayKey ? ' today' : ''}`}
-                  onDoubleClick={onColDblClick(i)}
+                  onPointerDown={onColPointerDown}
+                  onPointerUp={onColPointerUp(i)}
+                  onPointerCancel={cancelTap}
                 >
                   {sleepUntil > 0 && (
                     <div

@@ -41,7 +41,8 @@ function isEmptyDraft(card: Card): boolean {
     card.attachments.length === 0 &&
     liveComments === 0 &&
     card.assigneeIds.length === 0 &&
-    !card.date &&
+    // Дату не проверяем: черновик, созданный кликом по календарю, получает дату
+    // автоматически — без названия и прочего содержимого он всё равно «пустой».
     !card.priority &&
     (card.kind ?? 'task') === 'task' &&
     !card.meetingUrl
@@ -292,16 +293,22 @@ function Shell({ onLogout }: { onLogout: () => void }) {
     setSavedView(v)
   }
 
-  // Быстрое создание задачи (плавающая кнопка на десктопе / «+» в нижнем меню на телефоне).
-  // Создаёт пустую задачу в колонке «Нужно сделать» и сразу открывает её модалку —
-  // тип (задача/встреча) можно переключить уже внутри окна.
-  const createTask = () => {
+  // Создание задачи-черновика: пустой заголовок (курсор сразу в поле), в колонке
+  // «Нужно сделать». Черновик удаляем при закрытии, если так и остался пустым.
+  // schedule — сразу поставить дату/время (клик по календарю).
+  const createDraft = (schedule?: { date: string; start: string | null }) => {
     const col = store.columns.find((c) => c.role === 'todo') ?? store.columns[0]
     if (!col) return
     const id = store.addCard(col.id, '')
-    draftIdRef.current = id // черновик: удалим при закрытии, если так и останется пустым
+    if (schedule) {
+      if (schedule.start) store.scheduleCard(id, schedule.date, schedule.start, 60)
+      else store.scheduleCard(id, schedule.date, null)
+    }
+    draftIdRef.current = id
     setSelectedCardId(id)
   }
+  // Плавающая кнопка на десктопе / «+» в нижнем меню на телефоне.
+  const createTask = () => createDraft()
 
   // Закрытие карточки. Если это был пустой черновик от кнопки «+» — не оставляем его.
   const closeCard = () => {
@@ -333,6 +340,7 @@ function Shell({ onLogout }: { onLogout: () => void }) {
             memberFilter,
             onMemberFilterChange: setMemberFilter,
             onOpenCard: setSelectedCardId,
+            onCreateDraft: createDraft,
           }
           if (view === 'board') return <BoardView {...shared} />
           if (view === 'calendar') return <CalendarView {...shared} />

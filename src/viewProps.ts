@@ -6,4 +6,7 @@ export interface ViewProps {
   memberFilter: ReadonlySet<ID>
   onMemberFilterChange: (f: ReadonlySet<ID>) => void
   onOpenCard: (id: ID) => void
+  /** Создать новую задачу-черновик (пустой заголовок, курсор в поле) и открыть её.
+   *  Можно сразу запланировать на дату/время (клик по календарю). */
+  onCreateDraft: (schedule?: { date: string; start: string | null }) => void
 }

@@ -20,6 +20,10 @@ import './modal.css'
 
 const MAX_FILE_SIZE = 15 * 1024 * 1024 // 15 МБ
 const TITLE_DEBOUNCE_MS = 600
+// Заглушка, которой store называет карточку без имени. В поле показываем её пустой,
+// чтобы можно было сразу печатать (а не стирать «Без названия»).
+const PLACEHOLDER_TITLE = 'Без названия'
+const shownTitle = (t: string): string => (t === PLACEHOLDER_TITLE ? '' : t)
 
 const DURATION_OPTIONS: { value: string; label: string }[] = [
   { value: '30', label: '30 мин' },
@@ -240,7 +244,7 @@ export function CardModal({ cardId, onClose }: { cardId: ID; onClose: () => void
 
 function CardModalInner({ card, store, onClose }: { card: Card; store: BoardStore; onClose: () => void }) {
   // --- заголовок ---
-  const [title, setTitle] = useState(card.title)
+  const [title, setTitle] = useState(shownTitle(card.title))
   const titleRef = useRef<HTMLTextAreaElement>(null)
   const lastCardTitle = useRef(card.title)
 
@@ -259,7 +263,7 @@ function CardModalInner({ card, store, onClose }: { card: Card; store: BoardStor
     if (card.title === lastCardTitle.current) return
     if (titleFocused) return
     lastCardTitle.current = card.title
-    setTitle(card.title)
+    setTitle(shownTitle(card.title))
   }, [card.title, titleFocused])
 
   // autosize
@@ -270,6 +274,13 @@ function CardModalInner({ card, store, onClose }: { card: Card; store: BoardStor
       el.style.height = el.scrollHeight + 'px'
     }
   }, [title])
+
+  // Новая (пустая) карточка: ставим курсор сразу в поле названия, чтобы можно
+  // было начать печатать без лишних кликов (кнопка «+», клик по календарю и т.п.).
+  useEffect(() => {
+    if (!shownTitle(card.title).trim()) titleRef.current?.focus({ preventScroll: true })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // --- поповеры ---
   const [membersOpen, setMembersOpen] = useState(false)
@@ -545,7 +556,7 @@ function CardModalInner({ card, store, onClose }: { card: Card; store: BoardStor
                 }}
                 onBlur={() => {
                   flushTitle()
-                  if (!title.trim()) setTitle(card.title)
+                  if (!title.trim()) setTitle(shownTitle(card.title))
                   setTitleFocused(false)
                 }}
                 onKeyDown={(e: ReactKeyboardEvent<HTMLTextAreaElement>) => {
