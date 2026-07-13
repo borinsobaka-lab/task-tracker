@@ -22,18 +22,32 @@ const DURATIONS: { v: number; label: string }[] = [
   { v: 240, label: '4 ч' },
 ]
 
+// Фильтр по частоте повторения в шапке раздела (по умолчанию — «Все»)
+const FREQ_FILTERS: { v: 'all' | RecurFreq; label: string }[] = [
+  { v: 'all', label: 'Все' },
+  { v: 'daily', label: 'Ежедневные' },
+  { v: 'weekly', label: 'Еженедельные' },
+  { v: 'monthly', label: 'Ежемесячные' },
+]
+
 export function RecurringView({ memberFilter, onMemberFilterChange, onOpenCard }: ViewProps) {
   const store = useBoard()
   const [editing, setEditing] = useState<Series | 'new' | null>(null)
+  const [freqFilter, setFreqFilter] = useState<'all' | RecurFreq>('all')
 
   const inFilter = (c: Card) =>
     memberFilter.size === 0 || c.assigneeIds.some((id) => memberFilter.has(id))
+  const freqOf = (c: Card) => (c.seriesId ? store.seriesById(c.seriesId)?.rule.freq : undefined)
+  const inFreq = (c: Card) => freqFilter === 'all' || freqOf(c) === freqFilter
   // Раздел «Регулярное» — только задачи; повторяющиеся встречи живут в календаре
-  const insts = store.recurringCards().filter((c) => c.kind !== 'meeting' && inFilter(c))
+  const tasks = store.recurringCards().filter((c) => c.kind !== 'meeting')
+  const insts = tasks.filter((c) => inFilter(c) && inFreq(c))
   const active = insts
     .filter((c) => !c.done)
     .sort((a, b) => (a.date ?? '').localeCompare(b.date ?? '') || a.title.localeCompare(b.title, 'ru'))
   const completed = insts.filter((c) => c.done).sort((a, b) => (b.date ?? '').localeCompare(a.date ?? ''))
+  // Пусто из-за фильтров (при наличии регулярных задач вообще) — своё сообщение
+  const emptyByFilter = active.length === 0 && completed.length === 0 && tasks.length > 0
 
   const memberById = new Map(store.members.map((m) => [m.id, m]))
   const assigneesOf = (c: Card): Member[] =>
@@ -50,11 +64,28 @@ export function RecurringView({ memberFilter, onMemberFilterChange, onOpenCard }
         <button className="btn btn-primary btn-sm" onClick={() => setEditing('new')}>
           + Регулярная задача
         </button>
+        <select
+          className="cal-view-select"
+          value={freqFilter}
+          onChange={(e) => setFreqFilter(e.target.value as 'all' | RecurFreq)}
+          title="Показывать по частоте повторения"
+          aria-label="Фильтр по частоте повторения"
+        >
+          {FREQ_FILTERS.map((f) => (
+            <option key={f.v} value={f.v}>
+              {f.label}
+            </option>
+          ))}
+        </select>
       </SubHeader>
 
       <div className="rec-list">
         {active.length === 0 && completed.length === 0 && (
-          <div className="rec-empty muted">Пока нет регулярных задач. Нажмите «+ Регулярная задача».</div>
+          <div className="rec-empty muted">
+            {emptyByFilter
+              ? 'Нет регулярных задач с выбранным повторением.'
+              : 'Пока нет регулярных задач. Нажмите «+ Регулярная задача».'}
+          </div>
         )}
 
         {active.map((c) => (
