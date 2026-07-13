@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-13T06:13:15.897Z",
+  "generatedAt": "2026-07-13T06:13:37.094Z",
   "items": [
     {
       "id": "2c23ac8a-8875-4b23-9d1d-7724145cf55c",
@@ -487,6 +487,7 @@
       "date": "2026-07-13",
       "start": "11:30",
       "durationMin": 60,
+      "kind": "meeting",
       "members": []
     },
     {
