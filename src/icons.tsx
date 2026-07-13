@@ -21,7 +21,7 @@ import {
   Notes,
   NotesMinimalistic,
   Paperclip,
-  Refresh,
+  RepeatOneMinimalistic,
   Rocket,
   Settings,
   SortVertical,
@@ -41,7 +41,7 @@ export const IcoBrand = duotone(ClipboardList)
 export const IcoBoard = duotone(NotesMinimalistic)
 export const IcoCalendar = duotone(Calendar)
 export const IcoMatrix = duotone(Widget)
-export const IcoRecurring = duotone(Refresh)
+export const IcoRecurring = duotone(RepeatOneMinimalistic)
 export const IcoMeeting = duotone(Videocamera)
 export const IcoCamera = duotone(Camera)
 export const IcoClose = duotone(CloseCircle)
