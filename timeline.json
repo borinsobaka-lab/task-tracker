@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-13T06:23:37.165Z",
+  "generatedAt": "2026-07-13T06:30:33.928Z",
   "items": [
     {
       "id": "2c23ac8a-8875-4b23-9d1d-7724145cf55c",
@@ -622,6 +622,20 @@
       "members": []
     },
     {
+      "id": "f6783b8b-a76f-4c37-9b3c-a3ac566dfebe",
+      "title": "Встреча с владельцем Lady Stretch Дмитрием",
+      "date": "2026-07-15",
+      "start": "14:00",
+      "durationMin": 60,
+      "kind": "meeting",
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        }
+      ]
+    },
+    {
       "id": "2038c2c7-220f-43c7-8752-8e0f7514c6be",
       "title": "Padel",
       "date": "2026-07-15",
@@ -649,6 +663,24 @@
         {
           "name": "Вова",
           "color": "#84cc16"
+        }
+      ]
+    },
+    {
+      "id": "b67df382-68d3-4adb-acd3-0371cbd1168a",
+      "title": "Без названия",
+      "date": "2026-07-16",
+      "start": "13:30",
+      "durationMin": 30,
+      "kind": "meeting",
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        },
+        {
+          "name": "Настя",
+          "color": "#ec4899"
         }
       ]
     },
@@ -735,6 +767,38 @@
       ]
     },
     {
+      "id": "a558a94e-c82a-49eb-80a1-850fabe4b898",
+      "title": "Встреча с владельцем Lady Stretch Дмитрием",
+      "date": "2026-07-22",
+      "start": "14:00",
+      "durationMin": 60,
+      "kind": "meeting",
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        }
+      ]
+    },
+    {
+      "id": "618d3749-54b7-48cc-ac7c-5a159f044766",
+      "title": "Без названия",
+      "date": "2026-07-23",
+      "start": "13:30",
+      "durationMin": 30,
+      "kind": "meeting",
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        },
+        {
+          "name": "Настя",
+          "color": "#ec4899"
+        }
+      ]
+    },
+    {
       "id": "34717cd2-0aaf-4d7f-8503-edabee107111",
       "title": "Составление расписания тренировок на следующий месяц",
       "date": "2026-07-25",
@@ -774,6 +838,24 @@
         {
           "name": "Вова",
           "color": "#84cc16"
+        }
+      ]
+    },
+    {
+      "id": "14b7ce08-1d49-4a58-af0a-89807daf3248",
+      "title": "Без названия",
+      "date": "2026-07-30",
+      "start": "13:30",
+      "durationMin": 30,
+      "kind": "meeting",
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        },
+        {
+          "name": "Настя",
+          "color": "#ec4899"
         }
       ]
     },
@@ -818,6 +900,38 @@
         {
           "name": "Вова",
           "color": "#84cc16"
+        }
+      ]
+    },
+    {
+      "id": "3acdc2eb-3f71-4b58-a6ee-131b0f3d69d4",
+      "title": "Встреча с владельцем Lady Stretch Дмитрием",
+      "date": "2026-08-05",
+      "start": "14:00",
+      "durationMin": 60,
+      "kind": "meeting",
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        }
+      ]
+    },
+    {
+      "id": "5afc389b-0a9d-42f0-9eed-d3b13d4c785e",
+      "title": "Без названия",
+      "date": "2026-08-06",
+      "start": "13:30",
+      "durationMin": 30,
+      "kind": "meeting",
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        },
+        {
+          "name": "Настя",
+          "color": "#ec4899"
         }
       ]
     },
@@ -1076,6 +1190,42 @@
       "id": "3dcfec61-c215-4e53-9a8f-b023b22ecd17",
       "title": "Настя и Вова // Дейли",
       "date": "2027-01-09",
+      "start": "13:30",
+      "durationMin": 60,
+      "kind": "meeting",
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        },
+        {
+          "name": "Настя",
+          "color": "#ec4899"
+        }
+      ]
+    },
+    {
+      "id": "1dd61daf-d6dc-4998-99f5-70cdad29b780",
+      "title": "Настя и Вова // Дейли",
+      "date": "2027-02-09",
+      "start": "13:30",
+      "durationMin": 60,
+      "kind": "meeting",
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        },
+        {
+          "name": "Настя",
+          "color": "#ec4899"
+        }
+      ]
+    },
+    {
+      "id": "c3b17e88-bfd3-41ec-8b06-3868f7cb40bf",
+      "title": "Настя и Вова // Дейли",
+      "date": "2027-03-09",
       "start": "13:30",
       "durationMin": 60,
       "kind": "meeting",
