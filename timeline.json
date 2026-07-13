@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-13T03:09:42.718Z",
+  "generatedAt": "2026-07-13T03:09:54.533Z",
   "items": [
     {
       "id": "2c23ac8a-8875-4b23-9d1d-7724145cf55c",
@@ -396,7 +396,7 @@
       "id": "a6579e1e-2b8a-440c-8ddf-f4a099c8463c",
       "title": "Написать Екатерине записи на массаж",
       "date": "2026-07-13",
-      "start": "07:30",
+      "start": "08:00",
       "durationMin": 30,
       "priorityColor": "#ef4444",
       "members": [
@@ -410,7 +410,7 @@
       "id": "d3c5a2eb-13ee-4460-9794-9e95d7fee3a2",
       "title": "Ответить дизайнеру по логотипу",
       "date": "2026-07-13",
-      "start": "08:00",
+      "start": "08:30",
       "durationMin": 30,
       "priorityColor": "#ef4444",
       "members": [
