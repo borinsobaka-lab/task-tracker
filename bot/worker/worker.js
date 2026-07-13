@@ -618,6 +618,31 @@ export default {
       }
       return new Response('OK')
     }
+    // /check — диагностика групповых отчётов: читается ли доска (DATA_TOKEN) и
+    // доходит ли сообщение до группы (GROUP_CHAT_ID + права бота).
+    if (idMsg && idMsg.chat && typeof idMsg.text === 'string' && /^\/(check|проверка)(@[\w]+)?(\s|$)/i.test(idMsg.text.trim())) {
+      const chatId = String(idMsg.chat.id)
+      let board
+      try {
+        board = await loadBoard(env)
+      } catch (e) {
+        await tgSend(env, chatId, '❌ Доска не читается: ' + esc((e && e.message) || String(e)) + '\n\nОтчёты не уходят именно поэтому. Обычно виноват DATA_TOKEN — у него нет доступа к приватному репозиторию данных.')
+        return new Response('OK')
+      }
+      const today = dateKey(env, 0)
+      await tgSend(env, chatId, `✅ Доска читается. Задач с датой на сегодня (${ddmm(today)}): ${cardsForDate(board, today).length}.`)
+      if (!env.GROUP_CHAT_ID) {
+        await tgSend(env, chatId, '⚠️ Переменная GROUP_CHAT_ID не задана — отправлять отчёт некуда.')
+        return new Response('OK')
+      }
+      const r = await tgApi(env, 'sendMessage', { chat_id: env.GROUP_CHAT_ID, text: '🔧 Проверка связи с ботом — если вы это видите, отчёты будут приходить сюда.' })
+      if (r && r.ok) {
+        await tgSend(env, chatId, `✅ В группу отправлено тестовое сообщение (GROUP_CHAT_ID=<code>${esc(String(env.GROUP_CHAT_ID))}</code>). Групповые отчёты будут приходить: утро — ${esc(env.MORNING || '10:00')}, вечер — ${esc(env.EVENING || '20:00')} по ${esc(env.TZ_NAME || 'TZ')}.`)
+      } else {
+        await tgSend(env, chatId, `❌ Не удалось отправить в группу (GROUP_CHAT_ID=<code>${esc(String(env.GROUP_CHAT_ID))}</code>): ${esc((r && r.description) || 'нет ответа от Telegram')}\n\nЧастые причины: бот не добавлен в группу, у него нет права писать сообщения, либо id группы неверный (перепроверьте через /id@ИмяБота внутри группы).`)
+      }
+      return new Response('OK')
+    }
     try {
       if (update.callback_query) {
         await onCallback(update.callback_query, env)
