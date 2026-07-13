@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-13T06:52:10.868Z",
+  "generatedAt": "2026-07-13T06:52:14.253Z",
   "items": [
     {
       "id": "2c23ac8a-8875-4b23-9d1d-7724145cf55c",
@@ -482,14 +482,6 @@
       ]
     },
     {
-      "id": "1f92f5ab-a2de-4082-bcae-1778b5dfb198",
-      "title": "Без названия",
-      "date": "2026-07-13",
-      "start": "11:30",
-      "durationMin": 60,
-      "members": []
-    },
-    {
       "id": "ca2f078b-2253-469c-b913-dcd26bf6374a",
       "title": "Дать Насте доступ к таск трекеру",
       "date": "2026-07-13",
@@ -517,6 +509,15 @@
           "color": "#84cc16"
         }
       ]
+    },
+    {
+      "id": "1f92f5ab-a2de-4082-bcae-1778b5dfb198",
+      "title": "Без названия",
+      "date": "2026-07-13",
+      "start": "13:30",
+      "durationMin": 60,
+      "kind": "meeting",
+      "members": []
     },
     {
       "id": "9ddccf02-f82c-46a6-afbd-c095f5f558cf",
@@ -707,6 +708,15 @@
       ]
     },
     {
+      "id": "f1aa069d-ef2c-4d3e-a357-107d2e176b56",
+      "title": "Без названия",
+      "date": "2026-07-20",
+      "start": "13:30",
+      "durationMin": 60,
+      "kind": "meeting",
+      "members": []
+    },
+    {
       "id": "34717cd2-0aaf-4d7f-8503-edabee107111",
       "title": "Составление расписания тренировок на следующий месяц",
       "date": "2026-07-25",
@@ -716,6 +726,15 @@
           "color": "#ec4899"
         }
       ]
+    },
+    {
+      "id": "1439dc4a-a58f-40c1-ac76-21823039b8bd",
+      "title": "Без названия",
+      "date": "2026-07-27",
+      "start": "13:30",
+      "durationMin": 60,
+      "kind": "meeting",
+      "members": []
     },
     {
       "id": "003ae705-dc70-473c-bff4-39e5d8c942e1",
@@ -731,6 +750,15 @@
           "color": "#84cc16"
         }
       ]
+    },
+    {
+      "id": "e5cf1708-d498-4c5e-ae5e-a53ec4454710",
+      "title": "Без названия",
+      "date": "2026-08-03",
+      "start": "13:30",
+      "durationMin": 60,
+      "kind": "meeting",
+      "members": []
     },
     {
       "id": "240f7c95-58ed-4a3e-8b64-c363ff1f89e9",
@@ -815,6 +843,42 @@
           "color": "#84cc16"
         }
       ]
+    },
+    {
+      "id": "62c6dffd-a095-4ace-837f-be3e35c73fe8",
+      "title": "Без названия",
+      "date": "2026-08-10",
+      "start": "13:30",
+      "durationMin": 60,
+      "kind": "meeting",
+      "members": []
+    },
+    {
+      "id": "12b45126-f6c9-4a4e-8e95-aedda10b44ef",
+      "title": "Без названия",
+      "date": "2026-08-17",
+      "start": "13:30",
+      "durationMin": 60,
+      "kind": "meeting",
+      "members": []
+    },
+    {
+      "id": "2d99a785-1c06-4068-beb6-589935018f5f",
+      "title": "Без названия",
+      "date": "2026-08-24",
+      "start": "13:30",
+      "durationMin": 60,
+      "kind": "meeting",
+      "members": []
+    },
+    {
+      "id": "989fd223-bf27-46d0-a8b3-25d44273ebb2",
+      "title": "Без названия",
+      "date": "2026-08-31",
+      "start": "13:30",
+      "durationMin": 60,
+      "kind": "meeting",
+      "members": []
     },
     {
       "id": "eb96fb36-0717-4b24-a443-803e75204e17",
