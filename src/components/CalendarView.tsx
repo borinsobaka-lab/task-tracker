@@ -222,31 +222,41 @@ export function CalendarView({ memberFilter, onMemberFilterChange, onOpenCard, o
     return () => window.removeEventListener('keydown', onKey)
   }, [drag])
 
-  // Страховка: pointer-события висят на самом блоке, и если он размонтируется
-  // посреди перетаскивания (фоновая синхронизация подменила/удалила карточку),
-  // штатный onPointerUp до нас не дойдёт и drag завис бы в is-dragging навсегда.
-  // Ловим отпускание указателя на уровне window и снимаем зависший drag.
+  // Страховка на уровне window. Штатные pointer-обработчики висят на самом блоке
+  // и полагаются на pointer-capture. Если capture теряется (фоновая синхронизация
+  // перерисовала/подменила карточку, блок на миг размонтировался и т.п.), то
+  // pointerup до блока не доходит: onDragUp не срабатывает, задача визуально
+  // «тащилась», а на отпускании не встаёт в выбранный слот. Поэтому дублируем
+  // финал через window: на настоящем отпускании (pointerup) применяем бросок сами.
+  //
+  // ВАЖНО: lostpointercapture тут НЕ слушаем — он может прилететь ПОСРЕДИ жеста
+  // (при перерисовке), и снимать drag по нему нельзя, иначе последующий pointerup
+  // окажется «пустым». Настоящее завершение всегда приходит как pointerup/cancel.
   useEffect(() => {
     const release = (e: PointerEvent): void => {
       const d = dragRef.current
       if (!d || e.pointerId !== d.pointerId) return
-      // Даём сработать штатному обработчику элемента (он бежит раньше и сам
-      // сбросит drag). Если через микротаск drag всё ещё висит — элемент исчез,
-      // снимаем перетаскивание.
+      // Даём сработать штатному обработчику блока (он бежит раньше и, если capture
+      // цел, уже применит бросок и сбросит drag — сюда событие тогда не дойдёт из-за
+      // stopPropagation). Если через макротаск drag всё ещё висит — блок не обработал
+      // отпускание сам, доводим за него.
       setTimeout(() => {
-        if (dragRef.current && dragRef.current.pointerId === e.pointerId) {
+        const d2 = dragRef.current
+        if (d2 && d2.pointerId === e.pointerId) {
           clearPressTimer()
+          if (e.type === 'pointerup' && d2.moved && !d2.scrolled) applyDropRef.current(d2)
           setDrag(null)
         }
       }, 0)
     }
+    const move = (e: PointerEvent): void => trackMoveRef.current(e)
+    window.addEventListener('pointermove', move)
     window.addEventListener('pointerup', release)
     window.addEventListener('pointercancel', release)
-    window.addEventListener('lostpointercapture', release)
     return () => {
+      window.removeEventListener('pointermove', move)
       window.removeEventListener('pointerup', release)
       window.removeEventListener('pointercancel', release)
-      window.removeEventListener('lostpointercapture', release)
     }
   }, [])
 
@@ -468,25 +478,13 @@ export function CalendarView({ memberFilter, onMemberFilterChange, onOpenCard, o
     setDrag({ ...drag, moved: true, target })
   }
 
-  const onDragUp = (e: React.PointerEvent): void => {
-    if (!drag || e.pointerId !== drag.pointerId) return
-    e.stopPropagation()
-    clearPressTimer()
-    const d = drag
-    setDrag(null)
-
-    if (d.scrolled) return // это была прокрутка пальцем, а не клик/перетаскивание
-
-    if (!d.moved) {
-      // Порог не пройден — это клик (в т.ч. удержание без сдвига)
-      if (d.source.kind !== 'resize') onOpenCard(d.source.cardId)
-      return
-    }
-
+  // Применяет бросок (ставит задачу на выбранное место). Вынесено отдельно, чтобы
+  // вызывать и из штатного onPointerUp элемента, и из window-фолбэка — если у
+  // элемента потерялся pointer capture и его onPointerUp не сработал.
+  const applyDrop = (d: DragState): void => {
     const t = d.target
     if (!t) return
     const id = d.source.cardId
-
     if (t.type === 'unschedule') {
       if (d.origDate) store.scheduleCard(id, null)
       return
@@ -501,6 +499,39 @@ export function CalendarView({ memberFilter, onMemberFilterChange, onOpenCard, o
     const time = minToTime(t.startMin)
     if (d.origDate === date && d.origStart === time && d.origDur === t.durationMin) return
     store.scheduleCard(id, date, time, t.durationMin)
+  }
+  const applyDropRef = useRef(applyDrop)
+  applyDropRef.current = applyDrop
+
+  // Продолжение слежения за целью на уровне window — на случай потери pointer
+  // capture посреди жеста. Пока capture цел, штатный onDragMove гасит событие
+  // (stopPropagation), и до window оно не доходит — так что здесь мы обновляем
+  // цель только когда штатный обработчик уже не отрабатывает.
+  const trackMoveRef = useRef((_e: PointerEvent): void => {})
+  trackMoveRef.current = (e: PointerEvent): void => {
+    const d = dragRef.current
+    if (!d || e.pointerId !== d.pointerId || !d.active || d.scrolled) return
+    autoScroll(e.clientY)
+    const target = computeTarget(e.clientX, e.clientY, d)
+    if (d.moved && targetsEqual(d.target, target)) return
+    setDrag({ ...d, moved: true, target })
+  }
+
+  const onDragUp = (e: React.PointerEvent): void => {
+    if (!drag || e.pointerId !== drag.pointerId) return
+    e.stopPropagation()
+    clearPressTimer()
+    const d = drag
+    setDrag(null)
+
+    if (d.scrolled) return // это была прокрутка пальцем, а не клик/перетаскивание
+
+    if (!d.moved) {
+      // Порог не пройден — это клик (в т.ч. удержание без сдвига)
+      if (d.source.kind !== 'resize') onOpenCard(d.source.cardId)
+      return
+    }
+    applyDrop(d)
   }
 
   const onDragCancel = (e: React.PointerEvent): void => {
@@ -545,6 +576,7 @@ export function CalendarView({ memberFilter, onMemberFilterChange, onOpenCard, o
         : null
   }
   const onColPointerUp = (dayIdx: number) => (e: React.PointerEvent): void => {
+    if (dragRef.current) return cancelTap() // идёт перетаскивание (возможно, с потерей capture) — не создаём карточку
     if ((e.target as HTMLElement).closest('.cal-event, .cal-ghost')) return cancelTap()
     if (!isTap(e)) return
     const grect = gridRef.current?.getBoundingClientRect()
@@ -559,6 +591,7 @@ export function CalendarView({ memberFilter, onMemberFilterChange, onOpenCard, o
       e.button === 0 && !(e.target as HTMLElement).closest('.cal-chip') ? { x: e.clientX, y: e.clientY } : null
   }
   const onAllDayPointerUp = (dayIdx: number) => (e: React.PointerEvent): void => {
+    if (dragRef.current) return cancelTap() // идёт перетаскивание (возможно, с потерей capture) — не создаём карточку
     if ((e.target as HTMLElement).closest('.cal-chip')) return cancelTap()
     if (!isTap(e)) return
     createCard(dayIdx, null)
