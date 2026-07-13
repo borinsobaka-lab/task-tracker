@@ -27,7 +27,7 @@ export interface SeriesInput {
 }
 
 const MAX_DONE_INSTANCES = 8 // сколько выполненных экземпляров серии храним
-const MEETING_WINDOW = 6 // сколько будущих экземпляров повторяющейся встречи держим готовыми
+const MEETING_WINDOW = 8 // сколько ближайших экземпляров повторяющейся встречи держим готовыми
 const MEETING_MAX_PAST = 4 // сколько прошедших встреч серии храним
 
 function makeInstance(seriesId: ID, s: Series, dateKey: string, ts: string): Card {
@@ -72,18 +72,21 @@ function topUpMeetingSeries(d: BoardData, s: Series): void {
     }
   }
   const dates = new Set(own().map((c) => c.date).filter(Boolean) as string[])
-  let future = own().filter((c) => (c.date ?? '') >= today)
-  let lastDate = own().reduce((m, c) => (c.date && c.date > m ? c.date : m), '')
+  // Идём по ближайшим MEETING_WINDOW датам ПО ПОРЯДКУ (по всем дням правила —
+  // и понедельникам, и четвергам, и всем числам месяца) и досоздаём недостающие.
+  // Важно перебирать по порядку, а не «добивать до количества»: иначе при
+  // добавлении дня недели окно уже занято старыми датами и новые не появляются.
+  let key = firstOccurrence(today, s.rule)
+  let count = 0
   let guard = 0
-  while (future.length < MEETING_WINDOW && guard++ < 64) {
-    const nextKey = lastDate ? nextOccurrence(lastDate, s.rule) : firstOccurrence(today, s.rule)
-    if (!nextKey) break
-    lastDate = nextKey
-    if (dates.has(nextKey)) continue
-    const inst = makeInstance(s.id, s, nextKey, nowISO())
-    d.cards[inst.id] = inst
-    dates.add(nextKey)
-    future.push(inst)
+  while (key && count < MEETING_WINDOW && guard++ < 400) {
+    if (!dates.has(key)) {
+      const inst = makeInstance(s.id, s, key, nowISO())
+      d.cards[inst.id] = inst
+      dates.add(key)
+    }
+    count++
+    key = nextOccurrence(key, s.rule)
   }
   const past = own()
     .filter((c) => (c.date ?? '') < today)
