@@ -72,6 +72,7 @@ function topUpMeetingSeries(d: BoardData, s: Series): void {
     }
   }
   const dates = new Set(own().map((c) => c.date).filter(Boolean) as string[])
+  const ex = new Set(s.exdates ?? []) // даты, удалённые пользователем по одной — не пересоздаём
   // Идём по ближайшим MEETING_WINDOW датам ПО ПОРЯДКУ (по всем дням правила —
   // и понедельникам, и четвергам, и всем числам месяца) и досоздаём недостающие.
   // Важно перебирать по порядку, а не «добивать до количества»: иначе при
@@ -80,7 +81,7 @@ function topUpMeetingSeries(d: BoardData, s: Series): void {
   let count = 0
   let guard = 0
   while (key && count < MEETING_WINDOW && guard++ < 400) {
-    if (!dates.has(key)) {
+    if (!dates.has(key) && !ex.has(key)) {
       const inst = makeInstance(s.id, s, key, nowISO())
       d.cards[inst.id] = inst
       dates.add(key)
@@ -683,6 +684,16 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
         if (!card) return
         const wasMeeting = card.kind === 'meeting'
         const title = card.title
+        // Удаление одного экземпляра повторяющейся встречи: запоминаем дату как
+        // исключение, иначе автопополнение серии создаст встречу на неё заново.
+        const s = card.seriesId ? d.series?.[card.seriesId] : undefined
+        if (s && s.kind === 'meeting' && !s.deleted && card.date) {
+          if (!s.exdates) s.exdates = []
+          if (!s.exdates.includes(card.date)) {
+            s.exdates.push(card.date)
+            touch(s)
+          }
+        }
         card.deleted = true
         touch(card)
         const col = d.columns.find((c) => c.id === card.columnId)

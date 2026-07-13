@@ -82,6 +82,8 @@ export interface Series {
   /** время 'HH:MM' (необязательно). Если задано — экземпляры попадают в сетку календаря */
   start?: string
   durationMin?: number
+  /** Даты-исключения (YYYY-MM-DD): удалённые по одному экземпляры не пересоздаём */
+  exdates?: string[]
   deleted?: boolean
   createdAt: string
   updatedAt: string

@@ -351,6 +351,9 @@ function CardModalInner({ card, store, onClose }: { card: Card; store: BoardStor
   // --- тип карточки: задача / встреча ---
   const isMeeting = card.kind === 'meeting'
   const isRecurring = !!card.seriesId
+  const series = card.seriesId ? store.seriesById(card.seriesId) : undefined
+  const canDeleteSeries = !!series && !series.deleted
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
   const setKind = (kind: CardKind) => {
     if ((card.kind ?? 'task') !== kind) store.updateCard(card.id, { kind })
   }
@@ -453,8 +456,21 @@ function CardModalInner({ card, store, onClose }: { card: Card; store: BoardStor
 
   // --- удаление карточки ---
   const deleteCard = () => {
+    // Повторяющаяся карточка — показываем выбор (эту / все); иначе обычное подтверждение.
+    if (canDeleteSeries) {
+      setConfirmingDelete(true)
+      return
+    }
     if (!confirm('Удалить карточку? Это действие нельзя отменить.')) return
     store.deleteCard(card.id)
+    onClose()
+  }
+  const deleteThisInstance = () => {
+    store.deleteCard(card.id)
+    onClose()
+  }
+  const deleteWholeSeries = () => {
+    if (series) store.deleteSeries(series.id)
     onClose()
   }
 
@@ -848,9 +864,24 @@ function CardModalInner({ card, store, onClose }: { card: Card; store: BoardStor
         {/* ---------- Футер ---------- */}
         <footer className="cm-footer">
           <span className="muted">Создано {fmtFullDate(new Date(card.createdAt))}</span>
-          <button type="button" className="btn btn-danger btn-sm" onClick={deleteCard}>
-            Удалить карточку
-          </button>
+          {confirmingDelete && canDeleteSeries ? (
+            <div className="cm-del-choice">
+              <span className="cm-del-q">Удалить {isMeeting ? 'встречу' : 'задачу'}:</span>
+              <button type="button" className="btn btn-danger btn-sm" onClick={deleteThisInstance}>
+                только эту
+              </button>
+              <button type="button" className="btn btn-danger btn-sm" onClick={deleteWholeSeries}>
+                все повторяющиеся
+              </button>
+              <button type="button" className="btn btn-sm" onClick={() => setConfirmingDelete(false)}>
+                Отмена
+              </button>
+            </div>
+          ) : (
+            <button type="button" className="btn btn-danger btn-sm" onClick={deleteCard}>
+              Удалить {isMeeting ? 'встречу' : 'карточку'}
+            </button>
+          )}
         </footer>
         </div>
         {!isMeeting && <CommentsPanel card={card} />}

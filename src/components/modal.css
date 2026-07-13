@@ -671,6 +671,27 @@
   font-size: 12.5px;
 }
 
+/* Выбор при удалении повторяющейся карточки: эту / все / отмена */
+.cm-del-choice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.cm-del-q {
+  color: var(--text-soft);
+  font-weight: 600;
+}
+@media (max-width: 720px) {
+  .cm-footer {
+    flex-wrap: wrap;
+  }
+  .cm-del-choice {
+    width: 100%;
+  }
+}
+
 /* ---------- Комментарии ---------- */
 
 .cm-comments {
