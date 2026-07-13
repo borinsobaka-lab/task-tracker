@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-13T07:16:05.236Z",
+  "generatedAt": "2026-07-13T07:16:07.259Z",
   "items": [
     {
       "id": "2c23ac8a-8875-4b23-9d1d-7724145cf55c",
@@ -474,7 +474,7 @@
       "title": "Написать юристам о начале работы.",
       "date": "2026-07-13",
       "start": "10:30",
-      "durationMin": 90,
+      "durationMin": 30,
       "done": true,
       "priorityColor": "#ef4444",
       "members": [
