@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-13T04:36:10.869Z",
+  "generatedAt": "2026-07-13T04:36:35.853Z",
   "items": [
     {
       "id": "2c23ac8a-8875-4b23-9d1d-7724145cf55c",
@@ -485,6 +485,20 @@
       "start": "16:00",
       "durationMin": 60,
       "priorityColor": "#ef4444",
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        }
+      ]
+    },
+    {
+      "id": "8ea039c3-7737-47d0-9e70-e4bf06ca9c58",
+      "title": "Посмотреть новых конкурентов из анализа конкурентов от Насти СММ",
+      "date": "2026-07-13",
+      "start": "17:00",
+      "durationMin": 60,
+      "priorityColor": "#eab308",
       "members": [
         {
           "name": "Вова",
