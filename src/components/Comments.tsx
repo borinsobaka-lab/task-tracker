@@ -11,6 +11,7 @@ import { getCommentsSeen, setCommentsSeen } from '../config'
 import { fmtDateTime, initials, nowISO } from '../utils'
 import { sanitizeCommentHtml } from '../richText'
 import { Avatar } from './Avatar'
+import { IcoComment } from '../icons'
 import { EditorToolbar, richTextExtensions } from './RichTextEditor'
 
 // ---------- Контекст «прочитанного» (локально на устройстве) ----------
@@ -75,7 +76,7 @@ export function CommentsPanel({ card }: { card: Card }) {
   return (
     <aside className="cm-comments">
       <div className="cm-comments-head">
-        <span className="field-label">Комментарии{comments.length ? ` · ${comments.length}` : ''}</span>
+        <span className="field-label"><span className="inline-ico" aria-hidden><IcoComment size={14} /></span>Комментарии{comments.length ? ` · ${comments.length}` : ''}</span>
       </div>
       <CommentComposer onSubmit={(html) => store.addComment(card.id, html)} />
       <div className="comment-list">

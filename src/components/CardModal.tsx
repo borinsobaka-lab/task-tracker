@@ -10,7 +10,7 @@ import type { Attachment, Card, CardKind, ChecklistItem, EisenhowerQuadrant, ID,
 import { fmtDayMonth, fmtFullDate, formatBytes, parseDateKey, toDateKey } from '../utils'
 import { QUADRANT_COLOR, QUADRANT_LABEL, QUADRANTS } from '../eisenhower'
 import { describeRule, ruleIsValid } from '../recurrence'
-import { IcoCalendar, IcoCheck, IcoChevronDown, IcoClose, IcoMeeting, IcoRecurring, IcoX } from '../icons'
+import { IcoCalendar, IcoCheck, IcoChevronDown, IcoClose, IcoDescription, IcoMeeting, IcoPaperclip, IcoRecurring, IcoX } from '../icons'
 import { Avatar } from './Avatar'
 import { RichTextEditor } from './RichTextEditor'
 import { RecurrenceFields } from './RecurrenceFields'
@@ -723,7 +723,7 @@ function CardModalInner({ card, store, onClose }: { card: Card; store: BoardStor
 
         {/* ---------- Описание ---------- */}
         <section className="cm-section">
-          <span className="field-label">Описание</span>
+          <span className="field-label"><span className="inline-ico" aria-hidden><IcoDescription size={14} /></span>Описание</span>
           <RichTextEditor
             value={card.description}
             onChange={(html) => store.updateCard(card.id, { description: html })}
@@ -735,7 +735,7 @@ function CardModalInner({ card, store, onClose }: { card: Card; store: BoardStor
         {!isMeeting && (
         <section className="cm-section">
           <div className="cm-check-head">
-            <span className="field-label">Чек-лист</span>
+            <span className="field-label"><span className="inline-ico" aria-hidden><IcoCheck size={14} /></span>Чек-лист</span>
             {checklistTotal > 0 && (
               <span className="cm-check-count">
                 {checklistDone}/{checklistTotal}
@@ -781,7 +781,7 @@ function CardModalInner({ card, store, onClose }: { card: Card; store: BoardStor
         {!isMeeting && (
         <section className="cm-section">
           <div className="cm-att-head">
-            <span className="field-label">Вложения</span>
+            <span className="field-label"><span className="inline-ico" aria-hidden><IcoPaperclip size={14} /></span>Вложения</span>
             <button type="button" className="btn btn-sm" onClick={() => fileInputRef.current?.click()}>
               Прикрепить файл
             </button>
