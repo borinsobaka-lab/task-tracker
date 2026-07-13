@@ -423,6 +423,12 @@
   color: var(--text-faint);
 }
 
+/* Просроченная задача — красный заголовок (закреплённая в зоне «весь день») */
+.cal-chip.overdue .cal-chip-title {
+  color: var(--danger);
+  font-weight: 600;
+}
+
 .cal-chip.done {
   opacity: 0.75;
 }
@@ -684,6 +690,11 @@
 
 .cal-event.done .cal-event-title {
   text-decoration: line-through;
+}
+
+/* Просроченная задача сегодняшнего дня — красный заголовок */
+.cal-event.overdue .cal-event-title {
+  color: var(--danger);
 }
 
 /* Прошедшая встреча: без отметки выполнения — просто зачёркнута и приглушена */

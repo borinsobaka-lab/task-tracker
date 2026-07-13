@@ -263,6 +263,18 @@ export function CalendarView({ memberFilter, onMemberFilterChange, onOpenCard }:
   // «Зона сна» текущего пользователя — серые слоты 00:00–это_время
   const sleepUntil = Math.max(0, Math.min(12, store.identity?.sleepUntil ?? 0))
   const nowMin = now.getHours() * 60 + now.getMinutes()
+  const nowMs = now.getTime()
+  // Конец задачи: со временем — начало+длительность; без времени — конец её дня.
+  const cardEndMs = (c: Card): number => {
+    const d = parseDateKey(c.date!)
+    if (c.start) {
+      const [hh, mm] = c.start.split(':').map(Number)
+      return new Date(d.getFullYear(), d.getMonth(), d.getDate(), hh, mm).getTime() + (c.durationMin ?? 60) * 60000
+    }
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59).getTime()
+  }
+  // Просроченная задача: не выполнена, не встреча, есть дата, и её конец уже прошёл.
+  const isOverdue = (c: Card): boolean => !c.done && c.kind !== 'meeting' && !!c.date && cardEndMs(c) < nowMs
 
   const memberById = useMemo(() => new Map(store.members.map((m) => [m.id, m])), [store.members])
 
@@ -287,10 +299,22 @@ export function CalendarView({ memberFilter, onMemberFilterChange, onOpenCard }:
     .filter((g) => g.cards.length > 0)
     .sort((a, b) => colRank(a.col.role) - colRank(b.col.role))
   const unscheduledOther = unscheduled.filter((c) => !liveColumns.some((col) => col.id === c.columnId))
-  const allDayByDay = dayKeys.map((key) =>
-    visible.filter((c) => c.date === key && !c.start).sort((a, b) => a.title.localeCompare(b.title, 'ru')),
+  // Просроченные задачи с прошлых дней закрепляем вверху сегодняшнего дня (в зоне
+  // «весь день», без времени). Механизм включается, только когда сегодня в поле
+  // зрения; иначе (листаем другие недели) задачи показываем на своих местах.
+  const todayVisible = dayKeys.includes(todayKey)
+  const overduePinned = (todayVisible ? visible.filter((c) => isOverdue(c) && c.date! < todayKey) : []).sort(
+    (a, b) => (a.date! + (a.start ?? '')).localeCompare(b.date! + (b.start ?? '')),
   )
-  const timedByDay = dayKeys.map((key) => visible.filter((c) => c.date === key && !!c.start))
+  const overdueSet = new Set(overduePinned.map((c) => c.id))
+  const allDayByDay = dayKeys.map((key) => {
+    const own = visible
+      .filter((c) => c.date === key && !c.start && !overdueSet.has(c.id))
+      .sort((a, b) => a.title.localeCompare(b.title, 'ru'))
+    // Сегодня: сверху — просроченные с прошлых дней, затем обычные задачи дня.
+    return key === todayKey ? [...overduePinned, ...own] : own
+  })
+  const timedByDay = dayKeys.map((key) => visible.filter((c) => c.date === key && !!c.start && !overdueSet.has(c.id)))
 
   const assigneesOf = (c: Card): Member[] =>
     c.assigneeIds.map((id) => memberById.get(id)).filter((m): m is Member => !!m)
@@ -524,10 +548,11 @@ export function CalendarView({ memberFilter, onMemberFilterChange, onOpenCard }:
   const renderChip = (c: Card): React.ReactNode => {
     const dragging = draggedCardId === c.id && drag?.source.kind === 'allday'
     const armed = armedCardId === c.id && drag?.source.kind === 'allday'
+    const overdue = isOverdue(c)
     return (
       <div
         key={c.id}
-        className={`cal-chip${c.done ? ' done' : ''}${dragging ? ' is-dragging' : ''}${armed ? ' armed' : ''}${isMeeting(c) ? ' meeting' : ''}`}
+        className={`cal-chip${c.done ? ' done' : ''}${overdue ? ' overdue' : ''}${dragging ? ' is-dragging' : ''}${armed ? ' armed' : ''}${isMeeting(c) ? ' meeting' : ''}`}
         style={{ '--ev-color': colorOf(c), '--prio-color': priorityStripeColor(c.priority) } as React.CSSProperties}
         title={c.title}
         onPointerDown={(e) =>
@@ -573,10 +598,11 @@ export function CalendarView({ memberFilter, onMemberFilterChange, onOpenCard }:
     // Встречи не отмечают выполненными — они просто «проходят». Прошедшие зачёркиваем.
     const dayKey = dayKeys[dayIdx]
     const meetingPast = mtg && (dayKey < todayKey || (dayKey === todayKey && ev.startMin + dur <= nowMin))
+    const overdue = isOverdue(c)
     return (
       <div
         key={c.id}
-        className={`cal-event${c.done ? ' done' : ''}${meetingPast ? ' past' : ''}${compact ? ' compact' : ''}${dragging ? ' is-dragging' : ''}${armed ? ' armed' : ''}${mtg ? ' meeting' : ''}`}
+        className={`cal-event${c.done ? ' done' : ''}${overdue ? ' overdue' : ''}${meetingPast ? ' past' : ''}${compact ? ' compact' : ''}${dragging ? ' is-dragging' : ''}${armed ? ' armed' : ''}${mtg ? ' meeting' : ''}`}
         style={
           {
             top,
