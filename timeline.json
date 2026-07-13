@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-13T06:41:25.592Z",
+  "generatedAt": "2026-07-13T06:41:59.247Z",
   "items": [
     {
       "id": "2c23ac8a-8875-4b23-9d1d-7724145cf55c",
@@ -645,24 +645,6 @@
         {
           "name": "Вова",
           "color": "#84cc16"
-        }
-      ]
-    },
-    {
-      "id": "b67df382-68d3-4adb-acd3-0371cbd1168a",
-      "title": "Без названия",
-      "date": "2026-07-16",
-      "start": "13:30",
-      "durationMin": 30,
-      "kind": "meeting",
-      "members": [
-        {
-          "name": "Вова",
-          "color": "#84cc16"
-        },
-        {
-          "name": "Настя",
-          "color": "#ec4899"
         }
       ]
     },
