@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-13T06:13:37.094Z",
+  "generatedAt": "2026-07-13T06:13:55.226Z",
   "items": [
     {
       "id": "2c23ac8a-8875-4b23-9d1d-7724145cf55c",
@@ -482,15 +482,6 @@
       ]
     },
     {
-      "id": "8eea74f1-1f88-4aee-8bec-b9d1c0dfcc6b",
-      "title": "Без названия",
-      "date": "2026-07-13",
-      "start": "11:30",
-      "durationMin": 60,
-      "kind": "meeting",
-      "members": []
-    },
-    {
       "id": "ca2f078b-2253-469c-b913-dcd26bf6374a",
       "title": "Дать Насте доступ к таск трекеру",
       "date": "2026-07-13",
@@ -516,6 +507,24 @@
         {
           "name": "Вова",
           "color": "#84cc16"
+        }
+      ]
+    },
+    {
+      "id": "8eea74f1-1f88-4aee-8bec-b9d1c0dfcc6b",
+      "title": "Без названия",
+      "date": "2026-07-13",
+      "start": "13:30",
+      "durationMin": 30,
+      "kind": "meeting",
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        },
+        {
+          "name": "Настя",
+          "color": "#ec4899"
         }
       ]
     },
