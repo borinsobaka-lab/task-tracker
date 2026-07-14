@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-14T04:23:49.026Z",
+  "generatedAt": "2026-07-14T05:02:25.107Z",
   "items": [
     {
       "id": "2c23ac8a-8875-4b23-9d1d-7724145cf55c",
@@ -591,6 +591,20 @@
       "start": "14:00",
       "durationMin": 60,
       "priorityColor": "#eab308",
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        }
+      ]
+    },
+    {
+      "id": "f8498e2d-cde2-4c77-a564-10beee96c785",
+      "title": "Массаж",
+      "date": "2026-07-14",
+      "start": "14:00",
+      "durationMin": 60,
+      "kind": "meeting",
       "members": [
         {
           "name": "Вова",
