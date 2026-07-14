@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-14T05:02:43.877Z",
+  "generatedAt": "2026-07-14T05:05:04.377Z",
   "items": [
     {
       "id": "2c23ac8a-8875-4b23-9d1d-7724145cf55c",
@@ -575,7 +575,7 @@
       "title": "Встреча с владельцем Lady Stretch Дмитрием",
       "date": "2026-07-14",
       "start": "12:30",
-      "durationMin": 90,
+      "durationMin": 60,
       "kind": "meeting",
       "members": [
         {
