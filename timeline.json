@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-14T05:12:48.939Z",
+  "generatedAt": "2026-07-14T08:24:43.378Z",
   "items": [
     {
       "id": "2c23ac8a-8875-4b23-9d1d-7724145cf55c",
@@ -570,20 +570,6 @@
       ]
     },
     {
-      "id": "06cf13ca-1a37-4c44-9f78-d34c9b753a88",
-      "title": "Встреча с владельцем Lady Stretch Дмитрием",
-      "date": "2026-07-14",
-      "start": "12:30",
-      "durationMin": 60,
-      "kind": "meeting",
-      "members": [
-        {
-          "name": "Вова",
-          "color": "#84cc16"
-        }
-      ]
-    },
-    {
       "id": "f8498e2d-cde2-4c77-a564-10beee96c785",
       "title": "Массаж",
       "date": "2026-07-14",
@@ -669,10 +655,24 @@
       ]
     },
     {
+      "id": "06cf13ca-1a37-4c44-9f78-d34c9b753a88",
+      "title": "Встреча с владельцем Lady Stretch Дмитрием",
+      "date": "2026-07-15",
+      "start": "10:00",
+      "durationMin": 60,
+      "kind": "meeting",
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        }
+      ]
+    },
+    {
       "id": "de6b9b49-b0a9-4180-a7b8-64924103e6b9",
       "title": "Разобрать и сегментировать задачи леди стретч со встреч с Натальей",
       "date": "2026-07-15",
-      "start": "09:30",
+      "start": "11:00",
       "durationMin": 180,
       "priorityColor": "#eab308",
       "members": [
