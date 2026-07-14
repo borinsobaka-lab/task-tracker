@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-13T16:13:48.580Z",
+  "generatedAt": "2026-07-14T03:31:35.172Z",
   "items": [
     {
       "id": "2c23ac8a-8875-4b23-9d1d-7724145cf55c",
@@ -535,20 +535,6 @@
       "date": "2026-07-13",
       "start": "20:00",
       "durationMin": 240,
-      "kind": "meeting",
-      "members": [
-        {
-          "name": "Вова",
-          "color": "#84cc16"
-        }
-      ]
-    },
-    {
-      "id": "53033937-dbd4-4d31-b0d8-cff5221ba4bf",
-      "title": "Тренировка",
-      "date": "2026-07-14",
-      "start": "09:00",
-      "durationMin": 60,
       "kind": "meeting",
       "members": [
         {
