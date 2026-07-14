@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-14T13:03:37.609Z",
+  "generatedAt": "2026-07-14T13:04:04.005Z",
   "items": [
     {
       "id": "2c23ac8a-8875-4b23-9d1d-7724145cf55c",
@@ -770,6 +770,7 @@
       "date": "2026-07-16",
       "start": "13:30",
       "durationMin": 60,
+      "priorityColor": "#ef4444",
       "members": [
         {
           "name": "Настя",
