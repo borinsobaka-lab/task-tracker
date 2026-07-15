@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-15T08:02:02.053Z",
+  "generatedAt": "2026-07-15T08:02:15.886Z",
   "items": [
     {
       "id": "2c23ac8a-8875-4b23-9d1d-7724145cf55c",
@@ -375,18 +375,6 @@
       "title": "Оплата ИП Грузии и декларации",
       "date": "2026-07-12",
       "done": true,
-      "members": [
-        {
-          "name": "Вова",
-          "color": "#84cc16"
-        }
-      ]
-    },
-    {
-      "id": "3d0ff9b4-2cb2-4eca-9bef-cd5cfa156472",
-      "title": "Обновить данные по ТБС",
-      "date": "2026-07-12",
-      "priorityColor": "#ef4444",
       "members": [
         {
           "name": "Вова",
@@ -789,6 +777,20 @@
         {
           "name": "Настя",
           "color": "#ec4899"
+        }
+      ]
+    },
+    {
+      "id": "3d0ff9b4-2cb2-4eca-9bef-cd5cfa156472",
+      "title": "Обновить данные по ТБС",
+      "date": "2026-07-16",
+      "start": "14:30",
+      "durationMin": 60,
+      "priorityColor": "#ef4444",
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
         }
       ]
     },
