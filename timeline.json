@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-15T08:01:55.427Z",
+  "generatedAt": "2026-07-15T08:02:02.053Z",
   "items": [
     {
       "id": "2c23ac8a-8875-4b23-9d1d-7724145cf55c",
@@ -640,10 +640,12 @@
       ]
     },
     {
-      "id": "391ca8a3-7ed2-4a16-96a6-a87cfce43545",
-      "title": "Заказать воду в Ваке",
+      "id": "06cf13ca-1a37-4c44-9f78-d34c9b753a88",
+      "title": "Встреча с владельцем Lady Stretch Дмитрием",
       "date": "2026-07-15",
-      "priorityColor": "#ef4444",
+      "start": "11:00",
+      "durationMin": 60,
+      "kind": "meeting",
       "members": [
         {
           "name": "Вова",
@@ -652,12 +654,12 @@
       ]
     },
     {
-      "id": "06cf13ca-1a37-4c44-9f78-d34c9b753a88",
-      "title": "Встреча с владельцем Lady Stretch Дмитрием",
+      "id": "391ca8a3-7ed2-4a16-96a6-a87cfce43545",
+      "title": "Заказать воду в Ваке",
       "date": "2026-07-15",
-      "start": "11:00",
+      "start": "13:30",
       "durationMin": 60,
-      "kind": "meeting",
+      "priorityColor": "#ef4444",
       "members": [
         {
           "name": "Вова",
