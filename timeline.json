@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-15T08:02:15.886Z",
+  "generatedAt": "2026-07-15T08:02:32.478Z",
   "items": [
     {
       "id": "2c23ac8a-8875-4b23-9d1d-7724145cf55c",
@@ -589,20 +589,6 @@
       ]
     },
     {
-      "id": "15a5209d-4c4a-4eae-9e9f-d8ddf9d96b7f",
-      "title": "Сделать шаблон для отправки клиентам WhatsApp, чтобы выходить с ними на контакт в акции",
-      "date": "2026-07-14",
-      "start": "19:00",
-      "durationMin": 60,
-      "priorityColor": "#eab308",
-      "members": [
-        {
-          "name": "Вова",
-          "color": "#84cc16"
-        }
-      ]
-    },
-    {
       "id": "05923e3a-f038-452b-816d-129d9406fe69",
       "title": "Падел",
       "date": "2026-07-14",
@@ -787,6 +773,20 @@
       "start": "14:30",
       "durationMin": 60,
       "priorityColor": "#ef4444",
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        }
+      ]
+    },
+    {
+      "id": "15a5209d-4c4a-4eae-9e9f-d8ddf9d96b7f",
+      "title": "Сделать шаблон для отправки клиентам WhatsApp, чтобы выходить с ними на контакт в акции",
+      "date": "2026-07-16",
+      "start": "15:30",
+      "durationMin": 60,
+      "priorityColor": "#eab308",
       "members": [
         {
           "name": "Вова",
