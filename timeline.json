@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-16T14:18:25.491Z",
+  "generatedAt": "2026-07-16T14:21:08.487Z",
   "items": [
     {
       "id": "2c23ac8a-8875-4b23-9d1d-7724145cf55c",
@@ -742,21 +742,6 @@
       ]
     },
     {
-      "id": "3d0ff9b4-2cb2-4eca-9bef-cd5cfa156472",
-      "title": "Обновить данные по ТБС",
-      "date": "2026-07-16",
-      "start": "14:30",
-      "durationMin": 60,
-      "done": true,
-      "priorityColor": "#ef4444",
-      "members": [
-        {
-          "name": "Вова",
-          "color": "#84cc16"
-        }
-      ]
-    },
-    {
       "id": "15a5209d-4c4a-4eae-9e9f-d8ddf9d96b7f",
       "title": "Сделать шаблон для отправки клиентам WhatsApp, чтобы выходить с ними на контакт в акции",
       "date": "2026-07-16",
@@ -854,10 +839,25 @@
       ]
     },
     {
+      "id": "3d0ff9b4-2cb2-4eca-9bef-cd5cfa156472",
+      "title": "Обновить данные по ТБС",
+      "date": "2026-07-17",
+      "start": "14:30",
+      "durationMin": 60,
+      "done": true,
+      "priorityColor": "#ef4444",
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        }
+      ]
+    },
+    {
       "id": "de6b9b49-b0a9-4180-a7b8-64924103e6b9",
       "title": "Разобрать и сегментировать задачи леди стретч со встреч с Натальей",
       "date": "2026-07-17",
-      "start": "14:30",
+      "start": "15:30",
       "durationMin": 180,
       "priorityColor": "#eab308",
       "members": [
