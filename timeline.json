@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-16T10:54:43.168Z",
+  "generatedAt": "2026-07-16T10:55:18.016Z",
   "items": [
     {
       "id": "2c23ac8a-8875-4b23-9d1d-7724145cf55c",
@@ -834,6 +834,20 @@
         {
           "name": "Настя",
           "color": "#ec4899"
+        }
+      ]
+    },
+    {
+      "id": "fc3b0183-eb1d-4c6d-9bd8-8671d56a7e56",
+      "title": "Встреча с Лизой",
+      "date": "2026-07-17",
+      "start": "11:00",
+      "durationMin": 60,
+      "kind": "meeting",
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
         }
       ]
     },
