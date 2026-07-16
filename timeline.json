@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-16T13:55:16.144Z",
+  "generatedAt": "2026-07-16T14:01:23.821Z",
   "items": [
     {
       "id": "2c23ac8a-8875-4b23-9d1d-7724145cf55c",
@@ -801,6 +801,7 @@
       "id": "7ddaab74-2efd-41f8-9b62-6f0c6d3b4cdd",
       "title": "Обновить скрипт по направлениям тренировок",
       "date": "2026-07-17",
+      "kind": "meeting",
       "priorityColor": "#eab308",
       "members": [
         {
