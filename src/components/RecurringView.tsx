@@ -5,7 +5,7 @@ import type { Card, ID, Member, RecurFreq, RecurrenceRule, Series } from '../typ
 import { describeRule, ruleIsValid } from '../recurrence'
 import type { ViewProps } from '../viewProps'
 import { fmtDayMonth, hasContent, parseDateKey, plainSnippet } from '../utils'
-import { IcoCheck, IcoOpen, IcoRecurring, IcoX } from '../icons'
+import { IcoCheck, IcoRecurring, IcoX } from '../icons'
 import { Avatar, AvatarStack } from './Avatar'
 import { RichTextEditor } from './RichTextEditor'
 import { RecurrenceFields } from './RecurrenceFields'
@@ -31,7 +31,7 @@ const FREQ_FILTERS: { v: 'all' | RecurFreq; label: string }[] = [
   { v: 'yearly', label: 'Ежегодные' },
 ]
 
-export function RecurringView({ memberFilter, onMemberFilterChange, onOpenCard }: ViewProps) {
+export function RecurringView({ memberFilter, onMemberFilterChange }: ViewProps) {
   const store = useBoard()
   const [editing, setEditing] = useState<Series | 'new' | null>(null)
   const [freqFilter, setFreqFilter] = useState<'all' | RecurFreq>('all')
@@ -90,12 +90,12 @@ export function RecurringView({ memberFilter, onMemberFilterChange, onOpenCard }
         )}
 
         {active.map((c) => (
-          <RecRow key={c.id} card={c} rule={store.seriesById(c.seriesId!)?.rule} members={assigneesOf(c)} onEdit={() => openEdit(c)} onToggle={() => store.setCardDone(c.id, true)} onOpenCard={onOpenCard} />
+          <RecRow key={c.id} card={c} rule={store.seriesById(c.seriesId!)?.rule} members={assigneesOf(c)} onEdit={() => openEdit(c)} onToggle={() => store.setCardDone(c.id, true)} />
         ))}
 
         {completed.length > 0 && <div className="rec-sep">Выполненные</div>}
         {completed.map((c) => (
-          <RecRow key={c.id} card={c} rule={store.seriesById(c.seriesId!)?.rule} members={assigneesOf(c)} done onEdit={() => openEdit(c)} onToggle={() => store.setCardDone(c.id, false)} onOpenCard={onOpenCard} />
+          <RecRow key={c.id} card={c} rule={store.seriesById(c.seriesId!)?.rule} members={assigneesOf(c)} done onEdit={() => openEdit(c)} onToggle={() => store.setCardDone(c.id, false)} />
         ))}
       </div>
 
@@ -116,7 +116,6 @@ function RecRow({
   done,
   onEdit,
   onToggle,
-  onOpenCard,
 }: {
   card: Card
   rule?: RecurrenceRule
@@ -124,7 +123,6 @@ function RecRow({
   done?: boolean
   onEdit: () => void
   onToggle: () => void
-  onOpenCard: (id: ID) => void
 }) {
   let dateLabel = ''
   if (card.date) {
@@ -153,12 +151,11 @@ function RecRow({
           {rule && <span className="rec-rule">{describeRule(rule)}</span>}
         </div>
       </button>
-      <div className="rec-right">
-        {members.length > 0 && <AvatarStack members={members} size="sm" />}
-        <button className="icon-btn rec-open" title="Открыть в календаре" aria-label="Открыть карточку" onClick={() => onOpenCard(card.id)}>
-          <IcoOpen size={16} />
-        </button>
-      </div>
+      {members.length > 0 && (
+        <div className="rec-right">
+          <AvatarStack members={members} size="sm" />
+        </div>
+      )}
     </div>
   )
 }

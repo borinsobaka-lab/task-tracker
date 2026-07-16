@@ -158,17 +158,30 @@
 }
 
 @media (max-width: 720px) {
-  /* Поиск прижат вправо и стоит вплотную к настройкам (не «плавает») */
+  /* Поиск — как на десктопе: обычное инлайн-поле, растягивается по свободному месту
+     между названием раздела и кнопкой настроек (без отдельной кнопки и полноэкранного
+     оверлея). */
   .header-search {
-    margin-left: auto;
-  }
-  .app-header .header-right {
-    margin-left: 0;
+    flex: 1;
+    min-width: 0;
   }
   .header-search-field {
+    display: flex;
+    flex: 1;
+    min-width: 0;
+  }
+  .header-search-input {
+    width: 100%;
+    font-size: 16px; /* 16px, чтобы iOS не приближал страницу при фокусе */
+  }
+  /* Отдельная кнопка-иконка поиска на телефоне больше не нужна */
+  .app-header .header-search-btn {
     display: none;
   }
-  .app-header .header-search-btn {
-    display: inline-flex;
+  /* Выпадашка результатов не должна вылезать за правый край экрана */
+  .header-search .search-results {
+    width: min(400px, 92vw);
+    right: 0;
+    left: auto;
   }
 }

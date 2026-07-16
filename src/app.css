@@ -674,11 +674,12 @@
   }
   .header-title-mobile {
     display: block;
-    font-size: 16px;
+    font-size: 22px;
     font-weight: 700;
     letter-spacing: -0.01em;
     color: var(--text);
     white-space: nowrap;
+    flex-shrink: 0;
   }
 
   /* Нижняя навигация: 4 раздела, иконка сверху + подпись снизу */
@@ -687,7 +688,8 @@
     flex-shrink: 0;
     background: var(--surface);
     border-top: 1px solid var(--border);
-    padding-bottom: env(safe-area-inset-bottom);
+    /* Чуть приподнимаем пункты меню над нижней кромкой экрана */
+    padding-bottom: calc(env(safe-area-inset-bottom) + 8px);
     /* чтобы приподнятая кнопка «+» была поверх контента */
     position: relative;
     z-index: 20;

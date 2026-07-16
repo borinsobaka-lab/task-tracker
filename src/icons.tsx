@@ -25,7 +25,7 @@ import {
   SliderVertical,
   SortVertical,
   TrashBinMinimalistic,
-  Videocamera,
+  UsersGroupRounded,
   Widget,
 } from '@solar-icons/react'
 
@@ -41,7 +41,7 @@ export const IcoBoard = duotone(SliderVertical)
 export const IcoCalendar = duotone(Calendar)
 export const IcoMatrix = duotone(Widget)
 export const IcoRecurring = duotone(RepeatOneMinimalistic)
-export const IcoMeeting = duotone(Videocamera)
+export const IcoMeeting = duotone(UsersGroupRounded)
 export const IcoCamera = duotone(Camera)
 export const IcoClose = duotone(CloseCircle)
 export const IcoCheck = duotone(CheckCircle)
