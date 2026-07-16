@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-16T15:18:05.744Z",
+  "generatedAt": "2026-07-16T15:19:41.682Z",
   "items": [
     {
       "id": "2c23ac8a-8875-4b23-9d1d-7724145cf55c",
@@ -719,20 +719,6 @@
       ]
     },
     {
-      "id": "a23c2af8-a366-4884-9637-e1694783b6a3",
-      "title": "Разобраться с hh",
-      "date": "2026-07-16",
-      "start": "13:30",
-      "durationMin": 60,
-      "priorityColor": "#ef4444",
-      "members": [
-        {
-          "name": "Настя",
-          "color": "#ec4899"
-        }
-      ]
-    },
-    {
       "id": "41e1f0d7-ed62-4abc-93ad-7c3e4525d5a0",
       "title": "Падел",
       "date": "2026-07-16",
@@ -955,6 +941,20 @@
           "name": "Вова",
           "color": "#84cc16"
         },
+        {
+          "name": "Настя",
+          "color": "#ec4899"
+        }
+      ]
+    },
+    {
+      "id": "a23c2af8-a366-4884-9637-e1694783b6a3",
+      "title": "Разобраться с hh",
+      "date": "2026-07-20",
+      "start": "13:30",
+      "durationMin": 60,
+      "priorityColor": "#ef4444",
+      "members": [
         {
           "name": "Настя",
           "color": "#ec4899"
