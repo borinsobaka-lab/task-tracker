@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-16T13:54:37.661Z",
+  "generatedAt": "2026-07-16T13:54:52.595Z",
   "items": [
     {
       "id": "2c23ac8a-8875-4b23-9d1d-7724145cf55c",
@@ -646,21 +646,6 @@
       ]
     },
     {
-      "id": "271651f5-f48a-48d7-b336-df9b31baea1b",
-      "title": "Подготовить новые базы для рассылки и тексты для рассылок",
-      "date": "2026-07-15",
-      "start": "15:00",
-      "durationMin": 150,
-      "kind": "task",
-      "priorityColor": "#ef4444",
-      "members": [
-        {
-          "name": "Вова",
-          "color": "#84cc16"
-        }
-      ]
-    },
-    {
       "id": "2038c2c7-220f-43c7-8752-8e0f7514c6be",
       "title": "Padel",
       "date": "2026-07-15",
@@ -846,6 +831,21 @@
       "durationMin": 180,
       "done": true,
       "priorityColor": "#eab308",
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        }
+      ]
+    },
+    {
+      "id": "271651f5-f48a-48d7-b336-df9b31baea1b",
+      "title": "Подготовить новые базы для рассылки и тексты для рассылок",
+      "date": "2026-07-17",
+      "start": "15:00",
+      "durationMin": 150,
+      "kind": "task",
+      "priorityColor": "#ef4444",
       "members": [
         {
           "name": "Вова",
