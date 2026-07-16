@@ -506,10 +506,15 @@ function CardModalInner({ card, store, onClose }: { card: Card; store: BoardStor
   return (
     <div
       className="modal-overlay"
-      onMouseDown={(e) => {
+      // Закрытие по клику на подложку — на pointer-, а не mouse-событиях. Иначе на
+      // телефоне тап по календарю, создающий черновик, порождает «фантомные» mouse-
+      // события, которые прилетают уже на только что открывшуюся подложку и сразу её
+      // закрывают (карточка мелькала и пропадала). Pointer-события открывающий тап
+      // повторно не порождает — модалка остаётся открытой.
+      onPointerDown={(e) => {
         overlayDown.current = e.target === e.currentTarget
       }}
-      onMouseUp={(e) => {
+      onPointerUp={(e) => {
         if (overlayDown.current && e.target === e.currentTarget) onClose()
         overlayDown.current = false
       }}

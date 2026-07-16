@@ -81,7 +81,7 @@ public class TimelineRemoteViewsFactory implements RemoteViewsService.RemoteView
     @Override public int getCount() { return rows.size(); }
     @Override public long getItemId(int position) { return position; }
     @Override public boolean hasStableIds() { return false; }
-    @Override public int getViewTypeCount() { return 3; }
+    @Override public int getViewTypeCount() { return 4; }
     @Override public RemoteViews getLoadingView() { return null; }
 
     @Override
@@ -237,11 +237,35 @@ public class TimelineRemoteViewsFactory implements RemoteViewsService.RemoteView
 
         Item it = row.item;
         boolean isMeeting = "meeting".equals(it.kind);
+
+        // Выполненная задача — узкая плашка: полоса ответственного, точка приоритета,
+        // зачёркнутое название. Без времени.
+        if (it.done) {
+            RemoteViews dv = new RemoteViews(ctx.getPackageName(), R.layout.widget_item_task_done);
+            dv.setInt(R.id.item_bar, "setColorFilter", it.color);
+            dv.setInt(R.id.item_bar, "setImageAlpha", 150);
+            if (!isMeeting && it.priorityColor != null) {
+                dv.setViewVisibility(R.id.item_dot, View.VISIBLE);
+                dv.setInt(R.id.item_dot, "setColorFilter", parseColor(it.priorityColor));
+                dv.setInt(R.id.item_dot, "setImageAlpha", 150);
+            } else {
+                dv.setViewVisibility(R.id.item_dot, View.GONE);
+            }
+            SpannableString s = new SpannableString(it.title);
+            s.setSpan(new StrikethroughSpan(), 0, s.length(), 0);
+            dv.setTextViewText(R.id.item_title, s);
+            Intent doneFill = new Intent();
+            doneFill.setData(Uri.parse(APP_URL + "#card=" + Uri.encode(it.id)));
+            dv.setOnClickFillInIntent(R.id.item_root, doneFill);
+            return dv;
+        }
+
         RemoteViews rv = new RemoteViews(ctx.getPackageName(), R.layout.widget_item_task);
 
-        // Полоса ответственности (цвет исполнителя; у встречи тёмная)
+        // Полоса ответственности (цвет исполнителя; у встречи тёмная).
+        // Сюда доходят только невыполненные задачи (done обрабатывается выше).
         rv.setInt(R.id.item_bar, "setColorFilter", it.color);
-        rv.setInt(R.id.item_bar, "setImageAlpha", it.done ? 110 : 255);
+        rv.setInt(R.id.item_bar, "setImageAlpha", 255);
 
         // Иконка встречи — перед названием; точка приоритета — под названием, слева от времени
         if (isMeeting) {
@@ -252,7 +276,7 @@ public class TimelineRemoteViewsFactory implements RemoteViewsService.RemoteView
             if (it.priorityColor != null) {
                 rv.setViewVisibility(R.id.item_dot, View.VISIBLE);
                 rv.setInt(R.id.item_dot, "setColorFilter", parseColor(it.priorityColor));
-                rv.setInt(R.id.item_dot, "setImageAlpha", it.done ? 110 : 255);
+                rv.setInt(R.id.item_dot, "setImageAlpha", 255);
             } else {
                 rv.setViewVisibility(R.id.item_dot, View.GONE);
             }
@@ -261,17 +285,11 @@ public class TimelineRemoteViewsFactory implements RemoteViewsService.RemoteView
         // Тег «просрочено» в правом нижнем углу — только у просроченных
         rv.setViewVisibility(R.id.item_overdue_tag, row.overdue ? View.VISIBLE : View.GONE);
 
-        // Название (одна строка); просроченные — красным, выполненные — зачёркнуты
+        // Название (одна строка); просроченные — красным
         if (row.overdue) {
             rv.setTextViewText(R.id.item_title, it.title);
             rv.setTextColor(R.id.item_title, RED);
             rv.setTextColor(R.id.item_time, 0xFF9CA3AF);
-        } else if (it.done) {
-            SpannableString s = new SpannableString(it.title);
-            s.setSpan(new StrikethroughSpan(), 0, s.length(), 0);
-            rv.setTextViewText(R.id.item_title, s);
-            rv.setTextColor(R.id.item_title, 0xFF9AA0AE);
-            rv.setTextColor(R.id.item_time, 0xFFB3B8C4);
         } else {
             rv.setTextViewText(R.id.item_title, it.title);
             rv.setTextColor(R.id.item_title, 0xFF111827);
