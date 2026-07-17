@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-17T12:59:08.781Z",
+  "generatedAt": "2026-07-17T13:22:27.182Z",
   "items": [
     {
       "id": "2c23ac8a-8875-4b23-9d1d-7724145cf55c",
@@ -823,6 +823,20 @@
       "start": "23:00",
       "durationMin": 60,
       "priorityColor": "#eab308",
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        }
+      ]
+    },
+    {
+      "id": "2ae4272e-2f7e-42e4-8033-ecb003b3d63c",
+      "title": "Встреча с Мишей",
+      "date": "2026-07-18",
+      "start": "11:00",
+      "durationMin": 60,
+      "kind": "meeting",
       "members": [
         {
           "name": "Вова",
