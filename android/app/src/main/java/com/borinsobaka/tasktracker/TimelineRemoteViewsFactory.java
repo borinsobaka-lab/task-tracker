@@ -39,7 +39,7 @@ public class TimelineRemoteViewsFactory implements RemoteViewsService.RemoteView
     static final int RED = 0xFFDC2626;
     static final int ACCENT = 0xFF5B5BD6;
     static final int MEETING_COLOR = 0xFF1F2937; // тёмная полоса у встреч
-    static final int CARD_H_DP = 58; // высота карточки — для позиционирования красной линии
+    static final int CARD_H_DP = 50; // высота карточки — для позиционирования красной линии
 
     // Кэш загруженного timeline.json, чтобы поминутный тик не дёргал сеть каждую минуту
     private static List<Item> sCache = null;
