@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-17T11:29:38.554Z",
+  "generatedAt": "2026-07-17T11:29:47.627Z",
   "items": [
     {
       "id": "2c23ac8a-8875-4b23-9d1d-7724145cf55c",
@@ -773,40 +773,26 @@
       ]
     },
     {
-      "id": "271651f5-f48a-48d7-b336-df9b31baea1b",
-      "title": "Подготовить новые базы для рассылки и тексты для рассылок",
-      "date": "2026-07-17",
-      "start": "12:00",
-      "durationMin": 150,
-      "kind": "task",
-      "priorityColor": "#ef4444",
-      "members": [
-        {
-          "name": "Вова",
-          "color": "#84cc16"
-        }
-      ]
-    },
-    {
-      "id": "3d0ff9b4-2cb2-4eca-9bef-cd5cfa156472",
-      "title": "Обновить данные по ТБС",
-      "date": "2026-07-17",
-      "start": "14:30",
-      "durationMin": 60,
-      "priorityColor": "#ef4444",
-      "members": [
-        {
-          "name": "Вова",
-          "color": "#84cc16"
-        }
-      ]
-    },
-    {
       "id": "0037661a-d2a3-4c6a-afa4-e2e6cdc2581a",
       "title": "Оплатить юристов и подписать договор",
       "date": "2026-07-17",
       "start": "15:30",
       "durationMin": 120,
+      "priorityColor": "#ef4444",
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        }
+      ]
+    },
+    {
+      "id": "271651f5-f48a-48d7-b336-df9b31baea1b",
+      "title": "Подготовить новые базы для рассылки и тексты для рассылок",
+      "date": "2026-07-17",
+      "start": "17:30",
+      "durationMin": 150,
+      "kind": "task",
       "priorityColor": "#ef4444",
       "members": [
         {
@@ -850,6 +836,20 @@
       "start": "23:00",
       "durationMin": 60,
       "priorityColor": "#eab308",
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        }
+      ]
+    },
+    {
+      "id": "3d0ff9b4-2cb2-4eca-9bef-cd5cfa156472",
+      "title": "Обновить данные по ТБС",
+      "date": "2026-07-18",
+      "start": "13:00",
+      "durationMin": 60,
+      "priorityColor": "#ef4444",
       "members": [
         {
           "name": "Вова",
