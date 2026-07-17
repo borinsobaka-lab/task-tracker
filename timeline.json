@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-17T04:47:23.134Z",
+  "generatedAt": "2026-07-17T04:49:50.505Z",
   "items": [
     {
       "id": "2c23ac8a-8875-4b23-9d1d-7724145cf55c",
@@ -763,7 +763,7 @@
       "title": "Оплатить юристов и подписать договор",
       "date": "2026-07-17",
       "start": "08:30",
-      "durationMin": 60,
+      "durationMin": 120,
       "priorityColor": "#ef4444",
       "members": [
         {
