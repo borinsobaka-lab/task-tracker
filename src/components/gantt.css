@@ -270,6 +270,36 @@
   stroke: #16a34a;
   stroke-dasharray: 4 3;
 }
+/* Широкая невидимая дорожка для наведения/клика по связи */
+.gantt-conn-hit {
+  fill: none;
+  stroke: transparent;
+  stroke-width: 12;
+  pointer-events: stroke;
+  cursor: pointer;
+}
+.gantt-conn-g:hover .gantt-conn {
+  stroke-width: 2.4;
+}
+/* Красный крестик удаления — виден при наведении на связь */
+.gantt-conn-x {
+  opacity: 0;
+  pointer-events: auto;
+  cursor: pointer;
+}
+.gantt-conn-g:hover .gantt-conn-x {
+  opacity: 1;
+}
+.gantt-conn-x circle {
+  fill: #fff;
+  stroke: var(--danger);
+  stroke-width: 1.5;
+}
+.gantt-conn-x line {
+  stroke: var(--danger);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+}
 .gantt-conn-drag {
   stroke: var(--accent);
   stroke-width: 1.8;

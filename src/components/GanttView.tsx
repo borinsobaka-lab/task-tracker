@@ -55,6 +55,20 @@ export const GanttView = forwardRef<GanttHandle, { cards: Card[]; onOpenCard: (i
     const isMeeting = (c: Card) => c.kind === 'meeting'
     const colorOf = (c: Card): string =>
       c.done ? '#16a34a' : isMeeting(c) ? '#1f2937' : assigneesOf(c)[0]?.color ?? 'var(--accent)'
+    // Прошедшая по времени встреча (у встреч нет отметки «выполнено» — гасим по времени)
+    const nowMs = Date.now()
+    const isPastMeeting = (c: Card): boolean => {
+      if (c.kind !== 'meeting' || !c.date) return false
+      if (c.date < today) return true
+      if (c.date > today) return false
+      if (!c.start) return false // встреча «на весь день» сегодня — ещё не прошла
+      const [h, m] = c.start.split(':').map(Number)
+      const dt = parseDateKey(c.date)
+      dt.setHours(h, m + (c.durationMin ?? 0), 0, 0)
+      return dt.getTime() <= nowMs
+    }
+    // Гасим заголовок (светлее + зачёркнут), как у выполненной задачи
+    const dim = (c: Card): boolean => !!c.done || isPastMeeting(c)
 
     const scrollRef = useRef<HTMLDivElement>(null)
     const svgRef = useRef<SVGSVGElement>(null)
@@ -135,7 +149,7 @@ export const GanttView = forwardRef<GanttHandle, { cards: Card[]; onOpenCard: (i
 
     // Связи-зависимости: рисуем, только если обе задачи есть на диаграмме
     const connectors = useMemo(() => {
-      const out: { key: string; x1: number; y1: number; x2: number; y2: number; done: boolean }[] = []
+      const out: { key: string; from: ID; to: ID; x1: number; y1: number; x2: number; y2: number; done: boolean }[] = []
       for (const blocked of rows) {
         const ri = rowIndex.get(blocked.id)
         if (ri === undefined) continue
@@ -148,9 +162,11 @@ export const GanttView = forwardRef<GanttHandle, { cards: Card[]; onOpenCard: (i
           if (bEnd < 0 || kStart < 0) continue
           out.push({
             key: blockerId + '>' + blocked.id,
-            x1: (bEnd + 1) * DAY_W,
+            from: blockerId,
+            to: blocked.id,
+            x1: (bEnd + 1) * DAY_W, // правый край (финиш) предшественника
             y1: bi * ROW_PITCH + BAR_CY,
-            x2: kStart * DAY_W,
+            x2: kStart * DAY_W, // левый край (старт) зависимой задачи
             y2: ri * ROW_PITCH + BAR_CY,
             done: !!blocker.done,
           })
@@ -298,9 +314,16 @@ export const GanttView = forwardRef<GanttHandle, { cards: Card[]; onOpenCard: (i
       return <div className="gantt-empty muted">Нет запланированных задач — добавьте задачам даты, и они появятся на диаграмме.</div>
     }
 
-    const elbow = (x1: number, y1: number, x2: number, y2: number) => {
-      const hx = x1 + 11
-      return `M${x1},${y1} L${hx},${y1} L${hx},${y2} L${x2},${y2}`
+    // Ортогональный маршрут «финиш → старт»: короткий выступ вправо от финиша
+    // предшественника, спуск в промежуток между строками, горизонталь в этом
+    // промежутке (не пересекает полосы) и заход в задачу СЛЕВА (по хронологии).
+    const GAP = 10
+    const connGeom = (c: { x1: number; y1: number; x2: number; y2: number }) => {
+      const midY = (c.y1 + c.y2) / 2
+      const ax = c.x1 + GAP
+      const bx = c.x2 - GAP
+      const d = `M${c.x1},${c.y1} L${ax},${c.y1} L${ax},${midY} L${bx},${midY} L${bx},${c.y2} L${c.x2},${c.y2}`
+      return { d, mx: (ax + bx) / 2, my: midY }
     }
 
     return (
@@ -356,7 +379,7 @@ export const GanttView = forwardRef<GanttHandle, { cards: Card[]; onOpenCard: (i
                   <div className="gantt-left">
                     {project && <ProjectAvatar project={project} size="xs" />}
                     {assignees.length > 0 && <AvatarStack members={assignees} size="xs" />}
-                    <span className={'gantt-task-title' + (c.done ? ' done' : '')} title={c.title}>
+                    <span className={'gantt-task-title' + (dim(c) ? ' done' : '')} title={c.title}>
                       {isMeeting(c) && (
                         <span className="inline-ico" aria-hidden>
                           <IcoMeeting size={13} />
@@ -411,7 +434,7 @@ export const GanttView = forwardRef<GanttHandle, { cards: Card[]; onOpenCard: (i
                         </div>
                         {/* Название задачи справа от полосы */}
                         <span
-                          className={'gantt-bar-name' + (c.done ? ' done' : '')}
+                          className={'gantt-bar-name' + (dim(c) ? ' done' : '')}
                           style={{ left: (endIdx + 1) * DAY_W + 8 }}
                         >
                           {c.title}
@@ -454,14 +477,34 @@ export const GanttView = forwardRef<GanttHandle, { cards: Card[]; onOpenCard: (i
                   <path d="M0,0 L6,3 L0,6 Z" fill="#16a34a" />
                 </marker>
               </defs>
-              {connectors.map((c) => (
-                <path
-                  key={c.key}
-                  d={elbow(c.x1, c.y1, c.x2, c.y2)}
-                  className={'gantt-conn' + (c.done ? ' done' : '')}
-                  markerEnd={`url(#${c.done ? 'gantt-arrow-done' : 'gantt-arrow'})`}
-                />
-              ))}
+              {connectors.map((c) => {
+                const g = connGeom(c)
+                return (
+                  <g className="gantt-conn-g" key={c.key}>
+                    <path
+                      d={g.d}
+                      className={'gantt-conn' + (c.done ? ' done' : '')}
+                      markerEnd={`url(#${c.done ? 'gantt-arrow-done' : 'gantt-arrow'})`}
+                    />
+                    {/* Широкая невидимая дорожка — по ней ловим наведение/клик */}
+                    <path
+                      d={g.d}
+                      className="gantt-conn-hit"
+                      onClick={() => store.removeDependency(c.from, c.to)}
+                    />
+                    {/* Красный крестик при наведении — клик удаляет зависимость */}
+                    <g
+                      className="gantt-conn-x"
+                      transform={`translate(${g.mx},${g.my})`}
+                      onClick={() => store.removeDependency(c.from, c.to)}
+                    >
+                      <circle r="8" />
+                      <line x1="-3.2" y1="-3.2" x2="3.2" y2="3.2" />
+                      <line x1="3.2" y1="-3.2" x2="-3.2" y2="3.2" />
+                    </g>
+                  </g>
+                )
+              })}
               {connect && connectSrc && (
                 <line
                   className="gantt-conn-drag"
