@@ -284,7 +284,9 @@ function ProjectsSection() {
       <h3 className="field-label settings-section-title">Проекты</h3>
       <p className="muted settings-hint" style={{ marginBottom: 12 }}>
         Два проекта для табов в шапке. Загрузите иконку (можно SVG) и задайте название —
-        имя на табе не показывается, но пригодится позже для фильтра. Таб «Все» есть всегда.
+        имя на табе не показывается, но используется для фильтра. Таб «Все» есть всегда.
+        Укажите ID Telegram-группы проекта — бот шлёт туда отчёты по задачам этого проекта
+        (задачи без проекта попадают во все группы).
       </p>
       <div className="settings-projects">
         <ProjectSlot slot={0} />
@@ -347,12 +349,27 @@ function ProjectSlot({ slot }: { slot: number }) {
         )}
         <input ref={fileRef} type="file" accept=".svg,image/svg+xml,image/*" hidden onChange={pickIcon} />
       </span>
-      <input
-        className="input settings-project-name"
-        value={name}
-        placeholder={placeholder}
-        onChange={(e) => store.updateProjectSlot(slot, { name: e.target.value })}
-      />
+      <div className="settings-project-fields">
+        <input
+          className="input settings-project-name"
+          value={name}
+          placeholder={placeholder}
+          onChange={(e) => store.updateProjectSlot(slot, { name: e.target.value })}
+        />
+        <label
+          className="settings-project-tg"
+          title="ID Telegram-группы проекта — туда бот шлёт отчёты по задачам этого проекта (и по задачам без проекта)"
+        >
+          <span>Telegram-группа</span>
+          <input
+            className="input settings-project-tg-input"
+            value={project?.tgGroupId ?? ''}
+            placeholder="ID группы, например -1001234567890"
+            inputMode="numeric"
+            onChange={(e) => store.updateProjectSlot(slot, { tgGroupId: e.target.value })}
+          />
+        </label>
+      </div>
     </div>
   )
 }

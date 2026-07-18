@@ -175,6 +175,8 @@ export interface Project {
   name: string
   /** Иконка проекта: data-URL (в т.ч. SVG). Нет — показываем заглушку с буквой. */
   icon?: string
+  /** ID Telegram-группы проекта — туда бот шлёт отчёты по задачам этого проекта. */
+  tgGroupId?: string
   deleted?: boolean
   createdAt: string
   updatedAt: string

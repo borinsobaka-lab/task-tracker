@@ -72,18 +72,43 @@ const w20 = wall(now + 20 * 60000, tz)
 const soon = { cards: { e: { id: 'e', title: 'Скоро', assigneeIds: ['m1'], date: w20.date, start: w20.start } } }
 assert.equal(upcomingWithin(soon, 'm1', tz, now, 30).length, 1, 'событие через 20 мин в окне 30')
 
-// 3) Тексты групповых отчётов
+// 3) Тексты групповых отчётов (общий режим — без проекта)
 const today = wall(now, tz).date
 const boardToday = {
-  members: [{ id: 'm1', name: 'Вова' }],
+  members: [{ id: 'm1', name: 'Вова' }, { id: 'm2', name: 'Аня' }],
   columns: [{ id: 'todo', title: 'Нужно сделать', role: 'todo' }],
-  cards: { t: { id: 't', title: 'Позвонить в банк', assigneeIds: ['m1'], columnId: 'todo', date: today } },
+  projects: [
+    { id: 'proj-1', name: 'Альфа' },
+    { id: 'proj-2', name: 'Бета' },
+  ],
+  cards: {
+    t: { id: 't', title: 'Позвонить в банк', assigneeIds: ['m1'], columnId: 'todo', date: today },
+    a: { id: 'a', title: 'Задача Альфы', assigneeIds: ['m1'], columnId: 'todo', date: today, projectId: 'proj-1' },
+    b: { id: 'b', title: 'Задача Беты', assigneeIds: ['m2'], columnId: 'todo', date: today, projectId: 'proj-2' },
+  },
 }
-const mt = morningText(env, boardToday, [])
+const allGroup = { chatId: 'g0', projectId: null, name: '' }
+const mt = morningText(env, boardToday, allGroup, [])
 assert.ok(mt.includes('Доброе утро'), 'утренний заголовок')
-assert.ok(mt.includes('Позвонить в банк'), 'утренний список содержит задачу')
+assert.ok(mt.includes('Позвонить в банк'), 'утренний список содержит задачу без проекта')
 assert.ok(mt.includes('Вова'), 'группировка по исполнителю')
-const et = eveningText(env, boardToday, [])
+assert.ok(!mt.includes('📁'), 'в общем режиме нет строки с названием проекта')
+const et = eveningText(env, boardToday, allGroup, [])
 assert.ok(et.includes('Итоги дня'), 'вечерний заголовок')
+
+// 3b) Режим по проектам: в группу проекта идут его задачи + задачи без проекта,
+//     сообщение начинается с названия проекта, чужие задачи не попадают.
+const alpha = { chatId: 'g1', projectId: 'proj-1', name: 'Альфа' }
+const beta = { chatId: 'g2', projectId: 'proj-2', name: 'Бета' }
+const mAlpha = morningText(env, boardToday, alpha, [])
+assert.ok(mAlpha.includes('📁'), 'в режиме проекта есть строка с названием проекта')
+assert.ok(mAlpha.includes('Альфа'), 'название проекта Альфа в шапке')
+assert.ok(mAlpha.includes('Задача Альфы'), 'задача проекта попала в его группу')
+assert.ok(mAlpha.includes('Позвонить в банк'), 'задача без проекта попала в группу проекта')
+assert.ok(!mAlpha.includes('Задача Беты'), 'чужая задача не попала в группу проекта Альфа')
+const mBeta = morningText(env, boardToday, beta, [])
+assert.ok(mBeta.includes('Задача Беты'), 'задача Беты в группе Беты')
+assert.ok(mBeta.includes('Позвонить в банк'), 'задача без проекта попала и в группу Беты')
+assert.ok(!mBeta.includes('Задача Альфы'), 'чужая задача не попала в группу Беты')
 
 console.log('OK: все проверки логики Worker пройдены')

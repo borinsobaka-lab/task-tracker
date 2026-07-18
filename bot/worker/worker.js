@@ -2,11 +2,16 @@
 //
 // Делает две вещи (обе — на быстрой инфраструктуре Cloudflare, без задержек):
 //
-//  1) ГРУППОВЫЕ ОТЧЁТЫ в общий чат (как раньше):
+//  1) ГРУППОВЫЕ ОТЧЁТЫ по проектам (у каждого проекта — своя Telegram-группа):
 //       • утром — список задач на сегодня;
 //       • вечером — итоги дня + задачи на завтра;
 //       • днём — то же утреннее сообщение постоянно обновляется под текущие
 //         статусы (проверка раз в минуту, а не раз в 15 минут).
+//     В группу проекта уходят задачи этого проекта + задачи вообще без проекта
+//     (последние попадают во все группы). Сообщение начинается с названия проекта.
+//     Группы берутся из board.projects[].tgGroupId (настраивается в приложении);
+//     если ни у одного проекта id не задан — работаем по-старому, в один чат
+//     GROUP_CHAT_ID со всеми задачами сразу.
 //
 //  2) ЛИЧНЫЕ УВЕДОМЛЕНИЯ (диалог в личке):
 //       /start → пароль сервиса → выбор участника → подписка. Дальше приходят:
@@ -197,6 +202,37 @@ function statusOf(card, colById) {
 function cardsForDate(board, key) {
   return Object.values(board.cards || {}).filter((c) => c && !c.deleted && c.date === key)
 }
+// Попадает ли карточка в группу проекта projectId. Без проекта (projectId == null)
+// — «общая» группа, в неё идёт всё. Для группы конкретного проекта берём задачи
+// этого проекта И задачи вообще без проекта (в т.ч. встречи) — они идут во все группы.
+function matchesProject(card, projectId) {
+  if (!projectId) return true
+  return !card.projectId || card.projectId === projectId
+}
+function cardsForDateProj(board, key, projectId) {
+  return cardsForDate(board, key).filter((c) => matchesProject(c, projectId))
+}
+// Список целевых групп: у каждого проекта с заданным tgGroupId — своя группа.
+// Если ни у кого не задан — падаем в старый режим (один чат GROUP_CHAT_ID, все задачи).
+function targetGroups(env, board) {
+  const projects = (board.projects || []).filter((p) => p && !p.deleted && String(p.tgGroupId || '').trim())
+  if (projects.length) {
+    const seen = new Set()
+    const groups = []
+    for (const p of projects) {
+      const chatId = String(p.tgGroupId).trim()
+      if (seen.has(chatId)) continue // на случай, если двум проектам указали одну группу
+      seen.add(chatId)
+      groups.push({ chatId, projectId: p.id, name: p.name || '' })
+    }
+    return groups
+  }
+  if (env.GROUP_CHAT_ID) return [{ chatId: String(env.GROUP_CHAT_ID), projectId: null, name: '' }]
+  return []
+}
+function projectPrefix(group) {
+  return group && group.name ? `📁 <b>${esc(group.name)}</b>\n` : ''
+}
 function fmtCardLine(card, colById) {
   const st = statusOf(card, colById)
   const time = card.start ? `${card.start} ` : ''
@@ -260,19 +296,21 @@ function renderMoved(moved) {
   })
   return `\n\n🔀 <b>Перенесены на другой день:</b>\n` + lines.join('\n')
 }
-export function morningText(env, board, plannedIds = []) {
+// group = { chatId, projectId, name }. projectId==null и name=='' — «общий» режим
+// (старое поведение, все задачи, без строки с названием проекта).
+export function morningText(env, board, group = { projectId: null, name: '' }, plannedIds = []) {
   const { colById, members } = buildIndex(board)
   const today = dateKey(env, 0)
-  const cards = cardsForDate(board, today)
+  const cards = cardsForDateProj(board, today, group.projectId)
   const body = cards.length === 0 ? 'На сегодня задач не запланировано 🎉' : renderGroups(groupByMember(cards, members), colById)
   const moved = renderMoved(movedCards(board, plannedIds, today))
-  return `☀️ <b>Доброе утро!</b>\nЗадачи на сегодня, ${ddmm(today)}:\n\n${body}${moved}${legendBlock()}`
+  return `${projectPrefix(group)}☀️ <b>Доброе утро!</b>\nЗадачи на сегодня, ${ddmm(today)}:\n\n${body}${moved}${legendBlock()}`
 }
-export function eveningText(env, board, plannedIds = []) {
+export function eveningText(env, board, group = { projectId: null, name: '' }, plannedIds = []) {
   const { colById, members } = buildIndex(board)
   const today = dateKey(env, 0)
   const tomorrow = dateKey(env, 1)
-  const cards = cardsForDate(board, today)
+  const cards = cardsForDateProj(board, today, group.projectId)
   const done = cards.filter((c) => statusOf(c, colById) === 'done')
   let summary
   if (cards.length === 0) summary = 'Задач на сегодня не было.'
@@ -284,18 +322,18 @@ export function eveningText(env, board, plannedIds = []) {
     summary = groups.join('\n\n')
   }
   const moved = renderMoved(movedCards(board, plannedIds, today))
-  const tomCards = cardsForDate(board, tomorrow)
+  const tomCards = cardsForDateProj(board, tomorrow, group.projectId)
   let tomorrowBlock = ''
   if (tomCards.length) {
     tomorrowBlock = `\n\n📅 <b>На завтра, ${ddmm(tomorrow)}:</b>\n\n` + renderGroups(groupByMember(tomCards, members), colById)
   }
-  const head = `🌙 <b>Итоги дня, ${ddmm(today)}</b>\nВыполнено ${done.length} из ${cards.length}.`
+  const head = `${projectPrefix(group)}🌙 <b>Итоги дня, ${ddmm(today)}</b>\nВыполнено ${done.length} из ${cards.length}.`
   return `${head}\n\n${summary}${moved}${tomorrowBlock}${legendBlock()}`
 }
 
-async function sendGroup(env, text) {
+async function sendGroup(env, chatId, text) {
   const r = await tgApi(env, 'sendMessage', {
-    chat_id: env.GROUP_CHAT_ID,
+    chat_id: chatId,
     text,
     parse_mode: 'HTML',
     disable_web_page_preview: true,
@@ -303,9 +341,9 @@ async function sendGroup(env, text) {
   })
   return r.ok ? r.result.message_id : null
 }
-async function editGroup(env, msgId, text) {
+async function editGroup(env, chatId, msgId, text) {
   const r = await tgApi(env, 'editMessageText', {
-    chat_id: env.GROUP_CHAT_ID,
+    chat_id: chatId,
     message_id: msgId,
     text,
     parse_mode: 'HTML',
@@ -317,48 +355,60 @@ async function editGroup(env, msgId, text) {
 }
 
 async function runGroupReport(env, board) {
-  if (!env.GROUP_CHAT_ID) return
+  const groups = targetGroups(env, board)
+  if (!groups.length) return
   const today = dateKey(env, 0)
   const nowHM = tzHHMM(env)
   const morning = env.MORNING || '10:00'
   const evening = env.EVENING || '20:00'
 
   const state = await kvGet(env, 'report')
-  state.days = state.days || {}
-  const day = state.days[today] || {}
+  state.groups = state.groups || {} // состояние по каждому чату отдельно
+  let changed = false
 
-  // Утро (один раз за день, как только наступило время)
-  if (state.morningDate !== today && nowHM >= morning && nowHM < evening) {
-    const planned = cardsForDate(board, today).map((c) => c.id)
-    const id = await sendGroup(env, morningText(env, board, planned))
-    if (id) {
-      day.morningMsgId = id
-      day.plannedIds = planned
-      state.days[today] = day
-      state.morningDate = today
-      await kvPut(env, 'report', state)
+  // Каждая группа проекта живёт своим циклом (утро/день/вечер) независимо.
+  for (const group of groups) {
+    const gs = state.groups[group.chatId] || {}
+    gs.days = gs.days || {}
+    const day = gs.days[today] || {}
+
+    // Утро (один раз за день, как только наступило время)
+    if (gs.morningDate !== today && nowHM >= morning && nowHM < evening) {
+      const planned = cardsForDateProj(board, today, group.projectId).map((c) => c.id)
+      const id = await sendGroup(env, group.chatId, morningText(env, board, group, planned))
+      if (id) {
+        day.morningMsgId = id
+        day.plannedIds = planned
+        gs.days[today] = day
+        gs.morningDate = today
+        state.groups[group.chatId] = gs
+        changed = true
+      }
+      continue
     }
-    return
-  }
 
-  // Вечер (один раз за день)
-  if (state.eveningDate !== today && nowHM >= evening) {
-    const planned = day.plannedIds || []
-    if (day.morningMsgId) await editGroup(env, day.morningMsgId, morningText(env, board, planned))
-    const id = await sendGroup(env, eveningText(env, board, planned))
-    if (id) {
-      day.eveningMsgId = id
-      state.days[today] = day
-      state.eveningDate = today
-      await kvPut(env, 'report', state)
+    // Вечер (один раз за день)
+    if (gs.eveningDate !== today && nowHM >= evening) {
+      const planned = day.plannedIds || []
+      if (day.morningMsgId) await editGroup(env, group.chatId, day.morningMsgId, morningText(env, board, group, planned))
+      const id = await sendGroup(env, group.chatId, eveningText(env, board, group, planned))
+      if (id) {
+        day.eveningMsgId = id
+        gs.days[today] = day
+        gs.eveningDate = today
+        state.groups[group.chatId] = gs
+        changed = true
+      }
+      continue
     }
-    return
+
+    // Днём — обновляем утреннее сообщение под текущие статусы (идемпотентно, без записи в KV)
+    if (gs.morningDate === today && day.morningMsgId && nowHM >= morning && nowHM < evening) {
+      await editGroup(env, group.chatId, day.morningMsgId, morningText(env, board, group, day.plannedIds || []))
+    }
   }
 
-  // Днём — обновляем утреннее сообщение под текущие статусы (идемпотентно, без записи в KV)
-  if (state.morningDate === today && day.morningMsgId && nowHM >= morning && nowHM < evening) {
-    await editGroup(env, day.morningMsgId, morningText(env, board, day.plannedIds || []))
-  }
+  if (changed) await kvPut(env, 'report', state)
 }
 
 // ================= ЛИЧНЫЕ УВЕДОМЛЕНИЯ =================
@@ -602,7 +652,7 @@ export default {
       return new Response('bad request', { status: 400 })
     }
     // /id или /chatid в любом чате (в т.ч. в группе) — сообщить id чата.
-    // Нужен, чтобы узнать GROUP_CHAT_ID группы: добавьте бота в группу и напишите
+    // Нужен, чтобы узнать id группы проекта: добавьте бота в группу и напишите
     // там «/id@ИмяБота». В личке достаточно «/id».
     const idMsg = update.message
     if (idMsg && idMsg.chat && typeof idMsg.text === 'string' && /^\/(id|chatid)(@[\w]+)?(\s|$)/i.test(idMsg.text.trim())) {
@@ -610,7 +660,7 @@ export default {
       try {
         await tgApi(env, 'sendMessage', {
           chat_id: idMsg.chat.id,
-          text: `ID ${where}: <code>${idMsg.chat.id}</code>\n\nВпишите его в переменную <b>GROUP_CHAT_ID</b> воркера — туда будут приходить утренний и вечерний отчёты.`,
+          text: `ID ${where}: <code>${idMsg.chat.id}</code>\n\nВпишите его в приложении: <b>Настройки → Проекты → поле «Telegram-группа»</b> у нужного проекта. Тогда сюда будут приходить отчёты по задачам этого проекта (и по задачам без проекта).`,
           parse_mode: 'HTML',
         })
       } catch {
@@ -619,7 +669,7 @@ export default {
       return new Response('OK')
     }
     // /check — диагностика групповых отчётов: читается ли доска (DATA_TOKEN) и
-    // доходит ли сообщение до группы (GROUP_CHAT_ID + права бота).
+    // доходят ли сообщения до групп проектов (id из настроек + права бота).
     if (idMsg && idMsg.chat && typeof idMsg.text === 'string' && /^\/(check|проверка)(@[\w]+)?(\s|$)/i.test(idMsg.text.trim())) {
       const chatId = String(idMsg.chat.id)
       let board
@@ -630,17 +680,26 @@ export default {
         return new Response('OK')
       }
       const today = dateKey(env, 0)
-      await tgSend(env, chatId, `✅ Доска читается. Задач с датой на сегодня (${ddmm(today)}): ${cardsForDate(board, today).length}.`)
-      if (!env.GROUP_CHAT_ID) {
-        await tgSend(env, chatId, '⚠️ Переменная GROUP_CHAT_ID не задана — отправлять отчёт некуда.')
+      await tgSend(env, chatId, `✅ Доска читается. Всего задач с датой на сегодня (${ddmm(today)}): ${cardsForDate(board, today).length}.`)
+      const groups = targetGroups(env, board)
+      if (!groups.length) {
+        await tgSend(env, chatId, '⚠️ Не настроена ни одна группа: укажите ID Telegram-группы у проектов (Настройки → Проекты) или задайте переменную GROUP_CHAT_ID.')
         return new Response('OK')
       }
-      const r = await tgApi(env, 'sendMessage', { chat_id: env.GROUP_CHAT_ID, text: '🔧 Проверка связи с ботом — если вы это видите, отчёты будут приходить сюда.' })
-      if (r && r.ok) {
-        await tgSend(env, chatId, `✅ В группу отправлено тестовое сообщение (GROUP_CHAT_ID=<code>${esc(String(env.GROUP_CHAT_ID))}</code>). Групповые отчёты будут приходить: утро — ${esc(env.MORNING || '10:00')}, вечер — ${esc(env.EVENING || '20:00')} по ${esc(env.TZ_NAME || 'TZ')}.`)
-      } else {
-        await tgSend(env, chatId, `❌ Не удалось отправить в группу (GROUP_CHAT_ID=<code>${esc(String(env.GROUP_CHAT_ID))}</code>): ${esc((r && r.description) || 'нет ответа от Telegram')}\n\nЧастые причины: бот не добавлен в группу, у него нет права писать сообщения, либо id группы неверный (перепроверьте через /id@ИмяБота внутри группы).`)
+      for (const group of groups) {
+        const label = group.name ? `проекта «${esc(group.name)}»` : 'общей группы'
+        const n = cardsForDateProj(board, today, group.projectId).length
+        const test = group.name
+          ? `🔧 Проверка связи — сюда будут приходить отчёты по проекту «${esc(group.name)}» (и по задачам без проекта).`
+          : '🔧 Проверка связи с ботом — если вы это видите, отчёты будут приходить сюда.'
+        const r = await tgApi(env, 'sendMessage', { chat_id: group.chatId, text: test, parse_mode: 'HTML' })
+        if (r && r.ok) {
+          await tgSend(env, chatId, `✅ В группу ${label} (id=<code>${esc(group.chatId)}</code>) отправлено тестовое сообщение. Задач на сегодня для неё: ${n}.`)
+        } else {
+          await tgSend(env, chatId, `❌ Не удалось отправить в группу ${label} (id=<code>${esc(group.chatId)}</code>): ${esc((r && r.description) || 'нет ответа от Telegram')}\n\nЧастые причины: бот не добавлен в группу, у него нет права писать сообщения, либо id группы неверный (перепроверьте через /id@ИмяБота внутри группы).`)
+        }
       }
+      await tgSend(env, chatId, `Отчёты приходят: утро — ${esc(env.MORNING || '10:00')}, вечер — ${esc(env.EVENING || '20:00')} по ${esc(env.TZ_NAME || 'TZ')}.`)
       return new Response('OK')
     }
     try {

@@ -419,11 +419,11 @@ export interface BoardStore {
   updateMember(id: ID, patch: Partial<Pick<Member, 'name' | 'color' | 'sleepUntil' | 'tgUsername' | 'avatar'>>): void
   archiveMember(id: ID): void
 
-  // Проекты (табы в шапке; пока только визуально)
+  // Проекты (табы в шапке; фильтр задач; группа Telegram)
   projects: Project[]
-  /** Задать имя/иконку слота проекта (0 или 1); слот создаётся при необходимости.
+  /** Задать имя/иконку/группу слота проекта (0 или 1); слот создаётся при необходимости.
    *  icon: строка — установить, undefined — убрать. */
-  updateProjectSlot(slot: number, patch: { name?: string; icon?: string | undefined }): void
+  updateProjectSlot(slot: number, patch: { name?: string; icon?: string | undefined; tgGroupId?: string }): void
 
   // Колонки
   addColumn(title: string): void
@@ -605,6 +605,11 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
         if ('icon' in patch) {
           if (patch.icon) p.icon = patch.icon
           else delete p.icon
+        }
+        if (patch.tgGroupId !== undefined) {
+          const g = patch.tgGroupId.trim()
+          if (g) p.tgGroupId = g
+          else delete p.tgGroupId
         }
         touch(p)
       }),
