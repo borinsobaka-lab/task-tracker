@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-18T23:21:43.986Z",
+  "generatedAt": "2026-07-18T23:21:50.623Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -839,12 +839,11 @@
       ]
     },
     {
-      "id": "271651f5-f48a-48d7-b336-df9b31baea1b",
-      "title": "Подготовить новые базы для рассылки и тексты для рассылок",
+      "id": "01b36ac6-35c9-4439-acd6-7fcb6c57be77",
+      "title": "Написать Петру по Base40",
       "date": "2026-07-19",
       "start": "14:00",
-      "durationMin": 150,
-      "kind": "task",
+      "durationMin": 30,
       "priorityColor": "#ef4444",
       "members": [
         {
@@ -854,11 +853,12 @@
       ]
     },
     {
-      "id": "01b36ac6-35c9-4439-acd6-7fcb6c57be77",
-      "title": "Написать Петру по Base40",
+      "id": "271651f5-f48a-48d7-b336-df9b31baea1b",
+      "title": "Подготовить новые базы для рассылки и тексты для рассылок",
       "date": "2026-07-19",
-      "start": "16:30",
-      "durationMin": 30,
+      "start": "14:30",
+      "durationMin": 150,
+      "kind": "task",
       "priorityColor": "#ef4444",
       "members": [
         {
