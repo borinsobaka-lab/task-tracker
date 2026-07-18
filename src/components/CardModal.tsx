@@ -385,11 +385,15 @@ function CardModalInner({ card, store, onClose }: { card: Card; store: BoardStor
 
   // --- срок/время: локальное состояние поповера ---
   const [dateVal, setDateVal] = useState('')
+  const [endDateVal, setEndDateVal] = useState('')
+  const [rangeMode, setRangeMode] = useState(false)
   const [timeVal, setTimeVal] = useState('')
   const [durVal, setDurVal] = useState('allday')
 
   const openDatePopover = () => {
     setDateVal(card.date ?? toDateKey(new Date()))
+    setEndDateVal(card.endDate ?? '')
+    setRangeMode(!!card.endDate)
     setTimeVal(card.start ?? '')
     setDurVal(card.start ? String(card.durationMin ?? 60) : 'allday')
     setDateOpen(true)
@@ -397,8 +401,14 @@ function CardModalInner({ card, store, onClose }: { card: Card; store: BoardStor
 
   const saveDate = () => {
     if (!dateVal) return
-    if (durVal === 'allday' || !timeVal) store.scheduleCard(card.id, dateVal, null)
-    else store.scheduleCard(card.id, dateVal, timeVal, Number(durVal))
+    if (rangeMode) {
+      const end = endDateVal && endDateVal >= dateVal ? endDateVal : dateVal
+      store.setCardSpan(card.id, dateVal, end)
+    } else if (durVal === 'allday' || !timeVal) {
+      store.scheduleCard(card.id, dateVal, null)
+    } else {
+      store.scheduleCard(card.id, dateVal, timeVal, Number(durVal))
+    }
     setDateOpen(false)
   }
 
@@ -537,9 +547,11 @@ function CardModalInner({ card, store, onClose }: { card: Card; store: BoardStor
   const overlayDown = useRef(false)
 
   const chipLabel = card.date
-    ? `${fmtDayMonth(parseDateKey(card.date))}${
-        card.start ? `, ${card.start} · ${durLabel(card.durationMin ?? 60)}` : ' · весь день'
-      }`
+    ? card.endDate
+      ? `${fmtDayMonth(parseDateKey(card.date))} – ${fmtDayMonth(parseDateKey(card.endDate))}`
+      : `${fmtDayMonth(parseDateKey(card.date))}${
+          card.start ? `, ${card.start} · ${durLabel(card.durationMin ?? 60)}` : ' · весь день'
+        }`
     : 'Добавить дату'
 
   const durationOptions = DURATION_OPTIONS.some((o) => o.value === durVal)
@@ -729,43 +741,74 @@ function CardModalInner({ card, store, onClose }: { card: Card; store: BoardStor
             {dateOpen && (
               <div className="cm-pop cm-pop-date">
                 <div>
-                  <span className="field-label">Дата</span>
+                  <span className="field-label">{rangeMode ? 'Дата начала' : 'Дата'}</span>
                   <input type="date" className="input" value={dateVal} onChange={(e) => setDateVal(e.target.value)} />
                 </div>
-                <div className="cm-date-grid">
+                {rangeMode ? (
                   <div>
-                    <span className="field-label">Время</span>
+                    <span className="field-label">Дата окончания</span>
                     <input
-                      type="time"
+                      type="date"
                       className="input"
-                      value={timeVal}
-                      onChange={(e) => {
-                        const v = e.target.value
-                        setTimeVal(v)
-                        if (v && durVal === 'allday') setDurVal('60')
-                        if (!v) setDurVal('allday')
-                      }}
+                      value={endDateVal}
+                      min={dateVal}
+                      onChange={(e) => setEndDateVal(e.target.value)}
                     />
                   </div>
-                  <div>
-                    <span className="field-label">Длительность</span>
-                    <select
-                      className="input"
-                      value={durVal}
-                      onChange={(e) => {
-                        const v = e.target.value
-                        setDurVal(v)
-                        if (v === 'allday') setTimeVal('')
-                      }}
-                    >
-                      {durationOptions.map((o) => (
-                        <option key={o.value} value={o.value}>
-                          {o.label}
-                        </option>
-                      ))}
-                    </select>
+                ) : (
+                  <div className="cm-date-grid">
+                    <div>
+                      <span className="field-label">Время</span>
+                      <input
+                        type="time"
+                        className="input"
+                        value={timeVal}
+                        onChange={(e) => {
+                          const v = e.target.value
+                          setTimeVal(v)
+                          if (v && durVal === 'allday') setDurVal('60')
+                          if (!v) setDurVal('allday')
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <span className="field-label">Длительность</span>
+                      <select
+                        className="input"
+                        value={durVal}
+                        onChange={(e) => {
+                          const v = e.target.value
+                          setDurVal(v)
+                          if (v === 'allday') setTimeVal('')
+                        }}
+                      >
+                        {durationOptions.map((o) => (
+                          <option key={o.value} value={o.value}>
+                            {o.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
-                </div>
+                )}
+                <label className="cm-range-toggle">
+                  <input
+                    type="checkbox"
+                    checked={rangeMode}
+                    onChange={(e) => {
+                      const on = e.target.checked
+                      setRangeMode(on)
+                      if (on) {
+                        setTimeVal('')
+                        setDurVal('allday')
+                        if (!endDateVal || endDateVal < dateVal) setEndDateVal(dateVal)
+                      } else {
+                        setEndDateVal('')
+                      }
+                    }}
+                  />
+                  Несколько дней (диапазон)
+                </label>
                 <div className="cm-pop-actions">
                   <button type="button" className="btn btn-primary btn-sm" disabled={!dateVal} onClick={saveDate}>
                     Сохранить

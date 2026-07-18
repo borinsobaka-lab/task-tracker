@@ -270,14 +270,16 @@ export function CalendarView({ memberFilter, onMemberFilterChange, projectFilter
   const sleepUntil = Math.max(0, Math.min(12, store.identity?.sleepUntil ?? 0))
   const nowMin = now.getHours() * 60 + now.getMinutes()
   const nowMs = now.getTime()
-  // Конец задачи: со временем — начало+длительность; без времени — конец её дня.
+  // Конец задачи: со временем — начало+длительность; без времени — конец её дня
+  // (для многодневной — конец последнего дня диапазона).
   const cardEndMs = (c: Card): number => {
-    const d = parseDateKey(c.date!)
     if (c.start) {
+      const d = parseDateKey(c.date!)
       const [hh, mm] = c.start.split(':').map(Number)
       return new Date(d.getFullYear(), d.getMonth(), d.getDate(), hh, mm).getTime() + (c.durationMin ?? 60) * 60000
     }
-    return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59).getTime()
+    const e = parseDateKey(c.endDate ?? c.date!)
+    return new Date(e.getFullYear(), e.getMonth(), e.getDate(), 23, 59, 59).getTime()
   }
   // Просроченная задача: не выполнена, не встреча, есть дата, и её конец уже прошёл.
   const isOverdue = (c: Card): boolean => !c.done && c.kind !== 'meeting' && !!c.date && cardEndMs(c) < nowMs
@@ -310,13 +312,16 @@ export function CalendarView({ memberFilter, onMemberFilterChange, projectFilter
   // «весь день», без времени). Механизм включается, только когда сегодня в поле
   // зрения; иначе (листаем другие недели) задачи показываем на своих местах.
   const todayVisible = dayKeys.includes(todayKey)
-  const overduePinned = (todayVisible ? visible.filter((c) => isOverdue(c) && c.date! < todayKey) : []).sort(
+  const overduePinned = (todayVisible ? visible.filter((c) => isOverdue(c) && (c.endDate ?? c.date!) < todayKey) : []).sort(
     (a, b) => (a.date! + (a.start ?? '')).localeCompare(b.date! + (b.start ?? '')),
   )
   const overdueSet = new Set(overduePinned.map((c) => c.id))
+  // Задача «на весь день» покрывает день key: без времени и key в [date, endDate].
+  const coversDay = (c: Card, key: string): boolean =>
+    !c.start && c.date! <= key && (c.endDate ?? c.date!) >= key
   const allDayByDay = dayKeys.map((key) => {
     const own = visible
-      .filter((c) => c.date === key && !c.start && !overdueSet.has(c.id))
+      .filter((c) => coversDay(c, key) && !overdueSet.has(c.id))
       .sort((a, b) => a.title.localeCompare(b.title, 'ru'))
     // Сегодня: сверху — просроченные с прошлых дней, затем обычные задачи дня.
     return key === todayKey ? [...overduePinned, ...own] : own
@@ -586,15 +591,18 @@ export function CalendarView({ memberFilter, onMemberFilterChange, projectFilter
     const dragging = draggedCardId === c.id && drag?.source.kind === 'allday'
     const armed = armedCardId === c.id && drag?.source.kind === 'allday'
     const overdue = isOverdue(c)
+    const isRange = !!c.endDate
     return (
       <div
         key={c.id}
-        className={`cal-chip${c.done ? ' done' : ''}${overdue ? ' overdue' : ''}${dragging ? ' is-dragging' : ''}${armed ? ' armed' : ''}${isMeeting(c) ? ' meeting' : ''}`}
+        className={`cal-chip${c.done ? ' done' : ''}${overdue ? ' overdue' : ''}${dragging ? ' is-dragging' : ''}${armed ? ' armed' : ''}${isMeeting(c) ? ' meeting' : ''}${isRange ? ' range' : ''}`}
         style={{ '--ev-color': colorOf(c), '--prio-color': priorityStripeColor(c.priority) } as React.CSSProperties}
-        title={c.title}
-        onPointerDown={(e) =>
-          beginDrag(e, { kind: 'allday', cardId: c.id }, { durationMin: 60, origDate: c.date })
-        }
+        title={isRange ? `${c.title} (многодневная — правьте в Ганте)` : c.title}
+        // Многодневные не таскаем в календаре (диапазон меняется в Ганте/карточке) — открываем по клику
+        onPointerDown={(e) => {
+          if (!isRange) beginDrag(e, { kind: 'allday', cardId: c.id }, { durationMin: 60, origDate: c.date })
+        }}
+        onClick={isRange ? () => onOpenCard(c.id) : undefined}
         {...dragEvents}
       >
         {!isMeeting(c) && (

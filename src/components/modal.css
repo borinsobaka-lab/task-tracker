@@ -65,6 +65,16 @@
   margin: 0;
 }
 
+/* Переключатель «несколько дней» в поповере даты */
+.cm-range-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-soft);
+  cursor: pointer;
+}
+
 /* Выбор проекта: чипы «Без проекта» + проекты с логотипами */
 .cm-projects {
   display: flex;

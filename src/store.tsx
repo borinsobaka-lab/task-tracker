@@ -472,6 +472,9 @@ export interface BoardStore {
 
   // Календарь
   scheduleCard(id: ID, date: string | null, start?: string | null, durationMin?: number): void
+  /** Многодневная задача: диапазон [startKey, endKey]. Если endKey > startKey — тянется
+   *  на несколько дней (без времени); иначе — обычный однодневный «весь день». */
+  setCardSpan(id: ID, startKey: string, endKey: string): void
 
   // Вложения
   uploadAttachment(cardId: ID, file: File): Promise<void>
@@ -1079,10 +1082,12 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
         if (!card || card.deleted) return
         if (date === null) {
           delete card.date
+          delete card.endDate
           delete card.start
           delete card.durationMin
         } else {
           card.date = date
+          delete card.endDate // однодневное расписание — снимаем многодневный диапазон
           if (start === null) {
             delete card.start
             delete card.durationMin
@@ -1092,6 +1097,24 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
           } else if (durationMin !== undefined) {
             card.durationMin = durationMin
           }
+        }
+        touch(card)
+      }),
+    setCardSpan: (id, startKey, endKey) =>
+      engine.update((d) => {
+        const card = d.cards[id]
+        if (!card || card.deleted) return
+        // Нормализуем порядок дат на всякий случай
+        const start = startKey <= endKey ? startKey : endKey
+        const end = startKey <= endKey ? endKey : startKey
+        card.date = start
+        if (end > start) {
+          card.endDate = end
+          // Многодневная задача — «весь день», без конкретного времени
+          delete card.start
+          delete card.durationMin
+        } else {
+          delete card.endDate // однодневная — время (если было) сохраняем
         }
         touch(card)
       }),
