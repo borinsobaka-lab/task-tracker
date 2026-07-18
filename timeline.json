@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-18T16:43:04.168Z",
+  "generatedAt": "2026-07-18T21:26:38.131Z",
   "items": [
     {
       "id": "2c23ac8a-8875-4b23-9d1d-7724145cf55c",
@@ -833,21 +833,6 @@
       ]
     },
     {
-      "id": "271651f5-f48a-48d7-b336-df9b31baea1b",
-      "title": "Подготовить новые базы для рассылки и тексты для рассылок",
-      "date": "2026-07-18",
-      "start": "17:00",
-      "durationMin": 150,
-      "kind": "task",
-      "priorityColor": "#ef4444",
-      "members": [
-        {
-          "name": "Вова",
-          "color": "#84cc16"
-        }
-      ]
-    },
-    {
       "id": "2ae4272e-2f7e-42e4-8033-ecb003b3d63c",
       "title": "Встреча с Мишей",
       "date": "2026-07-19",
@@ -882,6 +867,21 @@
       "start": "14:00",
       "durationMin": 180,
       "priorityColor": "#eab308",
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        }
+      ]
+    },
+    {
+      "id": "271651f5-f48a-48d7-b336-df9b31baea1b",
+      "title": "Подготовить новые базы для рассылки и тексты для рассылок",
+      "date": "2026-07-19",
+      "start": "17:00",
+      "durationMin": 150,
+      "kind": "task",
+      "priorityColor": "#ef4444",
       "members": [
         {
           "name": "Вова",
