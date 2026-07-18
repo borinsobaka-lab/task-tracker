@@ -224,9 +224,11 @@
   .header-title-mobile {
     order: 0;
   }
+  /* Табы + настройки + поиск — единым блоком у правого края (не зависят от длины
+     заголовка раздела): свободное место уходит в margin-left перед табами. */
   .project-tabs {
     order: 1;
-    margin-right: auto; /* табы у названия, настройки и поиск — к правому краю */
+    margin-left: auto;
   }
   .app-header .header-right {
     order: 2;

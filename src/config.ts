@@ -92,11 +92,11 @@ export function setCalDays(n: number): void {
 }
 
 /** Режим «Таймлайн»: вертикальная хронология задач вместо сетки календаря. */
-export function getCalTimeline(): boolean {
-  return localStorage.getItem('tt.calTimeline') === '1'
+export function getCalGantt(): boolean {
+  return localStorage.getItem('tt.calGantt') === '1'
 }
-export function setCalTimeline(on: boolean): void {
-  localStorage.setItem('tt.calTimeline', on ? '1' : '0')
+export function setCalGantt(on: boolean): void {
+  localStorage.setItem('tt.calGantt', on ? '1' : '0')
 }
 
 /**

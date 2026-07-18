@@ -3,16 +3,14 @@
 
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useBoard } from '../store'
-import { getCalDays, getCalPanelOpen, getCalTimeline, isMobileViewport, setCalDays, setCalPanelOpen, setCalTimeline } from '../config'
+import { getCalDays, getCalPanelOpen, getCalGantt, isMobileViewport, setCalDays, setCalPanelOpen, setCalGantt } from '../config'
 import type { Card, ID, Member } from '../types'
-import { QUADRANT_COLOR, priorityStripeColor } from '../eisenhower'
+import { priorityStripeColor } from '../eisenhower'
 import type { ViewProps } from '../viewProps'
-import { IcoArrowLeft, IcoArrowRight, IcoCheck, IcoLink, IcoMeeting } from '../icons'
+import { IcoArrowLeft, IcoArrowRight, IcoCheck, IcoMeeting } from '../icons'
 import { SubHeader } from './SubHeader'
-import { TimelineView } from './TimelineView'
-import type { TimelineHandle } from './TimelineView'
-import { buildLiveTimelineUrl } from '../timelineShare'
-import type { TLItem } from '../timelineShare'
+import { GanttView } from './GanttView'
+import type { GanttHandle } from './GanttView'
 import {
   addDays,
   clamp,
@@ -158,14 +156,13 @@ export function CalendarView({ memberFilter, onMemberFilterChange, projectFilter
     setCalDays(n)
     setNDaysState(n)
   }
-  // Режим «Таймлайн» — вертикальная хронология вместо сетки
-  const [timeline, setTimelineState] = useState<boolean>(() => getCalTimeline())
-  const setTimeline = (on: boolean) => {
-    setCalTimeline(on)
-    setTimelineState(on)
+  // Режим «Гант» — диаграмма Ганта вместо сетки
+  const [gantt, setGanttState] = useState<boolean>(() => getCalGantt())
+  const setGantt = (on: boolean) => {
+    setCalGantt(on)
+    setGanttState(on)
   }
-  const tlRef = useRef<TimelineHandle>(null)
-  const [copied, setCopied] = useState(false)
+  const ganttRef = useRef<GanttHandle>(null)
   const [anchor, setAnchor] = useState<Date>(() => new Date())
   // На телефоне запоминаем состояние панели «Без даты»; на десктопе всегда открыта.
   const [panelOpen, setPanelOpen] = useState<boolean>(() => (isMobileViewport() ? getCalPanelOpen() : true))
@@ -334,22 +331,6 @@ export function CalendarView({ memberFilter, onMemberFilterChange, projectFilter
   // Встречи — серые, полоса слева и текст всегда чёрные (независимо от участников).
   // Задачи — по цвету исполнителя.
   const colorOf = (c: Card): string => (isMeeting(c) ? '#1f2937' : assigneesOf(c)[0]?.color ?? 'var(--accent)')
-
-  // Снимок задач для таймлайна (и для публичной ссылки). Все запланированные,
-  // без приватных полей — только то, что видно в хронологии.
-  const timelineItems: TLItem[] = visible
-    .filter((c) => !!c.date)
-    .map((c) => ({
-      id: c.id,
-      title: c.title,
-      date: c.date!,
-      ...(c.start ? { start: c.start } : {}),
-      ...(c.durationMin ? { durationMin: c.durationMin } : {}),
-      ...(c.kind ? { kind: c.kind } : {}),
-      ...(c.done ? { done: true } : {}),
-      ...(c.priority ? { priorityColor: QUADRANT_COLOR[c.priority] } : {}),
-      members: assigneesOf(c).map((m) => ({ name: m.name, color: m.color })),
-    }))
 
   // ---------- Геометрия перетаскивания ----------
 
@@ -819,40 +800,18 @@ export function CalendarView({ memberFilter, onMemberFilterChange, projectFilter
       className={`cal-root${drag?.moved ? ' is-dragging' : ''}`}
       style={{ ['--cal-days' as string]: String(nDays), ['--cal-gutter-w' as string]: `${gutterW}px` }}
     >
-      <SubHeader
-        memberFilter={memberFilter}
-        onMemberFilterChange={onMemberFilterChange}
-        right={
-          timeline ? (
-            <button
-              className={'btn btn-sm' + (copied ? ' btn-ok' : '')}
-              title="Скопировать живую ссылку на таймлайн (сама обновляется, только просмотр)"
-              onClick={() => {
-                navigator.clipboard.writeText(buildLiveTimelineUrl()).then(() => {
-                  setCopied(true)
-                  window.setTimeout(() => setCopied(false), 1800)
-                })
-              }}
-            >
-              <span className="btn-ico" aria-hidden>
-                <IcoLink size={15} />
-              </span>
-              {copied ? 'Скопировано' : 'Ссылка'}
-            </button>
-          ) : undefined
-        }
-      >
-        <button className="btn btn-sm" onClick={() => (timeline ? tlRef.current?.scrollToToday() : setAnchor(new Date()))}>
+      <SubHeader memberFilter={memberFilter} onMemberFilterChange={onMemberFilterChange}>
+        <button className="btn btn-sm" onClick={() => (gantt ? ganttRef.current?.scrollToToday() : setAnchor(new Date()))}>
           Сегодня
         </button>
         <select
           className="cal-view-select"
-          value={timeline ? 'timeline' : String(nDays)}
+          value={gantt ? 'gantt' : String(nDays)}
           onChange={(e) => {
             const v = e.target.value
-            if (v === 'timeline') setTimeline(true)
+            if (v === 'gantt') setGantt(true)
             else {
-              setTimeline(false)
+              setGantt(false)
               setNDays(Number(v))
             }
           }}
@@ -862,9 +821,9 @@ export function CalendarView({ memberFilter, onMemberFilterChange, projectFilter
           <option value="1">Сегодня</option>
           <option value="3">3 дня</option>
           <option value="7">Неделя</option>
-          <option value="timeline">Таймлайн</option>
+          <option value="gantt">Гант</option>
         </select>
-        {!timeline && (
+        {!gantt && (
           <div className="cal-nav">
             <button
               className="icon-btn cal-arrow"
@@ -889,14 +848,8 @@ export function CalendarView({ memberFilter, onMemberFilterChange, projectFilter
         )}
       </SubHeader>
 
-      {timeline ? (
-        <TimelineView
-          ref={tlRef}
-          items={timelineItems}
-          interactive
-          onOpenCard={onOpenCard}
-          onToggleDone={(id, done) => store.setCardDone(id, done)}
-        />
+      {gantt ? (
+        <GanttView ref={ganttRef} cards={visible} onOpenCard={onOpenCard} />
       ) : (
       <div className="cal-body">
         {panelOpen ? (

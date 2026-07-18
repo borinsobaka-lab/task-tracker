@@ -1,0 +1,185 @@
+/* Диаграмма Ганта: липкая шапка (месяцы + дни), липкая левая колонка с задачами,
+   справа — временная шкала с полосами. Горизонтальный скролл по дням. */
+.gantt-root {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  background: var(--bg);
+  position: relative;
+  --gantt-left-w: 210px;
+}
+.gantt-inner {
+  display: inline-block;
+  min-width: 100%;
+}
+
+/* ---------- Липкая шапка ---------- */
+.gantt-months,
+.gantt-head {
+  display: flex;
+  position: sticky;
+  z-index: 3;
+  background: var(--surface);
+}
+.gantt-months {
+  top: 0;
+  height: 22px;
+}
+.gantt-head {
+  top: 22px;
+  box-shadow: 0 1px 0 var(--border);
+}
+
+.gantt-left {
+  width: var(--gantt-left-w);
+  flex-shrink: 0;
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: var(--surface);
+  box-shadow: 1px 0 0 var(--border);
+  box-sizing: border-box;
+}
+.gantt-corner {
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-soft);
+}
+
+.gantt-months-track {
+  display: flex;
+  flex-shrink: 0;
+}
+.gantt-month {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-soft);
+  display: flex;
+  align-items: center;
+  padding-left: 6px;
+  border-left: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.gantt-days {
+  display: flex;
+  flex-shrink: 0;
+}
+.gantt-day {
+  width: var(--gantt-day-w);
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 0;
+  border-left: 1px solid var(--border);
+}
+.gantt-day-wd {
+  color: var(--text-faint);
+  font-size: 9px;
+  text-transform: uppercase;
+  line-height: 1.2;
+}
+.gantt-day-num {
+  color: var(--text);
+  font-weight: 600;
+  font-size: 12px;
+  line-height: 1.3;
+}
+.gantt-day.weekend {
+  background: var(--surface-2);
+}
+.gantt-day.today .gantt-day-num {
+  background: var(--accent);
+  color: #fff;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ---------- Тело ---------- */
+.gantt-body {
+  position: relative;
+}
+.gantt-row {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+}
+.gantt-row .gantt-left {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 10px;
+  height: 40px;
+}
+.gantt-task-title {
+  font-size: 13px;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+.gantt-task-title.done {
+  text-decoration: line-through;
+  color: var(--text-faint);
+}
+
+.gantt-track {
+  position: relative;
+  height: 40px;
+  flex-shrink: 0;
+  background-image: repeating-linear-gradient(
+    to right,
+    var(--border) 0,
+    var(--border) 1px,
+    transparent 1px,
+    transparent var(--gantt-day-w)
+  );
+}
+.gantt-today-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: var(--gantt-day-w);
+  background: var(--accent-soft);
+  pointer-events: none;
+}
+.gantt-bar {
+  position: absolute;
+  top: 8px;
+  height: 24px;
+  width: calc(var(--gantt-day-w) - 4px);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  padding: 0 6px;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+.gantt-bar.done {
+  opacity: 0.5;
+}
+.gantt-bar-label {
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.gantt-empty {
+  padding: 40px 20px;
+  text-align: center;
+  font-size: 14px;
+}
