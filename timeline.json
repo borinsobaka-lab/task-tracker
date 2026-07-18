@@ -1,24 +1,6 @@
 {
-  "generatedAt": "2026-07-18T21:26:38.131Z",
+  "generatedAt": "2026-07-18T23:15:25.756Z",
   "items": [
-    {
-      "id": "2c23ac8a-8875-4b23-9d1d-7724145cf55c",
-      "title": "Настя и Вова // Дейли",
-      "date": "2026-07-06",
-      "start": "13:30",
-      "durationMin": 60,
-      "kind": "meeting",
-      "members": [
-        {
-          "name": "Вова",
-          "color": "#84cc16"
-        },
-        {
-          "name": "Настя",
-          "color": "#ec4899"
-        }
-      ]
-    },
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
       "title": "Оплата Роялти",
@@ -213,24 +195,6 @@
         {
           "name": "Вова",
           "color": "#84cc16"
-        }
-      ]
-    },
-    {
-      "id": "5ca51c2d-07ad-42a6-8328-109cd3886fb5",
-      "title": "Настя и Вова // Дейли",
-      "date": "2026-07-09",
-      "start": "13:30",
-      "durationMin": 60,
-      "kind": "meeting",
-      "members": [
-        {
-          "name": "Вова",
-          "color": "#84cc16"
-        },
-        {
-          "name": "Настя",
-          "color": "#ec4899"
         }
       ]
     },
@@ -1193,24 +1157,6 @@
       ]
     },
     {
-      "id": "a0e20f8f-b996-4952-a6c4-2baa2ff52b17",
-      "title": "Настя и Вова // Дейли",
-      "date": "2026-08-09",
-      "start": "13:30",
-      "durationMin": 60,
-      "kind": "meeting",
-      "members": [
-        {
-          "name": "Вова",
-          "color": "#84cc16"
-        },
-        {
-          "name": "Настя",
-          "color": "#ec4899"
-        }
-      ]
-    },
-    {
       "id": "d38293be-983c-4d07-a50a-1423093169a8",
       "title": "Зарплата Настя",
       "date": "2026-08-10",
@@ -1341,132 +1287,6 @@
       "id": "2aa6cea6-c968-4113-8146-cffdd54a15a1",
       "title": "Еженедельная встреча // Вова Настя",
       "date": "2026-08-31",
-      "start": "13:30",
-      "durationMin": 60,
-      "kind": "meeting",
-      "members": [
-        {
-          "name": "Вова",
-          "color": "#84cc16"
-        },
-        {
-          "name": "Настя",
-          "color": "#ec4899"
-        }
-      ]
-    },
-    {
-      "id": "eb96fb36-0717-4b24-a443-803e75204e17",
-      "title": "Настя и Вова // Дейли",
-      "date": "2026-09-09",
-      "start": "13:30",
-      "durationMin": 60,
-      "kind": "meeting",
-      "members": [
-        {
-          "name": "Вова",
-          "color": "#84cc16"
-        },
-        {
-          "name": "Настя",
-          "color": "#ec4899"
-        }
-      ]
-    },
-    {
-      "id": "3fa24c98-60fc-4763-a135-26a7990643e1",
-      "title": "Настя и Вова // Дейли",
-      "date": "2026-10-09",
-      "start": "13:30",
-      "durationMin": 60,
-      "kind": "meeting",
-      "members": [
-        {
-          "name": "Вова",
-          "color": "#84cc16"
-        },
-        {
-          "name": "Настя",
-          "color": "#ec4899"
-        }
-      ]
-    },
-    {
-      "id": "fd931abb-ee55-4617-9de7-7791aff67ec9",
-      "title": "Настя и Вова // Дейли",
-      "date": "2026-11-09",
-      "start": "13:30",
-      "durationMin": 60,
-      "kind": "meeting",
-      "members": [
-        {
-          "name": "Вова",
-          "color": "#84cc16"
-        },
-        {
-          "name": "Настя",
-          "color": "#ec4899"
-        }
-      ]
-    },
-    {
-      "id": "3495f2c9-bee6-46f2-9afb-6da774c9a007",
-      "title": "Настя и Вова // Дейли",
-      "date": "2026-12-09",
-      "start": "13:30",
-      "durationMin": 60,
-      "kind": "meeting",
-      "members": [
-        {
-          "name": "Вова",
-          "color": "#84cc16"
-        },
-        {
-          "name": "Настя",
-          "color": "#ec4899"
-        }
-      ]
-    },
-    {
-      "id": "3dcfec61-c215-4e53-9a8f-b023b22ecd17",
-      "title": "Настя и Вова // Дейли",
-      "date": "2027-01-09",
-      "start": "13:30",
-      "durationMin": 60,
-      "kind": "meeting",
-      "members": [
-        {
-          "name": "Вова",
-          "color": "#84cc16"
-        },
-        {
-          "name": "Настя",
-          "color": "#ec4899"
-        }
-      ]
-    },
-    {
-      "id": "1dd61daf-d6dc-4998-99f5-70cdad29b780",
-      "title": "Настя и Вова // Дейли",
-      "date": "2027-02-09",
-      "start": "13:30",
-      "durationMin": 60,
-      "kind": "meeting",
-      "members": [
-        {
-          "name": "Вова",
-          "color": "#84cc16"
-        },
-        {
-          "name": "Настя",
-          "color": "#ec4899"
-        }
-      ]
-    },
-    {
-      "id": "c3b17e88-bfd3-41ec-8b06-3868f7cb40bf",
-      "title": "Настя и Вова // Дейли",
-      "date": "2027-03-09",
       "start": "13:30",
       "durationMin": 60,
       "kind": "meeting",
