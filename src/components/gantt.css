@@ -138,6 +138,14 @@
   position: relative;
   height: 40px;
   flex-shrink: 0;
+  /* фон (белые колонки + сетка) — на слое .gantt-grid-bg под связями и дорожками */
+}
+/* Подложка под дорожками: белые колонки и вертикальная сетка по дням.
+   Лежит НИЖЕ слоя связей, поэтому не перекрывает стрелки. */
+.gantt-grid-bg {
+  position: absolute;
+  top: 0;
+  left: var(--gantt-left-w);
   background-color: #fff;
   background-image: repeating-linear-gradient(
     to right,
@@ -146,6 +154,7 @@
     transparent 1px,
     transparent var(--gantt-day-w)
   );
+  pointer-events: none;
 }
 /* Подсветка колонок выходных */
 .gantt-weekend {
@@ -201,6 +210,17 @@
     transparent 10px
   );
 }
+/* Прошедшая встреча — та же «выполненная» стилистика, но в тёмной палитре:
+   чёрная полоса с тёмно-серой наклонной штриховкой */
+.gantt-bar.past {
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.16) 0,
+    rgba(255, 255, 255, 0.16) 5px,
+    transparent 5px,
+    transparent 10px
+  );
+}
 /* Задача-цель при протягивании зависимости */
 .gantt-bar.dep-target {
   outline: 2px solid var(--accent);
@@ -252,14 +272,14 @@
   opacity: 1;
   pointer-events: auto;
 }
-/* Слой связей-зависимостей поверх дорожек */
+/* Слой связей-зависимостей — под дорожками задач (стрелки идут ПОД задачами).
+   Порядок в DOM: подложка → связи → строки, поэтому полосы и названия сверху. */
 .gantt-connectors {
   position: absolute;
   top: 0;
   left: var(--gantt-left-w);
   pointer-events: none;
   overflow: visible;
-  z-index: 4;
 }
 .gantt-conn {
   fill: none;

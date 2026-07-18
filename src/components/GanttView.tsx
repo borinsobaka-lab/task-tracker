@@ -319,7 +319,10 @@ export const GanttView = forwardRef<GanttHandle, { cards: Card[]; onOpenCard: (i
     // промежутке (не пересекает полосы) и заход в задачу СЛЕВА (по хронологии).
     const GAP = 10
     const connGeom = (c: { x1: number; y1: number; x2: number; y2: number }) => {
-      const midY = (c.y1 + c.y2) / 2
+      // Горизонтальный участок ведём в промежутке рядом с предшественником —
+      // он всегда попадает между строками (не под полосой), поэтому крестик
+      // удаления там кликабелен, даже если задачи не соседние.
+      const midY = c.y1 + (c.y2 >= c.y1 ? ROW_PITCH / 2 : -ROW_PITCH / 2)
       const ax = c.x1 + GAP
       const bx = c.x2 - GAP
       const d = `M${c.x1},${c.y1} L${ax},${c.y1} L${ax},${midY} L${bx},${midY} L${bx},${c.y2} L${c.x2},${c.y2}`
@@ -366,6 +369,65 @@ export const GanttView = forwardRef<GanttHandle, { cards: Card[]; onOpenCard: (i
 
           {/* Строки-задачи */}
           <div className="gantt-body">
+            {/* Подложка: белые колонки, сетка по дням, выходные, «сегодня». Под связями. */}
+            <div className="gantt-grid-bg" style={{ width: gridW, height: totalH }}>
+              {weekendIdx.map((i) => (
+                <div key={'we' + i} className="gantt-weekend" style={{ left: i * DAY_W }} />
+              ))}
+              {todayIdx >= 0 && <div className="gantt-today-line" style={{ left: todayIdx * DAY_W }} />}
+            </div>
+
+            {/* Слой связей — под дорожками (стрелки проходят ПОД задачами и их названиями) */}
+            <svg
+              className="gantt-connectors"
+              ref={svgRef}
+              width={gridW}
+              height={totalH}
+              viewBox={`0 0 ${gridW} ${totalH}`}
+            >
+              <defs>
+                <marker id="gantt-arrow" markerWidth="7" markerHeight="7" refX="5.5" refY="3" orient="auto">
+                  <path d="M0,0 L6,3 L0,6 Z" fill="#f59e0b" />
+                </marker>
+                <marker id="gantt-arrow-done" markerWidth="7" markerHeight="7" refX="5.5" refY="3" orient="auto">
+                  <path d="M0,0 L6,3 L0,6 Z" fill="#16a34a" />
+                </marker>
+              </defs>
+              {connectors.map((c) => {
+                const g = connGeom(c)
+                return (
+                  <g className="gantt-conn-g" key={c.key}>
+                    <path
+                      d={g.d}
+                      className={'gantt-conn' + (c.done ? ' done' : '')}
+                      markerEnd={`url(#${c.done ? 'gantt-arrow-done' : 'gantt-arrow'})`}
+                    />
+                    {/* Широкая невидимая дорожка — по ней ловим наведение/клик */}
+                    <path d={g.d} className="gantt-conn-hit" onClick={() => store.removeDependency(c.from, c.to)} />
+                    {/* Красный крестик при наведении — клик удаляет зависимость */}
+                    <g
+                      className="gantt-conn-x"
+                      transform={`translate(${g.mx},${g.my})`}
+                      onClick={() => store.removeDependency(c.from, c.to)}
+                    >
+                      <circle r="8" />
+                      <line x1="-3.2" y1="-3.2" x2="3.2" y2="3.2" />
+                      <line x1="3.2" y1="-3.2" x2="-3.2" y2="3.2" />
+                    </g>
+                  </g>
+                )
+              })}
+              {connect && connectSrc && (
+                <line
+                  className="gantt-conn-drag"
+                  x1={connectSrc.x}
+                  y1={connectSrc.y}
+                  x2={connect.lx}
+                  y2={connect.ly}
+                />
+              )}
+            </svg>
+
             {rows.map((c) => {
               const project = projectOf(c)
               const assignees = assigneesOf(c)
@@ -389,17 +451,15 @@ export const GanttView = forwardRef<GanttHandle, { cards: Card[]; onOpenCard: (i
                     </span>
                   </div>
                   <div className="gantt-track" style={{ width: gridW }}>
-                    {/* Подсветка выходных */}
-                    {weekendIdx.map((i) => (
-                      <div key={'we' + i} className="gantt-weekend" style={{ left: i * DAY_W }} />
-                    ))}
-                    {/* Красная полоска «сегодня» */}
-                    {todayIdx >= 0 && <div className="gantt-today-line" style={{ left: todayIdx * DAY_W }} />}
                     {has && (
                       <>
                         <div
                           className={
-                            'gantt-bar' + (c.done ? ' done' : '') + (dr ? ' active' : '') + (isTarget ? ' dep-target' : '')
+                            'gantt-bar' +
+                            (c.done ? ' done' : '') +
+                            (isPastMeeting(c) ? ' past' : '') +
+                            (dr ? ' active' : '') +
+                            (isTarget ? ' dep-target' : '')
                           }
                           data-card-id={c.id}
                           style={{
@@ -460,61 +520,6 @@ export const GanttView = forwardRef<GanttHandle, { cards: Card[]; onOpenCard: (i
                 </div>
               )
             })}
-
-            {/* Слой связей-зависимостей поверх дорожек */}
-            <svg
-              className="gantt-connectors"
-              ref={svgRef}
-              width={gridW}
-              height={totalH}
-              viewBox={`0 0 ${gridW} ${totalH}`}
-            >
-              <defs>
-                <marker id="gantt-arrow" markerWidth="7" markerHeight="7" refX="5.5" refY="3" orient="auto">
-                  <path d="M0,0 L6,3 L0,6 Z" fill="#f59e0b" />
-                </marker>
-                <marker id="gantt-arrow-done" markerWidth="7" markerHeight="7" refX="5.5" refY="3" orient="auto">
-                  <path d="M0,0 L6,3 L0,6 Z" fill="#16a34a" />
-                </marker>
-              </defs>
-              {connectors.map((c) => {
-                const g = connGeom(c)
-                return (
-                  <g className="gantt-conn-g" key={c.key}>
-                    <path
-                      d={g.d}
-                      className={'gantt-conn' + (c.done ? ' done' : '')}
-                      markerEnd={`url(#${c.done ? 'gantt-arrow-done' : 'gantt-arrow'})`}
-                    />
-                    {/* Широкая невидимая дорожка — по ней ловим наведение/клик */}
-                    <path
-                      d={g.d}
-                      className="gantt-conn-hit"
-                      onClick={() => store.removeDependency(c.from, c.to)}
-                    />
-                    {/* Красный крестик при наведении — клик удаляет зависимость */}
-                    <g
-                      className="gantt-conn-x"
-                      transform={`translate(${g.mx},${g.my})`}
-                      onClick={() => store.removeDependency(c.from, c.to)}
-                    >
-                      <circle r="8" />
-                      <line x1="-3.2" y1="-3.2" x2="3.2" y2="3.2" />
-                      <line x1="3.2" y1="-3.2" x2="-3.2" y2="3.2" />
-                    </g>
-                  </g>
-                )
-              })}
-              {connect && connectSrc && (
-                <line
-                  className="gantt-conn-drag"
-                  x1={connectSrc.x}
-                  y1={connectSrc.y}
-                  x2={connect.lx}
-                  y2={connect.ly}
-                />
-              )}
-            </svg>
           </div>
         </div>
       </div>
