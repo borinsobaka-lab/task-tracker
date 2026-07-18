@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-18T12:02:54.932Z",
+  "generatedAt": "2026-07-18T12:03:03.568Z",
   "items": [
     {
       "id": "2c23ac8a-8875-4b23-9d1d-7724145cf55c",
@@ -803,20 +803,6 @@
       ]
     },
     {
-      "id": "15a5209d-4c4a-4eae-9e9f-d8ddf9d96b7f",
-      "title": "Сделать шаблон для отправки клиентам WhatsApp, чтобы выходить с ними на контакт в акции",
-      "date": "2026-07-17",
-      "start": "23:00",
-      "durationMin": 60,
-      "priorityColor": "#eab308",
-      "members": [
-        {
-          "name": "Вова",
-          "color": "#84cc16"
-        }
-      ]
-    },
-    {
       "id": "170472da-4613-48e0-9f20-0b6926373fc1",
       "title": "Созвон с Колей",
       "date": "2026-07-17",
@@ -895,6 +881,20 @@
       "start": "20:00",
       "durationMin": 120,
       "kind": "meeting",
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        }
+      ]
+    },
+    {
+      "id": "15a5209d-4c4a-4eae-9e9f-d8ddf9d96b7f",
+      "title": "Сделать шаблон для отправки клиентам WhatsApp, чтобы выходить с ними на контакт в акции",
+      "date": "2026-07-19",
+      "start": "11:00",
+      "durationMin": 60,
+      "priorityColor": "#eab308",
       "members": [
         {
           "name": "Вова",
