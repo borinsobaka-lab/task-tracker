@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-18T12:34:15.411Z",
+  "generatedAt": "2026-07-18T16:43:04.168Z",
   "items": [
     {
       "id": "2c23ac8a-8875-4b23-9d1d-7724145cf55c",
@@ -840,20 +840,6 @@
       "durationMin": 150,
       "kind": "task",
       "priorityColor": "#ef4444",
-      "members": [
-        {
-          "name": "Вова",
-          "color": "#84cc16"
-        }
-      ]
-    },
-    {
-      "id": "4c258040-1b01-4383-9a0c-5bd14d2f3db0",
-      "title": "Падел",
-      "date": "2026-07-18",
-      "start": "20:00",
-      "durationMin": 120,
-      "kind": "meeting",
       "members": [
         {
           "name": "Вова",
