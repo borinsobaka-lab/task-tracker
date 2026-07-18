@@ -290,7 +290,7 @@
   stroke: #16a34a;
   stroke-dasharray: 4 3;
 }
-/* Широкая невидимая дорожка для наведения/клика по связи */
+/* Широкая невидимая дорожка для наведения/клика по связи (верхний слой) */
 .gantt-conn-hit {
   fill: none;
   stroke: transparent;
@@ -298,17 +298,26 @@
   pointer-events: stroke;
   cursor: pointer;
 }
-.gantt-conn-g:hover .gantt-conn {
+/* Подсветка стрелки при наведении — видна поверх задач только на hover */
+.gantt-conn-hilite {
+  fill: none;
+  stroke: var(--danger);
   stroke-width: 2.4;
+  opacity: 0;
+  pointer-events: none;
+}
+.gantt-conn-g:hover .gantt-conn-hilite {
+  opacity: 1;
 }
 /* Красный крестик удаления — виден при наведении на связь */
 .gantt-conn-x {
   opacity: 0;
-  pointer-events: auto;
+  pointer-events: none;
   cursor: pointer;
 }
 .gantt-conn-g:hover .gantt-conn-x {
   opacity: 1;
+  pointer-events: auto;
 }
 .gantt-conn-x circle {
   fill: #fff;

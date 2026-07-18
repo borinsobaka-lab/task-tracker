@@ -393,39 +393,15 @@ export const GanttView = forwardRef<GanttHandle, { cards: Card[]; onOpenCard: (i
                   <path d="M0,0 L6,3 L0,6 Z" fill="#16a34a" />
                 </marker>
               </defs>
-              {connectors.map((c) => {
-                const g = connGeom(c)
-                return (
-                  <g className="gantt-conn-g" key={c.key}>
-                    <path
-                      d={g.d}
-                      className={'gantt-conn' + (c.done ? ' done' : '')}
-                      markerEnd={`url(#${c.done ? 'gantt-arrow-done' : 'gantt-arrow'})`}
-                    />
-                    {/* Широкая невидимая дорожка — по ней ловим наведение/клик */}
-                    <path d={g.d} className="gantt-conn-hit" onClick={() => store.removeDependency(c.from, c.to)} />
-                    {/* Красный крестик при наведении — клик удаляет зависимость */}
-                    <g
-                      className="gantt-conn-x"
-                      transform={`translate(${g.mx},${g.my})`}
-                      onClick={() => store.removeDependency(c.from, c.to)}
-                    >
-                      <circle r="8" />
-                      <line x1="-3.2" y1="-3.2" x2="3.2" y2="3.2" />
-                      <line x1="3.2" y1="-3.2" x2="-3.2" y2="3.2" />
-                    </g>
-                  </g>
-                )
-              })}
-              {connect && connectSrc && (
-                <line
-                  className="gantt-conn-drag"
-                  x1={connectSrc.x}
-                  y1={connectSrc.y}
-                  x2={connect.lx}
-                  y2={connect.ly}
+              {/* Только видимые стрелки — под задачами */}
+              {connectors.map((c) => (
+                <path
+                  key={c.key}
+                  d={connGeom(c).d}
+                  className={'gantt-conn' + (c.done ? ' done' : '')}
+                  markerEnd={`url(#${c.done ? 'gantt-arrow-done' : 'gantt-arrow'})`}
                 />
-              )}
+              ))}
             </svg>
 
             {rows.map((c) => {
@@ -520,6 +496,47 @@ export const GanttView = forwardRef<GanttHandle, { cards: Card[]; onOpenCard: (i
                 </div>
               )
             })}
+
+            {/* Верхний слой: невидимые «дорожки» для наведения + крестик удаления и
+                линия протягивания. Над строками, поэтому связь ловит наведение (полоса
+                её не перехватывает) и при этом не поднимает точки-порты у задачи. */}
+            <svg
+              className="gantt-connectors gantt-connectors-hit"
+              width={gridW}
+              height={totalH}
+              viewBox={`0 0 ${gridW} ${totalH}`}
+            >
+              {connectors.map((c) => {
+                const g = connGeom(c)
+                return (
+                  <g className="gantt-conn-g" key={c.key}>
+                    {/* Подсветка стрелки при наведении (поверх задач, только на hover) */}
+                    <path d={g.d} className="gantt-conn-hilite" />
+                    {/* Широкая невидимая дорожка — по ней ловим наведение/клик */}
+                    <path d={g.d} className="gantt-conn-hit" onClick={() => store.removeDependency(c.from, c.to)} />
+                    {/* Красный крестик при наведении — клик удаляет зависимость */}
+                    <g
+                      className="gantt-conn-x"
+                      transform={`translate(${g.mx},${g.my})`}
+                      onClick={() => store.removeDependency(c.from, c.to)}
+                    >
+                      <circle r="8" />
+                      <line x1="-3.2" y1="-3.2" x2="3.2" y2="3.2" />
+                      <line x1="3.2" y1="-3.2" x2="-3.2" y2="3.2" />
+                    </g>
+                  </g>
+                )
+              })}
+              {connect && connectSrc && (
+                <line
+                  className="gantt-conn-drag"
+                  x1={connectSrc.x}
+                  y1={connectSrc.y}
+                  x2={connect.lx}
+                  y2={connect.ly}
+                />
+              )}
+            </svg>
           </div>
         </div>
       </div>
