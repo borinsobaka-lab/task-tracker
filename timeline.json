@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-18T23:15:25.756Z",
+  "generatedAt": "2026-07-18T23:15:59.422Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -962,20 +962,6 @@
       "title": "Padel",
       "date": "2026-07-21",
       "start": "15:00",
-      "durationMin": 120,
-      "kind": "meeting",
-      "members": [
-        {
-          "name": "Вова",
-          "color": "#84cc16"
-        }
-      ]
-    },
-    {
-      "id": "22596abe-8030-4ac6-9cb3-ad82fa9f2a46",
-      "title": "Padel",
-      "date": "2026-07-21",
-      "start": "22:00",
       "durationMin": 120,
       "kind": "meeting",
       "members": [
