@@ -8,12 +8,16 @@ import './gantt.css'
 
 /** Диаграмма Ганта: строки-задачи слева (проект + ответственный + название),
  *  справа — временная шкала по дням с полосой от даты начала до даты окончания.
- *  Полосу можно двигать и растягивать на несколько дней (меняет date/endDate). */
+ *  Полосу можно двигать и растягивать на несколько дней (меняет date/endDate).
+ *  А протянув от кружка на краю полосы к другой задаче — задать зависимость. */
 export interface GanttHandle {
   scrollToToday: () => void
 }
 
 const DAY_W = 46 // ширина колонки-дня, px (должна совпадать с --gantt-day-w в CSS)
+const ROW_H = 40 // высота дорожки задачи, px (совпадает с .gantt-track height)
+const ROW_PITCH = ROW_H + 1 // + 1px нижней границы строки — шаг между центрами строк
+const BAR_CY = 20 // центр полосы по вертикали внутри дорожки (top 8 + высота 24 / 2)
 const MAX_DAYS = 180
 const WD = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб']
 const MON = ['янв', 'фев', 'мар', 'апр', 'мая', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек']
@@ -31,6 +35,16 @@ interface Drag {
   moved: boolean
 }
 
+// Протягивание зависимости: тянем от кружка на краю полосы к другой задаче.
+interface Connect {
+  fromId: ID
+  fromEnd: 'start' | 'end' // за какой кружок взялись
+  pointerId: number
+  lx: number // текущая позиция курсора в координатах SVG-слоя
+  ly: number
+  overId: ID | null // задача под курсором (цель связи)
+}
+
 export const GanttView = forwardRef<GanttHandle, { cards: Card[]; onOpenCard: (id: ID) => void }>(
   function GanttView({ cards, onOpenCard }, ref) {
     const store = useBoard()
@@ -39,13 +53,18 @@ export const GanttView = forwardRef<GanttHandle, { cards: Card[]; onOpenCard: (i
       c.assigneeIds.map((id) => memberById.get(id)).filter((m): m is Member => !!m)
     const projectOf = (c: Card) => (c.projectId ? store.projects.find((p) => p.id === c.projectId) : undefined)
     const isMeeting = (c: Card) => c.kind === 'meeting'
-    const colorOf = (c: Card): string => (isMeeting(c) ? '#1f2937' : assigneesOf(c)[0]?.color ?? 'var(--accent)')
+    const colorOf = (c: Card): string =>
+      c.done ? '#16a34a' : isMeeting(c) ? '#1f2937' : assigneesOf(c)[0]?.color ?? 'var(--accent)'
 
     const scrollRef = useRef<HTMLDivElement>(null)
+    const svgRef = useRef<SVGSVGElement>(null)
     const today = toDateKey(new Date())
     const [drag, setDrag] = useState<Drag | null>(null)
     const dragRef = useRef<Drag | null>(null)
     dragRef.current = drag
+    const [connect, setConnect] = useState<Connect | null>(null)
+    const connectRef = useRef<Connect | null>(null)
+    connectRef.current = connect
     // Гасим клик, который браузер шлёт сразу после перетаскивания (иначе открывалась бы карточка)
     const suppressClickRef = useRef(false)
 
@@ -59,6 +78,7 @@ export const GanttView = forwardRef<GanttHandle, { cards: Card[]; onOpenCard: (i
           ),
       [cards],
     )
+    const rowIndex = useMemo(() => new Map(rows.map((c, i) => [c.id, i])), [rows])
 
     // Диапазон дней: охватывает все даты (включая окончания) и сегодня, с запасом
     const { days, dayKeys } = useMemo(() => {
@@ -85,6 +105,10 @@ export const GanttView = forwardRef<GanttHandle, { cards: Card[]; onOpenCard: (i
     const todayIdx = dayKeys.indexOf(today)
     const idxOf = (key: string) => dayKeys.indexOf(key)
     const gridW = days.length * DAY_W
+    const weekendIdx = useMemo(
+      () => days.map((d, i) => (d.getDay() === 0 || d.getDay() === 6 ? i : -1)).filter((i) => i >= 0),
+      [days],
+    )
 
     const centerToday = () => {
       const el = scrollRef.current
@@ -108,6 +132,33 @@ export const GanttView = forwardRef<GanttHandle, { cards: Card[]; onOpenCard: (i
       })
       return segs
     }, [days])
+
+    // Связи-зависимости: рисуем, только если обе задачи есть на диаграмме
+    const connectors = useMemo(() => {
+      const out: { key: string; x1: number; y1: number; x2: number; y2: number; done: boolean }[] = []
+      for (const blocked of rows) {
+        const ri = rowIndex.get(blocked.id)
+        if (ri === undefined) continue
+        for (const blockerId of blocked.blockedBy ?? []) {
+          const bi = rowIndex.get(blockerId)
+          if (bi === undefined) continue
+          const blocker = rows[bi]
+          const bEnd = idxOf(blocker.endDate ?? blocker.date!)
+          const kStart = idxOf(blocked.date!)
+          if (bEnd < 0 || kStart < 0) continue
+          out.push({
+            key: blockerId + '>' + blocked.id,
+            x1: (bEnd + 1) * DAY_W,
+            y1: bi * ROW_PITCH + BAR_CY,
+            x2: kStart * DAY_W,
+            y2: ri * ROW_PITCH + BAR_CY,
+            done: !!blocker.done,
+          })
+        }
+      }
+      return out
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [rows, rowIndex, dayKeys])
 
     // ---------- Перетаскивание/растягивание полосы ----------
     const beginDrag = (c: Card, mode: DragMode) => (e: React.PointerEvent) => {
@@ -174,12 +225,90 @@ export const GanttView = forwardRef<GanttHandle, { cards: Card[]; onOpenCard: (i
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [dayKeys])
 
+    // ---------- Протягивание зависимости ----------
+    const beginConnect = (c: Card, fromEnd: 'start' | 'end') => (e: React.PointerEvent) => {
+      if (e.button !== 0) return
+      e.preventDefault()
+      e.stopPropagation()
+      if (rowIndex.get(c.id) === undefined) return
+      let lx = 0
+      let ly = 0
+      const svg = svgRef.current
+      if (svg) {
+        const r = svg.getBoundingClientRect()
+        lx = e.clientX - r.left
+        ly = e.clientY - r.top
+      }
+      setConnect({ fromId: c.id, fromEnd, pointerId: e.pointerId, lx, ly, overId: null })
+    }
+    useEffect(() => {
+      const move = (e: PointerEvent) => {
+        const cn = connectRef.current
+        if (!cn || e.pointerId !== cn.pointerId) return
+        const svg = svgRef.current
+        if (!svg) return
+        const r = svg.getBoundingClientRect()
+        const lx = e.clientX - r.left
+        const ly = e.clientY - r.top
+        let overId: ID | null = null
+        const el = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null
+        const holder = el && el.closest ? (el.closest('[data-card-id]') as HTMLElement | null) : null
+        const id = holder?.getAttribute('data-card-id')
+        if (id && id !== cn.fromId) overId = id
+        setConnect({ ...cn, lx, ly, overId })
+      }
+      const up = (e: PointerEvent) => {
+        const cn = connectRef.current
+        if (!cn || e.pointerId !== cn.pointerId) return
+        if (cn.overId && cn.overId !== cn.fromId) {
+          // конец полосы → «эта блокирует ту»; начало полосы → «та блокирует эту»
+          if (cn.fromEnd === 'end') store.addDependency(cn.fromId, cn.overId)
+          else store.addDependency(cn.overId, cn.fromId)
+        }
+        // Клик по полосе после протягивания не возникает (pointerdown был на кружке,
+        // а не на полосе), поэтому гасить click тут не нужно — иначе «съедался» бы
+        // следующий честный клик по любой задаче.
+        setConnect(null)
+      }
+      window.addEventListener('pointermove', move)
+      window.addEventListener('pointerup', up)
+      window.addEventListener('pointercancel', up)
+      return () => {
+        window.removeEventListener('pointermove', move)
+        window.removeEventListener('pointerup', up)
+        window.removeEventListener('pointercancel', up)
+      }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [rows, rowIndex])
+
+    // Начальная точка протягиваемой связи (в координатах SVG-слоя)
+    const connectSrc = useMemo(() => {
+      if (!connect) return null
+      const i = rowIndex.get(connect.fromId)
+      if (i === undefined) return null
+      const c = rows[i]
+      const x = connect.fromEnd === 'end' ? (idxOf(c.endDate ?? c.date!) + 1) * DAY_W : idxOf(c.date!) * DAY_W
+      return { x, y: i * ROW_PITCH + BAR_CY }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [connect, rows, rowIndex, dayKeys])
+
+    const totalH = rows.length * ROW_PITCH
+
     if (rows.length === 0) {
       return <div className="gantt-empty muted">Нет запланированных задач — добавьте задачам даты, и они появятся на диаграмме.</div>
     }
 
+    const elbow = (x1: number, y1: number, x2: number, y2: number) => {
+      const hx = x1 + 11
+      return `M${x1},${y1} L${hx},${y1} L${hx},${y2} L${x2},${y2}`
+    }
+
     return (
-      <div className={'gantt-root' + (drag ? ' dragging' : '')} ref={scrollRef} style={{ ['--gantt-day-w' as string]: `${DAY_W}px` }}>
+      <div
+        className={'gantt-root' + (drag ? ' dragging' : '') + (connect ? ' connecting' : '')}
+        ref={scrollRef}
+        style={{ ['--gantt-day-w' as string]: `${DAY_W}px` }}
+      >
         <div className="gantt-inner">
           {/* Подписи месяцев */}
           <div className="gantt-months">
@@ -221,6 +350,7 @@ export const GanttView = forwardRef<GanttHandle, { cards: Card[]; onOpenCard: (i
               const startIdx = dr ? dr.curStart : idxOf(c.date!)
               const endIdx = dr ? dr.curEnd : idxOf(c.endDate ?? c.date!)
               const has = startIdx >= 0 && endIdx >= 0
+              const isTarget = connect?.overId === c.id
               return (
                 <div key={c.id} className="gantt-row">
                   <div className="gantt-left">
@@ -236,45 +366,112 @@ export const GanttView = forwardRef<GanttHandle, { cards: Card[]; onOpenCard: (i
                     </span>
                   </div>
                   <div className="gantt-track" style={{ width: gridW }}>
+                    {/* Подсветка выходных */}
+                    {weekendIdx.map((i) => (
+                      <div key={'we' + i} className="gantt-weekend" style={{ left: i * DAY_W }} />
+                    ))}
+                    {/* Красная полоска «сегодня» */}
                     {todayIdx >= 0 && <div className="gantt-today-line" style={{ left: todayIdx * DAY_W }} />}
                     {has && (
-                      <div
-                        className={'gantt-bar' + (c.done ? ' done' : '') + (dr ? ' active' : '')}
-                        style={{
-                          left: startIdx * DAY_W + 2,
-                          width: (endIdx - startIdx + 1) * DAY_W - 4,
-                          background: colorOf(c),
-                        }}
-                        title={c.title}
-                        onPointerDown={beginDrag(c, 'move')}
-                        onPointerMove={onDragMove}
-                        onPointerUp={endDrag}
-                        onPointerCancel={endDrag}
-                        onClick={() => {
-                          if (suppressClickRef.current) {
-                            suppressClickRef.current = false
-                            return
+                      <>
+                        <div
+                          className={
+                            'gantt-bar' + (c.done ? ' done' : '') + (dr ? ' active' : '') + (isTarget ? ' dep-target' : '')
                           }
-                          if (!dragRef.current) onOpenCard(c.id)
-                        }}
-                      >
+                          data-card-id={c.id}
+                          style={{
+                            left: startIdx * DAY_W + 2,
+                            width: (endIdx - startIdx + 1) * DAY_W - 4,
+                            backgroundColor: colorOf(c),
+                          }}
+                          title={c.title}
+                          onPointerDown={beginDrag(c, 'move')}
+                          onPointerMove={onDragMove}
+                          onPointerUp={endDrag}
+                          onPointerCancel={endDrag}
+                          onClick={() => {
+                            if (suppressClickRef.current) {
+                              suppressClickRef.current = false
+                              return
+                            }
+                            if (!dragRef.current && !connectRef.current) onOpenCard(c.id)
+                          }}
+                        >
+                          <span
+                            className="gantt-handle gantt-handle-l"
+                            onPointerDown={beginDrag(c, 'resize-l')}
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                          {c.start && !c.endDate && <span className="gantt-bar-label">{c.start}</span>}
+                          <span
+                            className="gantt-handle gantt-handle-r"
+                            onPointerDown={beginDrag(c, 'resize-r')}
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        </div>
+                        {/* Название задачи справа от полосы */}
                         <span
-                          className="gantt-handle gantt-handle-l"
-                          onPointerDown={beginDrag(c, 'resize-l')}
-                          onClick={(e) => e.stopPropagation()}
-                        />
-                        {c.start && !c.endDate && <span className="gantt-bar-label">{c.start}</span>}
+                          className={'gantt-bar-name' + (c.done ? ' done' : '')}
+                          style={{ left: (endIdx + 1) * DAY_W + 8 }}
+                        >
+                          {c.title}
+                        </span>
+                        {/* Кружки-порты для протягивания зависимости */}
                         <span
-                          className="gantt-handle gantt-handle-r"
-                          onPointerDown={beginDrag(c, 'resize-r')}
-                          onClick={(e) => e.stopPropagation()}
+                          className="gantt-dot gantt-dot-l"
+                          data-card-id={c.id}
+                          style={{ left: startIdx * DAY_W + 2 }}
+                          onPointerDown={beginConnect(c, 'start')}
+                          title="Протяните к другой задаче, чтобы задать зависимость"
                         />
-                      </div>
+                        <span
+                          className="gantt-dot gantt-dot-r"
+                          data-card-id={c.id}
+                          style={{ left: (endIdx + 1) * DAY_W - 2 }}
+                          onPointerDown={beginConnect(c, 'end')}
+                          title="Протяните к другой задаче, чтобы задать зависимость"
+                        />
+                      </>
                     )}
                   </div>
                 </div>
               )
             })}
+
+            {/* Слой связей-зависимостей поверх дорожек */}
+            <svg
+              className="gantt-connectors"
+              ref={svgRef}
+              width={gridW}
+              height={totalH}
+              viewBox={`0 0 ${gridW} ${totalH}`}
+            >
+              <defs>
+                <marker id="gantt-arrow" markerWidth="7" markerHeight="7" refX="5.5" refY="3" orient="auto">
+                  <path d="M0,0 L6,3 L0,6 Z" fill="#f59e0b" />
+                </marker>
+                <marker id="gantt-arrow-done" markerWidth="7" markerHeight="7" refX="5.5" refY="3" orient="auto">
+                  <path d="M0,0 L6,3 L0,6 Z" fill="#16a34a" />
+                </marker>
+              </defs>
+              {connectors.map((c) => (
+                <path
+                  key={c.key}
+                  d={elbow(c.x1, c.y1, c.x2, c.y2)}
+                  className={'gantt-conn' + (c.done ? ' done' : '')}
+                  markerEnd={`url(#${c.done ? 'gantt-arrow-done' : 'gantt-arrow'})`}
+                />
+              ))}
+              {connect && connectSrc && (
+                <line
+                  className="gantt-conn-drag"
+                  x1={connectSrc.x}
+                  y1={connectSrc.y}
+                  x2={connect.lx}
+                  y2={connect.ly}
+                />
+              )}
+            </svg>
           </div>
         </div>
       </div>

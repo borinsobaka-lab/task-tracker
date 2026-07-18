@@ -476,6 +476,13 @@ export interface BoardStore {
    *  на несколько дней (без времени); иначе — обычный однодневный «весь день». */
   setCardSpan(id: ID, startKey: string, endKey: string): void
 
+  // Зависимости между задачами (Гант). blockerId должен быть готов раньше blockedId.
+  /** Добавить зависимость: blockerId блокирует blockedId (blockedId ждёт blockerId).
+   *  Игнорирует дубли, само-ссылку и рёбра, образующие цикл. */
+  addDependency(blockerId: ID, blockedId: ID): void
+  /** Убрать зависимость blockerId → blockedId. */
+  removeDependency(blockerId: ID, blockedId: ID): void
+
   // Вложения
   uploadAttachment(cardId: ID, file: File): Promise<void>
   removeAttachment(cardId: ID, attId: ID): Promise<void>
@@ -764,6 +771,14 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
         if (col) {
           col.cardIds = col.cardIds.filter((x) => x !== id)
           touch(col)
+        }
+        // Снимаем зависимости, ссылающиеся на удалённую задачу
+        for (const other of Object.values(d.cards)) {
+          if (other.blockedBy?.includes(id)) {
+            other.blockedBy = other.blockedBy.filter((x) => x !== id)
+            if (other.blockedBy.length === 0) delete other.blockedBy
+            touch(other)
+          }
         }
       }),
     moveCard: (id, toColumnId, toIndex) =>
@@ -1122,6 +1137,40 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
           delete card.endDate // однодневная — время (если было) сохраняем
         }
         touch(card)
+      }),
+
+    addDependency: (blockerId, blockedId) =>
+      engine.update((d) => {
+        if (blockerId === blockedId) return
+        const blocker = d.cards[blockerId]
+        const blocked = d.cards[blockedId]
+        if (!blocker || blocker.deleted || !blocked || blocked.deleted) return
+        if ((blocked.blockedBy ?? []).includes(blockerId)) return // уже есть
+        // Защита от циклов: blocker не должен (транзитивно) зависеть от blocked.
+        const stack = [blockerId]
+        const seen = new Set<ID>()
+        while (stack.length) {
+          const cur = stack.pop() as ID
+          const c = d.cards[cur]
+          if (!c || c.deleted) continue
+          for (const pred of c.blockedBy ?? []) {
+            if (pred === blockedId) return // ребро замкнуло бы цикл
+            if (!seen.has(pred)) {
+              seen.add(pred)
+              stack.push(pred)
+            }
+          }
+        }
+        blocked.blockedBy = [...(blocked.blockedBy ?? []), blockerId]
+        touch(blocked)
+      }),
+    removeDependency: (blockerId, blockedId) =>
+      engine.update((d) => {
+        const blocked = d.cards[blockedId]
+        if (!blocked || !blocked.blockedBy?.includes(blockerId)) return
+        blocked.blockedBy = blocked.blockedBy.filter((x) => x !== blockerId)
+        if (blocked.blockedBy.length === 0) delete blocked.blockedBy
+        touch(blocked)
       }),
 
     uploadAttachment: async (cardId, file) => {

@@ -358,7 +358,7 @@ function Shell({ onLogout }: { onLogout: () => void }) {
         <span className="fab-plus" aria-hidden>+</span>
         <span className="fab-text">Добавить задачу</span>
       </button>
-      {selectedCardId && <CardModal cardId={selectedCardId} onClose={closeCard} />}
+      {selectedCardId && <CardModal cardId={selectedCardId} onClose={closeCard} onOpenCard={setSelectedCardId} />}
       {settingsOpen && <SettingsModal onClose={() => setSettingsOpen(false)} onLogout={onLogout} />}
       {quickAddOpen && <QuickAddSheet onClose={() => setQuickAddOpen(false)} />}
       <Confetti />

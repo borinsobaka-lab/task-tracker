@@ -18,7 +18,7 @@
 .gantt-head {
   display: flex;
   position: sticky;
-  z-index: 3;
+  z-index: 8;
   background: var(--surface);
 }
 .gantt-months {
@@ -35,13 +35,13 @@
   flex-shrink: 0;
   position: sticky;
   left: 0;
-  z-index: 2;
+  z-index: 7;
   background: var(--surface);
   box-shadow: 1px 0 0 var(--border);
   box-sizing: border-box;
 }
 .gantt-corner {
-  z-index: 6;
+  z-index: 9;
   display: flex;
   align-items: center;
   padding: 0 12px;
@@ -79,6 +79,7 @@
   justify-content: center;
   padding: 3px 0;
   border-left: 1px solid var(--border);
+  background: #fff;
 }
 .gantt-day-wd {
   color: var(--text-faint);
@@ -95,8 +96,11 @@
 .gantt-day.weekend {
   background: var(--surface-2);
 }
+.gantt-day.today {
+  border-left: 2px solid var(--danger);
+}
 .gantt-day.today .gantt-day-num {
-  background: var(--accent);
+  background: var(--danger);
   color: #fff;
   border-radius: 50%;
   width: 20px;
@@ -138,6 +142,7 @@
   position: relative;
   height: 40px;
   flex-shrink: 0;
+  background-color: #fff;
   background-image: repeating-linear-gradient(
     to right,
     var(--border) 0,
@@ -146,12 +151,23 @@
     transparent var(--gantt-day-w)
   );
 }
+/* Подсветка колонок выходных */
+.gantt-weekend {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: var(--gantt-day-w);
+  background: var(--surface-2);
+  pointer-events: none;
+}
+/* Вертикальная красная полоска «сегодня» */
 .gantt-today-line {
   position: absolute;
   top: 0;
   bottom: 0;
   width: var(--gantt-day-w);
-  background: var(--accent-soft);
+  background: rgba(220, 38, 38, 0.07);
+  border-left: 2px solid var(--danger);
   pointer-events: none;
 }
 .gantt-bar {
@@ -179,8 +195,20 @@
   box-shadow: var(--shadow-md);
   z-index: 3;
 }
+/* Готовая задача — зелёная со штриховкой поверх, чтобы точно читалась как выполненная */
 .gantt-bar.done {
-  opacity: 0.5;
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.5) 0,
+    rgba(255, 255, 255, 0.5) 5px,
+    transparent 5px,
+    transparent 10px
+  );
+}
+/* Задача-цель при протягивании зависимости */
+.gantt-bar.dep-target {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
 }
 .gantt-bar-label {
   font-size: 10px;
@@ -188,6 +216,67 @@
   white-space: nowrap;
   padding: 0 4px;
   pointer-events: none;
+}
+/* Название задачи справа от полосы, прямо на шкале */
+.gantt-bar-name {
+  position: absolute;
+  top: 0;
+  line-height: 40px;
+  font-size: 12px;
+  color: var(--text-soft);
+  white-space: nowrap;
+  pointer-events: none;
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.gantt-bar-name.done {
+  text-decoration: line-through;
+  color: var(--text-faint);
+}
+/* Кружки-порты по краям полосы — тянут зависимость к другой задаче */
+.gantt-dot {
+  position: absolute;
+  top: 20px;
+  width: 11px;
+  height: 11px;
+  margin: -6px 0 0 -6px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 2px solid var(--accent);
+  opacity: 0;
+  pointer-events: none;
+  cursor: crosshair;
+  touch-action: none;
+  z-index: 5;
+}
+.gantt-row:hover .gantt-dot,
+.gantt-root.connecting .gantt-dot {
+  opacity: 1;
+  pointer-events: auto;
+}
+/* Слой связей-зависимостей поверх дорожек */
+.gantt-connectors {
+  position: absolute;
+  top: 0;
+  left: var(--gantt-left-w);
+  pointer-events: none;
+  overflow: visible;
+  z-index: 4;
+}
+.gantt-conn {
+  fill: none;
+  stroke: #f59e0b;
+  stroke-width: 1.6;
+}
+.gantt-conn.done {
+  stroke: #16a34a;
+  stroke-dasharray: 4 3;
+}
+.gantt-conn-drag {
+  stroke: var(--accent);
+  stroke-width: 1.8;
+  stroke-dasharray: 5 4;
 }
 /* Зоны-ручки по краям полосы — тянут дату начала/окончания */
 .gantt-handle {

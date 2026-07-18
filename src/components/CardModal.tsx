@@ -123,6 +123,93 @@ function ProjectPicker({ card }: { card: Card }) {
   )
 }
 
+/** Одна ссылка-чип на связанную задачу (перейти / убрать зависимость). */
+function BlkChip({
+  card,
+  tone,
+  onOpen,
+  onRemove,
+}: {
+  card: Card
+  tone: 'blocked' | 'blocks'
+  onOpen: () => void
+  onRemove: () => void
+}) {
+  return (
+    <span className={'cm-blk-chip ' + tone + (card.done ? ' done' : '')}>
+      <button type="button" className="cm-blk-open" onClick={onOpen} title="Перейти к задаче">
+        {card.done && (
+          <span className="inline-ico" aria-hidden>
+            <IcoCheck size={12} />
+          </span>
+        )}
+        {card.title.trim() || 'Без названия'}
+      </button>
+      <button
+        type="button"
+        className="cm-blk-x"
+        onClick={onRemove}
+        title="Убрать зависимость"
+        aria-label="Убрать зависимость"
+      >
+        <IcoClose size={12} />
+      </button>
+    </span>
+  )
+}
+
+/** Раздел «Блокировки»: чем заблокирована задача и какие задачи блокирует она сама.
+ *  Показывается только если зависимости есть (создаются перетягиванием на Ганте). */
+function BlockersSection({ card, onOpenCard }: { card: Card; onOpenCard?: (id: ID) => void }) {
+  const store = useBoard()
+  const all = store.liveCards()
+  const blockers = (card.blockedBy ?? [])
+    .map((id) => all.find((c) => c.id === id))
+    .filter((c): c is Card => !!c)
+  const blocking = all.filter((c) => (c.blockedBy ?? []).includes(card.id))
+  if (blockers.length === 0 && blocking.length === 0) return null
+
+  return (
+    <section className="cm-section cm-blockers">
+      <span className="field-label">
+        <span className="inline-ico" aria-hidden>🔒</span>Блокировки
+      </span>
+      {blockers.length > 0 && (
+        <div className="cm-blk-group">
+          <span className="cm-blk-label blocked">Заблокирована задачей:</span>
+          <div className="cm-blk-list">
+            {blockers.map((b) => (
+              <BlkChip
+                key={b.id}
+                card={b}
+                tone="blocked"
+                onOpen={() => onOpenCard?.(b.id)}
+                onRemove={() => store.removeDependency(b.id, card.id)}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+      {blocking.length > 0 && (
+        <div className="cm-blk-group">
+          <span className="cm-blk-label blocks">Блокирует задачи:</span>
+          <div className="cm-blk-list">
+            {blocking.map((b) => (
+              <BlkChip
+                key={b.id}
+                card={b}
+                tone="blocks"
+                onOpen={() => onOpenCard?.(b.id)}
+                onRemove={() => store.removeDependency(card.id, b.id)}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+    </section>
+  )
+}
+
 function PriorityPicker({ card }: { card: Card }) {
   const store = useBoard()
   const [open, setOpen] = useState(false)
@@ -286,7 +373,15 @@ function MeetingRecurrence({ card }: { card: Card }) {
   )
 }
 
-export function CardModal({ cardId, onClose }: { cardId: ID; onClose: () => void }) {
+export function CardModal({
+  cardId,
+  onClose,
+  onOpenCard,
+}: {
+  cardId: ID
+  onClose: () => void
+  onOpenCard?: (id: ID) => void
+}) {
   const store = useBoard()
   const card = store.card(cardId)
 
@@ -296,12 +391,22 @@ export function CardModal({ cardId, onClose }: { cardId: ID; onClose: () => void
   }, [card, onClose])
 
   if (!card) return null
-  return <CardModalInner key={cardId} card={card} store={store} onClose={onClose} />
+  return <CardModalInner key={cardId} card={card} store={store} onClose={onClose} onOpenCard={onOpenCard} />
 }
 
 // ---------- Содержимое (карточка гарантированно существует) ----------
 
-function CardModalInner({ card, store, onClose }: { card: Card; store: BoardStore; onClose: () => void }) {
+function CardModalInner({
+  card,
+  store,
+  onClose,
+  onOpenCard,
+}: {
+  card: Card
+  store: BoardStore
+  onClose: () => void
+  onOpenCard?: (id: ID) => void
+}) {
   // --- заголовок ---
   const [title, setTitle] = useState(shownTitle(card.title))
   const titleRef = useRef<HTMLTextAreaElement>(null)
@@ -857,6 +962,9 @@ function CardModalInner({ card, store, onClose }: { card: Card; store: BoardStor
 
         {/* ---------- Повторение (у встреч) ---------- */}
         {isMeeting && <MeetingRecurrence card={card} />}
+
+        {/* ---------- Блокировки (зависимости, задаются на Ганте) ---------- */}
+        <BlockersSection card={card} onOpenCard={onOpenCard} />
 
         {/* ---------- Описание ---------- */}
         <section className="cm-section">
