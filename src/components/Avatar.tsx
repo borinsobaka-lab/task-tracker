@@ -1,5 +1,19 @@
-import type { Member } from '../types'
+import type { Member, Project } from '../types'
 import { initials } from '../utils'
+
+/** Аватарка проекта — логотип (или буква-заглушка) скруглённым квадратом,
+ *  чтобы визуально отличаться от круглых аватарок участников. */
+export function ProjectAvatar({ project, size }: { project: Project; size?: 'xs' | 'sm' | 'lg' }) {
+  return (
+    <span className={`project-avatar${size ? ' ' + size : ''}`} title={project.name}>
+      {project.icon ? (
+        <img className="project-avatar-img" src={project.icon} alt="" draggable={false} />
+      ) : (
+        (project.name || 'П').trim().charAt(0).toUpperCase()
+      )}
+    </span>
+  )
+}
 
 export function Avatar({ member, size, title }: { member: Member; size?: 'xs' | 'sm' | 'lg'; title?: string }) {
   return (

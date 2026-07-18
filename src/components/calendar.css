@@ -251,7 +251,9 @@
 .cal-side-meta {
   margin-top: 5px;
   display: flex;
+  align-items: center;
   justify-content: flex-end;
+  gap: 3px;
 }
 
 /* ---------- Основная область ---------- */
@@ -422,6 +424,8 @@
 .cal-chip-avatars {
   flex-shrink: 0;
   display: inline-flex;
+  align-items: center;
+  gap: 3px;
   margin-left: auto;
 }
 
@@ -652,7 +656,9 @@
   right: 4px;
   bottom: 3px;
   display: flex;
+  align-items: center;
   justify-content: flex-end;
+  gap: 2px;
 }
 
 /* Компактный блок (30 минут): всё в одну строку */

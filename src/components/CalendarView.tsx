@@ -24,7 +24,7 @@ import {
   timeToMin,
   toDateKey,
 } from '../utils'
-import { AvatarStack } from './Avatar'
+import { AvatarStack, ProjectAvatar } from './Avatar'
 import './calendar.css'
 
 const HOUR_H = 48 // высота часа, px (синхронизировано с calendar.css)
@@ -328,6 +328,7 @@ export function CalendarView({ memberFilter, onMemberFilterChange, projectFilter
 
   const assigneesOf = (c: Card): Member[] =>
     c.assigneeIds.map((id) => memberById.get(id)).filter((m): m is Member => !!m)
+  const projectOf = (c: Card) => (c.projectId ? store.projects.find((p) => p.id === c.projectId) : undefined)
   const isMeeting = (c: Card): boolean => c.kind === 'meeting'
   // Встречи — фиксированного цвета, задачи — по цвету первого исполнителя.
   // Встречи — серые, полоса слева и текст всегда чёрные (независимо от участников).
@@ -631,8 +632,9 @@ export function CalendarView({ memberFilter, onMemberFilterChange, projectFilter
           </button>
         )}
         <span className="cal-chip-title">{c.title}</span>
-        {assigneesOf(c).length > 0 && (
+        {(projectOf(c) || assigneesOf(c).length > 0) && (
           <span className="cal-chip-avatars">
+            {projectOf(c) && <ProjectAvatar project={projectOf(c)!} size="xs" />}
             <AvatarStack members={assigneesOf(c)} size="xs" />
           </span>
         )}
@@ -713,6 +715,7 @@ export function CalendarView({ memberFilter, onMemberFilterChange, projectFilter
         </div>
         <div className="cal-event-time">{label}</div>
         <div className="cal-event-avatars">
+          {projectOf(c) && <ProjectAvatar project={projectOf(c)!} size="xs" />}
           <AvatarStack members={assigneesOf(c)} size="xs" />
         </div>
         <div
@@ -757,6 +760,7 @@ export function CalendarView({ memberFilter, onMemberFilterChange, projectFilter
     const dragging = draggedCardId === c.id && drag?.source.kind === 'unscheduled'
     const armed = armedCardId === c.id && drag?.source.kind === 'unscheduled'
     const assignees = assigneesOf(c)
+    const project = projectOf(c)
     return (
       <div
         key={c.id}
@@ -769,8 +773,9 @@ export function CalendarView({ memberFilter, onMemberFilterChange, projectFilter
           {isMeeting(c) && <span className="inline-ico" aria-hidden><IcoMeeting size={16} /></span>}
           {c.title}
         </div>
-        {assignees.length > 0 && (
+        {(project || assignees.length > 0) && (
           <div className="cal-side-meta">
+            {project && <ProjectAvatar project={project} size="xs" />}
             <AvatarStack members={assignees} size="xs" />
           </div>
         )}

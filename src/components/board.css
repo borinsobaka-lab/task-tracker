@@ -388,6 +388,17 @@
   margin-left: auto;
   display: inline-flex;
 }
+/* Проект + ответственные вместе справа (проект слева от аватарок) */
+.card-people {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.card-people .card-assign,
+.card-people .card-assignees {
+  margin-left: 0;
+}
 
 /* Быстрое назначение ответственного */
 .card-assign {

@@ -37,7 +37,7 @@ import { priorityStripeColor } from '../eisenhower'
 import { COLUMN_COLORS, fmtDayMonth, hasContent, parseDateKey, toDateKey } from '../utils'
 import type { ViewProps } from '../viewProps'
 import { IcoCalendar, IcoCheck, IcoClose, IcoComment, IcoDescription, IcoMeeting, IcoMenu, IcoNone, IcoPaperclip, IcoSort, IcoTrash } from '../icons'
-import { Avatar, AvatarStack } from './Avatar'
+import { Avatar, AvatarStack, ProjectAvatar } from './Avatar'
 import { SubHeader } from './SubHeader'
 import { hasUnseenComments, liveComments, useCommentsSeen } from './Comments'
 import './board.css'
@@ -639,6 +639,7 @@ function CardContent({ card, members, interactive }: { card: Card; members: Memb
   const assignees = card.assigneeIds
     .map((id) => members.find((m) => m.id === id))
     .filter((m): m is Member => !!m)
+  const project = card.projectId ? store.projects.find((p) => p.id === card.projectId) : undefined
 
   let dateLabel: string | null = null
   let overdue = false
@@ -649,7 +650,7 @@ function CardContent({ card, members, interactive }: { card: Card; members: Memb
   }
 
   const hasMeta =
-    dateLabel !== null || total > 0 || attachments > 0 || withDescription || commentCount > 0 || assignees.length > 0
+    dateLabel !== null || total > 0 || attachments > 0 || withDescription || commentCount > 0 || assignees.length > 0 || !!project
 
   return (
     <>
@@ -701,14 +702,19 @@ function CardContent({ card, members, interactive }: { card: Card; members: Memb
               <IcoComment size={15} /> {commentCount}
             </span>
           )}
-          {interactive ? (
-            <QuickAssign card={card} members={members} assignees={assignees} />
-          ) : (
-            assignees.length > 0 && (
-              <span className="card-assignees">
-                <AvatarStack members={assignees} size="sm" />
-              </span>
-            )
+          {(interactive || project || assignees.length > 0) && (
+            <span className="card-people">
+              {project && <ProjectAvatar project={project} size="sm" />}
+              {interactive ? (
+                <QuickAssign card={card} members={members} assignees={assignees} />
+              ) : (
+                assignees.length > 0 && (
+                  <span className="card-assignees">
+                    <AvatarStack members={assignees} size="sm" />
+                  </span>
+                )
+              )}
+            </span>
           )}
         </div>
       )}

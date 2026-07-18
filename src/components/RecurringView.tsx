@@ -6,7 +6,7 @@ import { describeRule, ruleIsValid } from '../recurrence'
 import type { ViewProps } from '../viewProps'
 import { fmtDayMonth, hasContent, parseDateKey, plainSnippet } from '../utils'
 import { IcoCheck, IcoNone, IcoRecurring, IcoX } from '../icons'
-import { Avatar, AvatarStack } from './Avatar'
+import { Avatar, AvatarStack, ProjectAvatar } from './Avatar'
 import { RichTextEditor } from './RichTextEditor'
 import { RecurrenceFields } from './RecurrenceFields'
 import { SubHeader } from './SubHeader'
@@ -125,6 +125,8 @@ function RecRow({
   onEdit: () => void
   onToggle: () => void
 }) {
+  const store = useBoard()
+  const project = card.projectId ? store.projects.find((p) => p.id === card.projectId) : undefined
   let dateLabel = ''
   if (card.date) {
     dateLabel = fmtDayMonth(parseDateKey(card.date))
@@ -152,9 +154,10 @@ function RecRow({
           {rule && <span className="rec-rule">{describeRule(rule)}</span>}
         </div>
       </button>
-      {members.length > 0 && (
+      {(project || members.length > 0) && (
         <div className="rec-right">
-          <AvatarStack members={members} size="sm" />
+          {project && <ProjectAvatar project={project} size="sm" />}
+          {members.length > 0 && <AvatarStack members={members} size="sm" />}
         </div>
       )}
     </div>

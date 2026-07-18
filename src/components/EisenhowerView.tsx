@@ -18,7 +18,7 @@ import type { Card, EisenhowerQuadrant, ID, Member } from '../types'
 import type { ViewProps } from '../viewProps'
 import { QUADRANTS } from '../eisenhower'
 import { IcoMeeting } from '../icons'
-import { AvatarStack } from './Avatar'
+import { AvatarStack, ProjectAvatar } from './Avatar'
 import { SubHeader } from './SubHeader'
 import './eisenhower.css'
 
@@ -182,14 +182,17 @@ function EisCardBody({
   color?: string
   dragging?: boolean
 }) {
+  const store = useBoard()
+  const project = card.projectId ? store.projects.find((p) => p.id === card.projectId) : undefined
   return (
     <div className={'eis-card-body' + (dragging ? ' overlay' : '')} style={color ? { borderLeftColor: color } : undefined}>
       <div className="eis-card-title">
         {card.kind === 'meeting' && <span className="inline-ico" aria-hidden><IcoMeeting size={13} /></span>}
         {card.title}
       </div>
-      {members.length > 0 && (
+      {(project || members.length > 0) && (
         <div className="eis-card-meta">
+          {project && <ProjectAvatar project={project} size="sm" />}
           <AvatarStack members={members} size="sm" />
         </div>
       )}
