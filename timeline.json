@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-18T23:21:50.623Z",
+  "generatedAt": "2026-07-18T23:21:56.306Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -825,12 +825,12 @@
       ]
     },
     {
-      "id": "15a5209d-4c4a-4eae-9e9f-d8ddf9d96b7f",
-      "title": "Сделать шаблон для отправки клиентам WhatsApp, чтобы выходить с ними на контакт в акции",
+      "id": "01b36ac6-35c9-4439-acd6-7fcb6c57be77",
+      "title": "Написать Петру по Base40",
       "date": "2026-07-19",
       "start": "13:00",
-      "durationMin": 60,
-      "priorityColor": "#eab308",
+      "durationMin": 30,
+      "priorityColor": "#ef4444",
       "members": [
         {
           "name": "Вова",
@@ -839,12 +839,12 @@
       ]
     },
     {
-      "id": "01b36ac6-35c9-4439-acd6-7fcb6c57be77",
-      "title": "Написать Петру по Base40",
+      "id": "15a5209d-4c4a-4eae-9e9f-d8ddf9d96b7f",
+      "title": "Сделать шаблон для отправки клиентам WhatsApp, чтобы выходить с ними на контакт в акции",
       "date": "2026-07-19",
-      "start": "14:00",
-      "durationMin": 30,
-      "priorityColor": "#ef4444",
+      "start": "13:30",
+      "durationMin": 60,
+      "priorityColor": "#eab308",
       "members": [
         {
           "name": "Вова",
