@@ -150,7 +150,7 @@ function rangeTitle(start: Date, end: Date): string {
 
 // ---------- Компонент ----------
 
-export function CalendarView({ memberFilter, onMemberFilterChange, onOpenCard, onCreateDraft }: ViewProps) {
+export function CalendarView({ memberFilter, onMemberFilterChange, projectFilter, onOpenCard, onCreateDraft }: ViewProps) {
   const store = useBoard()
   // Сколько дней показывать: 1 / 3 / 7 — выбор пользователя (сохраняется).
   const [nDays, setNDaysState] = useState<number>(() => getCalDays())
@@ -288,7 +288,8 @@ export function CalendarView({ memberFilter, onMemberFilterChange, onOpenCard, o
   const memberById = useMemo(() => new Map(store.members.map((m) => [m.id, m])), [store.members])
 
   const passesFilter = (c: Card): boolean =>
-    memberFilter.size === 0 || c.assigneeIds.some((id) => memberFilter.has(id))
+    (memberFilter.size === 0 || c.assigneeIds.some((id) => memberFilter.has(id))) &&
+    (projectFilter === null || c.projectId === projectFilter)
 
   const visible = store.liveCards().filter(passesFilter)
   const liveColumns = store.columns.filter((c) => !c.deleted)

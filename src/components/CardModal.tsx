@@ -10,7 +10,7 @@ import type { Attachment, Card, CardKind, ChecklistItem, EisenhowerQuadrant, ID,
 import { fmtDayMonth, fmtFullDate, formatBytes, parseDateKey, toDateKey } from '../utils'
 import { QUADRANT_COLOR, QUADRANT_LABEL, QUADRANTS } from '../eisenhower'
 import { describeRule, ruleIsValid } from '../recurrence'
-import { IcoCalendar, IcoCheck, IcoChevronDown, IcoClose, IcoDescription, IcoMeeting, IcoPaperclip, IcoRecurring, IcoX } from '../icons'
+import { IcoCalendar, IcoCheck, IcoChevronDown, IcoClose, IcoDescription, IcoMeeting, IcoNone, IcoPaperclip, IcoRecurring, IcoX } from '../icons'
 import { Avatar } from './Avatar'
 import { RichTextEditor } from './RichTextEditor'
 import { RecurrenceFields } from './RecurrenceFields'
@@ -80,6 +80,49 @@ function useDebouncedValue(fn: (v: string) => void, ms: number): { run: (v: stri
 // ---------- Корневой компонент ----------
 
 /** Выбор приоритета по матрице Эйзенхауэра прямо из карточки. */
+/** Выбор проекта задачи/встречи: «Без проекта» + проекты с логотипами. */
+function ProjectPicker({ card }: { card: Card }) {
+  const store = useBoard()
+  const projects = store.projects
+  if (projects.length === 0) return null // проектов ещё нет — выбирать не из чего
+  const current = card.projectId ?? null
+  return (
+    <section className="cm-section">
+      <span className="field-label">Проект</span>
+      <div className="cm-projects">
+        <button
+          type="button"
+          className={'cm-project' + (current === null ? ' active' : '')}
+          onClick={() => store.updateCard(card.id, { projectId: undefined })}
+        >
+          <span className="cm-project-none" aria-hidden>
+            <IcoNone size={18} />
+          </span>
+          Без проекта
+        </button>
+        {projects.map((p) => (
+          <button
+            key={p.id}
+            type="button"
+            className={'cm-project' + (current === p.id ? ' active' : '')}
+            title={p.name}
+            onClick={() => store.updateCard(card.id, { projectId: p.id })}
+          >
+            {p.icon ? (
+              <img className="cm-project-icon" src={p.icon} alt="" />
+            ) : (
+              <span className="cm-project-ph" aria-hidden>
+                {(p.name || 'П').charAt(0).toUpperCase()}
+              </span>
+            )}
+            <span className="cm-project-name">{p.name || 'Проект'}</span>
+          </button>
+        ))}
+      </div>
+    </section>
+  )
+}
+
 function PriorityPicker({ card }: { card: Card }) {
   const store = useBoard()
   const [open, setOpen] = useState(false)
@@ -735,6 +778,9 @@ function CardModalInner({ card, store, onClose }: { card: Card; store: BoardStor
             )}
           </div>
         </div>
+
+        {/* ---------- Проект ---------- */}
+        <ProjectPicker card={card} />
 
         {/* ---------- Ссылка на созвон (у встреч) ---------- */}
         {isMeeting && (

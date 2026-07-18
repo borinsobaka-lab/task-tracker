@@ -212,6 +212,8 @@ function Shell({ onLogout }: { onLogout: () => void }) {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [quickAddOpen, setQuickAddOpen] = useState(false)
   const [memberFilter, setMemberFilter] = useState<ReadonlySet<ID>>(new Set())
+  // Активный проект-фильтр (id) или null — «Все». Задаётся табами проектов в шапке.
+  const [projectFilter, setProjectFilter] = useState<ID | null>(null)
   // Карточка, созданная кнопкой «+» и ещё не заполненная (черновик). Ref на
   // свежий store — чтобы после закрытия увидеть досохранённые название/описание.
   const draftIdRef = useRef<ID | null>(null)
@@ -332,12 +334,15 @@ function Shell({ onLogout }: { onLogout: () => void }) {
         onViewChange={changeView}
         onOpenSettings={() => setSettingsOpen(true)}
         onOpenCard={setSelectedCardId}
+        projectFilter={projectFilter}
+        onProjectFilterChange={setProjectFilter}
       />
       <main className="app-main">
         {(() => {
           const shared = {
             memberFilter,
             onMemberFilterChange: setMemberFilter,
+            projectFilter,
             onOpenCard: setSelectedCardId,
             onCreateDraft: createDraft,
           }

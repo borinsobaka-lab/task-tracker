@@ -64,7 +64,7 @@ function cardStyle(card: Card): CSSProperties {
 
 // ---------- Корневой компонент ----------
 
-export function BoardView({ memberFilter, onMemberFilterChange, onOpenCard }: ViewProps) {
+export function BoardView({ memberFilter, onMemberFilterChange, projectFilter, onOpenCard }: ViewProps) {
   const store = useBoard()
   const columns = store.columns
 
@@ -87,8 +87,9 @@ export function BoardView({ memberFilter, onMemberFilterChange, onOpenCard }: Vi
     (card: Card) =>
       card.kind !== 'meeting' &&
       !card.seriesId &&
-      (memberFilter.size === 0 || card.assigneeIds.some((id) => memberFilter.has(id))),
-    [memberFilter],
+      (memberFilter.size === 0 || card.assigneeIds.some((id) => memberFilter.has(id))) &&
+      (projectFilter === null || card.projectId === projectFilter),
+    [memberFilter, projectFilter],
   )
 
   const isColumnId = useCallback((id: string) => columns.some((c) => c.id === id), [columns])

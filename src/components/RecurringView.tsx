@@ -5,7 +5,7 @@ import type { Card, ID, Member, RecurFreq, RecurrenceRule, Series } from '../typ
 import { describeRule, ruleIsValid } from '../recurrence'
 import type { ViewProps } from '../viewProps'
 import { fmtDayMonth, hasContent, parseDateKey, plainSnippet } from '../utils'
-import { IcoCheck, IcoRecurring, IcoX } from '../icons'
+import { IcoCheck, IcoNone, IcoRecurring, IcoX } from '../icons'
 import { Avatar, AvatarStack } from './Avatar'
 import { RichTextEditor } from './RichTextEditor'
 import { RecurrenceFields } from './RecurrenceFields'
@@ -31,13 +31,14 @@ const FREQ_FILTERS: { v: 'all' | RecurFreq; label: string }[] = [
   { v: 'yearly', label: 'Ежегодные' },
 ]
 
-export function RecurringView({ memberFilter, onMemberFilterChange }: ViewProps) {
+export function RecurringView({ memberFilter, onMemberFilterChange, projectFilter }: ViewProps) {
   const store = useBoard()
   const [editing, setEditing] = useState<Series | 'new' | null>(null)
   const [freqFilter, setFreqFilter] = useState<'all' | RecurFreq>('all')
 
   const inFilter = (c: Card) =>
-    memberFilter.size === 0 || c.assigneeIds.some((id) => memberFilter.has(id))
+    (memberFilter.size === 0 || c.assigneeIds.some((id) => memberFilter.has(id))) &&
+    (projectFilter === null || c.projectId === projectFilter)
   const freqOf = (c: Card) => (c.seriesId ? store.seriesById(c.seriesId)?.rule.freq : undefined)
   const inFreq = (c: Card) => freqFilter === 'all' || freqOf(c) === freqFilter
   // Раздел «Регулярное» — только задачи; повторяющиеся встречи живут в календаре
@@ -175,6 +176,7 @@ function RecurringEditor({ series, onClose }: { series: Series | null; onClose: 
   const [hasTime, setHasTime] = useState(!!series?.start)
   const [time, setTime] = useState(series?.start ?? '10:00')
   const [duration, setDuration] = useState(series?.durationMin ?? 60)
+  const [projectId, setProjectId] = useState<ID | undefined>(series?.projectId)
   const [error, setError] = useState<string | null>(null)
 
   const buildRule = (): RecurrenceRule => {
@@ -195,6 +197,7 @@ function RecurringEditor({ series, onClose }: { series: Series | null; onClose: 
       description,
       assigneeIds: assignees,
       rule,
+      ...(projectId ? { projectId } : {}),
       ...(hasTime ? { start: time, durationMin: duration } : {}),
     }
     if (series) store.updateSeries(series.id, input)
@@ -250,6 +253,40 @@ function RecurringEditor({ series, onClose }: { series: Series | null; onClose: 
             )
           })}
         </div>
+
+        {store.projects.length > 0 && (
+          <>
+            <label className="field-label" style={{ marginTop: 14 }}>
+              Проект
+            </label>
+            <div className="cm-projects">
+              <button
+                type="button"
+                className={'cm-project' + (!projectId ? ' active' : '')}
+                onClick={() => setProjectId(undefined)}
+              >
+                <span className="cm-project-none" aria-hidden><IcoNone size={18} /></span>
+                Без проекта
+              </button>
+              {store.projects.map((p) => (
+                <button
+                  key={p.id}
+                  type="button"
+                  className={'cm-project' + (projectId === p.id ? ' active' : '')}
+                  title={p.name}
+                  onClick={() => setProjectId(p.id)}
+                >
+                  {p.icon ? (
+                    <img className="cm-project-icon" src={p.icon} alt="" />
+                  ) : (
+                    <span className="cm-project-ph" aria-hidden>{(p.name || 'П').charAt(0).toUpperCase()}</span>
+                  )}
+                  <span className="cm-project-name">{p.name || 'Проект'}</span>
+                </button>
+              ))}
+            </div>
+          </>
+        )}
 
         <label className="field-label" style={{ marginTop: 14 }}>
           Повторять

@@ -65,6 +65,53 @@
   margin: 0;
 }
 
+/* Выбор проекта: чипы «Без проекта» + проекты с логотипами */
+.cm-projects {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.cm-project {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 12px 5px 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  background: var(--surface);
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text);
+}
+.cm-project.active {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--text);
+}
+.cm-project-icon {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  border-radius: 5px;
+  display: block;
+}
+.cm-project-ph {
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--border);
+  color: var(--text-soft);
+  font-size: 12px;
+  font-weight: 700;
+}
+.cm-project-none {
+  display: inline-flex;
+  color: var(--text-faint);
+}
+
 /* ---------- Шапка ---------- */
 
 .cm-header {

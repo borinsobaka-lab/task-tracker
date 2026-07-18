@@ -20,6 +20,7 @@ export interface SeriesInput {
   rule: RecurrenceRule
   kind?: CardKind
   meetingUrl?: string
+  projectId?: ID
   start?: string
   durationMin?: number
 }
@@ -42,6 +43,7 @@ function makeInstance(seriesId: ID, s: Series, dateKey: string, ts: string): Car
     createdAt: ts,
     updatedAt: ts,
   }
+  if (s.projectId) c.projectId = s.projectId
   if (s.kind === 'meeting') {
     c.kind = 'meeting'
     if (s.meetingUrl) c.meetingUrl = s.meetingUrl
@@ -125,6 +127,11 @@ function applySharedToInstances(d: BoardData, s: Series, sinceKey = ''): void {
     if ((s.meetingUrl ?? '') !== (c.meetingUrl ?? '')) {
       if (s.meetingUrl) c.meetingUrl = s.meetingUrl
       else delete c.meetingUrl
+      ch = true
+    }
+    if ((s.projectId ?? '') !== (c.projectId ?? '')) {
+      if (s.projectId) c.projectId = s.projectId
+      else delete c.projectId
       ch = true
     }
     if (ch) touch(c)
@@ -714,7 +721,7 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
         touch(card)
         // Повторяющаяся встреча: название/описание/ответственные/ссылка одинаковы
         // у всех экземпляров серии — распространяем правку на серию и остальные.
-        if (card.kind === 'meeting' && card.seriesId && ('title' in patch || 'description' in patch || 'assigneeIds' in patch || 'meetingUrl' in patch)) {
+        if (card.kind === 'meeting' && card.seriesId && ('title' in patch || 'description' in patch || 'assigneeIds' in patch || 'meetingUrl' in patch || 'projectId' in patch)) {
           const s = d.series?.[card.seriesId]
           if (s && !s.deleted) {
             s.title = card.title
@@ -722,6 +729,8 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
             s.assigneeIds = [...card.assigneeIds]
             if (card.meetingUrl) s.meetingUrl = card.meetingUrl
             else delete s.meetingUrl
+            if (card.projectId) s.projectId = card.projectId
+            else delete s.projectId
             touch(s)
             applySharedToInstances(d, s)
           }
@@ -853,6 +862,7 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
           description: input.description ?? '',
           assigneeIds: [...input.assigneeIds],
           rule: input.rule,
+          ...(input.projectId ? { projectId: input.projectId } : {}),
           ...(input.start ? { start: input.start, durationMin: input.durationMin ?? 60 } : {}),
           createdAt: ts,
           updatedAt: ts,
@@ -873,6 +883,8 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
         s.description = input.description ?? ''
         s.assigneeIds = [...input.assigneeIds]
         s.rule = input.rule
+        if (input.projectId) s.projectId = input.projectId
+        else delete s.projectId
         if (input.start) {
           s.start = input.start
           s.durationMin = input.durationMin ?? 60
@@ -887,6 +899,8 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
           active.title = s.title
           active.description = s.description
           active.assigneeIds = [...s.assigneeIds]
+          if (s.projectId) active.projectId = s.projectId
+          else delete active.projectId
           if (s.start) {
             active.start = s.start
             active.durationMin = s.durationMin
@@ -930,6 +944,8 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
           s.assigneeIds = [...card.assigneeIds]
           if (card.meetingUrl) s.meetingUrl = card.meetingUrl
           else delete s.meetingUrl
+          if (card.projectId) s.projectId = card.projectId
+          else delete s.projectId
           if (card.start) {
             s.start = card.start
             s.durationMin = card.durationMin ?? 60

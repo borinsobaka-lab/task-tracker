@@ -24,7 +24,7 @@ import './eisenhower.css'
 
 const INBOX = 'inbox'
 
-export function EisenhowerView({ memberFilter, onMemberFilterChange, onOpenCard }: ViewProps) {
+export function EisenhowerView({ memberFilter, onMemberFilterChange, projectFilter, onOpenCard }: ViewProps) {
   const store = useBoard()
   const memberById = useMemo(() => new Map(store.members.map((m) => [m.id, m])), [store.members])
   const [activeId, setActiveId] = useState<ID | null>(null)
@@ -37,7 +37,8 @@ export function EisenhowerView({ memberFilter, onMemberFilterChange, onOpenCard 
   )
 
   const inFilter = (c: Card) =>
-    memberFilter.size === 0 || c.assigneeIds.some((id) => memberFilter.has(id))
+    (memberFilter.size === 0 || c.assigneeIds.some((id) => memberFilter.has(id))) &&
+    (projectFilter === null || c.projectId === projectFilter)
   // В матрице только обычные задачи: без встреч, без регулярных и без готовых
   const cards = store.liveCards().filter((c) => c.kind !== 'meeting' && !c.seriesId && !c.done && inFilter(c))
 

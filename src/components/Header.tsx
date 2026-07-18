@@ -30,11 +30,15 @@ export function Header({
   onViewChange,
   onOpenSettings,
   onOpenCard,
+  projectFilter,
+  onProjectFilterChange,
 }: {
   view: ViewKind
   onViewChange: (v: ViewKind) => void
   onOpenSettings: () => void
   onOpenCard: (id: ID) => void
+  projectFilter: ID | null
+  onProjectFilterChange: (id: ID | null) => void
 }) {
   const store = useBoard()
   const status = STATUS_LABEL[store.status] ?? STATUS_LABEL.synced
@@ -59,7 +63,7 @@ export function Header({
         ))}
       </nav>
 
-      <ProjectTabs />
+      <ProjectTabs projectFilter={projectFilter} onChange={onProjectFilterChange} />
 
       <SearchBox onOpenCard={onOpenCard} />
 
@@ -124,35 +128,33 @@ export function BottomNav({
 }
 
 /**
- * Табы проектов в шапке: два слота-логотипа + таб «Все». Пока чисто визуально —
- * выбор не фильтрует задачи (это будет позже). Иконки/имена задаются в настройках.
+ * Табы проектов в шапке: два слота-логотипа + таб «Все». Выбор задаёт глобальный
+ * фильтр (projectFilter): в каждом разделе остаются только задачи этого проекта.
+ * Иконки/имена задаются в настройках. id слота — стабильный `proj-1`/`proj-2`.
  */
-function ProjectTabs() {
+function ProjectTabs({ projectFilter, onChange }: { projectFilter: ID | null; onChange: (id: ID | null) => void }) {
   const store = useBoard()
-  // active: 'all' | 0 | 1 — только визуальное состояние
-  const [active, setActive] = useState<'all' | 0 | 1>('all')
-  const slots: [number, ReturnType<typeof projectAt>][] = [
-    [0, projectAt(store.projects, 0)],
-    [1, projectAt(store.projects, 1)],
-  ]
   return (
     <div className="project-tabs" role="tablist" aria-label="Проекты">
-      {slots.map(([i, p]) => {
+      {[0, 1].map((i) => {
+        const p = store.projects[i]
+        const id = p?.id ?? `proj-${i + 1}`
         const named = p?.name?.trim()
         const label = named || `Проект ${i + 1}`
         // Пока логотип не загружен — показываем номер слота (а не «П» от «Проект»,
         // иначе оба заполнителя выглядели бы одинаково).
         const ph = named ? named.charAt(0).toUpperCase() : String(i + 1)
+        const selected = projectFilter === id
         return (
           <button
             key={i}
             type="button"
             role="tab"
-            aria-selected={active === i}
+            aria-selected={selected}
             aria-label={label}
             title={label}
-            className={'project-tab project-tab-logo' + (active === i ? ' active' : '')}
-            onClick={() => setActive(i as 0 | 1)}
+            className={'project-tab project-tab-logo' + (selected ? ' active' : '')}
+            onClick={() => onChange(id)}
           >
             {p?.icon ? (
               <img className="project-tab-icon" src={p.icon} alt="" />
@@ -167,18 +169,14 @@ function ProjectTabs() {
       <button
         type="button"
         role="tab"
-        aria-selected={active === 'all'}
-        className={'project-tab project-tab-all' + (active === 'all' ? ' active' : '')}
-        onClick={() => setActive('all')}
+        aria-selected={projectFilter === null}
+        className={'project-tab project-tab-all' + (projectFilter === null ? ' active' : '')}
+        onClick={() => onChange(null)}
       >
         Все
       </button>
     </div>
   )
-}
-
-function projectAt(projects: { id: string; name: string; icon?: string }[], i: number) {
-  return projects[i]
 }
 
 /** Глобальный поиск задач: поле на десктопе, кнопка+полноэкранный оверлей на телефоне. */

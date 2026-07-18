@@ -79,6 +79,8 @@ export interface Series {
   description: string
   assigneeIds: ID[]
   rule: RecurrenceRule
+  /** Проект серии (наследуется экземплярами) */
+  projectId?: ID
   /** 'meeting' — повторяющаяся встреча; отсутствует/'task' — регулярная задача */
   kind?: CardKind
   /** Ссылка на созвон (только у встреч) */
@@ -112,6 +114,8 @@ export interface Card {
   meetingUrl?: string
   /** Приоритет по матрице Эйзенхауэра (если распределён) */
   priority?: EisenhowerQuadrant
+  /** Проект, к которому относится задача/встреча (id из BoardData.projects). Нет — «без проекта». */
+  projectId?: ID
   /** Если задан — это экземпляр повторяющейся задачи (серии) */
   seriesId?: ID
   /** HTML из редактора (санитизируется при выводе) */
