@@ -3,7 +3,7 @@
 // удаления — через надгробия (deleted: true). После слияния доска нормализуется:
 // каждая живая карточка лежит ровно в одной живой колонке.
 
-import type { Attachment, BoardData, Card, ChecklistItem, Column, Comment, Member, ID, Series } from './types'
+import type { Attachment, BoardData, Card, ChecklistItem, Column, Comment, Member, ID, Project, Series } from './types'
 import { nowISO } from './utils'
 
 const TOMBSTONE_TTL_MS = 45 * 24 * 60 * 60 * 1000
@@ -90,6 +90,7 @@ function mergeById<T extends { id: ID; updatedAt: string }>(local: T[], remote: 
 export function mergeBoards(local: BoardData, remote: BoardData): BoardData {
   const members: Member[] = mergeById(local.members, remote.members)
   const columns: Column[] = mergeById(local.columns, remote.columns)
+  const projects: Project[] = mergeById(local.projects ?? [], remote.projects ?? [])
 
   const cards: Record<ID, Card> = {}
   const ids = new Set([...Object.keys(local.cards), ...Object.keys(remote.cards)])
@@ -113,6 +114,7 @@ export function mergeBoards(local: BoardData, remote: BoardData): BoardData {
     columns,
     cards,
     series,
+    projects,
     updatedAt: local.updatedAt >= remote.updatedAt ? local.updatedAt : remote.updatedAt,
   })
 }
@@ -226,6 +228,7 @@ export function emptyBoard(): BoardData {
     ],
     cards: {},
     series: {},
+    projects: [],
     updatedAt: ts,
   }
 }

@@ -158,6 +158,20 @@ export interface Column {
   updatedAt: string
 }
 
+/**
+ * Проект — визуальный таб-переключатель в шапке (пока без фильтрации).
+ * Имя на табе не показывается (только иконка), но хранится для будущего фильтра.
+ */
+export interface Project {
+  id: ID
+  name: string
+  /** Иконка проекта: data-URL (в т.ч. SVG). Нет — показываем заглушку с буквой. */
+  icon?: string
+  deleted?: boolean
+  createdAt: string
+  updatedAt: string
+}
+
 export interface BoardData {
   schemaVersion: 1
   members: Member[]
@@ -165,5 +179,7 @@ export interface BoardData {
   cards: Record<ID, Card>
   /** Шаблоны повторяющихся задач (может отсутствовать в старых данных) */
   series?: Record<ID, Series>
+  /** Проекты для табов в шапке (может отсутствовать в старых данных) */
+  projects?: Project[]
   updatedAt: string
 }

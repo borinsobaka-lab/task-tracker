@@ -153,6 +153,51 @@ export function imageFileToAvatar(file: File, size = 96): Promise<string> {
   })
 }
 
+/**
+ * Иконка проекта из файла. SVG сохраняем как есть (векторно, без растеризации) —
+ * data-URL рендерим через <img>, скрипты внутри не исполняются. Растровые
+ * форматы вписываем (contain) в квадрат 128px с прозрачным фоном, чтобы логотип
+ * не обрезался.
+ */
+export function imageFileToIcon(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const isSvg = file.type === 'image/svg+xml' || /\.svg$/i.test(file.name)
+    if (isSvg) {
+      const reader = new FileReader()
+      reader.onload = () => resolve(String(reader.result))
+      reader.onerror = () => reject(new Error('Не удалось прочитать SVG'))
+      reader.readAsDataURL(file)
+      return
+    }
+    if (!file.type.startsWith('image/')) return reject(new Error('Это не изображение'))
+    const url = URL.createObjectURL(file)
+    const img = new Image()
+    img.onload = () => {
+      URL.revokeObjectURL(url)
+      try {
+        const size = 128
+        const canvas = document.createElement('canvas')
+        canvas.width = size
+        canvas.height = size
+        const ctx = canvas.getContext('2d')
+        if (!ctx) return reject(new Error('Canvas недоступен'))
+        const scale = Math.min(size / img.width, size / img.height) // вписываем целиком
+        const w = img.width * scale
+        const h = img.height * scale
+        ctx.drawImage(img, (size - w) / 2, (size - h) / 2, w, h)
+        resolve(canvas.toDataURL('image/png'))
+      } catch (e) {
+        reject(e instanceof Error ? e : new Error(String(e)))
+      }
+    }
+    img.onerror = () => {
+      URL.revokeObjectURL(url)
+      reject(new Error('Не удалось открыть изображение'))
+    }
+    img.src = url
+  })
+}
+
 /** Совпадение карточки с поисковым запросом (по заголовку и тексту описания). */
 export function cardMatchesQuery(c: { title: string; description?: string }, query: string): boolean {
   const q = query.trim().toLowerCase()

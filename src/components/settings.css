@@ -136,6 +136,51 @@
   cursor: pointer;
   padding: 0;
 }
+/* Проекты: слот-иконка (загрузка, в т.ч. SVG) + название */
+.settings-projects {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+.settings-project {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.settings-project-iconbtn {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  cursor: pointer;
+  padding: 0;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.settings-project-icon {
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+  display: block;
+}
+.settings-project-ph {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-soft);
+}
+.settings-project-iconbtn .settings-avatar-cam {
+  border-radius: 12px;
+}
+.settings-project-name {
+  flex: 1;
+  min-width: 0;
+}
+
 .settings-member-row2 {
   display: flex;
   align-items: center;

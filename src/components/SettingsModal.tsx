@@ -3,7 +3,7 @@ import { useBoard } from '../store'
 import { getDataRepoConfig, getSoundOn, getToken, setDataRepoConfig, setSoundOn } from '../config'
 import { playTaskChime } from '../sound'
 import { saveEncryptedToken } from '../auth'
-import { imageFileToAvatar, MEMBER_COLORS } from '../utils'
+import { imageFileToAvatar, imageFileToIcon, MEMBER_COLORS } from '../utils'
 import { IcoCamera, IcoChevronRight, IcoClose, IcoX } from '../icons'
 import type { Member } from '../types'
 import { Avatar } from './Avatar'
@@ -38,6 +38,7 @@ export function SettingsModal({ onClose, onLogout }: { onClose: () => void; onLo
 
         <div className="settings-body">
           <MembersSection />
+          <ProjectsSection />
           <IdentitySection />
           <NotificationsSection />
           <DataSection />
@@ -271,6 +272,87 @@ function AddMemberForm() {
           />
         ))}
       </div>
+    </div>
+  )
+}
+
+// ---------- Проекты ----------
+
+function ProjectsSection() {
+  return (
+    <section className="settings-section">
+      <h3 className="field-label settings-section-title">Проекты</h3>
+      <p className="muted settings-hint" style={{ marginBottom: 12 }}>
+        Два проекта для табов в шапке. Загрузите иконку (можно SVG) и задайте название —
+        имя на табе не показывается, но пригодится позже для фильтра. Таб «Все» есть всегда.
+      </p>
+      <div className="settings-projects">
+        <ProjectSlot slot={0} />
+        <ProjectSlot slot={1} />
+      </div>
+    </section>
+  )
+}
+
+function ProjectSlot({ slot }: { slot: number }) {
+  const store = useBoard()
+  const project = store.projects[slot]
+  const fileRef = useRef<HTMLInputElement>(null)
+  const placeholder = `Проект ${slot + 1}`
+  const name = project?.name ?? ''
+
+  const pickIcon = async (e: ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0]
+    e.target.value = '' // позволяем выбрать тот же файл снова
+    if (!f) return
+    try {
+      const icon = await imageFileToIcon(f)
+      store.updateProjectSlot(slot, { icon })
+    } catch {
+      alert('Не удалось загрузить иконку. Попробуйте другой файл (SVG или PNG).')
+    }
+  }
+
+  return (
+    <div className="settings-project">
+      <span className="settings-avatar-wrap">
+        <button
+          type="button"
+          className="settings-project-iconbtn"
+          onClick={() => fileRef.current?.click()}
+          title="Загрузить иконку проекта"
+          aria-label={`Загрузить иконку для «${name || placeholder}»`}
+        >
+          {project?.icon ? (
+            <img className="settings-project-icon" src={project.icon} alt="" />
+          ) : (
+            <span className="settings-project-ph" aria-hidden>
+              {name.trim() ? name.trim().charAt(0).toUpperCase() : String(slot + 1)}
+            </span>
+          )}
+          <span className="settings-avatar-cam" aria-hidden>
+            <IcoCamera size={16} />
+          </span>
+        </button>
+        {project?.icon && (
+          <button
+            type="button"
+            className="settings-avatar-remove"
+            onClick={() => store.updateProjectSlot(slot, { icon: undefined })}
+            title="Убрать иконку"
+            aria-label="Убрать иконку"
+          >
+            <IcoClose size={13} color="currentColor" />
+          </button>
+        )}
+        <input ref={fileRef} type="file" accept=".svg,image/svg+xml,image/*" hidden onChange={pickIcon} />
+      </span>
+      <input
+        className="input settings-project-name"
+        value={name}
+        placeholder={placeholder}
+        onChange={(e) => store.updateProjectSlot(slot, { name: e.target.value })}
+      />
     </div>
   )
 }

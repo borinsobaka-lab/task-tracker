@@ -59,6 +59,8 @@ export function Header({
         ))}
       </nav>
 
+      <ProjectTabs />
+
       <SearchBox onOpenCard={onOpenCard} />
 
       <div className="header-right">
@@ -119,6 +121,64 @@ export function BottomNav({
       </button>
     </nav>
   )
+}
+
+/**
+ * Табы проектов в шапке: два слота-логотипа + таб «Все». Пока чисто визуально —
+ * выбор не фильтрует задачи (это будет позже). Иконки/имена задаются в настройках.
+ */
+function ProjectTabs() {
+  const store = useBoard()
+  // active: 'all' | 0 | 1 — только визуальное состояние
+  const [active, setActive] = useState<'all' | 0 | 1>('all')
+  const slots: [number, ReturnType<typeof projectAt>][] = [
+    [0, projectAt(store.projects, 0)],
+    [1, projectAt(store.projects, 1)],
+  ]
+  return (
+    <div className="project-tabs" role="tablist" aria-label="Проекты">
+      {slots.map(([i, p]) => {
+        const named = p?.name?.trim()
+        const label = named || `Проект ${i + 1}`
+        // Пока логотип не загружен — показываем номер слота (а не «П» от «Проект»,
+        // иначе оба заполнителя выглядели бы одинаково).
+        const ph = named ? named.charAt(0).toUpperCase() : String(i + 1)
+        return (
+          <button
+            key={i}
+            type="button"
+            role="tab"
+            aria-selected={active === i}
+            aria-label={label}
+            title={label}
+            className={'project-tab project-tab-logo' + (active === i ? ' active' : '')}
+            onClick={() => setActive(i as 0 | 1)}
+          >
+            {p?.icon ? (
+              <img className="project-tab-icon" src={p.icon} alt="" />
+            ) : (
+              <span className="project-tab-ph" aria-hidden>
+                {ph}
+              </span>
+            )}
+          </button>
+        )
+      })}
+      <button
+        type="button"
+        role="tab"
+        aria-selected={active === 'all'}
+        className={'project-tab project-tab-all' + (active === 'all' ? ' active' : '')}
+        onClick={() => setActive('all')}
+      >
+        Все
+      </button>
+    </div>
+  )
+}
+
+function projectAt(projects: { id: string; name: string; icon?: string }[], i: number) {
+  return projects[i]
 }
 
 /** Глобальный поиск задач: поле на десктопе, кнопка+полноэкранный оверлей на телефоне. */

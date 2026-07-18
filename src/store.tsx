@@ -4,7 +4,7 @@
 
 import React, { createContext, useContext, useEffect, useMemo, useSyncExternalStore } from 'react'
 import { produce } from 'immer'
-import type { Attachment, BoardData, Card, CardKind, ChecklistItem, Column, ColumnRole, Comment, EisenhowerQuadrant, ID, Member, RecurrenceRule, Series } from './types'
+import type { Attachment, BoardData, Card, CardKind, ChecklistItem, Column, ColumnRole, Comment, EisenhowerQuadrant, ID, Member, Project, RecurrenceRule, Series } from './types'
 import type { StorageAdapter } from './storage/adapter'
 import { ConflictError } from './storage/adapter'
 import { emptyBoard, mergeBoards, normalizeBoard } from './merge'
@@ -412,6 +412,12 @@ export interface BoardStore {
   updateMember(id: ID, patch: Partial<Pick<Member, 'name' | 'color' | 'sleepUntil' | 'tgUsername' | 'avatar'>>): void
   archiveMember(id: ID): void
 
+  // Проекты (табы в шапке; пока только визуально)
+  projects: Project[]
+  /** Задать имя/иконку слота проекта (0 или 1); слот создаётся при необходимости.
+   *  icon: строка — установить, undefined — убрать. */
+  updateProjectSlot(slot: number, patch: { name?: string; icon?: string | undefined }): void
+
   // Колонки
   addColumn(title: string): void
   renameColumn(id: ID, title: string): void
@@ -535,6 +541,7 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
     lastError: snap.lastError,
 
     members: activeMembers,
+    projects: (data.projects ?? []).filter((p) => !p.deleted),
     columns: liveColumns,
     card: getCard,
     cardsInColumn: (columnId) => {
@@ -572,6 +579,24 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
         if (!m) return
         m.archived = true
         touch(m)
+      }),
+
+    updateProjectSlot: (slot, patch) =>
+      engine.update((d) => {
+        if (!d.projects) d.projects = []
+        const ts = nowISO()
+        // Гарантируем существование слотов до нужного индекса (со стабильными id).
+        while (d.projects.length <= slot) {
+          const n = d.projects.length + 1
+          d.projects.push({ id: `proj-${n}`, name: `Проект ${n}`, createdAt: ts, updatedAt: ts })
+        }
+        const p = d.projects[slot]
+        if (patch.name !== undefined) p.name = patch.name
+        if ('icon' in patch) {
+          if (patch.icon) p.icon = patch.icon
+          else delete p.icon
+        }
+        touch(p)
       }),
 
     addColumn: (title) =>

@@ -1,3 +1,58 @@
+/* Табы проектов — пилюля-переключатель (как табы разделов) */
+.project-tabs {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  background: var(--surface-2);
+  border-radius: 9px;
+  padding: 3px;
+  flex-shrink: 0;
+}
+.project-tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  border-radius: 7px;
+  cursor: pointer;
+  color: var(--text-soft);
+  padding: 0;
+  height: 30px;
+}
+.project-tab-logo {
+  width: 36px;
+}
+.project-tab-icon {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  display: block;
+}
+.project-tab-ph {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--border);
+  color: var(--text-soft);
+  font-size: 12px;
+  font-weight: 700;
+}
+.project-tab-all {
+  padding: 0 12px;
+  font-weight: 500;
+  font-size: 13px;
+  white-space: nowrap;
+}
+.project-tab.active {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow-sm);
+}
+
 /* Глобальный поиск в верхнем хедере */
 .header-search {
   display: flex;
@@ -158,34 +213,28 @@
 }
 
 @media (max-width: 720px) {
-  /* Поиск — компактное поле фиксированной ширины слева от кнопки настроек.
-     Одинаковое во всех разделах: не растягивается под ширину заголовка (иначе
-     на «Доске» и «Календаре» оно было бы разной ширины). */
-  .header-search {
-    margin-left: auto; /* прижимаем поиск и настройки к правому краю */
-    min-width: 0;
-    flex-shrink: 1;
-  }
-  .app-header .header-right {
-    margin-left: 0; /* настройки вплотную к полю поиска */
-  }
+  /* Поиск на телефоне — только иконка (открывает полноэкранный поиск). Поле убрано,
+     на его месте — табы проектов. Порядок: [название][табы] … [настройки][поиск]. */
   .header-search-field {
-    display: flex;
-    flex: 0 1 168px; /* фикс. ширина; ужимается только если совсем не хватает места */
-    min-width: 0;
-  }
-  .header-search-input {
-    width: 100%;
-    font-size: 16px; /* 16px, чтобы iOS не приближал страницу при фокусе */
-  }
-  /* Отдельная кнопка-иконка поиска на телефоне больше не нужна */
-  .app-header .header-search-btn {
     display: none;
   }
-  /* Выпадашка результатов — от правого края, чтобы не вылезала за экран */
-  .header-search .search-results {
-    width: min(360px, 92vw);
-    right: 0;
-    left: auto;
+  .app-header .header-search-btn {
+    display: inline-flex;
+  }
+  .header-title-mobile {
+    order: 0;
+  }
+  .project-tabs {
+    order: 1;
+    margin-right: auto; /* табы у названия, настройки и поиск — к правому краю */
+  }
+  .app-header .header-right {
+    order: 2;
+    margin-left: 0;
+  }
+  .header-search {
+    order: 3;
+    margin-left: 0;
+    flex: 0 0 auto;
   }
 }
