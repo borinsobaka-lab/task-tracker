@@ -16,7 +16,7 @@ export interface GanttHandle {
 
 const DAY_W = 46 // ширина колонки-дня, px (должна совпадать с --gantt-day-w в CSS)
 const ROW_H = 40 // высота дорожки задачи, px (совпадает с .gantt-track height)
-const ROW_PITCH = ROW_H + 1 // + 1px нижней границы строки — шаг между центрами строк
+const ROW_PITCH = ROW_H // шаг между строками (у .gantt-row нет границ/отступов)
 const BAR_CY = 20 // центр полосы по вертикали внутри дорожки (top 8 + высота 24 / 2)
 const MAX_DAYS = 180
 const WD = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб']

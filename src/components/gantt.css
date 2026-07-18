@@ -96,9 +96,6 @@
 .gantt-day.weekend {
   background: var(--surface-2);
 }
-.gantt-day.today {
-  border-left: 2px solid var(--danger);
-}
 .gantt-day.today .gantt-day-num {
   background: var(--danger);
   color: #fff;
@@ -116,7 +113,6 @@
 }
 .gantt-row {
   display: flex;
-  border-bottom: 1px solid var(--border);
 }
 .gantt-row .gantt-left {
   display: flex;
@@ -160,14 +156,14 @@
   background: var(--surface-2);
   pointer-events: none;
 }
-/* Вертикальная красная полоска «сегодня» */
+/* Вертикальная красная линия «сегодня» — по центру колонки дня, под кружком в шапке */
 .gantt-today-line {
   position: absolute;
   top: 0;
   bottom: 0;
-  width: var(--gantt-day-w);
-  background: rgba(220, 38, 38, 0.07);
-  border-left: 2px solid var(--danger);
+  width: 2px;
+  margin-left: calc(var(--gantt-day-w) / 2 - 1px);
+  background: var(--danger);
   pointer-events: none;
 }
 .gantt-bar {
@@ -223,7 +219,8 @@
   top: 0;
   line-height: 40px;
   font-size: 12px;
-  color: var(--text-soft);
+  font-weight: 600;
+  color: var(--text);
   white-space: nowrap;
   pointer-events: none;
   max-width: 280px;
