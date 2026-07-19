@@ -39,7 +39,7 @@
 .subheader-members .member-filter-reset {
   color: #ef4444;
   background: rgba(239, 68, 68, 0.12);
-  border-color: rgba(239, 68, 68, 0.35);
+  border: none;
 }
 .subheader-members .member-filter-reset:hover {
   background: rgba(239, 68, 68, 0.2);
