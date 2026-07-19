@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-19T09:51:42.908Z",
+  "generatedAt": "2026-07-19T09:52:06.121Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -833,20 +833,6 @@
       "start": "14:30",
       "durationMin": 60,
       "priorityColor": "#eab308",
-      "members": [
-        {
-          "name": "Вова",
-          "color": "#84cc16"
-        }
-      ]
-    },
-    {
-      "id": "7f41c1f4-0625-43b7-b5a3-be3b4b1c5e50",
-      "title": "Добавить отзывы о массажистке в систему записи.",
-      "date": "2026-07-19",
-      "start": "15:30",
-      "durationMin": 30,
-      "priorityColor": "#ef4444",
       "members": [
         {
           "name": "Вова",
