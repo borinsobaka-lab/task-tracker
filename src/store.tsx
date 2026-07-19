@@ -423,7 +423,12 @@ export interface BoardStore {
   projects: Project[]
   /** Задать имя/иконку/группу слота проекта (0 или 1); слот создаётся при необходимости.
    *  icon: строка — установить, undefined — убрать. */
-  updateProjectSlot(slot: number, patch: { name?: string; icon?: string | undefined; tgGroupId?: string }): void
+  // Проекты (табы в шапке, фильтр по задачам, привязка к Telegram-группе)
+  /** Добавить новый (пустой) проект; возвращает его id. */
+  addProject(): ID
+  updateProject(id: ID, patch: { name?: string; icon?: string | undefined; tgGroupId?: string }): void
+  /** Удалить проект (надгробие) и снять его со всех карточек и серий. */
+  deleteProject(id: ID): void
 
   // Колонки
   addColumn(title: string): void
@@ -598,16 +603,19 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
         touch(m)
       }),
 
-    updateProjectSlot: (slot, patch) =>
+    addProject: () => {
+      const ts = nowISO()
+      const id = uid()
       engine.update((d) => {
         if (!d.projects) d.projects = []
-        const ts = nowISO()
-        // Гарантируем существование слотов до нужного индекса (со стабильными id).
-        while (d.projects.length <= slot) {
-          const n = d.projects.length + 1
-          d.projects.push({ id: `proj-${n}`, name: `Проект ${n}`, createdAt: ts, updatedAt: ts })
-        }
-        const p = d.projects[slot]
+        d.projects.push({ id, name: '', createdAt: ts, updatedAt: ts })
+      })
+      return id
+    },
+    updateProject: (id, patch) =>
+      engine.update((d) => {
+        const p = d.projects?.find((x) => x.id === id)
+        if (!p || p.deleted) return
         if (patch.name !== undefined) p.name = patch.name
         if ('icon' in patch) {
           if (patch.icon) p.icon = patch.icon
@@ -619,6 +627,26 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
           else delete p.tgGroupId
         }
         touch(p)
+      }),
+    deleteProject: (id) =>
+      engine.update((d) => {
+        const p = d.projects?.find((x) => x.id === id)
+        if (!p || p.deleted) return
+        p.deleted = true
+        touch(p)
+        // Снимаем проект с карточек и серий, чтобы они не «висели» на удалённом
+        for (const c of Object.values(d.cards)) {
+          if (c.projectId === id) {
+            delete c.projectId
+            touch(c)
+          }
+        }
+        for (const s of Object.values(d.series ?? {})) {
+          if (s.projectId === id) {
+            delete s.projectId
+            touch(s)
+          }
+        }
       }),
 
     addColumn: (title) =>

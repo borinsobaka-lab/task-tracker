@@ -6,6 +6,16 @@
   background: var(--surface-2);
   border-radius: 9px;
   padding: 3px;
+  flex-shrink: 1;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.project-tabs::-webkit-scrollbar {
+  display: none;
+}
+.project-tab {
   flex-shrink: 0;
 }
 .project-tab {

@@ -5,7 +5,7 @@ import { playTaskChime } from '../sound'
 import { saveEncryptedToken } from '../auth'
 import { imageFileToAvatar, imageFileToIcon, MEMBER_COLORS } from '../utils'
 import { IcoCamera, IcoChevronRight, IcoClose, IcoX } from '../icons'
-import type { Member } from '../types'
+import type { Member, Project } from '../types'
 import { Avatar } from './Avatar'
 import { SheetGrabber } from './SheetGrabber'
 import './settings.css'
@@ -279,29 +279,38 @@ function AddMemberForm() {
 // ---------- Проекты ----------
 
 function ProjectsSection() {
+  const store = useBoard()
+  const projects = store.projects
   return (
     <section className="settings-section">
       <h3 className="field-label settings-section-title">Проекты</h3>
       <p className="muted settings-hint" style={{ marginBottom: 12 }}>
-        Два проекта для табов в шапке. Загрузите иконку (можно SVG) и задайте название —
-        имя на табе не показывается, но используется для фильтра. Таб «Все» есть всегда.
-        Укажите ID Telegram-группы проекта — бот шлёт туда отчёты по задачам этого проекта
-        (задачи без проекта попадают во все группы).
+        Проекты — это табы-логотипы в шапке для фильтра задач. У каждого загрузите иконку
+        (можно SVG), задайте название и, при желании, ID Telegram-группы — бот шлёт туда
+        отчёты по задачам этого проекта (задачи без проекта попадают во все группы). Таб
+        «Все» есть всегда. Проектов можно добавить сколько нужно.
       </p>
       <div className="settings-projects">
-        <ProjectSlot slot={0} />
-        <ProjectSlot slot={1} />
+        {projects.length === 0 ? (
+          <p className="muted settings-hint" style={{ margin: 0 }}>
+            Проектов пока нет — добавьте первый кнопкой ниже.
+          </p>
+        ) : (
+          projects.map((p) => <ProjectRow key={p.id} project={p} />)
+        )}
       </div>
+      <button className="btn btn-primary" style={{ marginTop: 12 }} onClick={() => store.addProject()}>
+        + Добавить проект
+      </button>
     </section>
   )
 }
 
-function ProjectSlot({ slot }: { slot: number }) {
+function ProjectRow({ project }: { project: Project }) {
   const store = useBoard()
-  const project = store.projects[slot]
   const fileRef = useRef<HTMLInputElement>(null)
-  const placeholder = `Проект ${slot + 1}`
-  const name = project?.name ?? ''
+  const placeholder = 'Название проекта'
+  const name = project.name ?? ''
 
   const pickIcon = async (e: ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0]
@@ -309,9 +318,20 @@ function ProjectSlot({ slot }: { slot: number }) {
     if (!f) return
     try {
       const icon = await imageFileToIcon(f)
-      store.updateProjectSlot(slot, { icon })
+      store.updateProject(project.id, { icon })
     } catch {
       alert('Не удалось загрузить иконку. Попробуйте другой файл (SVG или PNG).')
+    }
+  }
+
+  const remove = () => {
+    const nm = name.trim() || 'без названия'
+    if (
+      confirm(
+        `Удалить проект «${nm}»?\n\nОн исчезнет из табов и фильтра, а задачи с этим проектом станут «без проекта».`
+      )
+    ) {
+      store.deleteProject(project.id)
     }
   }
 
@@ -325,22 +345,22 @@ function ProjectSlot({ slot }: { slot: number }) {
           title="Загрузить иконку проекта"
           aria-label={`Загрузить иконку для «${name || placeholder}»`}
         >
-          {project?.icon ? (
+          {project.icon ? (
             <img className="settings-project-icon" src={project.icon} alt="" />
           ) : (
             <span className="settings-project-ph" aria-hidden>
-              {name.trim() ? name.trim().charAt(0).toUpperCase() : String(slot + 1)}
+              {name.trim() ? name.trim().charAt(0).toUpperCase() : 'П'}
             </span>
           )}
           <span className="settings-avatar-cam" aria-hidden>
             <IcoCamera size={16} />
           </span>
         </button>
-        {project?.icon && (
+        {project.icon && (
           <button
             type="button"
             className="settings-avatar-remove"
-            onClick={() => store.updateProjectSlot(slot, { icon: undefined })}
+            onClick={() => store.updateProject(project.id, { icon: undefined })}
             title="Убрать иконку"
             aria-label="Убрать иконку"
           >
@@ -354,7 +374,7 @@ function ProjectSlot({ slot }: { slot: number }) {
           className="input settings-project-name"
           value={name}
           placeholder={placeholder}
-          onChange={(e) => store.updateProjectSlot(slot, { name: e.target.value })}
+          onChange={(e) => store.updateProject(project.id, { name: e.target.value })}
         />
         <label
           className="settings-project-tg"
@@ -363,13 +383,22 @@ function ProjectSlot({ slot }: { slot: number }) {
           <span>Telegram-группа</span>
           <input
             className="input settings-project-tg-input"
-            value={project?.tgGroupId ?? ''}
+            value={project.tgGroupId ?? ''}
             placeholder="ID группы, например -1001234567890"
             inputMode="numeric"
-            onChange={(e) => store.updateProjectSlot(slot, { tgGroupId: e.target.value })}
+            onChange={(e) => store.updateProject(project.id, { tgGroupId: e.target.value })}
           />
         </label>
       </div>
+      <button
+        type="button"
+        className="icon-btn settings-project-del"
+        onClick={remove}
+        title="Удалить проект"
+        aria-label={`Удалить проект «${name || placeholder}»`}
+      >
+        <IcoClose size={16} />
+      </button>
     </div>
   )
 }

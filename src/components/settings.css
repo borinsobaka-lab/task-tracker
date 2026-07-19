@@ -203,6 +203,14 @@
   flex: 1;
   min-width: 0;
 }
+.settings-project-del {
+  flex-shrink: 0;
+  align-self: center;
+  color: var(--text-faint);
+}
+.settings-project-del:hover {
+  color: var(--danger);
+}
 
 .settings-member-row2 {
   display: flex;

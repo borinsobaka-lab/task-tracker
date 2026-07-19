@@ -128,35 +128,40 @@ export function BottomNav({
 }
 
 /**
- * Табы проектов в шапке: два слота-логотипа + таб «Все». Выбор задаёт глобальный
- * фильтр (projectFilter): в каждом разделе остаются только задачи этого проекта.
- * Иконки/имена задаются в настройках. id слота — стабильный `proj-1`/`proj-2`.
+ * Табы проектов в шапке: по логотипу на каждый проект + таб «Все». Выбор задаёт
+ * глобальный фильтр (projectFilter): в каждом разделе остаются только задачи этого
+ * проекта. Проекты (имя/иконка/Telegram-группа) добавляются в настройках.
  */
 function ProjectTabs({ projectFilter, onChange }: { projectFilter: ID | null; onChange: (id: ID | null) => void }) {
   const store = useBoard()
+  const projects = store.projects
+
+  // Если активный фильтр указывает на удалённый проект — сбрасываем на «Все»
+  useEffect(() => {
+    if (projectFilter && !projects.some((p) => p.id === projectFilter)) onChange(null)
+  }, [projectFilter, projects, onChange])
+
+  if (projects.length === 0) return null // проектов ещё нет — табы не показываем
+
   return (
     <div className="project-tabs" role="tablist" aria-label="Проекты">
-      {[0, 1].map((i) => {
-        const p = store.projects[i]
-        const id = p?.id ?? `proj-${i + 1}`
-        const named = p?.name?.trim()
+      {projects.map((p, i) => {
+        const named = p.name?.trim()
         const label = named || `Проект ${i + 1}`
-        // Пока логотип не загружен — показываем номер слота (а не «П» от «Проект»,
-        // иначе оба заполнителя выглядели бы одинаково).
         const ph = named ? named.charAt(0).toUpperCase() : String(i + 1)
-        const selected = projectFilter === id
+        const selected = projectFilter === p.id
         return (
           <button
-            key={i}
+            key={p.id}
             type="button"
             role="tab"
             aria-selected={selected}
             aria-label={label}
             title={label}
             className={'project-tab project-tab-logo' + (selected ? ' active' : '')}
-            onClick={() => onChange(id)}
+            onClick={() => onChange(p.id)}
           >
-            {p?.icon ? (
+            {p.icon ? (
               <img className="project-tab-icon" src={p.icon} alt="" />
             ) : (
               <span className="project-tab-ph" aria-hidden>
