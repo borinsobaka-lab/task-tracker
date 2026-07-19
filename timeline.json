@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-19T10:20:07.427Z",
+  "generatedAt": "2026-07-19T10:38:33.763Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -830,7 +830,7 @@
       "id": "15a5209d-4c4a-4eae-9e9f-d8ddf9d96b7f",
       "title": "Сделать шаблон для отправки клиентам WhatsApp, чтобы выходить с ними на контакт в акции",
       "date": "2026-07-19",
-      "start": "14:30",
+      "start": "15:00",
       "durationMin": 60,
       "priorityColor": "#eab308",
       "members": [
