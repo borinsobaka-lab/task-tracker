@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-19T10:17:31.155Z",
+  "generatedAt": "2026-07-19T10:20:07.427Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -888,7 +888,7 @@
       "id": "c6b15802-9377-46ca-9545-c180670e1440",
       "title": "Изучить цены на гараж",
       "date": "2026-07-19",
-      "start": "19:00",
+      "start": "20:00",
       "durationMin": 60,
       "priorityColor": "#ef4444",
       "members": [
