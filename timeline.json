@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-19T09:24:50.967Z",
+  "generatedAt": "2026-07-19T09:35:28.052Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -789,20 +789,6 @@
       "durationMin": 60,
       "done": true,
       "priorityColor": "#ef4444",
-      "members": [
-        {
-          "name": "Вова",
-          "color": "#84cc16"
-        }
-      ]
-    },
-    {
-      "id": "bb7d2970-25ee-420e-8dee-6818beb8f8ba",
-      "title": "Написать салону красоты от имени владельца студии по коллаборации",
-      "date": "2026-07-19",
-      "start": "08:30",
-      "durationMin": 60,
-      "priorityColor": "#22c55e",
       "members": [
         {
           "name": "Вова",
