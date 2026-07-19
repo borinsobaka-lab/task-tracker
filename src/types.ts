@@ -149,13 +149,15 @@ export interface Card {
 
 /**
  * Роль колонки для отчётов Telegram-бота и статуса задачи:
+ *  - 'inbox'  — входящие: сюда бот складывает задачи, добавленные через Telegram;
+ *              в отчёты НЕ попадают (это «неразобранное»)
  *  - 'todo'   — нужно сделать
  *  - 'doing'  — в работе
  *  - 'review' — ожидает проверки
  *  - 'done'   — готово (карточка помечается выполненной)
  * Без роли — колонка не влияет на статус (считается «нужно сделать»).
  */
-export type ColumnRole = 'todo' | 'doing' | 'review' | 'done'
+export type ColumnRole = 'inbox' | 'todo' | 'doing' | 'review' | 'done'
 
 export interface Column {
   id: ID

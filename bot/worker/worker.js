@@ -17,6 +17,11 @@
 //       /start → пароль сервиса → выбор участника → подписка. Дальше приходят:
 //       «Вам назначили задачу/встречу» и «Через ~30 минут» до начала.
 //
+//  3) БЫСТРОЕ ДОБАВЛЕНИЕ ЗАДАЧ из личке: подключённый участник шлёт боту любой
+//       текст → бот спрашивает «Создать задачу?» (Да/Нет). «Да» создаёт задачу в
+//       колонке со статусом «Входящие» (роль 'inbox'), которую потом разбираешь в
+//       приложении. Для записи board.json секрету DATA_TOKEN нужны права записи.
+//
 // Состояние — в Cloudflare KV (binding BOT_KV). board.json читается из приватного
 // репозитория (DATA_TOKEN). Пароль проверяется расшифровкой auth.json (как вход
 // в приложение) и нигде не хранится.
@@ -56,6 +61,21 @@ async function tgDelete(env, chatId, messageId) {
 async function tgAnswer(env, id) {
   try {
     await tgApi(env, 'answerCallbackQuery', { callback_query_id: id })
+  } catch {
+    /* не критично */
+  }
+}
+// Меняем текст сообщения и убираем кнопки (после выбора Да/Нет)
+async function tgEditText(env, chatId, messageId, text) {
+  try {
+    await tgApi(env, 'editMessageText', {
+      chat_id: chatId,
+      message_id: messageId,
+      text,
+      parse_mode: 'HTML',
+      disable_web_page_preview: true,
+      reply_markup: { inline_keyboard: [] },
+    })
   } catch {
     /* не критично */
   }
@@ -125,6 +145,112 @@ export async function loadBoard(env) {
   return res.json()
 }
 
+// ---------- Запись board.json (создание задач из Telegram) ----------
+
+function nowISO() {
+  return new Date().toISOString()
+}
+
+// base64 ⇄ UTF-8 (btoa/atob работают только с Latin1, а в задачах кириллица)
+function b64encodeUtf8(str) {
+  const bytes = new TextEncoder().encode(str)
+  let bin = ''
+  const chunk = 0x8000
+  for (let i = 0; i < bytes.length; i += chunk) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk))
+  return btoa(bin)
+}
+function b64decodeUtf8(b64) {
+  const bin = atob(String(b64).replace(/\s/g, ''))
+  const bytes = new Uint8Array(bin.length)
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i)
+  return new TextDecoder().decode(bytes)
+}
+
+// Читаем board.json вместе с sha (нужен для записи)
+async function ghGetBoard(env) {
+  const url = `https://api.github.com/repos/${env.DATA_OWNER}/${env.DATA_REPO}/contents/board.json?ref=${encodeURIComponent(
+    env.DATA_BRANCH,
+  )}&ts=${Date.now()}`
+  const res = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${env.DATA_TOKEN}`,
+      Accept: 'application/vnd.github+json',
+      'X-GitHub-Api-Version': '2022-11-28',
+      'User-Agent': 'tasktracker-bot',
+    },
+  })
+  if (!res.ok) throw new Error(`GitHub вернул ${res.status} при чтении board.json`)
+  const j = await res.json()
+  return { board: JSON.parse(b64decodeUtf8(j.content)), sha: j.sha }
+}
+// Пишем board.json обратно (commit). Возвращаем сам Response (для проверки 409).
+async function ghPutBoard(env, board, sha, message) {
+  const url = `https://api.github.com/repos/${env.DATA_OWNER}/${env.DATA_REPO}/contents/board.json`
+  return fetch(url, {
+    method: 'PUT',
+    headers: {
+      Authorization: `Bearer ${env.DATA_TOKEN}`,
+      Accept: 'application/vnd.github+json',
+      'X-GitHub-Api-Version': '2022-11-28',
+      'User-Agent': 'tasktracker-bot',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      message: message || 'Новая задача из Telegram-бота',
+      content: b64encodeUtf8(JSON.stringify(board)),
+      sha,
+      branch: env.DATA_BRANCH,
+    }),
+  })
+}
+
+// Форма новой карточки-«входящей» (без исполнителя — разберём в приложении)
+export function makeInboxCard(text, columnId, ts, id) {
+  return {
+    id,
+    title: String(text).slice(0, 500),
+    kind: 'task',
+    description: '',
+    columnId,
+    assigneeIds: [],
+    checklist: [],
+    attachments: [],
+    comments: [],
+    createdAt: ts,
+    updatedAt: ts,
+  }
+}
+
+// Создаём задачу в колонке со статусом «Входящие». Повторяем при конфликте sha.
+async function createInboxCard(env, text) {
+  if (!env.DATA_TOKEN) return { error: 'не задан секрет DATA_TOKEN' }
+  for (let attempt = 0; attempt < 4; attempt++) {
+    let got
+    try {
+      got = await ghGetBoard(env)
+    } catch (e) {
+      return { error: (e && e.message) || String(e) }
+    }
+    const { board, sha } = got
+    const inbox = (board.columns || []).find((c) => c && !c.deleted && c.role === 'inbox')
+    if (!inbox) return { noInbox: true }
+    const ts = nowISO()
+    const id = crypto.randomUUID()
+    board.cards = board.cards || {}
+    board.cards[id] = makeInboxCard(text, inbox.id, ts, id)
+    inbox.cardIds = Array.isArray(inbox.cardIds) ? inbox.cardIds : []
+    inbox.cardIds.push(id)
+    inbox.updatedAt = ts
+    board.updatedAt = ts
+    const res = await ghPutBoard(env, board, sha, `Задача из Telegram: ${String(text).slice(0, 60)}`)
+    if (res.ok) return { ok: true, id, column: inbox.title }
+    if (res.status === 409) continue // sha устарел (доску кто-то записал) — перечитываем и повторяем
+    const t = await res.text().catch(() => '')
+    return { error: `GitHub ${res.status} ${String(t).slice(0, 120)}` }
+  }
+  return { error: 'не удалось записать после нескольких попыток (конфликт версий)' }
+}
+
 // ---------- Проверка пароля (PBKDF2/AES-GCM — как в приложении) ----------
 
 function b64ToBytes(b64) {
@@ -169,7 +295,7 @@ export async function verifyPassword(blob, password) {
 
 // ================= ГРУППОВЫЕ ОТЧЁТЫ (порт логики report.mjs) =================
 
-const EMOJI = { todo: '⬜', doing: '🔧', review: '👀', done: '✅' }
+const EMOJI = { inbox: '📥', todo: '⬜', doing: '🔧', review: '👀', done: '✅' }
 const HR = '➖➖➖➖➖➖➖➖➖➖'
 
 function dateKey(env, offsetDays = 0) {
@@ -211,6 +337,14 @@ function matchesProject(card, projectId) {
 }
 function cardsForDateProj(board, key, projectId) {
   return cardsForDate(board, key).filter((c) => matchesProject(c, projectId))
+}
+// Карточки для отчёта: как cardsForDateProj, но без «Входящих» (роль колонки
+// 'inbox') — их бот в отчёты не пишет, это неразобранные задачи.
+function reportCards(board, key, projectId) {
+  const inboxCols = new Set(
+    (board.columns || []).filter((c) => c && !c.deleted && c.role === 'inbox').map((c) => c.id),
+  )
+  return cardsForDateProj(board, key, projectId).filter((c) => !inboxCols.has(c.columnId))
 }
 // Список целевых групп: у каждого проекта с заданным tgGroupId — своя группа.
 // Если ни у кого не задан — падаем в старый режим (один чат GROUP_CHAT_ID, все задачи).
@@ -301,7 +435,7 @@ function renderMoved(moved) {
 export function morningText(env, board, group = { projectId: null, name: '' }, plannedIds = []) {
   const { colById, members } = buildIndex(board)
   const today = dateKey(env, 0)
-  const cards = cardsForDateProj(board, today, group.projectId)
+  const cards = reportCards(board, today, group.projectId)
   const body = cards.length === 0 ? 'На сегодня задач не запланировано 🎉' : renderGroups(groupByMember(cards, members), colById)
   const moved = renderMoved(movedCards(board, plannedIds, today))
   return `${projectPrefix(group)}☀️ <b>Доброе утро!</b>\nЗадачи на сегодня, ${ddmm(today)}:\n\n${body}${moved}${legendBlock()}`
@@ -310,7 +444,7 @@ export function eveningText(env, board, group = { projectId: null, name: '' }, p
   const { colById, members } = buildIndex(board)
   const today = dateKey(env, 0)
   const tomorrow = dateKey(env, 1)
-  const cards = cardsForDateProj(board, today, group.projectId)
+  const cards = reportCards(board, today, group.projectId)
   const done = cards.filter((c) => statusOf(c, colById) === 'done')
   let summary
   if (cards.length === 0) summary = 'Задач на сегодня не было.'
@@ -322,7 +456,7 @@ export function eveningText(env, board, group = { projectId: null, name: '' }, p
     summary = groups.join('\n\n')
   }
   const moved = renderMoved(movedCards(board, plannedIds, today))
-  const tomCards = cardsForDateProj(board, tomorrow, group.projectId)
+  const tomCards = reportCards(board, tomorrow, group.projectId)
   let tomorrowBlock = ''
   if (tomCards.length) {
     tomorrowBlock = `\n\n📅 <b>На завтра, ${ddmm(tomorrow)}:</b>\n\n` + renderGroups(groupByMember(tomCards, members), colById)
@@ -374,7 +508,7 @@ async function runGroupReport(env, board) {
 
     // Утро (один раз за день, как только наступило время)
     if (gs.morningDate !== today && nowHM >= morning && nowHM < evening) {
-      const planned = cardsForDateProj(board, today, group.projectId).map((c) => c.id)
+      const planned = reportCards(board, today, group.projectId).map((c) => c.id)
       const id = await sendGroup(env, group.chatId, morningText(env, board, group, planned))
       if (id) {
         day.morningMsgId = id
@@ -588,18 +722,87 @@ async function onMessage(msg, env) {
     return
   }
 
-  await tgSend(
-    env,
-    chatId,
-    `Вы подключены как <b>${esc(memberName(await loadBoard(env).catch(() => ({})), s.memberId))}</b>.\nЯ пишу, когда вам назначают задачу и за ~30 минут до задачи/встречи.\nОтключить — /stop.`,
-  )
+  // Активная сессия: любое обычное сообщение → предлагаем создать из него задачу
+  // во «Входящих». Команды (начинаются с «/») сюда не попадают на создание.
+  const body = text.trim()
+  if (body.startsWith('/')) {
+    await tgSend(
+      env,
+      chatId,
+      `Вы подключены как <b>${esc(memberName(await loadBoard(env).catch(() => ({})), s.memberId))}</b>.\n` +
+        `Пришлите текст — предложу создать из него задачу во «Входящих». Я также пишу, когда вам назначают задачу и за ~30 минут до начала. Отключить — /stop.`,
+    )
+    return
+  }
+  if (!body) return
+  sessions[chatId] = { ...s, pending: body }
+  await kvPut(env, 'sessions', sessions)
+  await tgSend(env, chatId, `Создать задачу из этого сообщения?\n\n«${esc(body)}»`, {
+    inline_keyboard: [
+      [
+        { text: '✅ Да', callback_data: 'task:yes' },
+        { text: '✖️ Нет', callback_data: 'task:no' },
+      ],
+    ],
+  })
 }
 
 async function onCallback(cbq, env) {
   const chatId = String((cbq.message && cbq.message.chat && cbq.message.chat.id) || '')
   const data = cbq.data || ''
+  const msgId = cbq.message && cbq.message.message_id
   await tgAnswer(env, cbq.id)
-  if (!chatId || !data.startsWith('pick:')) return
+  if (!chatId) return
+
+  // Быстрое добавление задачи: ответ на «Создать задачу?»
+  if (data === 'task:yes' || data === 'task:no') {
+    const sessions = await kvGet(env, 'sessions')
+    const s = sessions[chatId]
+    if (!s || s.stage !== 'active') {
+      await tgSend(env, chatId, 'Сессия неактивна. Напишите /start, чтобы подключиться.')
+      return
+    }
+    const text = s.pending
+    if (s.pending) {
+      delete s.pending
+      sessions[chatId] = s
+      await kvPut(env, 'sessions', sessions)
+    }
+    if (data === 'task:no' || !text) {
+      if (msgId) await tgEditText(env, chatId, msgId, '✖️ Отменено — задача не создана.')
+      else await tgSend(env, chatId, '✖️ Отменено.')
+      return
+    }
+    let result
+    try {
+      result = await createInboxCard(env, text)
+    } catch (e) {
+      result = { error: (e && e.message) || String(e) }
+    }
+    if (result.ok) {
+      const msg = `✅ Задача создана во «Входящих»:\n«${esc(text)}»`
+      if (msgId) await tgEditText(env, chatId, msgId, msg)
+      else await tgSend(env, chatId, msg, openBtn(env))
+    } else if (result.noInbox) {
+      await tgSend(
+        env,
+        chatId,
+        '⚠️ Не нашёл колонку со статусом «Входящие». Откройте приложение, у нужной колонки задайте статус «Входящие» (меню колонки → «Статус для отчётов») и пришлите сообщение ещё раз.',
+        openBtn(env),
+      )
+    } else {
+      await tgSend(
+        env,
+        chatId,
+        '❌ Не удалось создать задачу: ' +
+          esc(result.error || 'ошибка записи') +
+          '\n\nЧастая причина — у секрета DATA_TOKEN нет права записи (Contents: Read and Write) в репозиторий данных.',
+      )
+    }
+    return
+  }
+
+  if (!data.startsWith('pick:')) return
   const sessions = await kvGet(env, 'sessions')
   const s = sessions[chatId]
   if (!s || s.stage !== 'pick') return
@@ -627,7 +830,7 @@ async function onCallback(cbq, env) {
   await tgSend(
     env,
     chatId,
-    `Готово, <b>${esc(member.name)}</b>! 🎉\n\nТеперь я буду присылать:\n• когда вам <b>назначат задачу</b> или встречу;\n• напоминание <b>за ~30 минут</b> до начала.\n\nОтключить — /stop.`,
+    `Готово, <b>${esc(member.name)}</b>! 🎉\n\nТеперь я буду присылать:\n• когда вам <b>назначат задачу</b> или встречу;\n• напоминание <b>за ~30 минут</b> до начала.\n\n📥 А ещё пришлите мне любой текст — предложу быстро создать из него задачу во «Входящих».\n\nОтключить — /stop.`,
     openBtn(env),
   )
 }

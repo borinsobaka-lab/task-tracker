@@ -2,7 +2,7 @@
 // Запуск: node bot/worker/test.mjs   (Node ≥ 20 с глобальным Web Crypto)
 
 import assert from 'node:assert/strict'
-import { verifyPassword, authNeedsAppLogin, assignedCardIds, upcomingWithin, activeMembers, morningText, eveningText } from './worker.js'
+import { verifyPassword, authNeedsAppLogin, assignedCardIds, upcomingWithin, activeMembers, morningText, eveningText, makeInboxCard } from './worker.js'
 
 function b64(bytes) {
   let s = ''
@@ -110,5 +110,28 @@ const mBeta = morningText(env, boardToday, beta, [])
 assert.ok(mBeta.includes('Задача Беты'), 'задача Беты в группе Беты')
 assert.ok(mBeta.includes('Позвонить в банк'), 'задача без проекта попала и в группу Беты')
 assert.ok(!mBeta.includes('Задача Альфы'), 'чужая задача не попала в группу Беты')
+
+// 3c) «Входящие» (роль колонки 'inbox') не попадают в отчёты
+const boardInbox = {
+  members: [{ id: 'm1', name: 'Вова' }],
+  columns: [
+    { id: 'inbox', title: 'Входящие', role: 'inbox' },
+    { id: 'todo', title: 'Нужно сделать', role: 'todo' },
+  ],
+  cards: {
+    x: { id: 'x', title: 'Из телеграма', assigneeIds: ['m1'], columnId: 'inbox', date: today },
+    y: { id: 'y', title: 'Обычная задача', assigneeIds: ['m1'], columnId: 'todo', date: today },
+  },
+}
+const mi = morningText(env, boardInbox, allGroup, [])
+assert.ok(mi.includes('Обычная задача'), 'обычная задача в отчёте')
+assert.ok(!mi.includes('Из телеграма'), 'карточка из колонки «Входящие» в отчёт НЕ попадает')
+
+// 4) Форма задачи, созданной ботом из Telegram
+const card = makeInboxCard('  Купить корм  ', 'inbox', '2026-07-19T10:00:00.000Z', 'id1')
+assert.equal(card.title, '  Купить корм  ', 'заголовок = текст сообщения')
+assert.equal(card.columnId, 'inbox', 'карточка кладётся в колонку «Входящие»')
+assert.deepEqual(card.assigneeIds, [], 'без исполнителя — разберём в приложении')
+assert.equal(card.kind, 'task', 'это задача, не встреча')
 
 console.log('OK: все проверки логики Worker пройдены')

@@ -300,7 +300,7 @@ export function CalendarView({ memberFilter, onMemberFilterChange, projectFilter
     .sort((a, b) => a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id))
   // Группируем «Без даты» по статусу колонки. Порядок: Нужно сделать → В работе →
   // Ожидает проверки → колонки без роли. «Готово» уже отфильтровано выше.
-  const UNSCHED_RANK: Record<string, number> = { todo: 0, doing: 1, review: 2 }
+  const UNSCHED_RANK: Record<string, number> = { inbox: -1, todo: 0, doing: 1, review: 2 }
   const colRank = (role?: string): number => (role && role in UNSCHED_RANK ? UNSCHED_RANK[role] : 3)
   const unscheduledGroups = liveColumns
     .filter((col) => col.role !== 'done')
