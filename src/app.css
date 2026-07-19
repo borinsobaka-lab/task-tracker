@@ -166,6 +166,11 @@
 }
 
 .member-filter-btn {
+  /* Плотно оборачиваем круглую аватарку, чтобы рамка тоже была круглой (а не овалом) */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
   /* 1px рамка в цвете участника (задаётся через --mc из настроек) */
   border: 1px solid var(--mc, var(--border-strong));
   background: none;
@@ -178,14 +183,10 @@
 .member-filter-btn:hover {
   opacity: 1;
 }
-/* Активный фильтр: вторая (красная) рамка + «матричный» красный вид аватарки */
+/* Активный фильтр: вторая рамка в цвете приложения (фиолетовая) */
 .member-filter-btn.active {
   opacity: 1;
-  box-shadow: 0 0 0 1px var(--surface), 0 0 0 3px #ef4444;
-}
-.member-filter-btn.active .avatar {
-  background: rgba(239, 68, 68, 0.16) !important;
-  color: #ef4444;
+  box-shadow: 0 0 0 1px var(--surface), 0 0 0 3px var(--accent);
 }
 
 .header-right {

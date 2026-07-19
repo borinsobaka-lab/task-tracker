@@ -45,7 +45,7 @@ export function SubHeader({
           </button>
         ))}
         {memberFilter.size > 0 && (
-          <button className="btn btn-ghost btn-sm" onClick={() => onMemberFilterChange(new Set())}>
+          <button className="btn btn-sm member-filter-reset" onClick={() => onMemberFilterChange(new Set())}>
             Сбросить
           </button>
         )}

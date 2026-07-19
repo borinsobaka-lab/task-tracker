@@ -34,6 +34,17 @@
   flex-shrink: 0;
 }
 
+/* Кнопка «Сбросить» (появляется при активном фильтре) — красная: красный текст
+   и светло-красный полупрозрачный фон */
+.subheader-members .member-filter-reset {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.35);
+}
+.subheader-members .member-filter-reset:hover {
+  background: rgba(239, 68, 68, 0.2);
+}
+
 /* Правый слот второго хедера (например, кнопка «Ссылка» в таймлайне) */
 .subheader-right {
   margin-left: auto;
