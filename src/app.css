@@ -166,20 +166,26 @@
 }
 
 .member-filter-btn {
-  border: 2px solid transparent;
+  /* 1px рамка в цвете участника (задаётся через --mc из настроек) */
+  border: 1px solid var(--mc, var(--border-strong));
   background: none;
   padding: 1px;
   border-radius: 50%;
   cursor: pointer;
-  opacity: 0.75;
-  transition: opacity 0.12s, border-color 0.12s;
+  opacity: 0.9;
+  transition: opacity 0.12s, box-shadow 0.12s;
 }
 .member-filter-btn:hover {
   opacity: 1;
 }
+/* Активный фильтр: вторая (красная) рамка + «матричный» красный вид аватарки */
 .member-filter-btn.active {
-  border-color: var(--accent);
   opacity: 1;
+  box-shadow: 0 0 0 1px var(--surface), 0 0 0 3px #ef4444;
+}
+.member-filter-btn.active .avatar {
+  background: rgba(239, 68, 68, 0.16) !important;
+  color: #ef4444;
 }
 
 .header-right {

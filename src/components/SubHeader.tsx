@@ -37,6 +37,7 @@ export function SubHeader({
           <button
             key={m.id}
             className={`member-filter-btn${memberFilter.has(m.id) ? ' active' : ''}`}
+            style={{ ['--mc' as string]: m.color }}
             onClick={() => toggleMember(m.id)}
             title={`${m.name} — показать только его задачи`}
           >
