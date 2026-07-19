@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-19T13:00:19.802Z",
+  "generatedAt": "2026-07-19T13:00:26.909Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -977,7 +977,7 @@
       "title": "Написать по гаражу",
       "date": "2026-07-20",
       "start": "12:00",
-      "durationMin": 60,
+      "durationMin": 30,
       "members": [
         {
           "name": "Вова",
