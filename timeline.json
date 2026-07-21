@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-21T08:37:55.560Z",
+  "generatedAt": "2026-07-21T08:38:26.626Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -1047,6 +1047,15 @@
           "color": "#84cc16"
         }
       ]
+    },
+    {
+      "id": "022d32c7-58d7-40f3-a693-2a303bb6ceb1",
+      "title": "Встреча",
+      "date": "2026-07-21",
+      "start": "15:00",
+      "durationMin": 60,
+      "kind": "meeting",
+      "members": []
     },
     {
       "id": "a46386bb-9bcb-4623-a28b-fca18eb7597f",
