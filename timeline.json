@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-22T21:42:10.396Z",
+  "generatedAt": "2026-07-22T21:42:15.302Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -1019,21 +1019,6 @@
       ]
     },
     {
-      "id": "01b36ac6-35c9-4439-acd6-7fcb6c57be77",
-      "title": "Встреча с Петром 💪💪💪",
-      "date": "2026-07-23",
-      "start": "14:00",
-      "durationMin": 60,
-      "kind": "meeting",
-      "priorityColor": "#ef4444",
-      "members": [
-        {
-          "name": "Вова",
-          "color": "#84cc16"
-        }
-      ]
-    },
-    {
       "id": "8c23fde1-9eba-4098-80c5-fc676c2b5e5d",
       "title": "Обсудить с Полиной ее результаты работы за последние месяцы",
       "date": "2026-07-23",
@@ -1067,6 +1052,21 @@
         {
           "name": "Витя",
           "color": "#6366f1"
+        }
+      ]
+    },
+    {
+      "id": "01b36ac6-35c9-4439-acd6-7fcb6c57be77",
+      "title": "Встреча с Петром 💪💪💪",
+      "date": "2026-07-23",
+      "start": "16:00",
+      "durationMin": 60,
+      "kind": "meeting",
+      "priorityColor": "#ef4444",
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
         }
       ]
     },
