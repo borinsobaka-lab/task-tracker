@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-22T07:19:14.427Z",
+  "generatedAt": "2026-07-22T07:19:24.337Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -949,24 +949,6 @@
       ]
     },
     {
-      "id": "550d7485-a900-42cc-94d6-4838f0a5d9e4",
-      "title": "Запустить направление винного стретчинга",
-      "date": "2026-07-20",
-      "start": "14:30",
-      "durationMin": 90,
-      "priorityColor": "#ef4444",
-      "members": [
-        {
-          "name": "Настя",
-          "color": "#ec4899"
-        },
-        {
-          "name": "Вова",
-          "color": "#84cc16"
-        }
-      ]
-    },
-    {
       "id": "022d32c7-58d7-40f3-a693-2a303bb6ceb1",
       "title": "Встреча",
       "date": "2026-07-21",
@@ -1076,6 +1058,24 @@
       "durationMin": 60,
       "priorityColor": "#ef4444",
       "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        }
+      ]
+    },
+    {
+      "id": "550d7485-a900-42cc-94d6-4838f0a5d9e4",
+      "title": "Запустить направление винного стретчинга",
+      "date": "2026-07-23",
+      "start": "11:00",
+      "durationMin": 150,
+      "priorityColor": "#ef4444",
+      "members": [
+        {
+          "name": "Настя",
+          "color": "#ec4899"
+        },
         {
           "name": "Вова",
           "color": "#84cc16"
