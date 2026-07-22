@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-22T07:24:20.790Z",
+  "generatedAt": "2026-07-22T07:25:04.921Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -984,21 +984,6 @@
       ]
     },
     {
-      "id": "271651f5-f48a-48d7-b336-df9b31baea1b",
-      "title": "Подготовить новые базы для рассылки и тексты для рассылок",
-      "date": "2026-07-22",
-      "start": "15:30",
-      "durationMin": 150,
-      "kind": "task",
-      "priorityColor": "#ef4444",
-      "members": [
-        {
-          "name": "Вова",
-          "color": "#84cc16"
-        }
-      ]
-    },
-    {
       "id": "faef0b5a-9d98-4c3d-bf4f-bb0f077f8514",
       "title": "Публикация вакансии массажиста и тренера в телеге",
       "date": "2026-07-22",
@@ -1122,6 +1107,21 @@
       "start": "11:00",
       "durationMin": 300,
       "priorityColor": "#eab308",
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        }
+      ]
+    },
+    {
+      "id": "271651f5-f48a-48d7-b336-df9b31baea1b",
+      "title": "Подготовить новые базы для рассылки и тексты для рассылок",
+      "date": "2026-07-24",
+      "start": "16:00",
+      "durationMin": 240,
+      "kind": "task",
+      "priorityColor": "#ef4444",
       "members": [
         {
           "name": "Вова",
