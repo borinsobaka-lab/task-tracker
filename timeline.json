@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-22T21:41:35.321Z",
+  "generatedAt": "2026-07-22T21:41:48.947Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -925,21 +925,6 @@
       ]
     },
     {
-      "id": "01b36ac6-35c9-4439-acd6-7fcb6c57be77",
-      "title": "Встреча с Петром 💪💪💪",
-      "date": "2026-07-22",
-      "start": "12:00",
-      "durationMin": 60,
-      "kind": "meeting",
-      "priorityColor": "#ef4444",
-      "members": [
-        {
-          "name": "Вова",
-          "color": "#84cc16"
-        }
-      ]
-    },
-    {
       "id": "faef0b5a-9d98-4c3d-bf4f-bb0f077f8514",
       "title": "Публикация вакансии массажиста и тренера в телеге",
       "date": "2026-07-22",
@@ -1030,6 +1015,21 @@
         {
           "name": "Настя",
           "color": "#ec4899"
+        }
+      ]
+    },
+    {
+      "id": "01b36ac6-35c9-4439-acd6-7fcb6c57be77",
+      "title": "Встреча с Петром 💪💪💪",
+      "date": "2026-07-23",
+      "start": "14:00",
+      "durationMin": 60,
+      "kind": "meeting",
+      "priorityColor": "#ef4444",
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
         }
       ]
     },
