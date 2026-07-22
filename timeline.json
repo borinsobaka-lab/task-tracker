@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-22T21:14:45.210Z",
+  "generatedAt": "2026-07-22T21:41:07.018Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -930,6 +930,7 @@
       "date": "2026-07-22",
       "start": "12:00",
       "durationMin": 60,
+      "kind": "meeting",
       "priorityColor": "#ef4444",
       "members": [
         {
