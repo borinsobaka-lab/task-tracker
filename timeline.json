@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-22T21:42:21.911Z",
+  "generatedAt": "2026-07-22T21:42:28.515Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -1060,7 +1060,7 @@
       "title": "Встреча с Петром 💪💪💪",
       "date": "2026-07-23",
       "start": "15:30",
-      "durationMin": 60,
+      "durationMin": 90,
       "kind": "meeting",
       "priorityColor": "#ef4444",
       "members": [
