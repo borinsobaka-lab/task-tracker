@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-23T07:30:26.557Z",
+  "generatedAt": "2026-07-23T07:33:40.770Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -1043,22 +1043,12 @@
       ]
     },
     {
-      "id": "a46386bb-9bcb-4623-a28b-fca18eb7597f",
-      "title": "Еженедельная встреча // Вова Настя",
+      "id": "55310a26-ba16-4206-8d4a-e4f9b02f9820",
+      "title": "Без названия",
       "date": "2026-07-23",
       "start": "13:30",
       "durationMin": 60,
-      "kind": "meeting",
-      "members": [
-        {
-          "name": "Вова",
-          "color": "#84cc16"
-        },
-        {
-          "name": "Настя",
-          "color": "#ec4899"
-        }
-      ]
+      "members": []
     },
     {
       "id": "8c23fde1-9eba-4098-80c5-fc676c2b5e5d",
