@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-23T10:28:57.204Z",
+  "generatedAt": "2026-07-23T11:30:14.435Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -1117,6 +1117,20 @@
       "start": "15:30",
       "durationMin": 90,
       "kind": "meeting",
+      "priorityColor": "#ef4444",
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        }
+      ]
+    },
+    {
+      "id": "1c0ac94b-53da-4abf-b08b-d41931215039",
+      "title": "Открыть доступ к tabvlicam.",
+      "date": "2026-07-23",
+      "start": "17:00",
+      "durationMin": 60,
       "priorityColor": "#ef4444",
       "members": [
         {
