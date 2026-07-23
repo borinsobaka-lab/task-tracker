@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-23T16:10:15.534Z",
+  "generatedAt": "2026-07-23T22:03:27.487Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -1642,6 +1642,46 @@
       "id": "9c9dec61-10e8-4fcf-80a6-64ddf1c61d12",
       "title": "Еженедельная встреча // BASE40",
       "date": "2026-08-17",
+      "start": "14:30",
+      "durationMin": 60,
+      "kind": "meeting",
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        },
+        {
+          "name": "Оля",
+          "color": "#f59e0b"
+        },
+        {
+          "name": "Витя",
+          "color": "#6366f1"
+        }
+      ]
+    },
+    {
+      "id": "8289a4d9-a85e-4a73-9d92-d452cb31f4ac",
+      "title": "Еженедельная встреча // Вова Настя",
+      "date": "2026-08-20",
+      "start": "13:30",
+      "durationMin": 60,
+      "kind": "meeting",
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        },
+        {
+          "name": "Настя",
+          "color": "#ec4899"
+        }
+      ]
+    },
+    {
+      "id": "a418a5dd-ef77-44aa-a9ba-295b632d7da7",
+      "title": "Еженедельная встреча // BASE40",
+      "date": "2026-08-20",
       "start": "14:30",
       "durationMin": 60,
       "kind": "meeting",
