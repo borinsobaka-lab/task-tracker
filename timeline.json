@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-23T11:36:49.726Z",
+  "generatedAt": "2026-07-23T11:36:58.123Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -1031,20 +1031,6 @@
       ]
     },
     {
-      "id": "5f453643-3a62-4e8c-b131-9b93dbca5a0d",
-      "title": "Написать ответ на негативные отзывы",
-      "date": "2026-07-23",
-      "start": "13:00",
-      "durationMin": 30,
-      "priorityColor": "#3b82f6",
-      "members": [
-        {
-          "name": "Вова",
-          "color": "#84cc16"
-        }
-      ]
-    },
-    {
       "id": "55310a26-ba16-4206-8d4a-e4f9b02f9820",
       "title": "Написать досудебную претензию",
       "date": "2026-07-23",
@@ -1118,6 +1104,20 @@
       "durationMin": 90,
       "kind": "meeting",
       "priorityColor": "#ef4444",
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        }
+      ]
+    },
+    {
+      "id": "5f453643-3a62-4e8c-b131-9b93dbca5a0d",
+      "title": "Написать ответ на негативные отзывы",
+      "date": "2026-07-23",
+      "start": "17:00",
+      "durationMin": 30,
+      "priorityColor": "#3b82f6",
       "members": [
         {
           "name": "Вова",
