@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-24T12:09:16.635Z",
+  "generatedAt": "2026-07-24T20:58:35.847Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -1180,6 +1180,21 @@
       ]
     },
     {
+      "id": "01b36ac6-35c9-4439-acd6-7fcb6c57be77",
+      "title": "Встреча с Петром 💪💪💪",
+      "date": "2026-07-24",
+      "start": "20:00",
+      "durationMin": 90,
+      "kind": "meeting",
+      "priorityColor": "#ef4444",
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        }
+      ]
+    },
+    {
       "id": "34717cd2-0aaf-4d7f-8503-edabee107111",
       "title": "Составление расписания тренировок на следующий месяц",
       "date": "2026-07-25",
@@ -1198,21 +1213,6 @@
         {
           "name": "Настя",
           "color": "#ec4899"
-        }
-      ]
-    },
-    {
-      "id": "01b36ac6-35c9-4439-acd6-7fcb6c57be77",
-      "title": "Встреча с Петром 💪💪💪",
-      "date": "2026-07-25",
-      "start": "11:00",
-      "durationMin": 90,
-      "kind": "meeting",
-      "priorityColor": "#ef4444",
-      "members": [
-        {
-          "name": "Вова",
-          "color": "#84cc16"
         }
       ]
     },
