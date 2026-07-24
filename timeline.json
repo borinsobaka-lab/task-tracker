@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-24T12:08:58.909Z",
+  "generatedAt": "2026-07-24T12:09:06.357Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -1099,20 +1099,6 @@
       ]
     },
     {
-      "id": "7febe982-2f96-4192-8a64-63b937a81b44",
-      "title": "Написать по гаражу",
-      "date": "2026-07-23",
-      "start": "17:30",
-      "durationMin": 30,
-      "priorityColor": "#eab308",
-      "members": [
-        {
-          "name": "Вова",
-          "color": "#84cc16"
-        }
-      ]
-    },
-    {
       "id": "99987901-2c3b-4de7-bc67-eaadc87b914a",
       "title": "Падел",
       "date": "2026-07-23",
@@ -1237,6 +1223,20 @@
       "durationMin": 90,
       "kind": "meeting",
       "priorityColor": "#ef4444",
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        }
+      ]
+    },
+    {
+      "id": "7febe982-2f96-4192-8a64-63b937a81b44",
+      "title": "Написать по гаражу",
+      "date": "2026-07-25",
+      "start": "17:30",
+      "durationMin": 30,
+      "priorityColor": "#eab308",
       "members": [
         {
           "name": "Вова",
