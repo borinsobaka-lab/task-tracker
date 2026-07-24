@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-24T12:08:45.695Z",
+  "generatedAt": "2026-07-24T12:08:50.902Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -1127,20 +1127,6 @@
       ]
     },
     {
-      "id": "1c0ac94b-53da-4abf-b08b-d41931215039",
-      "title": "Распределить задачи по ответственным и разместить их в Task Tracker.",
-      "date": "2026-07-23",
-      "start": "18:00",
-      "durationMin": 60,
-      "priorityColor": "#ef4444",
-      "members": [
-        {
-          "name": "Вова",
-          "color": "#84cc16"
-        }
-      ]
-    },
-    {
       "id": "99987901-2c3b-4de7-bc67-eaadc87b914a",
       "title": "Падел",
       "date": "2026-07-23",
@@ -1199,6 +1185,20 @@
       "start": "18:00",
       "durationMin": 240,
       "kind": "task",
+      "priorityColor": "#ef4444",
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        }
+      ]
+    },
+    {
+      "id": "1c0ac94b-53da-4abf-b08b-d41931215039",
+      "title": "Распределить задачи по ответственным и разместить их в Task Tracker.",
+      "date": "2026-07-24",
+      "start": "18:00",
+      "durationMin": 60,
       "priorityColor": "#ef4444",
       "members": [
         {
