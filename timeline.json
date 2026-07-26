@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-26T08:15:37.263Z",
+  "generatedAt": "2026-07-26T08:16:15.186Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -1237,6 +1237,7 @@
       "id": "082983ae-e4dc-42b2-8f4e-055d13b1beae",
       "title": "Обновить чек-лист админа",
       "date": "2026-07-26",
+      "priorityColor": "#eab308",
       "members": [
         {
           "name": "Настя",
