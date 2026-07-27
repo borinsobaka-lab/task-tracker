@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-27T09:23:16.069Z",
+  "generatedAt": "2026-07-27T09:23:34.302Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -1113,19 +1113,6 @@
       ]
     },
     {
-      "id": "9221ee71-a62d-4a95-bd14-bf9e7feb4dad",
-      "title": "Отправка промо-email писем клиентам",
-      "date": "2026-07-24",
-      "start": "16:00",
-      "durationMin": 120,
-      "members": [
-        {
-          "name": "Вова",
-          "color": "#84cc16"
-        }
-      ]
-    },
-    {
       "id": "5f453643-3a62-4e8c-b131-9b93dbca5a0d",
       "title": "Написать ответ на негативные отзывы",
       "date": "2026-07-24",
@@ -1328,6 +1315,19 @@
       "durationMin": 180,
       "kind": "task",
       "priorityColor": "#ef4444",
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        }
+      ]
+    },
+    {
+      "id": "9221ee71-a62d-4a95-bd14-bf9e7feb4dad",
+      "title": "Отправка промо-email писем клиентам",
+      "date": "2026-07-29",
+      "start": "16:00",
+      "durationMin": 120,
       "members": [
         {
           "name": "Вова",
