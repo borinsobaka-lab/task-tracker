@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-27T10:55:34.782Z",
+  "generatedAt": "2026-07-27T10:55:40.101Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -1426,7 +1426,7 @@
       "title": "Маркетинг",
       "date": "2026-07-29",
       "start": "19:00",
-      "durationMin": 60,
+      "durationMin": 120,
       "priorityColor": "#ef4444",
       "members": [
         {
