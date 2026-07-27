@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-27T09:20:18.967Z",
+  "generatedAt": "2026-07-27T09:20:37.143Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -1193,20 +1193,6 @@
       ]
     },
     {
-      "id": "7febe982-2f96-4192-8a64-63b937a81b44",
-      "title": "Написать по гаражу",
-      "date": "2026-07-25",
-      "start": "17:30",
-      "durationMin": 30,
-      "priorityColor": "#eab308",
-      "members": [
-        {
-          "name": "Вова",
-          "color": "#84cc16"
-        }
-      ]
-    },
-    {
       "id": "34717cd2-0aaf-4d7f-8503-edabee107111",
       "title": "Составление расписания тренировок на следующий месяц",
       "date": "2026-07-26",
@@ -1340,6 +1326,20 @@
       "durationMin": 180,
       "kind": "task",
       "priorityColor": "#ef4444",
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        }
+      ]
+    },
+    {
+      "id": "7febe982-2f96-4192-8a64-63b937a81b44",
+      "title": "Написать по гаражу",
+      "date": "2026-07-29",
+      "start": "17:30",
+      "durationMin": 30,
+      "priorityColor": "#eab308",
       "members": [
         {
           "name": "Вова",
