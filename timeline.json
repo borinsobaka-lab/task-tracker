@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-27T10:34:04.352Z",
+  "generatedAt": "2026-07-27T10:34:13.483Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -1270,7 +1270,20 @@
       "start": "16:00",
       "durationMin": 60,
       "kind": "meeting",
-      "members": []
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        },
+        {
+          "name": "Оля",
+          "color": "#f59e0b"
+        },
+        {
+          "name": "Витя",
+          "color": "#6366f1"
+        }
+      ]
     },
     {
       "id": "271651f5-f48a-48d7-b336-df9b31baea1b",
@@ -1339,7 +1352,20 @@
       "start": "16:00",
       "durationMin": 60,
       "kind": "meeting",
-      "members": []
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        },
+        {
+          "name": "Оля",
+          "color": "#f59e0b"
+        },
+        {
+          "name": "Витя",
+          "color": "#6366f1"
+        }
+      ]
     },
     {
       "id": "6080e626-5c58-4ff7-98b0-13ff68429620",
@@ -1403,7 +1429,20 @@
       "start": "16:00",
       "durationMin": 60,
       "kind": "meeting",
-      "members": []
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        },
+        {
+          "name": "Оля",
+          "color": "#f59e0b"
+        },
+        {
+          "name": "Витя",
+          "color": "#6366f1"
+        }
+      ]
     },
     {
       "id": "240f7c95-58ed-4a3e-8b64-c363ff1f89e9",
@@ -1452,7 +1491,20 @@
       "start": "16:00",
       "durationMin": 60,
       "kind": "meeting",
-      "members": []
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        },
+        {
+          "name": "Оля",
+          "color": "#f59e0b"
+        },
+        {
+          "name": "Витя",
+          "color": "#6366f1"
+        }
+      ]
     },
     {
       "id": "3d9d6cfa-e90f-46e9-9312-e59a306ff458",
@@ -1523,7 +1575,20 @@
       "start": "16:00",
       "durationMin": 60,
       "kind": "meeting",
-      "members": []
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        },
+        {
+          "name": "Оля",
+          "color": "#f59e0b"
+        },
+        {
+          "name": "Витя",
+          "color": "#6366f1"
+        }
+      ]
     },
     {
       "id": "6f2a4bfa-518d-43c7-83e9-dd154838e037",
@@ -1561,7 +1626,20 @@
       "start": "16:00",
       "durationMin": 60,
       "kind": "meeting",
-      "members": []
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        },
+        {
+          "name": "Оля",
+          "color": "#f59e0b"
+        },
+        {
+          "name": "Витя",
+          "color": "#6366f1"
+        }
+      ]
     },
     {
       "id": "e7b42a94-07ea-46ee-8801-6190058dfd99",
@@ -1599,7 +1677,20 @@
       "start": "16:00",
       "durationMin": 60,
       "kind": "meeting",
-      "members": []
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        },
+        {
+          "name": "Оля",
+          "color": "#f59e0b"
+        },
+        {
+          "name": "Витя",
+          "color": "#6366f1"
+        }
+      ]
     },
     {
       "id": "8289a4d9-a85e-4a73-9d92-d452cb31f4ac",
@@ -1626,7 +1717,20 @@
       "start": "16:00",
       "durationMin": 60,
       "kind": "meeting",
-      "members": []
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        },
+        {
+          "name": "Оля",
+          "color": "#f59e0b"
+        },
+        {
+          "name": "Витя",
+          "color": "#6366f1"
+        }
+      ]
     },
     {
       "id": "ac015817-3f22-4bc4-9f1f-8824d71a967c",
@@ -1664,7 +1768,20 @@
       "start": "16:00",
       "durationMin": 60,
       "kind": "meeting",
-      "members": []
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        },
+        {
+          "name": "Оля",
+          "color": "#f59e0b"
+        },
+        {
+          "name": "Витя",
+          "color": "#6366f1"
+        }
+      ]
     },
     {
       "id": "2aa6cea6-c968-4113-8146-cffdd54a15a1",
@@ -1691,7 +1808,20 @@
       "start": "16:00",
       "durationMin": 60,
       "kind": "meeting",
-      "members": []
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        },
+        {
+          "name": "Оля",
+          "color": "#f59e0b"
+        },
+        {
+          "name": "Витя",
+          "color": "#6366f1"
+        }
+      ]
     },
     {
       "id": "544d3fd2-089c-49cf-b62a-d0bc0a30e7ae",
@@ -1700,7 +1830,20 @@
       "start": "16:00",
       "durationMin": 60,
       "kind": "meeting",
-      "members": []
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        },
+        {
+          "name": "Оля",
+          "color": "#f59e0b"
+        },
+        {
+          "name": "Витя",
+          "color": "#6366f1"
+        }
+      ]
     },
     {
       "id": "58b83413-20e4-4971-98d9-eda2643cc776",
@@ -1709,7 +1852,20 @@
       "start": "16:00",
       "durationMin": 60,
       "kind": "meeting",
-      "members": []
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        },
+        {
+          "name": "Оля",
+          "color": "#f59e0b"
+        },
+        {
+          "name": "Витя",
+          "color": "#6366f1"
+        }
+      ]
     }
   ]
 }
