@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-27T10:37:14.465Z",
+  "generatedAt": "2026-07-27T10:37:43.288Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -1212,7 +1212,7 @@
       "title": "Узнать, работает ли эквайринг ТБС с ИП",
       "date": "2026-07-27",
       "start": "16:30",
-      "durationMin": 60,
+      "durationMin": 30,
       "priorityColor": "#ef4444",
       "members": [
         {
@@ -1220,6 +1220,14 @@
           "color": "#84cc16"
         }
       ]
+    },
+    {
+      "id": "775fd48b-4fa4-4432-8eb4-d43f53df3c91",
+      "title": "Без названия",
+      "date": "2026-07-27",
+      "start": "17:00",
+      "durationMin": 60,
+      "members": []
     },
     {
       "id": "a8e35675-44d3-4872-b298-d6c8ea929165",
