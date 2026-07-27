@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-27T15:38:45.195Z",
+  "generatedAt": "2026-07-27T15:38:50.572Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -1282,7 +1282,7 @@
       "title": "Написать массажистке Нино",
       "date": "2026-07-27",
       "start": "20:30",
-      "durationMin": 60,
+      "durationMin": 30,
       "kind": "task",
       "priorityColor": "#ef4444",
       "members": [
