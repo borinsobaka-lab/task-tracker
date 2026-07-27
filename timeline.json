@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-27T10:30:03.865Z",
+  "generatedAt": "2026-07-27T10:30:15.728Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -1371,7 +1371,7 @@
       "id": "6272482c-2893-49ed-83eb-75189b9c353d",
       "title": "Еженедельная встреча // BASE40",
       "date": "2026-07-31",
-      "start": "14:30",
+      "start": "13:30",
       "durationMin": 60,
       "kind": "meeting",
       "members": [
