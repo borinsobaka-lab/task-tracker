@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-27T10:48:11.115Z",
+  "generatedAt": "2026-07-27T10:53:14.046Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -1319,6 +1319,28 @@
       "start": "13:30",
       "durationMin": 60,
       "kind": "meeting",
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        },
+        {
+          "name": "Оля",
+          "color": "#f59e0b"
+        },
+        {
+          "name": "Витя",
+          "color": "#6366f1"
+        }
+      ]
+    },
+    {
+      "id": "67ba0e0a-6725-4966-80c4-278831e6991e",
+      "title": "Заполнить цены по таблице оборудования",
+      "date": "2026-07-28",
+      "start": "15:00",
+      "durationMin": 60,
+      "priorityColor": "#ef4444",
       "members": [
         {
           "name": "Вова",
