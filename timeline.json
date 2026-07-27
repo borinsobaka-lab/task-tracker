@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-27T13:11:44.703Z",
+  "generatedAt": "2026-07-27T13:35:23.383Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -1222,19 +1222,6 @@
       ]
     },
     {
-      "id": "dd1cf3b6-baaa-4d92-8efd-09511f225ce5",
-      "title": "Отправка промо-push сообщений клиентам",
-      "date": "2026-07-27",
-      "start": "18:30",
-      "durationMin": 60,
-      "members": [
-        {
-          "name": "Вова",
-          "color": "#84cc16"
-        }
-      ]
-    },
-    {
       "id": "d36781ce-20ce-4055-be80-b6997916f5aa",
       "title": "Еженедельная встреча // Вова Настя",
       "date": "2026-07-27",
@@ -1321,6 +1308,19 @@
       "durationMin": 180,
       "kind": "task",
       "priorityColor": "#ef4444",
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        }
+      ]
+    },
+    {
+      "id": "dd1cf3b6-baaa-4d92-8efd-09511f225ce5",
+      "title": "Отправка промо-push сообщений клиентам",
+      "date": "2026-07-28",
+      "start": "12:30",
+      "durationMin": 60,
       "members": [
         {
           "name": "Вова",
