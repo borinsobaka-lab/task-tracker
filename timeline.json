@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-27T10:46:55.643Z",
+  "generatedAt": "2026-07-27T10:47:02.183Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -1284,7 +1284,7 @@
       "title": "Придумать название",
       "date": "2026-07-27",
       "start": "20:00",
-      "durationMin": 60,
+      "durationMin": 240,
       "priorityColor": "#ef4444",
       "members": [
         {
