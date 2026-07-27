@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-27T09:19:41.432Z",
+  "generatedAt": "2026-07-27T09:19:49.500Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -1292,7 +1292,7 @@
       "title": "Подготовить новые базы для рассылки и тексты для рассылок",
       "date": "2026-07-27",
       "start": "15:30",
-      "durationMin": 60,
+      "durationMin": 180,
       "kind": "task",
       "priorityColor": "#ef4444",
       "members": [
