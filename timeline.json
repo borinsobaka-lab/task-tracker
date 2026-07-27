@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-27T10:53:51.215Z",
+  "generatedAt": "2026-07-27T10:54:07.831Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -1181,11 +1181,13 @@
       ]
     },
     {
-      "id": "7d051bcc-ccdb-4866-b2c1-f16bb012b4f4",
-      "title": "Поиск помещения",
+      "id": "1c0ac94b-53da-4abf-b08b-d41931215039",
+      "title": "Распределить задачи по ответственным и разместить их в Task Tracker.",
       "date": "2026-07-27",
-      "start": "15:00",
-      "durationMin": 30,
+      "start": "15:30",
+      "durationMin": 60,
+      "done": true,
+      "priorityColor": "#ef4444",
       "members": [
         {
           "name": "Вова",
@@ -1194,13 +1196,11 @@
       ]
     },
     {
-      "id": "1c0ac94b-53da-4abf-b08b-d41931215039",
-      "title": "Распределить задачи по ответственным и разместить их в Task Tracker.",
+      "id": "7d051bcc-ccdb-4866-b2c1-f16bb012b4f4",
+      "title": "Поиск помещения",
       "date": "2026-07-27",
       "start": "15:30",
       "durationMin": 60,
-      "done": true,
-      "priorityColor": "#ef4444",
       "members": [
         {
           "name": "Вова",
@@ -1227,20 +1227,6 @@
       "date": "2026-07-27",
       "start": "16:30",
       "durationMin": 30,
-      "priorityColor": "#ef4444",
-      "members": [
-        {
-          "name": "Вова",
-          "color": "#84cc16"
-        }
-      ]
-    },
-    {
-      "id": "775fd48b-4fa4-4432-8eb4-d43f53df3c91",
-      "title": "Поиск помещения",
-      "date": "2026-07-27",
-      "start": "17:00",
-      "durationMin": 60,
       "priorityColor": "#ef4444",
       "members": [
         {
