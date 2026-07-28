@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-28T08:57:27.056Z",
+  "generatedAt": "2026-07-28T08:57:56.978Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -1588,7 +1588,12 @@
       "title": "Винный стретчинг",
       "date": "2026-07-30",
       "priorityColor": "#ef4444",
-      "members": []
+      "members": [
+        {
+          "name": "Настя",
+          "color": "#ec4899"
+        }
+      ]
     },
     {
       "id": "711ddea5-22a2-41df-9f0b-6b47d4f665e1",
