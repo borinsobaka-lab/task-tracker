@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-28T08:39:12.831Z",
+  "generatedAt": "2026-07-28T08:39:19.940Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -1637,6 +1637,14 @@
           "color": "#84cc16"
         }
       ]
+    },
+    {
+      "id": "5b11dd58-ec85-4cac-b001-dac849c9ba42",
+      "title": "Без названия",
+      "date": "2026-08-01",
+      "start": "16:30",
+      "durationMin": 60,
+      "members": []
     },
     {
       "id": "003ae705-dc70-473c-bff4-39e5d8c942e1",
