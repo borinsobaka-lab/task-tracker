@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-29T06:15:41.542Z",
+  "generatedAt": "2026-07-29T06:15:52.960Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -1508,20 +1508,6 @@
       ]
     },
     {
-      "id": "7febe982-2f96-4192-8a64-63b937a81b44",
-      "title": "Написать по гаражу",
-      "date": "2026-07-29",
-      "start": "17:30",
-      "durationMin": 30,
-      "priorityColor": "#eab308",
-      "members": [
-        {
-          "name": "Вова",
-          "color": "#84cc16"
-        }
-      ]
-    },
-    {
       "id": "5b11dd58-ec85-4cac-b001-dac849c9ba42",
       "title": "Собеседование админ Мария",
       "date": "2026-07-29",
@@ -1690,6 +1676,20 @@
       "date": "2026-08-01",
       "start": "11:30",
       "durationMin": 300,
+      "priorityColor": "#eab308",
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        }
+      ]
+    },
+    {
+      "id": "7febe982-2f96-4192-8a64-63b937a81b44",
+      "title": "Написать по гаражу",
+      "date": "2026-08-02",
+      "start": "12:00",
+      "durationMin": 30,
       "priorityColor": "#eab308",
       "members": [
         {
