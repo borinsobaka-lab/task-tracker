@@ -856,9 +856,36 @@ export default {
     } catch {
       return new Response('bad request', { status: 400 })
     }
+
+    // Бота ДОБАВИЛИ в группу → сразу присылаем ID группы и инструкцию. Апдейт
+    // my_chat_member о самом боте приходит всегда, даже при включённом privacy mode
+    // (в отличие от обычного /id, который privacy mode может «съесть»).
+    if (update.my_chat_member) {
+      const m = update.my_chat_member
+      const chat = m.chat || {}
+      const st = (m.new_chat_member && m.new_chat_member.status) || ''
+      const wasOut = ['left', 'kicked'].includes((m.old_chat_member && m.old_chat_member.status) || '')
+      if ((chat.type === 'group' || chat.type === 'supergroup') && (st === 'member' || st === 'administrator') && wasOut) {
+        try {
+          await tgApi(env, 'sendMessage', {
+            chat_id: chat.id,
+            text:
+              `Привет! Я бот задач 🗒\n\nID этой группы: <code>${chat.id}</code>\n\n` +
+              `Чтобы сюда приходили уведомления — впишите этот ID в приложении: ` +
+              `<b>Настройки → Проекты → поле «Telegram-группа»</b> у нужного проекта. ` +
+              `Показать ID снова можно командой <b>/id</b>.`,
+            parse_mode: 'HTML',
+          })
+        } catch {
+          /* не вышло — не критично */
+        }
+      }
+      return new Response('OK')
+    }
+
     // /id или /chatid в любом чате (в т.ч. в группе) — сообщить id чата.
     // Нужен, чтобы узнать id группы проекта: добавьте бота в группу и напишите
-    // там «/id@ИмяБота». В личке достаточно «/id».
+    // там «/id» (или «/id@ИмяБота», если privacy mode «съедает» простую команду).
     const idMsg = update.message
     if (idMsg && idMsg.chat && typeof idMsg.text === 'string' && /^\/(id|chatid)(@[\w]+)?(\s|$)/i.test(idMsg.text.trim())) {
       const where = idMsg.chat.type === 'private' ? 'этого чата' : 'этой группы'
