@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-30T09:14:25.349Z",
+  "generatedAt": "2026-07-30T09:36:41.875Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -1518,6 +1518,7 @@
       "date": "2026-07-30",
       "start": "13:30",
       "durationMin": 60,
+      "done": true,
       "members": [
         {
           "name": "Вова",
@@ -1661,6 +1662,19 @@
           "name": "Витя",
           "color": "#6366f1"
         },
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        }
+      ]
+    },
+    {
+      "id": "cd90a922-e3b7-487a-a65f-31e5f90ce790",
+      "title": "Поиск помещения",
+      "date": "2026-07-31",
+      "start": "15:00",
+      "durationMin": 30,
+      "members": [
         {
           "name": "Вова",
           "color": "#84cc16"
