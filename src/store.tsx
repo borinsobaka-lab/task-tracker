@@ -421,9 +421,13 @@ export interface BoardStore {
 
   members: Member[] // без архивных
   columns: Column[] // без удалённых
+  /** Карточка по id; карточки закрытых для текущего участника проектов не возвращаются */
   card(id: ID): Card | undefined
   cardsInColumn(columnId: ID): Card[]
+  /** Живые карточки, ВИДИМЫЕ текущему участнику (задачи закрытых проектов скрыты) */
   liveCards(): Card[]
+  /** Все живые карточки без фильтра доступа — для системных вещей (публикация таймлайна) */
+  allLiveCards(): Card[]
 
   identity: Member | null
   setIdentity(id: ID | null): void
@@ -433,14 +437,14 @@ export interface BoardStore {
   updateMember(id: ID, patch: Partial<Pick<Member, 'name' | 'color' | 'sleepUntil' | 'tgUsername' | 'avatar'>>): void
   archiveMember(id: ID): void
 
-  // Проекты (табы в шапке; фильтр задач; группа Telegram)
+  // Проекты (табы в шапке; фильтр задач; группа Telegram; доступ по участникам)
+  /** Проекты, видимые текущему участнику (у проекта пустой memberIds — виден всем) */
   projects: Project[]
-  /** Задать имя/иконку/группу слота проекта (0 или 1); слот создаётся при необходимости.
-   *  icon: строка — установить, undefined — убрать. */
-  // Проекты (табы в шапке, фильтр по задачам, привязка к Telegram-группе)
+  /** Все проекты без фильтра доступа — для настроек владельца */
+  allProjects: Project[]
   /** Добавить новый (пустой) проект; возвращает его id. */
   addProject(): ID
-  updateProject(id: ID, patch: { name?: string; icon?: string | undefined; tgGroupId?: string }): void
+  updateProject(id: ID, patch: { name?: string; icon?: string | undefined; tgGroupId?: string; memberIds?: ID[] }): void
   /** Удалить проект (надгробие) и снять его со всех карточек и серий. */
   deleteProject(id: ID): void
 
@@ -565,9 +569,19 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
   const activeMembers = data.members.filter((m) => !m.archived)
   const identity = snap.identityId ? data.members.find((m) => m.id === snap.identityId && !m.archived) ?? null : null
 
+  // Доступ к проектам: проект с непустым memberIds видят только его участники.
+  // Задачи/встречи/серии закрытого проекта скрываются из всех разделов, поиска и
+  // выбора проекта. «Без проекта» и проекты без списка участников видят все.
+  const allProjects = (data.projects ?? []).filter((p) => !p.deleted)
+  const visibleProjects = allProjects.filter(
+    (p) => !p.memberIds?.length || (identity !== null && p.memberIds.includes(identity.id)),
+  )
+  const hiddenProjectIds = new Set(allProjects.filter((p) => !visibleProjects.includes(p)).map((p) => p.id))
+  const cardVisible = (c: Card): boolean => !c.projectId || !hiddenProjectIds.has(c.projectId)
+
   const getCard = (id: ID): Card | undefined => {
     const c = data.cards[id]
-    return c && !c.deleted ? c : undefined
+    return c && !c.deleted && cardVisible(c) ? c : undefined
   }
 
   return {
@@ -577,7 +591,8 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
     lastError: snap.lastError,
 
     members: activeMembers,
-    projects: (data.projects ?? []).filter((p) => !p.deleted),
+    projects: visibleProjects,
+    allProjects,
     columns: liveColumns,
     card: getCard,
     cardsInColumn: (columnId) => {
@@ -585,11 +600,14 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
       if (!col) return []
       return col.cardIds.map((id) => getCard(id)).filter((c): c is Card => !!c)
     },
-    liveCards: () => Object.values(data.cards).filter((c) => !c.deleted),
+    liveCards: () => Object.values(data.cards).filter((c) => !c.deleted && cardVisible(c)),
+    allLiveCards: () => Object.values(data.cards).filter((c) => !c.deleted),
 
-    series: Object.values(data.series ?? {}).filter((s) => !s.deleted),
+    series: Object.values(data.series ?? {}).filter(
+      (s) => !s.deleted && (!s.projectId || !hiddenProjectIds.has(s.projectId)),
+    ),
     seriesById: (id) => data.series?.[id],
-    recurringCards: () => Object.values(data.cards).filter((c) => !c.deleted && !!c.seriesId),
+    recurringCards: () => Object.values(data.cards).filter((c) => !c.deleted && !!c.seriesId && cardVisible(c)),
 
     identity,
     setIdentity: (id) => engine.setIdentity(id),
@@ -639,6 +657,10 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
           const g = patch.tgGroupId.trim()
           if (g) p.tgGroupId = g
           else delete p.tgGroupId
+        }
+        if (patch.memberIds !== undefined) {
+          if (patch.memberIds.length) p.memberIds = [...patch.memberIds]
+          else delete p.memberIds // пустой список = проект видят все
         }
         touch(p)
       }),

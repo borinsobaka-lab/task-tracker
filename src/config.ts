@@ -27,6 +27,11 @@ export const AUTH_REPO = {
   path: 'auth.json',
 }
 
+/** Пароль владельца — запрашивается при открытии настроек. Это UI-барьер от
+ *  случайных правок сотрудниками (настройки, участники, проекты, доступы),
+ *  а не криптографическая защита данных. */
+export const OWNER_PASSWORD = '1234'
+
 const LS = {
   token: 'tt.token',
   identity: 'tt.identity',

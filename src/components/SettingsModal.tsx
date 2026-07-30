@@ -280,7 +280,7 @@ function AddMemberForm() {
 
 function ProjectsSection() {
   const store = useBoard()
-  const projects = store.projects
+  const projects = store.allProjects
   return (
     <section className="settings-section">
       <h3 className="field-label settings-section-title">Проекты</h3>
@@ -288,7 +288,9 @@ function ProjectsSection() {
         Проекты — это табы-логотипы в шапке для фильтра задач. У каждого загрузите иконку
         (можно SVG), задайте название и, при желании, ID Telegram-группы — бот шлёт туда
         отчёты по задачам этого проекта (задачи без проекта попадают во все группы). Таб
-        «Все» есть всегда. Проектов можно добавить сколько нужно.
+        «Все» есть всегда. Проектов можно добавить сколько нужно. В строке «Доступ»
+        отметьте, кто входит в проект: если отмечен хотя бы один участник, таб проекта и
+        его задачи видят только отмеченные; если никто не отмечен — видят все.
       </p>
       <div className="settings-projects">
         {projects.length === 0 ? (
@@ -389,6 +391,36 @@ function ProjectRow({ project }: { project: Project }) {
             onChange={(e) => store.updateProject(project.id, { tgGroupId: e.target.value })}
           />
         </label>
+        <div
+          className="settings-project-access"
+          title="Кто входит в проект. Отмечен хотя бы один — таб и задачи проекта видят только отмеченные участники. Никто не отмечен — видят все."
+        >
+          <span>Доступ</span>
+          <div className="settings-project-access-list">
+            {store.members.map((m) => {
+              const on = (project.memberIds ?? []).includes(m.id)
+              return (
+                <button
+                  key={m.id}
+                  type="button"
+                  className={'settings-project-member' + (on ? ' on' : '')}
+                  onClick={() => {
+                    const cur = project.memberIds ?? []
+                    const next = on ? cur.filter((x) => x !== m.id) : [...cur, m.id]
+                    store.updateProject(project.id, { memberIds: next })
+                  }}
+                  title={`${m.name} — ${on ? 'входит в проект (нажмите, чтобы убрать)' : 'не входит (нажмите, чтобы добавить)'}`}
+                  aria-pressed={on}
+                >
+                  <Avatar member={m} size="sm" />
+                </button>
+              )
+            })}
+            <span className="muted settings-project-access-hint">
+              {(project.memberIds ?? []).length ? 'видят только отмеченные' : 'видят все'}
+            </span>
+          </div>
+        </div>
       </div>
       <button
         type="button"

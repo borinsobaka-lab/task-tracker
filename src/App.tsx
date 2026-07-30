@@ -3,7 +3,7 @@ import { BoardProvider, useMaybeBoard, useSyncMeta } from './store'
 import type { StorageAdapter } from './storage/adapter'
 import { GitHubAdapter } from './storage/github'
 import { LocalAdapter } from './storage/local'
-import { getDataRepoConfig, getSavedView, getToken, isDemoMode, setSavedView, setToken } from './config'
+import { getDataRepoConfig, getSavedView, getToken, isDemoMode, OWNER_PASSWORD, setSavedView, setToken } from './config'
 import { getAuthState } from './auth'
 import type { EncryptedBlob } from './crypto'
 import { PasswordScreen } from './components/PasswordScreen'
@@ -172,7 +172,10 @@ function TimelinePublisher({ token }: { token: string }) {
 
   useEffect(() => {
     if (!store) return
-    const items = buildTimelineItems(store)
+    // Публичный таймлайн — общий файл для всех: собираем из ПОЛНОГО списка задач,
+    // без фильтра доступа по проектам (иначе устройство участника с ограниченным
+    // доступом перезаписало бы общий таймлайн урезанной версией).
+    const items = buildTimelineItems({ liveCards: store.allLiveCards, members: store.members })
     const json = JSON.stringify(items)
     if (json === lastJson.current) return
     lastJson.current = json
@@ -210,6 +213,15 @@ function Shell({ onLogout }: { onLogout: () => void }) {
   const [view, setView] = useState<ViewKind>(getSavedView)
   const [selectedCardId, setSelectedCardId] = useState<ID | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
+
+  // Настройки — только для владельца: при каждом открытии спрашиваем пароль.
+  // Это UI-барьер от случайных правок сотрудниками (не криптозащита данных).
+  const openSettings = () => {
+    const p = prompt('Настройки доступны только владельцу.\nВведите пароль владельца:')
+    if (p === null) return // отмена
+    if (p === OWNER_PASSWORD) setSettingsOpen(true)
+    else alert('Неверный пароль.')
+  }
   const [quickAddOpen, setQuickAddOpen] = useState(false)
   const [memberFilter, setMemberFilter] = useState<ReadonlySet<ID>>(new Set())
   // Активный проект-фильтр (id) или null — «Все». Задаётся табами проектов в шапке.
@@ -332,7 +344,7 @@ function Shell({ onLogout }: { onLogout: () => void }) {
       <Header
         view={view}
         onViewChange={changeView}
-        onOpenSettings={() => setSettingsOpen(true)}
+        onOpenSettings={openSettings}
         onOpenCard={setSelectedCardId}
         projectFilter={projectFilter}
         onProjectFilterChange={setProjectFilter}
