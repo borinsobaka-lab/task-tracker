@@ -610,6 +610,11 @@ async function runNotifications(env, board) {
     const known = new Set(st.knownAssigned || [])
     const notified = new Set(st.notified30 || [])
 
+    // ВАЖНО: knownAssigned/notified30 — постоянные «журналы» уже отправленных
+    // уведомлений; их НЕ чистим. По каждой карточке «вам назначили…» и «через ~30
+    // минут…» уходят максимум по одному разу за всё время. Иначе, если карточка на
+    // минуту «мигнёт» в данных (рассинхрон двух устройств, пересохранение доски),
+    // она снова выглядела бы как новая — и бот слал бы уведомление каждую минуту.
     const assigned = assignedCardIds(board, s.memberId)
     for (const id of assigned) {
       if (known.has(id)) continue
@@ -619,10 +624,8 @@ async function runNotifications(env, board) {
       known.add(id)
       changed = true
     }
-    for (const id of [...known]) if (!assigned.has(id)) { known.delete(id); changed = true }
 
     const up = upcomingWithin(board, s.memberId, tz, now, 30)
-    const upIds = new Set(up.map((u) => u.id))
     for (const u of up) {
       if (notified.has(u.id)) continue
       const what = u.kind === 'meeting' ? ' (встреча)' : ''
@@ -630,7 +633,6 @@ async function runNotifications(env, board) {
       notified.add(u.id)
       changed = true
     }
-    for (const id of [...notified]) if (!upIds.has(id)) { notified.delete(id); changed = true }
 
     notif[chatId] = { knownAssigned: [...known], notified30: [...notified] }
   }
