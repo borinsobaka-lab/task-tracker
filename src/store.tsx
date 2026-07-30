@@ -31,7 +31,10 @@ const MEETING_MAX_PAST = 4 // сколько прошедших встреч с�
 
 function makeInstance(seriesId: ID, s: Series, dateKey: string, ts: string): Card {
   const c: Card = {
-    id: uid(),
+    // Детерминированный id (серия + дата): два устройства, независимо создавшие
+    // экземпляр на одну и ту же дату, дадут ОДИН id и сольются в одну карточку при
+    // синхронизации — без дублей.
+    id: `${seriesId}:${dateKey}`,
     seriesId,
     title: s.title,
     description: s.description,
@@ -276,8 +279,19 @@ export class SyncEngine {
   update(mutator: (d: BoardData) => void): void {
     if (!this.data) return
     this.pendingCelebrate = false
-    this.data = produce(this.data, (draft) => {
+    const prev = this.data
+    const next = produce(prev, (draft) => {
       mutator(draft)
+    })
+    // Мутатор ничего не изменил (immer вернул тот же объект) — не помечаем dirty,
+    // не бампаем updatedAt и не сохраняем. Иначе автодействия вроде topUpMeetings()
+    // в устоявшемся состоянии плодили бы «пустые» коммиты board.json и лишние
+    // гонки/пересохранения между одновременно открытыми устройствами.
+    if (next === prev) {
+      this.pendingCelebrate = false
+      return
+    }
+    this.data = produce(next, (draft) => {
       draft.updatedAt = nowISO()
     })
     this.dirty = true
