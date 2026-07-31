@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-31T11:31:29.895Z",
+  "generatedAt": "2026-07-31T12:53:38.988Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -1822,6 +1822,20 @@
       "date": "2026-08-01",
       "start": "17:00",
       "durationMin": 60,
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        }
+      ]
+    },
+    {
+      "id": "424e59fa-ccdb-40eb-a52a-8d7e15155d34",
+      "title": "Купить новый пульт от шлагбаума в Ваке",
+      "date": "2026-08-01",
+      "start": "18:00",
+      "durationMin": 60,
+      "priorityColor": "#22c55e",
       "members": [
         {
           "name": "Вова",
