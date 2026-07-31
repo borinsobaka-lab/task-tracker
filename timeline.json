@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-31T11:27:24.222Z",
+  "generatedAt": "2026-07-31T11:23:43.617Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -1766,23 +1766,10 @@
       ]
     },
     {
-      "id": "3b81fab9-2783-453f-8fcd-fdf0cb149404",
-      "title": "Купить вино для винного стретчинга",
-      "date": "2026-08-01",
-      "start": "10:00",
-      "durationMin": 120,
-      "members": [
-        {
-          "name": "Вова",
-          "color": "#84cc16"
-        }
-      ]
-    },
-    {
       "id": "de6b9b49-b0a9-4180-a7b8-64924103e6b9",
       "title": "Распределить в работу по ответственным задачам со встреч с Натальей",
       "date": "2026-08-01",
-      "start": "11:30",
+      "start": "10:00",
       "durationMin": 300,
       "priorityColor": "#eab308",
       "members": [
@@ -1813,6 +1800,19 @@
       "durationMin": 180,
       "kind": "task",
       "priorityColor": "#ef4444",
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        }
+      ]
+    },
+    {
+      "id": "3b81fab9-2783-453f-8fcd-fdf0cb149404",
+      "title": "Купить вино для винного стретчинга",
+      "date": "2026-08-01",
+      "start": "15:00",
+      "durationMin": 120,
       "members": [
         {
           "name": "Вова",
