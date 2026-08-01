@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-01T12:36:01.407Z",
+  "generatedAt": "2026-08-01T12:36:09.211Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -1793,20 +1793,6 @@
       ]
     },
     {
-      "id": "424e59fa-ccdb-40eb-a52a-8d7e15155d34",
-      "title": "Купить новый пульт от шлагбаума в Ваке",
-      "date": "2026-08-01",
-      "start": "18:00",
-      "durationMin": 60,
-      "priorityColor": "#22c55e",
-      "members": [
-        {
-          "name": "Вова",
-          "color": "#84cc16"
-        }
-      ]
-    },
-    {
       "id": "6c6faffe-4c13-4331-87f5-21266ebfff46",
       "title": "Padel",
       "date": "2026-08-01",
@@ -1907,6 +1893,20 @@
       "start": "12:30",
       "durationMin": 60,
       "priorityColor": "#ef4444",
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        }
+      ]
+    },
+    {
+      "id": "424e59fa-ccdb-40eb-a52a-8d7e15155d34",
+      "title": "Купить новый пульт от шлагбаума в Ваке",
+      "date": "2026-08-02",
+      "start": "13:30",
+      "durationMin": 60,
+      "priorityColor": "#22c55e",
       "members": [
         {
           "name": "Вова",
