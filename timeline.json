@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-01T12:36:09.211Z",
+  "generatedAt": "2026-08-01T12:36:13.888Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -1887,12 +1887,12 @@
       ]
     },
     {
-      "id": "99d13140-23d5-4c2c-92ed-5989c598fa1d",
-      "title": "Маркетинг",
+      "id": "424e59fa-ccdb-40eb-a52a-8d7e15155d34",
+      "title": "Купить новый пульт от шлагбаума в Ваке",
       "date": "2026-08-02",
-      "start": "12:30",
+      "start": "13:30",
       "durationMin": 60,
-      "priorityColor": "#ef4444",
+      "priorityColor": "#22c55e",
       "members": [
         {
           "name": "Вова",
@@ -1901,12 +1901,12 @@
       ]
     },
     {
-      "id": "424e59fa-ccdb-40eb-a52a-8d7e15155d34",
-      "title": "Купить новый пульт от шлагбаума в Ваке",
+      "id": "99d13140-23d5-4c2c-92ed-5989c598fa1d",
+      "title": "Маркетинг",
       "date": "2026-08-02",
-      "start": "13:30",
+      "start": "17:00",
       "durationMin": 60,
-      "priorityColor": "#22c55e",
+      "priorityColor": "#ef4444",
       "members": [
         {
           "name": "Вова",
