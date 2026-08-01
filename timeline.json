@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-01T15:12:40.878Z",
+  "generatedAt": "2026-08-01T15:12:54.904Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -1881,20 +1881,6 @@
       "start": "11:00",
       "durationMin": 60,
       "priorityColor": "#ef4444",
-      "members": [
-        {
-          "name": "Вова",
-          "color": "#84cc16"
-        }
-      ]
-    },
-    {
-      "id": "7febe982-2f96-4192-8a64-63b937a81b44",
-      "title": "Написать по гаражу",
-      "date": "2026-08-02",
-      "start": "12:00",
-      "durationMin": 30,
-      "priorityColor": "#eab308",
       "members": [
         {
           "name": "Вова",
