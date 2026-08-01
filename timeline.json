@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-01T12:33:22.505Z",
+  "generatedAt": "2026-08-01T12:33:29.021Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -1598,20 +1598,6 @@
       ]
     },
     {
-      "id": "99d13140-23d5-4c2c-92ed-5989c598fa1d",
-      "title": "Маркетинг",
-      "date": "2026-07-31",
-      "start": "12:30",
-      "durationMin": 60,
-      "priorityColor": "#ef4444",
-      "members": [
-        {
-          "name": "Вова",
-          "color": "#84cc16"
-        }
-      ]
-    },
-    {
       "id": "2a1a7364-8b06-495f-b6a0-080887bdd603",
       "title": "Еженедельная встреча",
       "date": "2026-07-31",
@@ -1882,6 +1868,20 @@
       "start": "12:00",
       "durationMin": 30,
       "priorityColor": "#eab308",
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        }
+      ]
+    },
+    {
+      "id": "99d13140-23d5-4c2c-92ed-5989c598fa1d",
+      "title": "Маркетинг",
+      "date": "2026-08-02",
+      "start": "12:30",
+      "durationMin": 60,
+      "priorityColor": "#ef4444",
       "members": [
         {
           "name": "Вова",
