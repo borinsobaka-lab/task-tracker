@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-01T15:12:31.482Z",
+  "generatedAt": "2026-08-01T15:12:40.878Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -1876,11 +1876,17 @@
     },
     {
       "id": "06e12727-2f68-43cb-887b-a8ac70f8575b",
-      "title": "Заб",
+      "title": "Забрать полотенца из студии",
       "date": "2026-08-02",
       "start": "11:00",
       "durationMin": 60,
-      "members": []
+      "priorityColor": "#ef4444",
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        }
+      ]
     },
     {
       "id": "7febe982-2f96-4192-8a64-63b937a81b44",
