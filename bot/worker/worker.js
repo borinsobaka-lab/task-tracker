@@ -95,6 +95,29 @@ async function kvPut(env, key, obj) {
   await env.BOT_KV.put(key, JSON.stringify(obj))
 }
 
+// ---------- Маркеры «уже отправлено» в Cache API ----------
+// Вторая линия защиты от дублей. KV может отказать в записи (например, исчерпан
+// дневной лимит бесплатного тарифа) — тогда «сначала отправили, потом не смогли
+// запомнить» превращается в отправку каждую минуту. Маркер в кэше дата-центра
+// не зависит от KV и не даёт отправить то же самое повторно.
+function markerReq(path) {
+  return new Request('https://tasktracker-bot-state.internal/' + path)
+}
+async function hasMarker(path) {
+  try {
+    return !!(await caches.default.match(markerReq(path)))
+  } catch {
+    return false
+  }
+}
+async function putMarker(path, maxAgeSec) {
+  try {
+    await caches.default.put(markerReq(path), new Response('1', { headers: { 'Cache-Control': `max-age=${maxAgeSec}` } }))
+  } catch {
+    /* кэш недоступен — остаётся защита через KV */
+  }
+}
+
 // ---------- Данные из GitHub ----------
 
 export async function loadAuthBlob(env) {
@@ -488,7 +511,7 @@ async function editGroup(env, chatId, msgId, text) {
   return r
 }
 
-async function runGroupReport(env, board) {
+export async function runGroupReport(env, board) {
   const groups = targetGroups(env, board)
   if (!groups.length) return
   const today = dateKey(env, 0)
@@ -498,51 +521,73 @@ async function runGroupReport(env, board) {
 
   const state = await kvGet(env, 'report')
   state.groups = state.groups || {} // состояние по каждому чату отдельно
-  let changed = false
 
-  // Каждая группа проекта живёт своим циклом (утро/день/вечер) независимо.
-  for (const group of groups) {
-    const gs = state.groups[group.chatId] || {}
-    gs.days = gs.days || {}
-    const day = gs.days[today] || {}
-
-    // Утро (один раз за день, как только наступило время)
-    if (gs.morningDate !== today && nowHM >= morning && nowHM < evening) {
-      const planned = reportCards(board, today, group.projectId).map((c) => c.id)
-      const id = await sendGroup(env, group.chatId, morningText(env, board, group, planned))
-      if (id) {
-        day.morningMsgId = id
-        day.plannedIds = planned
-        gs.days[today] = day
-        gs.morningDate = today
-        state.groups[group.chatId] = gs
-        changed = true
-      }
-      continue
-    }
-
-    // Вечер (один раз за день)
-    if (gs.eveningDate !== today && nowHM >= evening) {
-      const planned = day.plannedIds || []
-      if (day.morningMsgId) await editGroup(env, group.chatId, day.morningMsgId, morningText(env, board, group, planned))
-      const id = await sendGroup(env, group.chatId, eveningText(env, board, group, planned))
-      if (id) {
-        day.eveningMsgId = id
-        gs.days[today] = day
-        gs.eveningDate = today
-        state.groups[group.chatId] = gs
-        changed = true
-      }
-      continue
-    }
-
-    // Днём — обновляем утреннее сообщение под текущие статусы (идемпотентно, без записи в KV)
-    if (gs.morningDate === today && day.morningMsgId && nowHM >= morning && nowHM < evening) {
-      await editGroup(env, group.chatId, day.morningMsgId, morningText(env, board, group, day.plannedIds || []))
+  // Состояние пишем СРАЗУ после каждой отправки, а не одним махом в конце:
+  // иначе сбой на следующей группе (сеть, лимит KV) терял бы факт отправки,
+  // и на следующей минуте отчёт улетал бы повторно.
+  const persist = async () => {
+    try {
+      await kvPut(env, 'report', state)
+    } catch (e) {
+      console.log('report kvPut failed:', (e && e.message) || e)
     }
   }
 
-  if (changed) await kvPut(env, 'report', state)
+  // Каждая группа проекта живёт своим циклом (утро/день/вечер) независимо;
+  // ошибка в одной группе не должна ломать остальные и сохранение состояния.
+  for (const group of groups) {
+    try {
+      const gs = (state.groups[group.chatId] = state.groups[group.chatId] || {})
+      gs.days = gs.days || {}
+      const day = (gs.days[today] = gs.days[today] || {})
+
+      // Утро (один раз за день, как только наступило время)
+      if (gs.morningDate !== today && nowHM >= morning && nowHM < evening) {
+        // Маркер в кэше — страховка от повтора, если KV-запись вчера не удалась
+        if (await hasMarker(`sent/morning/${group.chatId}/${today}`)) {
+          gs.morningDate = today
+          await persist()
+          continue
+        }
+        const planned = reportCards(board, today, group.projectId).map((c) => c.id)
+        const id = await sendGroup(env, group.chatId, morningText(env, board, group, planned))
+        if (id) {
+          day.morningMsgId = id
+          day.plannedIds = planned
+          gs.morningDate = today
+          await putMarker(`sent/morning/${group.chatId}/${today}`, 100000) // ≈ 28 часов
+          await persist()
+        }
+        continue
+      }
+
+      // Вечер (один раз за день)
+      if (gs.eveningDate !== today && nowHM >= evening) {
+        if (await hasMarker(`sent/evening/${group.chatId}/${today}`)) {
+          gs.eveningDate = today
+          await persist()
+          continue
+        }
+        const planned = day.plannedIds || []
+        if (day.morningMsgId) await editGroup(env, group.chatId, day.morningMsgId, morningText(env, board, group, planned))
+        const id = await sendGroup(env, group.chatId, eveningText(env, board, group, planned))
+        if (id) {
+          day.eveningMsgId = id
+          gs.eveningDate = today
+          await putMarker(`sent/evening/${group.chatId}/${today}`, 100000)
+          await persist()
+        }
+        continue
+      }
+
+      // Днём — обновляем утреннее сообщение под текущие статусы (идемпотентно, без записи в KV)
+      if (gs.morningDate === today && day.morningMsgId && nowHM >= morning && nowHM < evening) {
+        await editGroup(env, group.chatId, day.morningMsgId, morningText(env, board, group, day.plannedIds || []))
+      }
+    } catch (e) {
+      console.log('group report failed for', group.chatId, (e && e.message) || e)
+    }
+  }
 }
 
 // ================= ЛИЧНЫЕ УВЕДОМЛЕНИЯ =================
@@ -618,25 +663,44 @@ async function runNotifications(env, board) {
     const assigned = assignedCardIds(board, s.memberId)
     for (const id of assigned) {
       if (known.has(id)) continue
+      // Маркер в кэше — страховка от повтора, если запись в KV после отправки не удалась
+      if (await hasMarker(`notif/assigned/${chatId}/${id}`)) {
+        known.add(id)
+        changed = true
+        continue
+      }
       const card = board.cards[id]
       const what = card.kind === 'meeting' ? 'встречу' : 'задачу'
       await tgSend(env, chatId, `📌 Вам назначили ${what}: <b>${esc(card.title || 'Без названия')}</b>${cardWhen(card)}`, openBtn(env))
       known.add(id)
       changed = true
+      await putMarker(`notif/assigned/${chatId}/${id}`, 604800) // неделя
     }
 
     const up = upcomingWithin(board, s.memberId, tz, now, 30)
     for (const u of up) {
       if (notified.has(u.id)) continue
+      if (await hasMarker(`notif/30min/${chatId}/${u.id}`)) {
+        notified.add(u.id)
+        changed = true
+        continue
+      }
       const what = u.kind === 'meeting' ? ' (встреча)' : ''
       await tgSend(env, chatId, `⏰ Через ${u.mins} мин начнётся: <b>${esc(u.title)}</b> в ${u.start}${what}`, openBtn(env))
       notified.add(u.id)
       changed = true
+      await putMarker(`notif/30min/${chatId}/${u.id}`, 86400) // сутки
     }
 
     notif[chatId] = { knownAssigned: [...known], notified30: [...notified] }
   }
-  if (changed) await kvPut(env, 'notif', notif)
+  if (changed) {
+    try {
+      await kvPut(env, 'notif', notif)
+    } catch (e) {
+      console.log('notif kvPut failed:', (e && e.message) || e)
+    }
+  }
 }
 
 // ---------- Личный диалог (webhook) ----------
@@ -970,8 +1034,19 @@ export default {
           console.log('board load failed:', e && e.message)
           return
         }
-        await runNotifications(env, board)
-        await runGroupReport(env, board)
+        // Изолируем подсистемы: сбой личных уведомлений не должен ронять
+        // групповые отчёты (и наоборот) — иначе неотработавший kvPut одной
+        // подсистемы приводил к повторным отправкам в другой.
+        try {
+          await runNotifications(env, board)
+        } catch (e) {
+          console.log('notifications failed:', (e && e.message) || e)
+        }
+        try {
+          await runGroupReport(env, board)
+        } catch (e) {
+          console.log('group report failed:', (e && e.message) || e)
+        }
       })(),
     )
   },
