@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-03T13:52:51.830Z",
+  "generatedAt": "2026-08-03T14:05:27.946Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -1888,6 +1888,7 @@
       "date": "2026-08-02",
       "start": "15:00",
       "durationMin": 30,
+      "done": true,
       "members": [
         {
           "name": "Вова",
@@ -1953,6 +1954,20 @@
       ]
     },
     {
+      "id": "39a06e9e-0bfd-4c8f-a7ba-8afc7c89f2c2:2026-08-03",
+      "title": "Поиск помещения",
+      "date": "2026-08-03",
+      "start": "15:00",
+      "durationMin": 30,
+      "done": true,
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        }
+      ]
+    },
+    {
       "id": "9221ee71-a62d-4a95-bd14-bf9e7feb4dad",
       "title": "Отправка промо-email писем клиентам",
       "date": "2026-08-03",
@@ -2006,6 +2021,19 @@
         {
           "name": "Витя",
           "color": "#6366f1"
+        }
+      ]
+    },
+    {
+      "id": "39a06e9e-0bfd-4c8f-a7ba-8afc7c89f2c2:2026-08-04",
+      "title": "Поиск помещения",
+      "date": "2026-08-04",
+      "start": "15:00",
+      "durationMin": 30,
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
         }
       ]
     },
