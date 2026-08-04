@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-04T11:42:03.019Z",
+  "generatedAt": "2026-08-04T11:46:12.325Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -2047,6 +2047,15 @@
           "color": "#f59e0b"
         }
       ]
+    },
+    {
+      "id": "ee4a3e48-2008-402f-be6a-8ffb95cd59a2",
+      "title": "Без названия",
+      "date": "2026-08-04",
+      "start": "20:00",
+      "durationMin": 60,
+      "kind": "meeting",
+      "members": []
     },
     {
       "id": "079f4dc2-81a7-4f5e-a43a-1041187a90fa",
