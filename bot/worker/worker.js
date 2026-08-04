@@ -95,15 +95,19 @@ async function kvPut(env, key, obj) {
   await env.BOT_KV.put(key, JSON.stringify(obj))
 }
 
-// ---------- Маркеры «уже отправлено» в Cache API ----------
-// Вторая линия защиты от дублей. KV может отказать в записи (например, исчерпан
-// дневной лимит бесплатного тарифа) — тогда «сначала отправили, потом не смогли
-// запомнить» превращается в отправку каждую минуту. Маркер в кэше дата-центра
-// не зависит от KV и не даёт отправить то же самое повторно.
+// ---------- Маркеры «уже отправлено» ----------
+// Вторая и третья линии защиты от дублей. KV может отказать в записи (например,
+// исчерпан дневной лимит бесплатного тарифа) — тогда «сначала отправили, потом
+// не смогли запомнить» превращается в отправку каждую минуту. Поэтому маркеры
+// дублируются в двух местах, не зависящих от KV:
+//  - память изолята (sentMemory) — живёт между тиками cron, пока воркер «тёплый»;
+//  - Cache API дата-центра — переживает перезапуск изолята.
+const sentMemory = new Set()
 function markerReq(path) {
   return new Request('https://tasktracker-bot-state.internal/' + path)
 }
 async function hasMarker(path) {
+  if (sentMemory.has(path)) return true
   try {
     return !!(await caches.default.match(markerReq(path)))
   } catch {
@@ -111,10 +115,12 @@ async function hasMarker(path) {
   }
 }
 async function putMarker(path, maxAgeSec) {
+  sentMemory.add(path)
+  if (sentMemory.size > 5000) sentMemory.clear() // страховка от бесконечного роста
   try {
     await caches.default.put(markerReq(path), new Response('1', { headers: { 'Cache-Control': `max-age=${maxAgeSec}` } }))
   } catch {
-    /* кэш недоступен — остаётся защита через KV */
+    /* кэш недоступен — остаются память изолята и KV */
   }
 }
 
@@ -642,7 +648,7 @@ function cardWhen(card) {
   return ` — ${d}.${m}${card.start ? ' ' + card.start : ''}`
 }
 
-async function runNotifications(env, board) {
+export async function runNotifications(env, board) {
   const sessions = await kvGet(env, 'sessions')
   const active = Object.entries(sessions).filter(([, s]) => s && s.stage === 'active')
   if (!active.length) return
