@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-04T10:09:09.891Z",
+  "generatedAt": "2026-08-04T10:09:21.547Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -2023,8 +2023,8 @@
       "id": "0c8db639-cd3a-495d-a526-050dfd4b9926",
       "title": "Поездка в спортивный магазин: поиск оборудования",
       "date": "2026-08-04",
-      "start": "16:00",
-      "durationMin": 300,
+      "start": "15:30",
+      "durationMin": 210,
       "priorityColor": "#ef4444",
       "members": [
         {
