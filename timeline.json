@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-04T09:49:09.414Z",
+  "generatedAt": "2026-08-04T09:59:56.219Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -1609,24 +1609,6 @@
       ]
     },
     {
-      "id": "6bef662d-32df-43d6-a6cc-05519efd1bfa",
-      "title": "Разработка бренд-идентики (название, лого, фирстиль) с ИИ",
-      "date": "2026-07-31",
-      "start": "15:30",
-      "durationMin": 420,
-      "priorityColor": "#ef4444",
-      "members": [
-        {
-          "name": "Оля",
-          "color": "#f59e0b"
-        },
-        {
-          "name": "Вова",
-          "color": "#84cc16"
-        }
-      ]
-    },
-    {
       "id": "dd1cf3b6-baaa-4d92-8efd-09511f225ce5",
       "title": "Отправка промо-push сообщений клиентам",
       "date": "2026-07-31",
@@ -2045,6 +2027,24 @@
       "durationMin": 180,
       "priorityColor": "#ef4444",
       "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        }
+      ]
+    },
+    {
+      "id": "6bef662d-32df-43d6-a6cc-05519efd1bfa",
+      "title": "Разработка бренд-идентики (название, лого, фирстиль) с ИИ",
+      "date": "2026-08-04",
+      "start": "16:30",
+      "durationMin": 270,
+      "priorityColor": "#ef4444",
+      "members": [
+        {
+          "name": "Оля",
+          "color": "#f59e0b"
+        },
         {
           "name": "Вова",
           "color": "#84cc16"
