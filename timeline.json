@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-04T10:23:24.262Z",
+  "generatedAt": "2026-08-04T10:24:26.421Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -2003,6 +2003,20 @@
         {
           "name": "Витя",
           "color": "#6366f1"
+        }
+      ]
+    },
+    {
+      "id": "94ce484f-e556-4de2-a0ef-54cb92f561e5",
+      "title": "Решить, с каким SMM будем работать",
+      "date": "2026-08-04",
+      "start": "14:30",
+      "durationMin": 60,
+      "priorityColor": "#ef4444",
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
         }
       ]
     },
