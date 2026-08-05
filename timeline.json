@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-05T15:46:53.507Z",
+  "generatedAt": "2026-08-05T15:47:02.005Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -1185,20 +1185,6 @@
       ]
     },
     {
-      "id": "7d051bcc-ccdb-4866-b2c1-f16bb012b4f4",
-      "title": "Поиск помещения",
-      "date": "2026-07-27",
-      "start": "15:30",
-      "durationMin": 60,
-      "done": true,
-      "members": [
-        {
-          "name": "Вова",
-          "color": "#84cc16"
-        }
-      ]
-    },
-    {
       "id": "d9635ca8-42f0-4095-a67e-5e6d97cc20f0",
       "title": "Найти строителей",
       "date": "2026-07-27",
@@ -1984,6 +1970,7 @@
       "date": "2026-08-05",
       "start": "15:00",
       "durationMin": 30,
+      "done": true,
       "members": [
         {
           "name": "Вова",
@@ -2099,6 +2086,19 @@
       "date": "2026-08-06",
       "start": "14:30",
       "durationMin": 210,
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        }
+      ]
+    },
+    {
+      "id": "39a06e9e-0bfd-4c8f-a7ba-8afc7c89f2c2:2026-08-06",
+      "title": "Поиск помещения",
+      "date": "2026-08-06",
+      "start": "15:00",
+      "durationMin": 30,
       "members": [
         {
           "name": "Вова",
