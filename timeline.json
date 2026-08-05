@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-05T15:47:02.005Z",
+  "generatedAt": "2026-08-05T15:47:16.347Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -1892,20 +1892,6 @@
       ]
     },
     {
-      "id": "55676402-f5d1-4a7d-9822-6e0d975ca5fe",
-      "title": "Подготовить таблицу по расходу.",
-      "date": "2026-08-04",
-      "start": "22:00",
-      "durationMin": 60,
-      "priorityColor": "#ef4444",
-      "members": [
-        {
-          "name": "Вова",
-          "color": "#84cc16"
-        }
-      ]
-    },
-    {
       "id": "240f7c95-58ed-4a3e-8b64-c363ff1f89e9",
       "title": "Оплата коммуналки студий",
       "date": "2026-08-05",
@@ -1985,6 +1971,20 @@
       "start": "23:00",
       "durationMin": 60,
       "kind": "task",
+      "priorityColor": "#ef4444",
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        }
+      ]
+    },
+    {
+      "id": "55676402-f5d1-4a7d-9822-6e0d975ca5fe",
+      "title": "Подготовить таблицу по расходу.",
+      "date": "2026-08-05",
+      "start": "23:00",
+      "durationMin": 60,
       "priorityColor": "#ef4444",
       "members": [
         {
