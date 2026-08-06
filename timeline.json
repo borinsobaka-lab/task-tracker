@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-06T14:25:31.339Z",
+  "generatedAt": "2026-08-06T14:25:56.886Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -2080,19 +2080,6 @@
       ]
     },
     {
-      "id": "9221ee71-a62d-4a95-bd14-bf9e7feb4dad",
-      "title": "Отправка промо-email писем клиентам",
-      "date": "2026-08-06",
-      "start": "17:30",
-      "durationMin": 210,
-      "members": [
-        {
-          "name": "Вова",
-          "color": "#84cc16"
-        }
-      ]
-    },
-    {
       "id": "d6140bc8-e906-40a6-938d-e4ab3f26209f",
       "title": "Paddle",
       "date": "2026-08-06",
@@ -2184,6 +2171,19 @@
       "date": "2026-08-07",
       "start": "15:00",
       "durationMin": 30,
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        }
+      ]
+    },
+    {
+      "id": "9221ee71-a62d-4a95-bd14-bf9e7feb4dad",
+      "title": "Отправка промо-email писем клиентам",
+      "date": "2026-08-07",
+      "start": "15:30",
+      "durationMin": 210,
       "members": [
         {
           "name": "Вова",
