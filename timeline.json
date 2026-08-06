@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-06T11:21:57.162Z",
+  "generatedAt": "2026-08-06T11:59:01.504Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -2098,6 +2098,20 @@
       "date": "2026-08-06",
       "start": "17:30",
       "durationMin": 210,
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        }
+      ]
+    },
+    {
+      "id": "d6140bc8-e906-40a6-938d-e4ab3f26209f",
+      "title": "Paddle",
+      "date": "2026-08-06",
+      "start": "22:00",
+      "durationMin": 60,
+      "kind": "meeting",
       "members": [
         {
           "name": "Вова",
