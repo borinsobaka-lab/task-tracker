@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-06T08:43:09.394Z",
+  "generatedAt": "2026-08-06T09:13:27.622Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -1922,10 +1922,6 @@
       "durationMin": 540,
       "priorityColor": "#ef4444",
       "members": [
-        {
-          "name": "Вова",
-          "color": "#84cc16"
-        },
         {
           "name": "Оля",
           "color": "#f59e0b"
