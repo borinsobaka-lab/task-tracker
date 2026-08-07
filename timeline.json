@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-07T11:30:43.584Z",
+  "generatedAt": "2026-08-07T14:22:22.026Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -1376,20 +1376,6 @@
       ]
     },
     {
-      "id": "ef6edb63-af13-4547-a200-ff2315d679ec",
-      "title": "Поиск помещения",
-      "date": "2026-07-30",
-      "start": "13:30",
-      "durationMin": 60,
-      "done": true,
-      "members": [
-        {
-          "name": "Вова",
-          "color": "#84cc16"
-        }
-      ]
-    },
-    {
       "id": "67ba0e0a-6725-4966-80c4-278831e6991e",
       "title": "Заполнить цены по таблице оборудования",
       "date": "2026-07-30",
@@ -2117,6 +2103,7 @@
       "date": "2026-08-07",
       "start": "15:00",
       "durationMin": 30,
+      "done": true,
       "members": [
         {
           "name": "Вова",
@@ -2225,6 +2212,19 @@
       "start": "10:00",
       "durationMin": 840,
       "priorityColor": "#ef4444",
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        }
+      ]
+    },
+    {
+      "id": "39a06e9e-0bfd-4c8f-a7ba-8afc7c89f2c2:2026-08-08",
+      "title": "Поиск помещения",
+      "date": "2026-08-08",
+      "start": "15:00",
+      "durationMin": 30,
       "members": [
         {
           "name": "Вова",
