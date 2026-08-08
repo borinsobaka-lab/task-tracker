@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-08T20:09:11.304Z",
+  "generatedAt": "2026-08-08T20:09:26.663Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -2277,6 +2277,19 @@
       "title": "Решить как вешать знак на стену",
       "date": "2026-08-09",
       "start": "14:00",
+      "durationMin": 60,
+      "members": [
+        {
+          "name": "Витя",
+          "color": "#6366f1"
+        }
+      ]
+    },
+    {
+      "id": "951e46f9-94b1-4fc3-a1df-0e5a561aefa6",
+      "title": "купить сани",
+      "date": "2026-08-09",
+      "start": "15:30",
       "durationMin": 60,
       "members": [
         {
