@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-13T07:57:23.612Z",
+  "generatedAt": "2026-08-13T08:10:08.145Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -2328,6 +2328,7 @@
       "start": "12:00",
       "durationMin": 60,
       "kind": "task",
+      "done": true,
       "members": [
         {
           "name": "Оля",
