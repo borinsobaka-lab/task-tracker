@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-14T16:15:53.119Z",
+  "generatedAt": "2026-08-14T16:15:57.824Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -2365,7 +2365,12 @@
       "date": "2026-08-14",
       "start": "17:00",
       "durationMin": 60,
-      "members": []
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        }
+      ]
     },
     {
       "id": "a56aaf34-355d-44e8-aeca-3c990d5e1c99",
