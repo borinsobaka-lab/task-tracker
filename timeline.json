@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-19T09:41:15.863Z",
+  "generatedAt": "2026-08-19T09:46:37.945Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -2017,19 +2017,6 @@
       ]
     },
     {
-      "id": "a91ddc8c-ebe6-4d8a-861f-82c8b14cc756",
-      "title": "Решить как вешать знак на стену",
-      "date": "2026-08-10",
-      "start": "14:00",
-      "durationMin": 60,
-      "members": [
-        {
-          "name": "Витя",
-          "color": "#6366f1"
-        }
-      ]
-    },
-    {
       "id": "951e46f9-94b1-4fc3-a1df-0e5a561aefa6",
       "title": "Купить сани",
       "date": "2026-08-10",
@@ -2392,6 +2379,23 @@
       "durationMin": 60,
       "priorityColor": "#ef4444",
       "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        }
+      ]
+    },
+    {
+      "id": "a91ddc8c-ebe6-4d8a-861f-82c8b14cc756",
+      "title": "Решить как вешать знак на стену",
+      "date": "2026-08-19",
+      "start": "16:30",
+      "durationMin": 60,
+      "members": [
+        {
+          "name": "Витя",
+          "color": "#6366f1"
+        },
         {
           "name": "Вова",
           "color": "#84cc16"
