@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-21T07:21:46.558Z",
+  "generatedAt": "2026-08-21T08:31:02.353Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -2426,29 +2426,12 @@
       ]
     },
     {
-      "id": "a54631a7-2725-4c98-a593-d3c4c73f12b1",
-      "title": "Созвон",
-      "date": "2026-08-21",
-      "start": "12:30",
-      "durationMin": 60,
-      "kind": "meeting",
-      "members": [
-        {
-          "name": "Вова",
-          "color": "#84cc16"
-        },
-        {
-          "name": "Настя",
-          "color": "#ec4899"
-        }
-      ]
-    },
-    {
       "id": "b95e0992-fd33-4d07-a070-1c9d7c3f07de",
       "title": "Поправить бота в Telegram, чтобы он прислал уведомления о просроченных задачах в план на день.",
       "date": "2026-08-21",
       "start": "13:30",
       "durationMin": 60,
+      "done": true,
       "priorityColor": "#eab308",
       "members": [
         {
@@ -2496,6 +2479,24 @@
         {
           "name": "Вова",
           "color": "#84cc16"
+        }
+      ]
+    },
+    {
+      "id": "a54631a7-2725-4c98-a593-d3c4c73f12b1",
+      "title": "Созвон",
+      "date": "2026-08-21",
+      "start": "17:00",
+      "durationMin": 60,
+      "kind": "meeting",
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        },
+        {
+          "name": "Настя",
+          "color": "#ec4899"
         }
       ]
     },
