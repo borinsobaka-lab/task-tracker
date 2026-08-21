@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-21T14:25:52.141Z",
+  "generatedAt": "2026-08-21T14:26:07.734Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -2401,6 +2401,18 @@
       ]
     },
     {
+      "id": "e49485a2-88de-47cd-a712-c5b396bbb3cc",
+      "title": "Дозаполнить таблицу оборудования",
+      "date": "2026-08-21",
+      "priorityColor": "#ef4444",
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        }
+      ]
+    },
+    {
       "id": "9294d746-f180-483c-be39-d9023d6a176d:2026-08-21",
       "title": "Публикация вакансии массажиста",
       "date": "2026-08-21",
@@ -2419,20 +2431,6 @@
       "durationMin": 60,
       "done": true,
       "priorityColor": "#eab308",
-      "members": [
-        {
-          "name": "Вова",
-          "color": "#84cc16"
-        }
-      ]
-    },
-    {
-      "id": "e49485a2-88de-47cd-a712-c5b396bbb3cc",
-      "title": "Дозаполнить таблицу оборудования",
-      "date": "2026-08-21",
-      "start": "13:30",
-      "durationMin": 60,
-      "priorityColor": "#ef4444",
       "members": [
         {
           "name": "Вова",
