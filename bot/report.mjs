@@ -139,15 +139,44 @@ function cardsForDate(board, key) {
   return Object.values(board.cards || {}).filter((c) => c && !c.deleted && c.date === key)
 }
 
-function fmtCardLine(card, colById) {
+/** Просроченные задачи — те же, что календарь закрепляет сверху текущего дня:
+ *  срок (дата окончания) уже прошёл, а задача не выполнена. Встречи не берём —
+ *  пропущенную встречу «доделать» нельзя. keepIds — карточки из утреннего
+ *  сообщения: их оставляем, даже если за день их доделали (зачёркнутыми). */
+export function overdueCards(board, todayKey, keepIds) {
+  const { colById } = buildIndex(board)
+  const keep = new Set(keepIds || [])
+  return Object.values(board.cards || {})
+    .filter(
+      (c) =>
+        c &&
+        !c.deleted &&
+        !!c.date &&
+        (c.endDate || c.date) < todayKey &&
+        c.kind !== 'meeting' &&
+        (statusOf(c, colById) !== 'done' || keep.has(c.id)),
+    )
+    .sort(byDate)
+}
+
+/** «дд.мм» или «дд.мм–дд.мм» для многодневной задачи. */
+function cardDateLabel(card) {
+  const end = card.endDate && card.endDate !== card.date ? `–${ddmm(card.endDate)}` : ''
+  return `${ddmm(card.date)}${end}`
+}
+
+/** opts.showDate — печатать дату карточки перед названием (для просроченных,
+ *  которые пришли с разных прошлых дней). */
+function fmtCardLine(card, colById, opts) {
   const st = statusOf(card, colById)
+  const date = opts && opts.showDate && card.date ? `<b>${cardDateLabel(card)}</b> ` : ''
   const time = card.start ? `${card.start} ` : ''
   const meeting = card.kind === 'meeting' ? '📹 ' : ''
   let title = esc(card.title || 'Без названия')
   if (st === 'done') title = `<s>${title}</s>`
   let extra = ''
   if (card.kind === 'meeting' && card.meetingUrl) extra = ` — <a href="${esc(card.meetingUrl)}">ссылка</a>`
-  return `${EMOJI[st]} ${time}${meeting}${title}${extra}`
+  return `${EMOJI[st]} ${date}${time}${meeting}${title}${extra}`
 }
 
 /** Ник в Telegram → упоминание "@ник" (добавляем @, если пользователь его не поставил). */
@@ -173,22 +202,36 @@ function byTime(a, b) {
   return as ? 1 : -1 // задачи «на весь день» (без времени) — выше
 }
 
+/** Просроченные: сначала самые давние (их забыли раньше всех), внутри дня — по времени. */
+function byDate(a, b) {
+  return (a.date || '').localeCompare(b.date || '') || byTime(a, b)
+}
+
 /** Группирует карточки по исполнителям (+ группа «Без исполнителя»), каждую по времени. */
-function groupByMember(cards, members) {
+function groupByMember(cards, members, cmp = byTime) {
   const groups = []
   for (const m of members) {
-    const list = cards.filter((c) => (c.assigneeIds || []).includes(m.id)).sort(byTime)
+    const list = cards.filter((c) => (c.assigneeIds || []).includes(m.id)).sort(cmp)
     if (list.length) groups.push({ name: m.name, nick: m.tgUsername, isMember: true, cards: list })
   }
-  const orphan = cards.filter((c) => !(c.assigneeIds || []).some((id) => members.find((m) => m.id === id))).sort(byTime)
+  const orphan = cards.filter((c) => !(c.assigneeIds || []).some((id) => members.find((m) => m.id === id))).sort(cmp)
   if (orphan.length) groups.push({ name: 'Без исполнителя', isMember: false, cards: orphan })
   return groups
 }
 
-function renderGroups(groups, colById) {
+function renderGroups(groups, colById, opts) {
   return groups
-    .map((g) => `${groupHeader(g)}\n` + g.cards.map((c) => '   ' + fmtCardLine(c, colById)).join('\n'))
+    .map((g) => `${groupHeader(g)}\n` + g.cards.map((c) => '   ' + fmtCardLine(c, colById, opts)).join('\n'))
     .join('\n\n')
+}
+
+/** Блок «Просрочено» для утреннего отчёта: задачи с прошлых дней, которые ещё не
+ *  сделаны, по каждому исполнителю. Пусто — блока нет. */
+function renderOverdue(board, todayKey, colById, members, keepIds) {
+  const cards = overdueCards(board, todayKey, keepIds)
+  if (!cards.length) return ''
+  const body = renderGroups(groupByMember(cards, members, byDate), colById, { showDate: true })
+  return `‼️ <b>Просрочено — надо закрыть:</b>\n\n${body}\n\n`
 }
 
 /** Легенда статусов под горизонтальной чертой — чтобы не выглядела частью задач. */
@@ -220,15 +263,17 @@ function renderMoved(moved) {
   return `\n\n🔀 <b>Перенесены на другой день:</b>\n` + lines.join('\n')
 }
 
-export function morningText(board, plannedIds = []) {
+export function morningText(board, plannedIds = [], overdueIds = []) {
   const { colById, members } = buildIndex(board)
   const today = dateKey(0)
   const cards = cardsForDate(board, today)
   let body
   if (cards.length === 0) body = 'На сегодня задач не запланировано 🎉'
   else body = renderGroups(groupByMember(cards, members), colById)
+  // Просроченное — сверху, как в календаре: иначе про эти задачи забывают.
+  const overdue = renderOverdue(board, today, colById, members, overdueIds)
   const moved = renderMoved(movedCards(board, plannedIds, today))
-  return `☀️ <b>Доброе утро!</b>\nЗадачи на сегодня, ${ddmm(today)}:\n\n${body}${moved}${legendBlock()}`
+  return `☀️ <b>Доброе утро!</b>\n\n${overdue}📅 <b>Задачи на сегодня, ${ddmm(today)}:</b>\n\n${body}${moved}${legendBlock()}`
 }
 
 export function eveningText(board, plannedIds = []) {
@@ -285,16 +330,18 @@ async function main() {
     // Запоминаем, какие задачи были запланированы на сегодня — чтобы позже
     // показать «перенесённые» (те, что за день переехали на другой день).
     const planned = cardsForDate(board, today).map((c) => c.id)
-    const id = await sendMessage(morningText(board, planned))
+    const overdue = overdueCards(board, today).map((c) => c.id)
+    const id = await sendMessage(morningText(board, planned, overdue))
     day.morningMsgId = id
     day.plannedIds = planned
+    day.overdueIds = overdue
     state.days[today] = day
     await ghPut(STATE, STATE_TOKEN, state, stateFile.sha)
     console.log(`Утреннее сообщение отправлено (id ${id}).`)
   } else if (MODE === 'evening') {
     const planned = day.plannedIds || []
     // Обновим утреннее сообщение финальными статусами, затем пришлём итог
-    if (day.morningMsgId) await editMessage(day.morningMsgId, morningText(board, planned))
+    if (day.morningMsgId) await editMessage(day.morningMsgId, morningText(board, planned, day.overdueIds || []))
     const id = await sendMessage(eveningText(board, planned))
     day.eveningMsgId = id
     state.days[today] = day
@@ -306,7 +353,7 @@ async function main() {
       console.log('Утреннего сообщения ещё нет — обновлять нечего.')
       return
     }
-    await editMessage(day.morningMsgId, morningText(board, day.plannedIds || []))
+    await editMessage(day.morningMsgId, morningText(board, day.plannedIds || [], day.overdueIds || []))
     console.log('Утреннее сообщение обновлено.')
   }
 }

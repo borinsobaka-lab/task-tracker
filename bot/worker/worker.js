@@ -367,13 +367,38 @@ function matchesProject(card, projectId) {
 function cardsForDateProj(board, key, projectId) {
   return cardsForDate(board, key).filter((c) => matchesProject(c, projectId))
 }
-// Карточки для отчёта: как cardsForDateProj, но без «Входящих» (роль колонки
-// 'inbox') — их бот в отчёты не пишет, это неразобранные задачи.
+// Идентификаторы колонок со статусом «Входящие» — их бот в отчёты не пишет,
+// это неразобранные задачи.
+function inboxColumnIds(board) {
+  return new Set((board.columns || []).filter((c) => c && !c.deleted && c.role === 'inbox').map((c) => c.id))
+}
+// Карточки для отчёта: как cardsForDateProj, но без «Входящих».
 function reportCards(board, key, projectId) {
-  const inboxCols = new Set(
-    (board.columns || []).filter((c) => c && !c.deleted && c.role === 'inbox').map((c) => c.id),
-  )
+  const inboxCols = inboxColumnIds(board)
   return cardsForDateProj(board, key, projectId).filter((c) => !inboxCols.has(c.columnId))
+}
+// Просроченные задачи — те же, что календарь закрепляет сверху текущего дня:
+// срок (дата окончания) уже прошёл, а задача не выполнена. Встречи не считаем —
+// пропущенную встречу «доделать» нельзя. «Входящие» так же не показываем.
+// keepIds — карточки, попавшие в утреннее сообщение: их оставляем в блоке, даже
+// когда за день их доделали (зачёркнутыми, чтобы был виден прогресс).
+export function overdueCards(board, todayKey, projectId, keepIds) {
+  const { colById } = buildIndex(board)
+  const inboxCols = inboxColumnIds(board)
+  const keep = new Set(keepIds || [])
+  return Object.values(board.cards || {})
+    .filter(
+      (c) =>
+        c &&
+        !c.deleted &&
+        !!c.date &&
+        (c.endDate || c.date) < todayKey &&
+        c.kind !== 'meeting' &&
+        (statusOf(c, colById) !== 'done' || keep.has(c.id)) &&
+        !inboxCols.has(c.columnId) &&
+        matchesProject(c, projectId),
+    )
+    .sort(byDate)
 }
 // Список целевых групп: у каждого проекта с заданным tgGroupId — своя группа.
 // Если ни у кого не задан — падаем в старый режим (один чат GROUP_CHAT_ID, все задачи).
@@ -396,15 +421,23 @@ function targetGroups(env, board) {
 function projectPrefix(group) {
   return group && group.name ? `📁 <b>${esc(group.name)}</b>\n` : ''
 }
-function fmtCardLine(card, colById) {
+// opts.showDate — печатать дату карточки перед названием (для просроченных,
+// которые пришли с разных прошлых дней). Многодневная задача — «дд.мм–дд.мм».
+function fmtCardLine(card, colById, opts) {
   const st = statusOf(card, colById)
+  const date = opts && opts.showDate && card.date ? `<b>${cardDateLabel(card)}</b> ` : ''
   const time = card.start ? `${card.start} ` : ''
   const meeting = card.kind === 'meeting' ? '📹 ' : ''
   let title = esc(card.title || 'Без названия')
   if (st === 'done') title = `<s>${title}</s>`
   let extra = ''
   if (card.kind === 'meeting' && card.meetingUrl) extra = ` — <a href="${esc(card.meetingUrl)}">ссылка</a>`
-  return `${EMOJI[st]} ${time}${meeting}${title}${extra}`
+  return `${EMOJI[st]} ${date}${time}${meeting}${title}${extra}`
+}
+// «дд.мм» или «дд.мм–дд.мм» для многодневной задачи.
+function cardDateLabel(card) {
+  const end = card.endDate && card.endDate !== card.date ? `–${ddmm(card.endDate)}` : ''
+  return `${ddmm(card.date)}${end}`
 }
 function tgHandle(raw) {
   const n = String(raw || '').trim()
@@ -423,18 +456,32 @@ function byTime(a, b) {
   if (!as && !bs) return (a.title || '').localeCompare(b.title || '', 'ru')
   return as ? 1 : -1
 }
-function groupByMember(cards, members) {
+// Для просроченных: сначала самые давние (их забыли раньше всех), внутри дня — по времени.
+function byDate(a, b) {
+  return (a.date || '').localeCompare(b.date || '') || byTime(a, b)
+}
+function groupByMember(cards, members, cmp = byTime) {
   const groups = []
   for (const m of members) {
-    const list = cards.filter((c) => (c.assigneeIds || []).includes(m.id)).sort(byTime)
+    const list = cards.filter((c) => (c.assigneeIds || []).includes(m.id)).sort(cmp)
     if (list.length) groups.push({ name: m.name, nick: m.tgUsername, isMember: true, cards: list })
   }
-  const orphan = cards.filter((c) => !(c.assigneeIds || []).some((id) => members.find((m) => m.id === id))).sort(byTime)
+  const orphan = cards.filter((c) => !(c.assigneeIds || []).some((id) => members.find((m) => m.id === id))).sort(cmp)
   if (orphan.length) groups.push({ name: 'Без исполнителя', isMember: false, cards: orphan })
   return groups
 }
-function renderGroups(groups, colById) {
-  return groups.map((g) => `${groupHeader(g)}\n` + g.cards.map((c) => '   ' + fmtCardLine(c, colById)).join('\n')).join('\n\n')
+function renderGroups(groups, colById, opts) {
+  return groups
+    .map((g) => `${groupHeader(g)}\n` + g.cards.map((c) => '   ' + fmtCardLine(c, colById, opts)).join('\n'))
+    .join('\n\n')
+}
+// Блок «Просрочено» для утреннего отчёта: задачи с прошлых дней, которые ещё не
+// сделаны, по каждому исполнителю. Пусто — блока нет.
+function renderOverdue(board, todayKey, projectId, colById, members, keepIds) {
+  const cards = overdueCards(board, todayKey, projectId, keepIds)
+  if (!cards.length) return ''
+  const body = renderGroups(groupByMember(cards, members, byDate), colById, { showDate: true })
+  return `‼️ <b>Просрочено — надо закрыть:</b>\n\n${body}\n\n`
 }
 function legendBlock() {
   return `\n\n${HR}\n<i>${EMOJI.todo} нужно сделать · ${EMOJI.doing} в работе · ${EMOJI.review} на проверке · ${EMOJI.done} готово</i>`
@@ -461,13 +508,15 @@ function renderMoved(moved) {
 }
 // group = { chatId, projectId, name }. projectId==null и name=='' — «общий» режим
 // (старое поведение, все задачи, без строки с названием проекта).
-export function morningText(env, board, group = { projectId: null, name: '' }, plannedIds = []) {
+export function morningText(env, board, group = { projectId: null, name: '' }, plannedIds = [], overdueIds = []) {
   const { colById, members } = buildIndex(board)
   const today = dateKey(env, 0)
   const cards = reportCards(board, today, group.projectId)
   const body = cards.length === 0 ? 'На сегодня задач не запланировано 🎉' : renderGroups(groupByMember(cards, members), colById)
+  // Просроченное — сверху, как в календаре: иначе про эти задачи забывают.
+  const overdue = renderOverdue(board, today, group.projectId, colById, members, overdueIds)
   const moved = renderMoved(movedCards(board, plannedIds, today))
-  return `${projectPrefix(group)}☀️ <b>Доброе утро!</b>\nЗадачи на сегодня, ${ddmm(today)}:\n\n${body}${moved}${legendBlock()}`
+  return `${projectPrefix(group)}☀️ <b>Доброе утро!</b>\n\n${overdue}📅 <b>Задачи на сегодня, ${ddmm(today)}:</b>\n\n${body}${moved}${legendBlock()}`
 }
 export function eveningText(env, board, group = { projectId: null, name: '' }, plannedIds = []) {
   const { colById, members } = buildIndex(board)
@@ -556,10 +605,12 @@ export async function runGroupReport(env, board) {
           continue
         }
         const planned = reportCards(board, today, group.projectId).map((c) => c.id)
-        const id = await sendGroup(env, group.chatId, morningText(env, board, group, planned))
+        const overdue = overdueCards(board, today, group.projectId).map((c) => c.id)
+        const id = await sendGroup(env, group.chatId, morningText(env, board, group, planned, overdue))
         if (id) {
           day.morningMsgId = id
           day.plannedIds = planned
+          day.overdueIds = overdue
           gs.morningDate = today
           await putMarker(`sent/morning/${group.chatId}/${today}`, 100000) // ≈ 28 часов
           await persist()
@@ -575,7 +626,7 @@ export async function runGroupReport(env, board) {
           continue
         }
         const planned = day.plannedIds || []
-        if (day.morningMsgId) await editGroup(env, group.chatId, day.morningMsgId, morningText(env, board, group, planned))
+        if (day.morningMsgId) await editGroup(env, group.chatId, day.morningMsgId, morningText(env, board, group, planned, day.overdueIds || []))
         const id = await sendGroup(env, group.chatId, eveningText(env, board, group, planned))
         if (id) {
           day.eveningMsgId = id
@@ -588,7 +639,7 @@ export async function runGroupReport(env, board) {
 
       // Днём — обновляем утреннее сообщение под текущие статусы (идемпотентно, без записи в KV)
       if (gs.morningDate === today && day.morningMsgId && nowHM >= morning && nowHM < evening) {
-        await editGroup(env, group.chatId, day.morningMsgId, morningText(env, board, group, day.plannedIds || []))
+        await editGroup(env, group.chatId, day.morningMsgId, morningText(env, board, group, day.plannedIds || [], day.overdueIds || []))
       }
     } catch (e) {
       console.log('group report failed for', group.chatId, (e && e.message) || e)
