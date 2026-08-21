@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-21T06:34:18.078Z",
+  "generatedAt": "2026-08-21T06:34:32.303Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -2331,6 +2331,7 @@
       "date": "2026-08-19",
       "start": "16:30",
       "durationMin": 60,
+      "done": true,
       "members": [
         {
           "name": "Витя",
