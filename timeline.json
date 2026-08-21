@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-21T08:31:14.167Z",
+  "generatedAt": "2026-08-21T08:31:18.456Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -2328,20 +2328,6 @@
       ]
     },
     {
-      "id": "e49485a2-88de-47cd-a712-c5b396bbb3cc",
-      "title": "Дозаполнить таблицу оборудования",
-      "date": "2026-08-19",
-      "start": "15:30",
-      "durationMin": 60,
-      "priorityColor": "#ef4444",
-      "members": [
-        {
-          "name": "Вова",
-          "color": "#84cc16"
-        }
-      ]
-    },
-    {
       "id": "a91ddc8c-ebe6-4d8a-861f-82c8b14cc756",
       "title": "Решить как вешать знак на стену + печатники",
       "date": "2026-08-19",
@@ -2433,6 +2419,20 @@
       "durationMin": 60,
       "done": true,
       "priorityColor": "#eab308",
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        }
+      ]
+    },
+    {
+      "id": "e49485a2-88de-47cd-a712-c5b396bbb3cc",
+      "title": "Дозаполнить таблицу оборудования",
+      "date": "2026-08-21",
+      "start": "13:30",
+      "durationMin": 60,
+      "priorityColor": "#ef4444",
       "members": [
         {
           "name": "Вова",
