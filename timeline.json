@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-21T06:10:14.223Z",
+  "generatedAt": "2026-08-21T06:26:41.655Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -2066,20 +2066,6 @@
       ]
     },
     {
-      "id": "39a06e9e-0bfd-4c8f-a7ba-8afc7c89f2c2:2026-08-12",
-      "title": "Поиск помещения",
-      "date": "2026-08-12",
-      "start": "15:00",
-      "durationMin": 30,
-      "done": true,
-      "members": [
-        {
-          "name": "Вова",
-          "color": "#84cc16"
-        }
-      ]
-    },
-    {
       "id": "6f2a4bfa-518d-43c7-83e9-dd154838e037",
       "title": "Оплата ИП Грузии и декларации",
       "date": "2026-08-13",
@@ -2430,6 +2416,7 @@
       "date": "2026-08-20",
       "start": "15:00",
       "durationMin": 30,
+      "done": true,
       "members": [
         {
           "name": "Вова",
@@ -2466,6 +2453,19 @@
       "start": "14:30",
       "durationMin": 60,
       "priorityColor": "#ef4444",
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        }
+      ]
+    },
+    {
+      "id": "39a06e9e-0bfd-4c8f-a7ba-8afc7c89f2c2:2026-08-21",
+      "title": "Поиск помещения",
+      "date": "2026-08-21",
+      "start": "15:00",
+      "durationMin": 30,
       "members": [
         {
           "name": "Вова",
