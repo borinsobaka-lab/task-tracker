@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-21T06:28:41.147Z",
+  "generatedAt": "2026-08-21T06:28:48.745Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -2428,10 +2428,19 @@
       "id": "a54631a7-2725-4c98-a593-d3c4c73f12b1",
       "title": "Созвон",
       "date": "2026-08-21",
-      "start": "12:00",
+      "start": "12:30",
       "durationMin": 60,
       "kind": "meeting",
-      "members": []
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        },
+        {
+          "name": "Настя",
+          "color": "#ec4899"
+        }
+      ]
     },
     {
       "id": "bfc268f4-fb3c-4548-8eef-789036bdb730",
