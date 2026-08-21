@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-21T10:18:55.493Z",
+  "generatedAt": "2026-08-21T14:25:52.141Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -2459,7 +2459,7 @@
       "title": "Разработка экранов с тренировками (станционная ротация)",
       "date": "2026-08-21",
       "start": "15:30",
-      "durationMin": 360,
+      "durationMin": 510,
       "priorityColor": "#ef4444",
       "members": [
         {
