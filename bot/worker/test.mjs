@@ -2,7 +2,7 @@
 // Запуск: node bot/worker/test.mjs   (Node ≥ 20 с глобальным Web Crypto)
 
 import assert from 'node:assert/strict'
-import { verifyPassword, authNeedsAppLogin, assignedCardIds, upcomingWithin, activeMembers, morningText, eveningText, makeInboxCard } from './worker.js'
+import { verifyPassword, authNeedsAppLogin, assignedCardIds, upcomingWithin, activeMembers, morningText, eveningText, makeInboxCard, overdueCards } from './worker.js'
 
 function b64(bytes) {
   let s = ''
@@ -40,6 +40,11 @@ function wall(ms, tz) {
   }).formatToParts(new Date(ms)))
     p[x.type] = x.value
   return { date: `${p.year}-${p.month}-${p.day}`, start: `${p.hour}:${p.minute}` }
+}
+
+function ddmmOf(key) {
+  const [, m, d] = key.split('-')
+  return `${d}.${m}`
 }
 
 const tz = 'Asia/Tbilisi'
@@ -126,6 +131,71 @@ const boardInbox = {
 const mi = morningText(env, boardInbox, allGroup, [])
 assert.ok(mi.includes('Обычная задача'), 'обычная задача в отчёте')
 assert.ok(!mi.includes('Из телеграма'), 'карточка из колонки «Входящие» в отчёт НЕ попадает')
+
+// 3d) Просроченные задачи (те, что календарь закрепляет сверху дня) — в утреннем отчёте
+function shiftDays(key, days) {
+  const d = new Date(key + 'T12:00:00Z')
+  d.setUTCDate(d.getUTCDate() + days)
+  return d.toISOString().slice(0, 10)
+}
+const past = shiftDays(today, -3)
+const older = shiftDays(today, -10)
+const boardOverdue = {
+  members: [{ id: 'm1', name: 'Вова' }, { id: 'm2', name: 'Аня' }],
+  columns: [
+    { id: 'inbox', title: 'Входящие', role: 'inbox' },
+    { id: 'todo', title: 'Нужно сделать', role: 'todo' },
+    { id: 'done', title: 'Готово', role: 'done' },
+  ],
+  cards: {
+    t: { id: 't', title: 'Задача на сегодня', assigneeIds: ['m1'], columnId: 'todo', date: today },
+    o1: { id: 'o1', title: 'Забытая задача', assigneeIds: ['m1'], columnId: 'todo', date: past },
+    o2: { id: 'o2', title: 'Совсем старая', assigneeIds: ['m2'], columnId: 'todo', date: older },
+    o3: { id: 'o3', title: 'Старая доделанная', assigneeIds: ['m1'], columnId: 'done', date: past },
+    o4: { id: 'o4', title: 'Старая помеченная', assigneeIds: ['m1'], columnId: 'todo', date: past, done: true },
+    o5: { id: 'o5', title: 'Прошедшая встреча', assigneeIds: ['m1'], columnId: 'todo', date: past, kind: 'meeting' },
+    o6: { id: 'o6', title: 'Старое неразобранное', assigneeIds: ['m1'], columnId: 'inbox', date: past },
+    o7: { id: 'o7', title: 'Тянется до завтра', assigneeIds: ['m1'], columnId: 'todo', date: past, endDate: shiftDays(today, 1) },
+    o8: { id: 'o8', title: 'Удалённая старая', assigneeIds: ['m1'], columnId: 'todo', date: past, deleted: true },
+  },
+}
+assert.deepEqual(
+  overdueCards(boardOverdue, today, null).map((c) => c.id),
+  ['o2', 'o1'],
+  'просрочены только незакрытые задачи с прошлых дней, самые давние сверху',
+)
+const mo = morningText(env, boardOverdue, allGroup, [])
+assert.ok(mo.includes('Просрочено'), 'в утреннем отчёте есть блок просроченного')
+assert.ok(mo.indexOf('Просрочено') < mo.indexOf('Задачи на сегодня'), 'просроченное — выше задач на день')
+assert.ok(mo.includes('Забытая задача'), 'просроченная задача попала в отчёт')
+assert.ok(mo.includes('Совсем старая'), 'просроченная задача второго участника попала в отчёт')
+assert.ok(mo.includes(ddmmOf(past)), 'у просроченной задачи видна её дата')
+assert.ok(!mo.includes('Старая доделанная'), 'закрытая через колонку «Готово» не считается просроченной')
+assert.ok(!mo.includes('Старая помеченная'), 'отмеченная выполненной не считается просроченной')
+assert.ok(!mo.includes('Прошедшая встреча'), 'прошедшая встреча не просрочена — её не доделать')
+assert.ok(!mo.includes('Старое неразобранное'), '«Входящие» в блок просроченного не идут')
+assert.ok(!mo.includes('Тянется до завтра'), 'многодневная задача, идущая по сегодня, ещё не просрочена')
+assert.ok(!mo.includes('Удалённая старая'), 'удалённая карточка не просрочена')
+assert.ok(mo.includes('Задача на сегодня'), 'задачи дня остались на месте')
+
+// Доска без просрочки — блока нет вовсе
+assert.ok(!morningText(env, boardToday, allGroup, []).includes('Просрочено'), 'нет просрочки — нет и блока')
+
+// keepIds: задачу из утреннего сообщения доделали — она остаётся, но зачёркнутой
+const closed = JSON.parse(JSON.stringify(boardOverdue))
+closed.cards.o1.done = true
+const moClosed = morningText(env, closed, allGroup, [], ['o1'])
+assert.ok(moClosed.includes('<s>Забытая задача</s>'), 'доделанная за день просрочка остаётся зачёркнутой')
+assert.ok(!morningText(env, closed, allGroup, []).includes('Забытая задача'), 'без keepIds доделанная просрочка уходит из блока')
+
+// Режим проектов: чужая просрочка в группу не попадает
+const boardOverdueProj = JSON.parse(JSON.stringify(boardOverdue))
+boardOverdueProj.projects = [{ id: 'proj-1', name: 'Альфа' }, { id: 'proj-2', name: 'Бета' }]
+boardOverdueProj.cards.o1.projectId = 'proj-1'
+boardOverdueProj.cards.o2.projectId = 'proj-2'
+const moAlpha = morningText(env, boardOverdueProj, alpha, [])
+assert.ok(moAlpha.includes('Забытая задача'), 'просрочка своего проекта в группе проекта')
+assert.ok(!moAlpha.includes('Совсем старая'), 'чужая просрочка в группу проекта не идёт')
 
 // 4) Форма задачи, созданной ботом из Telegram
 const card = makeInboxCard('  Купить корм  ', 'inbox', '2026-07-19T10:00:00.000Z', 'id1')
