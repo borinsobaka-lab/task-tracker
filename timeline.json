@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-23T05:51:48.363Z",
+  "generatedAt": "2026-08-23T05:52:05.064Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -2133,20 +2133,6 @@
       ]
     },
     {
-      "id": "39a06e9e-0bfd-4c8f-a7ba-8afc7c89f2c2:2026-08-14",
-      "title": "Поиск помещения",
-      "date": "2026-08-14",
-      "start": "15:00",
-      "durationMin": 30,
-      "done": true,
-      "members": [
-        {
-          "name": "Вова",
-          "color": "#84cc16"
-        }
-      ]
-    },
-    {
       "id": "c1261043-958d-4a30-b86b-ff1e2f70c1a5:2026-08-12",
       "title": "Отправка промо-push сообщений клиентам",
       "date": "2026-08-14",
@@ -2179,20 +2165,6 @@
         {
           "name": "Витя",
           "color": "#6366f1"
-        }
-      ]
-    },
-    {
-      "id": "39a06e9e-0bfd-4c8f-a7ba-8afc7c89f2c2:2026-08-15",
-      "title": "Поиск помещения",
-      "date": "2026-08-15",
-      "start": "15:00",
-      "durationMin": 30,
-      "done": true,
-      "members": [
-        {
-          "name": "Вова",
-          "color": "#84cc16"
         }
       ]
     },
@@ -2540,6 +2512,21 @@
       "date": "2026-08-22",
       "start": "15:00",
       "durationMin": 30,
+      "done": true,
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        }
+      ]
+    },
+    {
+      "id": "39a06e9e-0bfd-4c8f-a7ba-8afc7c89f2c2:2026-08-23",
+      "title": "Поиск помещения",
+      "date": "2026-08-23",
+      "start": "15:00",
+      "durationMin": 30,
+      "done": true,
       "members": [
         {
           "name": "Вова",
@@ -2573,6 +2560,19 @@
         {
           "name": "Настя",
           "color": "#ec4899"
+        }
+      ]
+    },
+    {
+      "id": "39a06e9e-0bfd-4c8f-a7ba-8afc7c89f2c2:2026-08-24",
+      "title": "Поиск помещения",
+      "date": "2026-08-24",
+      "start": "15:00",
+      "durationMin": 30,
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
         }
       ]
     },
