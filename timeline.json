@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-25T10:08:37.166Z",
+  "generatedAt": "2026-08-25T15:31:10.814Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -2346,6 +2346,7 @@
       "id": "e49485a2-88de-47cd-a712-c5b396bbb3cc",
       "title": "Дозаполнить таблицу оборудования",
       "date": "2026-08-21",
+      "done": true,
       "priorityColor": "#ef4444",
       "members": [
         {
@@ -2594,6 +2595,14 @@
           "color": "#84cc16"
         }
       ]
+    },
+    {
+      "id": "c1bc0eed-d2f1-4523-b9fa-dc36ff7cc412",
+      "title": "Без названия",
+      "date": "2026-08-26",
+      "start": "12:00",
+      "durationMin": 60,
+      "members": []
     },
     {
       "id": "c1261043-958d-4a30-b86b-ff1e2f70c1a5:2026-08-27",
