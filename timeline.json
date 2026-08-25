@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-25T15:37:07.917Z",
+  "generatedAt": "2026-08-25T15:37:12.775Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -2616,6 +2616,7 @@
       "date": "2026-08-26",
       "start": "14:00",
       "durationMin": 60,
+      "priorityColor": "#eab308",
       "members": [
         {
           "name": "Витя",
