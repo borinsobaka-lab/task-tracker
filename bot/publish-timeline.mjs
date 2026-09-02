@@ -64,7 +64,7 @@ export function buildTimeline(board) {
       members: (c.assigneeIds || [])
         .map((id) => memberById.get(id))
         .filter(Boolean)
-        .map((m) => ({ name: m.name, color: m.color })),
+        .map((m) => ({ id: m.id, name: m.name, color: m.color })),
     }))
     .sort((a, b) => (a.date + (a.start || '')).localeCompare(b.date + (b.start || '')))
   return { items }

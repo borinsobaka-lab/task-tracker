@@ -44,11 +44,18 @@
             android:textColor="#6B7280"
             android:textSize="14sp" />
 
-        <!-- Распорка, чтобы кнопки ушли вправо -->
+        <!-- Чьи задачи показаны (участник, выбранный в приложении). Заодно
+             распорка: занимает всё свободное место, кнопки уходят вправо. -->
         <TextView
+            android:id="@+id/widget_who"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1" />
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:textColor="#6B7280"
+            android:textSize="13sp" />
 
         <ImageView
             android:id="@+id/widget_add"

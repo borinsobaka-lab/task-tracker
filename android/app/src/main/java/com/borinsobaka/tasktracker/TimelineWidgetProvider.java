@@ -14,7 +14,10 @@ import android.widget.RemoteViews;
 
 import java.util.Calendar;
 
-/** Виджет-таймлайн на рабочем столе: список задач из публичного timeline.json. */
+/**
+ * Виджет-таймлайн на рабочем столе: задачи из публичного timeline.json — только
+ * те, что назначены на участника, выбранного в приложении («Кто вы?»).
+ */
 public class TimelineWidgetProvider extends AppWidgetProvider {
 
     static final String ACTION_REFRESH = "com.borinsobaka.tasktracker.ACTION_REFRESH"; // тихо перечитать список
@@ -30,7 +33,16 @@ public class TimelineWidgetProvider extends AppWidgetProvider {
     }
 
     private static int todayCount(Context ctx) {
-        return ctx.getSharedPreferences("widget", Context.MODE_PRIVATE).getInt("today_count", 0);
+        return WidgetPrefs.of(ctx).getInt("today_count", 0);
+    }
+
+    /** Шапка: дата, число задач на сегодня и чьи задачи показаны. */
+    private static void applyHeader(Context ctx, RemoteViews rv) {
+        int count = todayCount(ctx);
+        rv.setTextViewText(R.id.widget_today, todayLabel());
+        rv.setTextViewText(R.id.widget_today_count, count > 0 ? String.valueOf(count) : "");
+        rv.setViewVisibility(R.id.widget_today_count, count > 0 ? View.VISIBLE : View.GONE);
+        rv.setTextViewText(R.id.widget_who, WidgetPrefs.whoLabel(ctx));
     }
 
     @Override
@@ -70,14 +82,11 @@ public class TimelineWidgetProvider extends AppWidgetProvider {
                 mgr.partiallyUpdateAppWidget(id, rv);
             }
         } else if (ACTION_BAR.equals(action)) {
-            // Фабрика посчитала задачи на сегодня — обновляем число в шапке и
-            // возвращаем кнопку «Обновить» вместо крутилки.
-            int count = todayCount(ctx);
+            // Фабрика посчитала задачи на сегодня (только выбранного участника) —
+            // обновляем шапку и возвращаем кнопку «Обновить» вместо крутилки.
             for (int id : ids) {
                 RemoteViews rv = new RemoteViews(ctx.getPackageName(), R.layout.widget_timeline);
-                rv.setTextViewText(R.id.widget_today, todayLabel());
-                rv.setTextViewText(R.id.widget_today_count, count > 0 ? String.valueOf(count) : "");
-                rv.setViewVisibility(R.id.widget_today_count, count > 0 ? View.VISIBLE : View.GONE);
+                applyHeader(ctx, rv);
                 rv.setViewVisibility(R.id.widget_refreshing, View.GONE);
                 rv.setViewVisibility(R.id.widget_refresh, View.VISIBLE);
                 mgr.partiallyUpdateAppWidget(id, rv);
@@ -86,7 +95,7 @@ public class TimelineWidgetProvider extends AppWidgetProvider {
             // впереди сегодня ещё есть задачи (чтобы полоса «сейчас» между задачами
             // вовремя переходила в нужный промежуток). Когда сегодня всё позади —
             // отключаем частые обновления (экономим батарею).
-            var prefs = ctx.getSharedPreferences("widget", Context.MODE_PRIVATE);
+            var prefs = WidgetPrefs.of(ctx);
             boolean hasCurrent = prefs.getBoolean("has_current", false);
             boolean hasUpcoming = prefs.getBoolean("has_upcoming", false);
             scheduleTick(ctx, (hasCurrent || hasUpcoming) && ids.length > 0);
@@ -125,11 +134,8 @@ public class TimelineWidgetProvider extends AppWidgetProvider {
     static void updateWidget(Context ctx, AppWidgetManager mgr, int widgetId) {
         RemoteViews rv = new RemoteViews(ctx.getPackageName(), R.layout.widget_timeline);
 
-        // Шапка: сегодняшняя дата + количество задач
-        rv.setTextViewText(R.id.widget_today, todayLabel());
-        int count = todayCount(ctx);
-        rv.setTextViewText(R.id.widget_today_count, count > 0 ? String.valueOf(count) : "");
-        rv.setViewVisibility(R.id.widget_today_count, count > 0 ? View.VISIBLE : View.GONE);
+        // Шапка: сегодняшняя дата, количество задач и имя выбранного участника
+        applyHeader(ctx, rv);
         rv.setViewVisibility(R.id.widget_refreshing, View.GONE);
         rv.setViewVisibility(R.id.widget_refresh, View.VISIBLE);
 

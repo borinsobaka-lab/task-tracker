@@ -30,7 +30,7 @@ export function buildTimelineItems(store: StoreLike): TLItem[] {
       members: c.assigneeIds
         .map((id) => byId.get(id))
         .filter((m): m is Member => !!m)
-        .map((m) => ({ name: m.name, color: m.color })),
+        .map((m) => ({ id: m.id, name: m.name, color: m.color })),
     }))
     .sort((a, b) => (a.date + (a.start ?? '')).localeCompare(b.date + (b.start ?? '')))
 }

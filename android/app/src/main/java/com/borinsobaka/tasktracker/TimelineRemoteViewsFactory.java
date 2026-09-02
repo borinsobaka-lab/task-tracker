@@ -27,6 +27,8 @@ import java.util.Locale;
 
 /**
  * Наполняет список виджета данными из публичного timeline.json.
+ * Показываются задачи только того участника, который выбран в приложении
+ * («Кто вы?»): id приходит из WebView-оболочки и лежит в WidgetPrefs.
  * Сверху закреплены просроченные невыполненные задачи (красным), затем задачи
  * сегодня и далее с заголовками дней и счётчиком. У идущей сейчас задачи —
  * красная горизонтальная линия, показывающая, сколько её времени прошло.
@@ -64,6 +66,9 @@ public class TimelineRemoteViewsFactory implements RemoteViewsService.RemoteView
         boolean done;
         int color = ACCENT; // цвет полосы ответственности (исполнитель / встреча)
         long startMs, endMs;
+        // Исполнители: id (в старых снимках их нет) и имена — по ним отбираем «мои» задачи
+        final List<String> memberIds = new ArrayList<>();
+        final List<String> memberNames = new ArrayList<>();
     }
 
     private static class Row {
@@ -91,10 +96,18 @@ public class TimelineRemoteViewsFactory implements RemoteViewsService.RemoteView
         List<Item> items = load();
         String today = dayKey(now);
 
+        // Показываем задачи только выбранного в приложении участника
+        String myId = WidgetPrefs.identityId(ctx);
+        String myName = WidgetPrefs.identityName(ctx);
+        boolean canFilter = myId != null && (myName != null || hasMemberIds(items));
+        // Имя для шапки — только когда фильтр реально работает (иначе там пусто)
+        WidgetPrefs.setWhoLabel(ctx, canFilter && myName != null ? myName : "");
+
         List<Item> overdue = new ArrayList<>();
         List<Item> future = new ArrayList<>();
         boolean hasCurrent = false;
         for (Item it : items) {
+            if (canFilter && !isMine(it, myId, myName)) continue;
             boolean isMeeting = "meeting".equals(it.kind);
             if (isCurrent(it)) hasCurrent = true;
             if (isMeeting) {
@@ -123,7 +136,7 @@ public class TimelineRemoteViewsFactory implements RemoteViewsService.RemoteView
                 if (afterNow(it, today)) hasUpcoming = true;
             }
         }
-        ctx.getSharedPreferences("widget", Context.MODE_PRIVATE).edit()
+        WidgetPrefs.of(ctx).edit()
                 .putInt("today_count", todayCount)
                 .putBoolean("has_current", hasCurrent)
                 .putBoolean("has_upcoming", hasUpcoming)
@@ -187,6 +200,28 @@ public class TimelineRemoteViewsFactory implements RemoteViewsService.RemoteView
             nl.nowLine = true;
             rows.add(nl);
         }
+    }
+
+    /** Задача назначена на выбранного участника? Сверяем по id, а в старых снимках — по имени. */
+    private static boolean isMine(Item it, String myId, String myName) {
+        for (String id : it.memberIds) {
+            if (myId.equals(id)) return true;
+        }
+        // Снимок без id участников (старый формат / старый воркфлоу) — сверяем по имени
+        if (myName != null && it.memberIds.isEmpty()) {
+            for (String name : it.memberNames) {
+                if (myName.equalsIgnoreCase(name)) return true;
+            }
+        }
+        return false;
+    }
+
+    /** Есть ли в снимке id участников — без них по id отобрать нечего. */
+    private static boolean hasMemberIds(List<Item> items) {
+        for (Item it : items) {
+            if (!it.memberIds.isEmpty()) return true;
+        }
+        return false;
     }
 
     /** Задача идёт позже «сейчас»: будущий день, либо сегодняшняя ещё не начавшаяся. */
@@ -373,6 +408,16 @@ public class TimelineRemoteViewsFactory implements RemoteViewsService.RemoteView
                 it.done = o.optBoolean("done", false);
                 it.priorityColor = o.isNull("priorityColor") ? null : o.optString("priorityColor", null);
                 JSONArray mem = o.optJSONArray("members");
+                if (mem != null) {
+                    for (int m = 0; m < mem.length(); m++) {
+                        JSONObject who = mem.optJSONObject(m);
+                        if (who == null) continue;
+                        String mid = who.isNull("id") ? null : who.optString("id", null);
+                        String mname = who.isNull("name") ? null : who.optString("name", null);
+                        if (mid != null && !mid.isEmpty()) it.memberIds.add(mid);
+                        if (mname != null && !mname.isEmpty()) it.memberNames.add(mname);
+                    }
+                }
                 if ("meeting".equals(it.kind)) {
                     it.color = MEETING_COLOR;
                 } else if (mem != null && mem.length() > 0) {

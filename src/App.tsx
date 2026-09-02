@@ -22,6 +22,7 @@ import { IdentityScreen } from './components/IdentityScreen'
 import { PublicTimeline } from './components/PublicTimeline'
 import { CommentsSeenProvider } from './components/Comments'
 import { isLiveTimelineHash, parseTimelineHash } from './timelineShare'
+import { reportIdentityToNative } from './nativeBridge'
 import { buildTimelineItems, publishTimeline } from './publicTimelinePublisher'
 import type { TLItem } from './timelineShare'
 import type { Card, ID } from './types'
@@ -240,6 +241,18 @@ function Shell({ onLogout }: { onLogout: () => void }) {
       store.topUpMeetings()
     }
   }, [store])
+
+  // Кто выбран в «Кто вы?» — сообщаем Android-оболочке: виджет на рабочем столе
+  // показывает задачи только этого участника. В браузере вызов ничего не делает.
+  // Пока доска грузится (store == null) молчим, иначе виджет на секунду сбросил
+  // бы фильтр и показал чужие задачи.
+  const boardReady = !!store
+  const identityId = store?.identity?.id ?? null
+  const identityName = store?.identity?.name ?? null
+  useEffect(() => {
+    if (!boardReady) return
+    reportIdentityToNative(identityId, identityName)
+  }, [boardReady, identityId, identityName])
 
   // Диплинки из виджета Android: ...#card=<id> открывает задачу, ...#new — новая задача.
   useEffect(() => {
