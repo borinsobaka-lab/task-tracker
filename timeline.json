@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-02T21:57:27.469Z",
+  "generatedAt": "2026-09-02T21:57:31.782Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -2670,12 +2670,11 @@
       ]
     },
     {
-      "id": "eb6be22a-b151-4a71-b269-501ac4005ffb",
-      "title": "Созвон с Романом",
+      "id": "c1261043-958d-4a30-b86b-ff1e2f70c1a5:2026-08-27",
+      "title": "Отправка промо-push сообщений клиентам",
       "date": "2026-09-03",
-      "start": "13:30",
-      "durationMin": 30,
-      "kind": "meeting",
+      "start": "12:30",
+      "durationMin": 60,
       "members": [
         {
           "name": "Вова",
@@ -2684,11 +2683,12 @@
       ]
     },
     {
-      "id": "c1261043-958d-4a30-b86b-ff1e2f70c1a5:2026-08-27",
-      "title": "Отправка промо-push сообщений клиентам",
+      "id": "eb6be22a-b151-4a71-b269-501ac4005ffb",
+      "title": "Созвон с Романом",
       "date": "2026-09-03",
-      "start": "14:00",
-      "durationMin": 60,
+      "start": "13:30",
+      "durationMin": 30,
+      "kind": "meeting",
       "members": [
         {
           "name": "Вова",
