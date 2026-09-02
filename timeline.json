@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-02T18:09:41.562Z",
+  "generatedAt": "2026-09-02T18:15:47.024Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -2642,12 +2642,12 @@
       ]
     },
     {
-      "id": "8f64e5c2-7d2e-40c1-a300-b89e960f7ac3",
-      "title": "Созвон с Гришей",
+      "id": "c1bc0eed-d2f1-4523-b9fa-dc36ff7cc412",
+      "title": "Поиск остатка желтого оборудования из таблицы в Грузии.",
       "date": "2026-09-03",
-      "start": "10:30",
-      "durationMin": 60,
-      "kind": "meeting",
+      "start": "11:00",
+      "durationMin": 150,
+      "priorityColor": "#ef4444",
       "members": [
         {
           "name": "Вова",
@@ -2656,12 +2656,12 @@
       ]
     },
     {
-      "id": "c1bc0eed-d2f1-4523-b9fa-dc36ff7cc412",
-      "title": "Поиск остатка желтого оборудования из таблицы в Грузии.",
+      "id": "8f64e5c2-7d2e-40c1-a300-b89e960f7ac3",
+      "title": "Созвон с Гришей",
       "date": "2026-09-03",
-      "start": "11:00",
-      "durationMin": 150,
-      "priorityColor": "#ef4444",
+      "start": "11:30",
+      "durationMin": 60,
+      "kind": "meeting",
       "members": [
         {
           "name": "Вова",
