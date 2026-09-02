@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-02T18:18:27.190Z",
+  "generatedAt": "2026-09-02T18:18:48.138Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -2660,6 +2660,20 @@
       "title": "Созвон с Гришей",
       "date": "2026-09-03",
       "start": "11:30",
+      "durationMin": 60,
+      "kind": "meeting",
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        }
+      ]
+    },
+    {
+      "id": "eb6be22a-b151-4a71-b269-501ac4005ffb",
+      "title": "Созвон с Романом",
+      "date": "2026-09-03",
+      "start": "13:30",
       "durationMin": 60,
       "kind": "meeting",
       "members": [
