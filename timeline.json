@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-02T14:00:45.567Z",
+  "generatedAt": "2026-09-02T15:48:23.722Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -2334,20 +2334,6 @@
       ]
     },
     {
-      "id": "39a06e9e-0bfd-4c8f-a7ba-8afc7c89f2c2:2026-08-25",
-      "title": "Поиск помещения",
-      "date": "2026-08-25",
-      "start": "15:00",
-      "durationMin": 30,
-      "done": true,
-      "members": [
-        {
-          "name": "Вова",
-          "color": "#84cc16"
-        }
-      ]
-    },
-    {
       "id": "20f7ce1c-75cb-4f3a-a52a-7553ebf0b08c",
       "title": "Уточнить по стоимости работ нового SMM.",
       "date": "2026-08-26",
@@ -2633,6 +2619,7 @@
       "date": "2026-09-02",
       "start": "15:00",
       "durationMin": 30,
+      "done": true,
       "members": [
         {
           "name": "Вова",
@@ -2692,6 +2679,19 @@
       "date": "2026-09-03",
       "start": "14:30",
       "durationMin": 60,
+      "members": [
+        {
+          "name": "Вова",
+          "color": "#84cc16"
+        }
+      ]
+    },
+    {
+      "id": "39a06e9e-0bfd-4c8f-a7ba-8afc7c89f2c2:2026-09-03",
+      "title": "Поиск помещения",
+      "date": "2026-09-03",
+      "start": "15:00",
+      "durationMin": 30,
       "members": [
         {
           "name": "Вова",
