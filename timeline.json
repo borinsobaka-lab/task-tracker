@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-03T00:59:25.378Z",
+  "generatedAt": "2026-09-03T00:59:29.055Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -2730,7 +2730,7 @@
       "title": "Разработка экранов с тренировками - WINDOWS (!!!!!мультиплатформа)",
       "date": "2026-09-04",
       "start": "11:00",
-      "durationMin": 60,
+      "durationMin": 150,
       "priorityColor": "#ef4444",
       "members": [
         {
