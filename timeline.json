@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-04T13:42:50.483Z",
+  "generatedAt": "2026-09-04T16:17:33.741Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -8,6 +8,7 @@
       "done": true,
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -22,6 +23,7 @@
       "kind": "meeting",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -37,6 +39,7 @@
       "priorityColor": "#ef4444",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -51,6 +54,7 @@
       "kind": "meeting",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -63,6 +67,7 @@
       "done": true,
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -77,6 +82,7 @@
       "done": true,
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -92,6 +98,7 @@
       "priorityColor": "#3b82f6",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -108,6 +115,7 @@
       "priorityColor": "#ef4444",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -123,6 +131,7 @@
       "priorityColor": "#ef4444",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -138,6 +147,7 @@
       "priorityColor": "#22c55e",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -152,6 +162,7 @@
       "kind": "meeting",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -166,6 +177,7 @@
       "kind": "meeting",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -178,6 +190,7 @@
       "done": true,
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -193,6 +206,7 @@
       "priorityColor": "#ef4444",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -208,6 +222,7 @@
       "priorityColor": "#22c55e",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -223,6 +238,7 @@
       "priorityColor": "#eab308",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -238,6 +254,7 @@
       "priorityColor": "#3b82f6",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -252,6 +269,7 @@
       "kind": "meeting",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -264,6 +282,7 @@
       "done": true,
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -276,6 +295,7 @@
       "done": true,
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -288,6 +308,7 @@
       "done": true,
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -301,6 +322,7 @@
       "priorityColor": "#eab308",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -315,6 +337,7 @@
       "kind": "meeting",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -329,6 +352,7 @@
       "kind": "meeting",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -341,6 +365,7 @@
       "done": true,
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -356,6 +381,7 @@
       "priorityColor": "#ef4444",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -371,6 +397,7 @@
       "priorityColor": "#ef4444",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -387,6 +414,7 @@
       "priorityColor": "#ef4444",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -402,6 +430,7 @@
       "priorityColor": "#ef4444",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -417,6 +446,7 @@
       "priorityColor": "#ef4444",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -432,6 +462,7 @@
       "priorityColor": "#22c55e",
       "members": [
         {
+          "id": "4e018f91-dee4-4006-9a63-6f48b46a3d2d",
           "name": "Настя",
           "color": "#ec4899"
         }
@@ -447,6 +478,7 @@
       "priorityColor": "#ef4444",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -461,6 +493,7 @@
       "kind": "meeting",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -476,6 +509,7 @@
       "priorityColor": "#ef4444",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -490,6 +524,7 @@
       "kind": "meeting",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -504,6 +539,7 @@
       "kind": "meeting",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -518,6 +554,7 @@
       "kind": "meeting",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -532,6 +569,7 @@
       "kind": "meeting",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -547,6 +585,7 @@
       "priorityColor": "#ef4444",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -562,6 +601,7 @@
       "priorityColor": "#eab308",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -576,6 +616,7 @@
       "kind": "meeting",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -588,6 +629,7 @@
       "done": true,
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -600,6 +642,7 @@
       "done": true,
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -613,6 +656,7 @@
       "priorityColor": "#ef4444",
       "members": [
         {
+          "id": "4e018f91-dee4-4006-9a63-6f48b46a3d2d",
           "name": "Настя",
           "color": "#ec4899"
         }
@@ -629,6 +673,7 @@
       "priorityColor": "#eab308",
       "members": [
         {
+          "id": "4e018f91-dee4-4006-9a63-6f48b46a3d2d",
           "name": "Настя",
           "color": "#ec4899"
         }
@@ -643,6 +688,7 @@
       "kind": "meeting",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -656,6 +702,7 @@
       "priorityColor": "#eab308",
       "members": [
         {
+          "id": "4e018f91-dee4-4006-9a63-6f48b46a3d2d",
           "name": "Настя",
           "color": "#ec4899"
         }
@@ -670,6 +717,7 @@
       "priorityColor": "#eab308",
       "members": [
         {
+          "id": "4e018f91-dee4-4006-9a63-6f48b46a3d2d",
           "name": "Настя",
           "color": "#ec4899"
         }
@@ -684,6 +732,7 @@
       "kind": "meeting",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -699,6 +748,7 @@
       "priorityColor": "#ef4444",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -713,6 +763,7 @@
       "kind": "meeting",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -727,6 +778,7 @@
       "kind": "meeting",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -742,6 +794,7 @@
       "priorityColor": "#ef4444",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -756,6 +809,7 @@
       "kind": "meeting",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -771,6 +825,7 @@
       "priorityColor": "#ef4444",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -786,6 +841,7 @@
       "priorityColor": "#eab308",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -801,6 +857,7 @@
       "priorityColor": "#ef4444",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -816,6 +873,7 @@
       "priorityColor": "#ef4444",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -831,6 +889,7 @@
       "priorityColor": "#ef4444",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -843,6 +902,7 @@
       "done": true,
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -855,6 +915,7 @@
       "done": true,
       "members": [
         {
+          "id": "4e018f91-dee4-4006-9a63-6f48b46a3d2d",
           "name": "Настя",
           "color": "#ec4899"
         }
@@ -869,6 +930,7 @@
       "kind": "meeting",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -883,6 +945,7 @@
       "kind": "meeting",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -898,6 +961,7 @@
       "priorityColor": "#ef4444",
       "members": [
         {
+          "id": "4e018f91-dee4-4006-9a63-6f48b46a3d2d",
           "name": "Настя",
           "color": "#ec4899"
         }
@@ -912,6 +976,7 @@
       "kind": "meeting",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -927,6 +992,7 @@
       "priorityColor": "#ef4444",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -942,10 +1008,12 @@
       "priorityColor": "#ef4444",
       "members": [
         {
+          "id": "4e018f91-dee4-4006-9a63-6f48b46a3d2d",
           "name": "Настя",
           "color": "#ec4899"
         },
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -960,6 +1028,7 @@
       "done": true,
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -975,6 +1044,7 @@
       "priorityColor": "#ef4444",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -990,6 +1060,7 @@
       "priorityColor": "#ef4444",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -1006,6 +1077,7 @@
       "priorityColor": "#eab308",
       "members": [
         {
+          "id": "4e018f91-dee4-4006-9a63-6f48b46a3d2d",
           "name": "Настя",
           "color": "#ec4899"
         }
@@ -1021,6 +1093,7 @@
       "priorityColor": "#ef4444",
       "members": [
         {
+          "id": "4e018f91-dee4-4006-9a63-6f48b46a3d2d",
           "name": "Настя",
           "color": "#ec4899"
         }
@@ -1035,6 +1108,7 @@
       "kind": "meeting",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -1050,6 +1124,7 @@
       "priorityColor": "#3b82f6",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -1065,6 +1140,7 @@
       "priorityColor": "#ef4444",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -1077,6 +1153,7 @@
       "done": true,
       "members": [
         {
+          "id": "4e018f91-dee4-4006-9a63-6f48b46a3d2d",
           "name": "Настя",
           "color": "#ec4899"
         }
@@ -1090,6 +1167,7 @@
       "priorityColor": "#eab308",
       "members": [
         {
+          "id": "4e018f91-dee4-4006-9a63-6f48b46a3d2d",
           "name": "Настя",
           "color": "#ec4899"
         }
@@ -1105,6 +1183,7 @@
       "priorityColor": "#ef4444",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -1120,6 +1199,7 @@
       "priorityColor": "#ef4444",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -1134,6 +1214,7 @@
       "done": true,
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -1149,14 +1230,17 @@
       "priorityColor": "#ef4444",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         },
         {
+          "id": "83d23fdb-962e-4265-ae13-e9090a58dc69",
           "name": "Оля",
           "color": "#f59e0b"
         },
         {
+          "id": "cf4dd8bc-12e0-4cf7-8115-a7667b80e91b",
           "name": "Витя",
           "color": "#6366f1"
         }
@@ -1173,6 +1257,7 @@
       "priorityColor": "#ef4444",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -1188,6 +1273,7 @@
       "priorityColor": "#ef4444",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -1200,6 +1286,7 @@
       "done": true,
       "members": [
         {
+          "id": "4e018f91-dee4-4006-9a63-6f48b46a3d2d",
           "name": "Настя",
           "color": "#ec4899"
         }
@@ -1215,6 +1302,7 @@
       "priorityColor": "#ef4444",
       "members": [
         {
+          "id": "4e018f91-dee4-4006-9a63-6f48b46a3d2d",
           "name": "Настя",
           "color": "#ec4899"
         }
@@ -1230,6 +1318,7 @@
       "priorityColor": "#ef4444",
       "members": [
         {
+          "id": "4e018f91-dee4-4006-9a63-6f48b46a3d2d",
           "name": "Настя",
           "color": "#ec4899"
         }
@@ -1243,6 +1332,7 @@
       "priorityColor": "#ef4444",
       "members": [
         {
+          "id": "4e018f91-dee4-4006-9a63-6f48b46a3d2d",
           "name": "Настя",
           "color": "#ec4899"
         }
@@ -1264,6 +1354,7 @@
       "priorityColor": "#ef4444",
       "members": [
         {
+          "id": "4e018f91-dee4-4006-9a63-6f48b46a3d2d",
           "name": "Настя",
           "color": "#ec4899"
         }
@@ -1279,14 +1370,17 @@
       "priorityColor": "#ef4444",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         },
         {
+          "id": "83d23fdb-962e-4265-ae13-e9090a58dc69",
           "name": "Оля",
           "color": "#f59e0b"
         },
         {
+          "id": "cf4dd8bc-12e0-4cf7-8115-a7667b80e91b",
           "name": "Витя",
           "color": "#6366f1"
         }
@@ -1302,10 +1396,12 @@
       "priorityColor": "#ef4444",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         },
         {
+          "id": "83d23fdb-962e-4265-ae13-e9090a58dc69",
           "name": "Оля",
           "color": "#f59e0b"
         }
@@ -1320,6 +1416,7 @@
       "done": true,
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -1334,6 +1431,7 @@
       "kind": "meeting",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -1346,10 +1444,12 @@
       "done": true,
       "members": [
         {
+          "id": "4e018f91-dee4-4006-9a63-6f48b46a3d2d",
           "name": "Настя",
           "color": "#ec4899"
         },
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -1362,6 +1462,7 @@
       "done": true,
       "members": [
         {
+          "id": "4e018f91-dee4-4006-9a63-6f48b46a3d2d",
           "name": "Настя",
           "color": "#ec4899"
         }
@@ -1374,6 +1475,7 @@
       "done": true,
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -1386,6 +1488,7 @@
       "done": true,
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -1400,6 +1503,7 @@
       "kind": "meeting",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -1412,10 +1516,12 @@
       "done": true,
       "members": [
         {
+          "id": "4e018f91-dee4-4006-9a63-6f48b46a3d2d",
           "name": "Настя",
           "color": "#ec4899"
         },
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -1430,6 +1536,7 @@
       "done": true,
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -1445,6 +1552,7 @@
       "priorityColor": "#ef4444",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -1460,6 +1568,7 @@
       "priorityColor": "#ef4444",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -1472,6 +1581,7 @@
       "done": true,
       "members": [
         {
+          "id": "4e018f91-dee4-4006-9a63-6f48b46a3d2d",
           "name": "Настя",
           "color": "#ec4899"
         }
@@ -1487,6 +1597,7 @@
       "priorityColor": "#ef4444",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -1501,6 +1612,7 @@
       "priorityColor": "#ef4444",
       "members": [
         {
+          "id": "83d23fdb-962e-4265-ae13-e9090a58dc69",
           "name": "Оля",
           "color": "#f59e0b"
         }
@@ -1515,6 +1627,7 @@
       "kind": "meeting",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -1530,6 +1643,7 @@
       "priorityColor": "#ef4444",
       "members": [
         {
+          "id": "83d23fdb-962e-4265-ae13-e9090a58dc69",
           "name": "Оля",
           "color": "#f59e0b"
         }
@@ -1542,6 +1656,7 @@
       "done": true,
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -1554,6 +1669,7 @@
       "done": true,
       "members": [
         {
+          "id": "4e018f91-dee4-4006-9a63-6f48b46a3d2d",
           "name": "Настя",
           "color": "#ec4899"
         }
@@ -1569,10 +1685,12 @@
       "priorityColor": "#ef4444",
       "members": [
         {
+          "id": "83d23fdb-962e-4265-ae13-e9090a58dc69",
           "name": "Оля",
           "color": "#f59e0b"
         },
         {
+          "id": "cf4dd8bc-12e0-4cf7-8115-a7667b80e91b",
           "name": "Витя",
           "color": "#6366f1"
         }
@@ -1588,6 +1706,7 @@
       "priorityColor": "#ef4444",
       "members": [
         {
+          "id": "cf4dd8bc-12e0-4cf7-8115-a7667b80e91b",
           "name": "Витя",
           "color": "#6366f1"
         }
@@ -1603,6 +1722,7 @@
       "priorityColor": "#ef4444",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -1617,6 +1737,7 @@
       "priorityColor": "#ef4444",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -1629,6 +1750,7 @@
       "done": true,
       "members": [
         {
+          "id": "4e018f91-dee4-4006-9a63-6f48b46a3d2d",
           "name": "Настя",
           "color": "#ec4899"
         }
@@ -1644,6 +1766,7 @@
       "priorityColor": "#ef4444",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -1659,6 +1782,7 @@
       "priorityColor": "#ef4444",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -1674,6 +1798,7 @@
       "priorityColor": "#ef4444",
       "members": [
         {
+          "id": "4e018f91-dee4-4006-9a63-6f48b46a3d2d",
           "name": "Настя",
           "color": "#ec4899"
         }
@@ -1688,6 +1813,7 @@
       "kind": "meeting",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -1700,6 +1826,7 @@
       "done": true,
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -1715,6 +1842,7 @@
       "priorityColor": "#ef4444",
       "members": [
         {
+          "id": "4e018f91-dee4-4006-9a63-6f48b46a3d2d",
           "name": "Настя",
           "color": "#ec4899"
         }
@@ -1729,10 +1857,12 @@
       "kind": "meeting",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         },
         {
+          "id": "4e018f91-dee4-4006-9a63-6f48b46a3d2d",
           "name": "Настя",
           "color": "#ec4899"
         }
@@ -1747,6 +1877,7 @@
       "done": true,
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -1762,6 +1893,7 @@
       "priorityColor": "#22c55e",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -1777,6 +1909,7 @@
       "priorityColor": "#eab308",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -1789,6 +1922,7 @@
       "done": true,
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -1801,6 +1935,7 @@
       "done": true,
       "members": [
         {
+          "id": "4e018f91-dee4-4006-9a63-6f48b46a3d2d",
           "name": "Настя",
           "color": "#ec4899"
         }
@@ -1813,6 +1948,7 @@
       "done": true,
       "members": [
         {
+          "id": "4e018f91-dee4-4006-9a63-6f48b46a3d2d",
           "name": "Настя",
           "color": "#ec4899"
         }
@@ -1826,6 +1962,7 @@
       "durationMin": 60,
       "members": [
         {
+          "id": "83d23fdb-962e-4265-ae13-e9090a58dc69",
           "name": "Оля",
           "color": "#f59e0b"
         }
@@ -1838,6 +1975,7 @@
       "done": true,
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -1850,6 +1988,7 @@
       "done": true,
       "members": [
         {
+          "id": "4e018f91-dee4-4006-9a63-6f48b46a3d2d",
           "name": "Настя",
           "color": "#ec4899"
         }
@@ -1864,6 +2003,7 @@
       "done": true,
       "members": [
         {
+          "id": "cf4dd8bc-12e0-4cf7-8115-a7667b80e91b",
           "name": "Витя",
           "color": "#6366f1"
         }
@@ -1876,6 +2016,7 @@
       "done": true,
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -1891,10 +2032,12 @@
       "done": true,
       "members": [
         {
+          "id": "83d23fdb-962e-4265-ae13-e9090a58dc69",
           "name": "Оля",
           "color": "#f59e0b"
         },
         {
+          "id": "cf4dd8bc-12e0-4cf7-8115-a7667b80e91b",
           "name": "Витя",
           "color": "#6366f1"
         }
@@ -1907,6 +2050,7 @@
       "done": true,
       "members": [
         {
+          "id": "4e018f91-dee4-4006-9a63-6f48b46a3d2d",
           "name": "Настя",
           "color": "#ec4899"
         }
@@ -1919,6 +2063,7 @@
       "done": true,
       "members": [
         {
+          "id": "4e018f91-dee4-4006-9a63-6f48b46a3d2d",
           "name": "Настя",
           "color": "#ec4899"
         }
@@ -1933,6 +2078,7 @@
       "done": true,
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -1945,6 +2091,7 @@
       "done": true,
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -1959,6 +2106,7 @@
       "done": true,
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -1973,6 +2121,7 @@
       "done": true,
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -1987,6 +2136,7 @@
       "done": true,
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -2001,6 +2151,7 @@
       "done": true,
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -2012,6 +2163,7 @@
       "date": "2026-08-15",
       "members": [
         {
+          "id": "4e018f91-dee4-4006-9a63-6f48b46a3d2d",
           "name": "Настя",
           "color": "#ec4899"
         }
@@ -2024,6 +2176,7 @@
       "done": true,
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -2036,6 +2189,7 @@
       "done": true,
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -2048,6 +2202,7 @@
       "done": true,
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -2062,14 +2217,17 @@
       "kind": "meeting",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         },
         {
+          "id": "83d23fdb-962e-4265-ae13-e9090a58dc69",
           "name": "Оля",
           "color": "#f59e0b"
         },
         {
+          "id": "cf4dd8bc-12e0-4cf7-8115-a7667b80e91b",
           "name": "Витя",
           "color": "#6366f1"
         }
@@ -2084,10 +2242,12 @@
       "done": true,
       "members": [
         {
+          "id": "cf4dd8bc-12e0-4cf7-8115-a7667b80e91b",
           "name": "Витя",
           "color": "#6366f1"
         },
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -2100,6 +2260,7 @@
       "done": true,
       "members": [
         {
+          "id": "4e018f91-dee4-4006-9a63-6f48b46a3d2d",
           "name": "Настя",
           "color": "#ec4899"
         }
@@ -2112,6 +2273,7 @@
       "done": true,
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -2126,10 +2288,12 @@
       "kind": "meeting",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         },
         {
+          "id": "4e018f91-dee4-4006-9a63-6f48b46a3d2d",
           "name": "Настя",
           "color": "#ec4899"
         }
@@ -2143,6 +2307,7 @@
       "priorityColor": "#ef4444",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -2155,6 +2320,7 @@
       "done": true,
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -2170,6 +2336,7 @@
       "priorityColor": "#eab308",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -2184,14 +2351,17 @@
       "kind": "meeting",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         },
         {
+          "id": "83d23fdb-962e-4265-ae13-e9090a58dc69",
           "name": "Оля",
           "color": "#f59e0b"
         },
         {
+          "id": "cf4dd8bc-12e0-4cf7-8115-a7667b80e91b",
           "name": "Витя",
           "color": "#6366f1"
         }
@@ -2206,10 +2376,12 @@
       "kind": "meeting",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         },
         {
+          "id": "4e018f91-dee4-4006-9a63-6f48b46a3d2d",
           "name": "Настя",
           "color": "#ec4899"
         }
@@ -2225,6 +2397,7 @@
       "priorityColor": "#ef4444",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -2240,6 +2413,7 @@
       "priorityColor": "#ef4444",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -2252,6 +2426,7 @@
       "done": true,
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -2266,10 +2441,12 @@
       "kind": "meeting",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         },
         {
+          "id": "4e018f91-dee4-4006-9a63-6f48b46a3d2d",
           "name": "Настя",
           "color": "#ec4899"
         }
@@ -2282,6 +2459,7 @@
       "done": true,
       "members": [
         {
+          "id": "4e018f91-dee4-4006-9a63-6f48b46a3d2d",
           "name": "Настя",
           "color": "#ec4899"
         }
@@ -2294,6 +2472,7 @@
       "done": true,
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -2308,14 +2487,17 @@
       "kind": "meeting",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         },
         {
+          "id": "83d23fdb-962e-4265-ae13-e9090a58dc69",
           "name": "Оля",
           "color": "#f59e0b"
         },
         {
+          "id": "cf4dd8bc-12e0-4cf7-8115-a7667b80e91b",
           "name": "Витя",
           "color": "#6366f1"
         }
@@ -2329,6 +2511,7 @@
       "durationMin": 60,
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -2343,6 +2526,7 @@
       "priorityColor": "#eab308",
       "members": [
         {
+          "id": "cf4dd8bc-12e0-4cf7-8115-a7667b80e91b",
           "name": "Витя",
           "color": "#6366f1"
         }
@@ -2357,10 +2541,12 @@
       "kind": "meeting",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         },
         {
+          "id": "4e018f91-dee4-4006-9a63-6f48b46a3d2d",
           "name": "Настя",
           "color": "#ec4899"
         }
@@ -2375,6 +2561,7 @@
       "done": true,
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -2387,6 +2574,7 @@
       "done": true,
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -2401,14 +2589,17 @@
       "kind": "meeting",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         },
         {
+          "id": "83d23fdb-962e-4265-ae13-e9090a58dc69",
           "name": "Оля",
           "color": "#f59e0b"
         },
         {
+          "id": "cf4dd8bc-12e0-4cf7-8115-a7667b80e91b",
           "name": "Витя",
           "color": "#6366f1"
         }
@@ -2423,6 +2614,7 @@
       "done": true,
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -2437,6 +2629,7 @@
       "done": true,
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -2451,6 +2644,7 @@
       "done": true,
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -2465,10 +2659,12 @@
       "kind": "meeting",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         },
         {
+          "id": "4e018f91-dee4-4006-9a63-6f48b46a3d2d",
           "name": "Настя",
           "color": "#ec4899"
         }
@@ -2483,6 +2679,7 @@
       "done": true,
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -2495,6 +2692,7 @@
       "done": true,
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -2507,6 +2705,7 @@
       "done": true,
       "members": [
         {
+          "id": "4e018f91-dee4-4006-9a63-6f48b46a3d2d",
           "name": "Настя",
           "color": "#ec4899"
         }
@@ -2519,6 +2718,7 @@
       "done": true,
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -2531,6 +2731,7 @@
       "done": true,
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -2545,14 +2746,17 @@
       "kind": "meeting",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         },
         {
+          "id": "83d23fdb-962e-4265-ae13-e9090a58dc69",
           "name": "Оля",
           "color": "#f59e0b"
         },
         {
+          "id": "cf4dd8bc-12e0-4cf7-8115-a7667b80e91b",
           "name": "Витя",
           "color": "#6366f1"
         }
@@ -2567,6 +2771,7 @@
       "done": true,
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -2579,10 +2784,12 @@
       "done": true,
       "members": [
         {
+          "id": "4e018f91-dee4-4006-9a63-6f48b46a3d2d",
           "name": "Настя",
           "color": "#ec4899"
         },
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -2597,6 +2804,7 @@
       "done": true,
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -2611,6 +2819,7 @@
       "kind": "meeting",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -2625,6 +2834,7 @@
       "done": true,
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -2639,6 +2849,7 @@
       "priorityColor": "#ef4444",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -2653,6 +2864,7 @@
       "kind": "meeting",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -2667,6 +2879,7 @@
       "done": true,
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -2681,6 +2894,7 @@
       "kind": "meeting",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -2695,10 +2909,12 @@
       "kind": "meeting",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         },
         {
+          "id": "4e018f91-dee4-4006-9a63-6f48b46a3d2d",
           "name": "Настя",
           "color": "#ec4899"
         }
@@ -2713,6 +2929,7 @@
       "kind": "meeting",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -2725,6 +2942,7 @@
       "done": true,
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -2737,6 +2955,7 @@
       "priorityColor": "#ef4444",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -2751,14 +2970,17 @@
       "kind": "meeting",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         },
         {
+          "id": "83d23fdb-962e-4265-ae13-e9090a58dc69",
           "name": "Оля",
           "color": "#f59e0b"
         },
         {
+          "id": "cf4dd8bc-12e0-4cf7-8115-a7667b80e91b",
           "name": "Витя",
           "color": "#6366f1"
         }
@@ -2772,6 +2994,7 @@
       "durationMin": 30,
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -2786,10 +3009,12 @@
       "kind": "meeting",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         },
         {
+          "id": "4e018f91-dee4-4006-9a63-6f48b46a3d2d",
           "name": "Настя",
           "color": "#ec4899"
         }
@@ -2804,6 +3029,7 @@
       "priorityColor": "#ef4444",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -2815,6 +3041,7 @@
       "date": "2026-09-05",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -2826,6 +3053,7 @@
       "date": "2026-09-07",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -2840,10 +3068,12 @@
       "kind": "meeting",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         },
         {
+          "id": "4e018f91-dee4-4006-9a63-6f48b46a3d2d",
           "name": "Настя",
           "color": "#ec4899"
         }
@@ -2855,6 +3085,7 @@
       "date": "2026-09-08",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -2866,6 +3097,7 @@
       "date": "2026-09-08",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -2880,14 +3112,17 @@
       "kind": "meeting",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         },
         {
+          "id": "83d23fdb-962e-4265-ae13-e9090a58dc69",
           "name": "Оля",
           "color": "#f59e0b"
         },
         {
+          "id": "cf4dd8bc-12e0-4cf7-8115-a7667b80e91b",
           "name": "Витя",
           "color": "#6366f1"
         }
@@ -2899,6 +3134,7 @@
       "date": "2026-09-09",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -2910,6 +3146,7 @@
       "date": "2026-09-10",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -2921,6 +3158,7 @@
       "date": "2026-09-10",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -2932,6 +3170,7 @@
       "date": "2026-09-10",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -2946,10 +3185,12 @@
       "kind": "meeting",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         },
         {
+          "id": "4e018f91-dee4-4006-9a63-6f48b46a3d2d",
           "name": "Настя",
           "color": "#ec4899"
         }
@@ -2964,14 +3205,17 @@
       "kind": "meeting",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         },
         {
+          "id": "83d23fdb-962e-4265-ae13-e9090a58dc69",
           "name": "Оля",
           "color": "#f59e0b"
         },
         {
+          "id": "cf4dd8bc-12e0-4cf7-8115-a7667b80e91b",
           "name": "Витя",
           "color": "#6366f1"
         }
@@ -2983,6 +3227,7 @@
       "date": "2026-09-12",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -2994,6 +3239,7 @@
       "date": "2026-09-12",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -3008,10 +3254,12 @@
       "kind": "meeting",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         },
         {
+          "id": "4e018f91-dee4-4006-9a63-6f48b46a3d2d",
           "name": "Настя",
           "color": "#ec4899"
         }
@@ -3026,14 +3274,17 @@
       "kind": "meeting",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         },
         {
+          "id": "83d23fdb-962e-4265-ae13-e9090a58dc69",
           "name": "Оля",
           "color": "#f59e0b"
         },
         {
+          "id": "cf4dd8bc-12e0-4cf7-8115-a7667b80e91b",
           "name": "Витя",
           "color": "#6366f1"
         }
@@ -3045,6 +3296,7 @@
       "date": "2026-09-16",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -3059,10 +3311,12 @@
       "kind": "meeting",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         },
         {
+          "id": "4e018f91-dee4-4006-9a63-6f48b46a3d2d",
           "name": "Настя",
           "color": "#ec4899"
         }
@@ -3077,14 +3331,17 @@
       "kind": "meeting",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         },
         {
+          "id": "83d23fdb-962e-4265-ae13-e9090a58dc69",
           "name": "Оля",
           "color": "#f59e0b"
         },
         {
+          "id": "cf4dd8bc-12e0-4cf7-8115-a7667b80e91b",
           "name": "Витя",
           "color": "#6366f1"
         }
@@ -3096,6 +3353,7 @@
       "date": "2026-09-20",
       "members": [
         {
+          "id": "4e018f91-dee4-4006-9a63-6f48b46a3d2d",
           "name": "Настя",
           "color": "#ec4899"
         }
@@ -3107,6 +3365,7 @@
       "date": "2026-09-20",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
@@ -3121,10 +3380,12 @@
       "kind": "meeting",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         },
         {
+          "id": "4e018f91-dee4-4006-9a63-6f48b46a3d2d",
           "name": "Настя",
           "color": "#ec4899"
         }
@@ -3139,14 +3400,17 @@
       "kind": "meeting",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         },
         {
+          "id": "83d23fdb-962e-4265-ae13-e9090a58dc69",
           "name": "Оля",
           "color": "#f59e0b"
         },
         {
+          "id": "cf4dd8bc-12e0-4cf7-8115-a7667b80e91b",
           "name": "Витя",
           "color": "#6366f1"
         }
@@ -3161,10 +3425,12 @@
       "kind": "meeting",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         },
         {
+          "id": "4e018f91-dee4-4006-9a63-6f48b46a3d2d",
           "name": "Настя",
           "color": "#ec4899"
         }
@@ -3176,6 +3442,7 @@
       "date": "2026-09-25",
       "members": [
         {
+          "id": "4e018f91-dee4-4006-9a63-6f48b46a3d2d",
           "name": "Настя",
           "color": "#ec4899"
         }
@@ -3190,14 +3457,17 @@
       "kind": "meeting",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         },
         {
+          "id": "83d23fdb-962e-4265-ae13-e9090a58dc69",
           "name": "Оля",
           "color": "#f59e0b"
         },
         {
+          "id": "cf4dd8bc-12e0-4cf7-8115-a7667b80e91b",
           "name": "Витя",
           "color": "#6366f1"
         }
@@ -3212,10 +3482,12 @@
       "kind": "meeting",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         },
         {
+          "id": "4e018f91-dee4-4006-9a63-6f48b46a3d2d",
           "name": "Настя",
           "color": "#ec4899"
         }
@@ -3230,14 +3502,17 @@
       "kind": "meeting",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         },
         {
+          "id": "83d23fdb-962e-4265-ae13-e9090a58dc69",
           "name": "Оля",
           "color": "#f59e0b"
         },
         {
+          "id": "cf4dd8bc-12e0-4cf7-8115-a7667b80e91b",
           "name": "Витя",
           "color": "#6366f1"
         }
@@ -3252,10 +3527,12 @@
       "kind": "meeting",
       "members": [
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         },
         {
+          "id": "4e018f91-dee4-4006-9a63-6f48b46a3d2d",
           "name": "Настя",
           "color": "#ec4899"
         }
@@ -3267,10 +3544,12 @@
       "date": "2026-10-02",
       "members": [
         {
+          "id": "4e018f91-dee4-4006-9a63-6f48b46a3d2d",
           "name": "Настя",
           "color": "#ec4899"
         },
         {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
         }
