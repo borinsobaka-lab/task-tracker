@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-04T02:26:16.500Z",
+  "generatedAt": "2026-09-04T02:26:28.770Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -3032,7 +3032,7 @@
       "id": "deef4786-5c8e-4def-90b8-33e5db37439c",
       "title": "Маркетинг LS",
       "date": "2026-09-04",
-      "start": "15:30",
+      "start": "15:10",
       "durationMin": 60,
       "kind": "meeting",
       "members": [
