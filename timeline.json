@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-04T02:26:08.544Z",
+  "generatedAt": "2026-09-04T02:26:16.500Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -3030,12 +3030,23 @@
     },
     {
       "id": "deef4786-5c8e-4def-90b8-33e5db37439c",
-      "title": "Без названия",
+      "title": "Маркетинг LS",
       "date": "2026-09-04",
       "start": "15:30",
       "durationMin": 60,
       "kind": "meeting",
-      "members": []
+      "members": [
+        {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
+          "name": "Вова",
+          "color": "#84cc16"
+        },
+        {
+          "id": "4e018f91-dee4-4006-9a63-6f48b46a3d2d",
+          "name": "Настя",
+          "color": "#ec4899"
+        }
+      ]
     },
     {
       "id": "37c9b4b7-3728-4415-829b-8bd13517fcf0:2026-09-05",
