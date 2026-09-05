@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-05T15:42:35.368Z",
+  "generatedAt": "2026-09-05T15:42:43.566Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -3039,12 +3039,18 @@
     },
     {
       "id": "9d79b3b1-958a-455f-9958-49eb538bd3e4",
-      "title": "Без названия",
+      "title": "Барбер",
       "date": "2026-09-06",
       "start": "11:00",
       "durationMin": 60,
       "kind": "meeting",
-      "members": []
+      "members": [
+        {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
+          "name": "Вова",
+          "color": "#84cc16"
+        }
+      ]
     },
     {
       "id": "3e1efce0-b6d2-4a30-b011-ddb86ed1ad4e",
