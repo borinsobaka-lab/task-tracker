@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-05T15:42:43.566Z",
+  "generatedAt": "2026-09-05T15:42:51.225Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -3041,7 +3041,7 @@
       "id": "9d79b3b1-958a-455f-9958-49eb538bd3e4",
       "title": "Барбер",
       "date": "2026-09-06",
-      "start": "11:00",
+      "start": "11:15",
       "durationMin": 60,
       "kind": "meeting",
       "members": [
