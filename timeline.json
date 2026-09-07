@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-07T13:07:24.727Z",
+  "generatedAt": "2026-09-07T15:22:48.680Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -2875,19 +2875,6 @@
       ]
     },
     {
-      "id": "c367f180-50d3-42de-9658-89cf97ce7238",
-      "title": "Повысить прайс",
-      "date": "2026-09-04",
-      "priorityColor": "#ef4444",
-      "members": [
-        {
-          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
-          "name": "Вова",
-          "color": "#84cc16"
-        }
-      ]
-    },
-    {
       "id": "39a06e9e-0bfd-4c8f-a7ba-8afc7c89f2c2:2026-09-04",
       "title": "Поиск помещения",
       "date": "2026-09-04",
@@ -3095,6 +3082,21 @@
       "start": "15:00",
       "durationMin": 30,
       "done": true,
+      "members": [
+        {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
+          "name": "Вова",
+          "color": "#84cc16"
+        }
+      ]
+    },
+    {
+      "id": "c367f180-50d3-42de-9658-89cf97ce7238",
+      "title": "Повысить прайс",
+      "date": "2026-09-07",
+      "start": "19:30",
+      "durationMin": 30,
+      "priorityColor": "#ef4444",
       "members": [
         {
           "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
