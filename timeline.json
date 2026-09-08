@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-08T21:25:20.600Z",
+  "generatedAt": "2026-09-08T21:25:26.315Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -3200,12 +3200,11 @@
       ]
     },
     {
-      "id": "64849f99-c47b-41bc-b279-94df8e825b52",
-      "title": "Разработка экранов с тренировками - WINDOWS (!!!!!мультиплатформа)",
+      "id": "39a06e9e-0bfd-4c8f-a7ba-8afc7c89f2c2:2026-09-09",
+      "title": "Поиск помещения",
       "date": "2026-09-09",
       "start": "15:00",
-      "durationMin": 300,
-      "priorityColor": "#ef4444",
+      "durationMin": 30,
       "members": [
         {
           "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
@@ -3215,11 +3214,12 @@
       ]
     },
     {
-      "id": "39a06e9e-0bfd-4c8f-a7ba-8afc7c89f2c2:2026-09-09",
-      "title": "Поиск помещения",
+      "id": "64849f99-c47b-41bc-b279-94df8e825b52",
+      "title": "Разработка экранов с тренировками - WINDOWS (!!!!!мультиплатформа)",
       "date": "2026-09-09",
-      "start": "15:00",
-      "durationMin": 30,
+      "start": "15:30",
+      "durationMin": 300,
+      "priorityColor": "#ef4444",
       "members": [
         {
           "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
