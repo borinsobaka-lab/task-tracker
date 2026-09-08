@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-08T07:29:05.414Z",
+  "generatedAt": "2026-09-08T07:31:54.886Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -3167,6 +3167,14 @@
           "color": "#84cc16"
         }
       ]
+    },
+    {
+      "id": "8b6f9d18-81c3-48a5-87ea-fdc81eca06ca",
+      "title": "Доделать сайт массажа.",
+      "date": "2026-09-08",
+      "start": "15:30",
+      "durationMin": 60,
+      "members": []
     },
     {
       "id": "32eb0e79-a160-4ef2-b599-0fab1b3d317e",
