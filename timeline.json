@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-11T16:31:00.654Z",
+  "generatedAt": "2026-09-11T16:31:07.899Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -3382,7 +3382,7 @@
       "id": "85cdeb7b-d58e-4ad4-a1a3-610552230831",
       "title": "Встреча с новым массажистом",
       "date": "2026-09-14",
-      "start": "14:30",
+      "start": "14:00",
       "durationMin": 60,
       "kind": "meeting",
       "members": [
