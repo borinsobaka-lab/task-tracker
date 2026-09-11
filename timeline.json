@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-11T12:24:20.066Z",
+  "generatedAt": "2026-09-11T12:36:37.549Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -3300,6 +3300,7 @@
       "date": "2026-09-11",
       "start": "20:30",
       "durationMin": 30,
+      "done": true,
       "members": [
         {
           "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
