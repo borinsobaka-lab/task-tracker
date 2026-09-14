@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-14T21:57:02.209Z",
+  "generatedAt": "2026-09-14T21:57:08.030Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -3386,7 +3386,7 @@
       "title": "Еженедельная встреча",
       "date": "2026-09-15",
       "start": "13:30",
-      "durationMin": 60,
+      "durationMin": 30,
       "kind": "meeting",
       "members": [
         {
