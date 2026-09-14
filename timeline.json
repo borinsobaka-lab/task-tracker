@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-14T21:56:34.629Z",
+  "generatedAt": "2026-09-14T21:56:41.287Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -3408,10 +3408,11 @@
     },
     {
       "id": "77e81625-db84-4bcd-a68e-fd38d3d02600",
-      "title": "Без названия",
+      "title": "Созвон с Ромой",
       "date": "2026-09-15",
       "start": "14:30",
       "durationMin": 60,
+      "kind": "meeting",
       "members": []
     },
     {
