@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-19T12:14:42.223Z",
+  "generatedAt": "2026-09-19T12:15:52.699Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -2666,21 +2666,6 @@
       ]
     },
     {
-      "id": "39a06e9e-0bfd-4c8f-a7ba-8afc7c89f2c2:2026-09-06",
-      "title": "Поиск помещения",
-      "date": "2026-09-06",
-      "start": "15:00",
-      "durationMin": 30,
-      "done": true,
-      "members": [
-        {
-          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
-          "name": "Вова",
-          "color": "#84cc16"
-        }
-      ]
-    },
-    {
       "id": "3e1efce0-b6d2-4a30-b011-ddb86ed1ad4e",
       "title": "Padel",
       "date": "2026-09-06",
@@ -2744,39 +2729,9 @@
       ]
     },
     {
-      "id": "39a06e9e-0bfd-4c8f-a7ba-8afc7c89f2c2:2026-09-07",
-      "title": "Поиск помещения",
-      "date": "2026-09-07",
-      "start": "15:00",
-      "durationMin": 30,
-      "done": true,
-      "members": [
-        {
-          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
-          "name": "Вова",
-          "color": "#84cc16"
-        }
-      ]
-    },
-    {
       "id": "9294d746-f180-483c-be39-d9023d6a176d:2026-09-08",
       "title": "Публикация вакансии массажиста",
       "date": "2026-09-08",
-      "done": true,
-      "members": [
-        {
-          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
-          "name": "Вова",
-          "color": "#84cc16"
-        }
-      ]
-    },
-    {
-      "id": "39a06e9e-0bfd-4c8f-a7ba-8afc7c89f2c2:2026-09-08",
-      "title": "Поиск помещения",
-      "date": "2026-09-08",
-      "start": "13:00",
-      "durationMin": 30,
       "done": true,
       "members": [
         {
@@ -3378,6 +3333,7 @@
       "date": "2026-09-16",
       "start": "15:00",
       "durationMin": 30,
+      "done": true,
       "members": [
         {
           "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
@@ -3403,6 +3359,21 @@
           "id": "4e018f91-dee4-4006-9a63-6f48b46a3d2d",
           "name": "Настя",
           "color": "#ec4899"
+        }
+      ]
+    },
+    {
+      "id": "39a06e9e-0bfd-4c8f-a7ba-8afc7c89f2c2:2026-09-17",
+      "title": "Поиск помещения",
+      "date": "2026-09-17",
+      "start": "15:00",
+      "durationMin": 30,
+      "done": true,
+      "members": [
+        {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
+          "name": "Вова",
+          "color": "#84cc16"
         }
       ]
     },
@@ -3440,6 +3411,35 @@
           "id": "cf4dd8bc-12e0-4cf7-8115-a7667b80e91b",
           "name": "Витя",
           "color": "#6366f1"
+        }
+      ]
+    },
+    {
+      "id": "39a06e9e-0bfd-4c8f-a7ba-8afc7c89f2c2:2026-09-18",
+      "title": "Поиск помещения",
+      "date": "2026-09-18",
+      "start": "15:00",
+      "durationMin": 30,
+      "done": true,
+      "members": [
+        {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
+          "name": "Вова",
+          "color": "#84cc16"
+        }
+      ]
+    },
+    {
+      "id": "39a06e9e-0bfd-4c8f-a7ba-8afc7c89f2c2:2026-09-19",
+      "title": "Поиск помещения",
+      "date": "2026-09-19",
+      "start": "15:00",
+      "durationMin": 30,
+      "members": [
+        {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
+          "name": "Вова",
+          "color": "#84cc16"
         }
       ]
     },
