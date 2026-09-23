@@ -6,4 +6,13 @@
     <string name="widget_desc">Таймлайн ближайших задач</string>
     <string name="refresh">Обновить</string>
     <string name="add_task">Новая задача</string>
+    <string name="usage_widget_title">Claude</string>
+    <string name="usage_widget_desc">Лимиты Claude: сессия 5 ч, неделя, неделя Fable</string>
+    <string name="usage_connect_hint">Нажмите, чтобы подключить аккаунт Claude</string>
+    <string name="usage_screen_title">Лимиты Claude</string>
+    <string name="usage_login_help">Виджет показывает те же лимиты, что команда /usage в Claude Code. Телефону нужен свой вход в аккаунт Claude (только чтение лимитов):\n\n1. Нажмите «Открыть вход Claude» и войдите в тот же аккаунт, что и в Claude Code.\n2. На странице появится код — скопируйте его, вернитесь сюда, вставьте в поле и нажмите «Подключить».</string>
+    <string name="usage_open_login">1. Открыть вход Claude</string>
+    <string name="usage_code_hint">Код со страницы Claude</string>
+    <string name="usage_submit">2. Подключить</string>
+    <string name="usage_logout">Отключить аккаунт</string>
 </resources>
