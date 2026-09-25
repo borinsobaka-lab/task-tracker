@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-25T23:58:22.830Z",
+  "generatedAt": "2026-09-25T23:58:26.640Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -1171,21 +1171,6 @@
       "durationMin": 60,
       "done": true,
       "priorityColor": "#ef4444",
-      "members": [
-        {
-          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
-          "name": "Вова",
-          "color": "#84cc16"
-        }
-      ]
-    },
-    {
-      "id": "a8e35675-44d3-4872-b298-d6c8ea929165",
-      "title": "Заполнить результаты по конверсиям",
-      "date": "2026-07-27",
-      "start": "18:00",
-      "durationMin": 30,
-      "done": true,
       "members": [
         {
           "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
@@ -3386,6 +3371,7 @@
       "date": "2026-09-26",
       "start": "03:30",
       "durationMin": 30,
+      "done": true,
       "members": [
         {
           "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
@@ -3599,6 +3585,18 @@
     {
       "id": "eed9deba-a652-4faa-9de4-bcb5acf584ff:2026-10-01",
       "title": "Зарплаты сотрудникам",
+      "date": "2026-10-01",
+      "members": [
+        {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
+          "name": "Вова",
+          "color": "#84cc16"
+        }
+      ]
+    },
+    {
+      "id": "d4bc3109-7ee8-4f6d-bbbb-13c5a8289bd8:2026-10-01",
+      "title": "Заполнить результаты по конверсиям",
       "date": "2026-10-01",
       "members": [
         {
