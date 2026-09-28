@@ -97,17 +97,21 @@ const mt = morningText(env, boardToday, allGroup, [])
 assert.ok(mt.includes('Доброе утро'), 'утренний заголовок')
 assert.ok(mt.includes('Позвонить в банк'), 'утренний список содержит задачу без проекта')
 assert.ok(mt.includes('Вова'), 'группировка по исполнителю')
-assert.ok(!mt.includes('📁'), 'в общем режиме нет строки с названием проекта')
+assert.ok(!mt.includes('👤') && !mt.includes('📭'), 'нет эмодзи перед исполнителями')
+assert.ok(mt.includes('<b>Вова</b>'), 'имя исполнителя жирным')
+assert.ok(!mt.includes('➖') && !mt.includes('нужно сделать'), 'нет черты и легенды статусов')
 const et = eveningText(env, boardToday, allGroup, [])
 assert.ok(et.includes('Итоги дня'), 'вечерний заголовок')
 
 // 3b) Режим по проектам: в группу проекта идут его задачи + задачи без проекта,
-//     сообщение начинается с названия проекта, чужие задачи не попадают.
+//     названия проекта в сообщении нет (оно и так приходит в чат проекта),
+//     чужие задачи не попадают.
 const alpha = { chatId: 'g1', projectId: 'proj-1', name: 'Альфа' }
 const beta = { chatId: 'g2', projectId: 'proj-2', name: 'Бета' }
 const mAlpha = morningText(env, boardToday, alpha, [])
-assert.ok(mAlpha.includes('📁'), 'в режиме проекта есть строка с названием проекта')
-assert.ok(mAlpha.includes('Альфа'), 'название проекта Альфа в шапке')
+assert.ok(!mAlpha.includes('📁'), 'нет строки с папкой и названием проекта')
+assert.ok(mAlpha.startsWith('☀️ <b>Доброе утро!</b>'), 'сообщение начинается сразу с приветствия')
+assert.ok(eveningText(env, boardToday, alpha, []).startsWith('🌙 <b>Итоги дня'), 'вечерний отчёт без шапки проекта')
 assert.ok(mAlpha.includes('Задача Альфы'), 'задача проекта попала в его группу')
 assert.ok(mAlpha.includes('Позвонить в банк'), 'задача без проекта попала в группу проекта')
 assert.ok(!mAlpha.includes('Задача Беты'), 'чужая задача не попала в группу проекта Альфа')
