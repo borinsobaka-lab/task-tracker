@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Токены входа в Claude не попадают ни в облачную копию, ни в перенос на новый телефон (Android 12+). -->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="sharedpref" path="claude_usage.xml" />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="sharedpref" path="claude_usage.xml" />
+    </device-transfer>
+</data-extraction-rules>

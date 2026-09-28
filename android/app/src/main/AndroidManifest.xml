@@ -6,6 +6,8 @@
 
     <application
         android:allowBackup="true"
+        android:fullBackupContent="@xml/backup_rules"
+        android:dataExtractionRules="@xml/data_extraction_rules"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
@@ -33,6 +35,26 @@
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/appwidget_timeline_info" />
+        </receiver>
+
+        <!-- Экран «Лимиты Claude»: подключение аккаунта для виджета лимитов -->
+        <activity
+            android:name=".UsageActivity"
+            android:exported="false"
+            android:label="@string/usage_screen_title"
+            android:windowSoftInputMode="adjustResize" />
+
+        <!-- Виджет «Лимиты Claude» (сессия 5 ч, неделя, неделя Fable) -->
+        <receiver
+            android:name=".UsageWidgetProvider"
+            android:exported="true"
+            android:label="@string/usage_screen_title">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/appwidget_usage_info" />
         </receiver>
 
         <service
