@@ -325,7 +325,6 @@ export async function verifyPassword(blob, password) {
 // ================= ГРУППОВЫЕ ОТЧЁТЫ (порт логики report.mjs) =================
 
 const EMOJI = { inbox: '📥', todo: '⬜', doing: '🔧', review: '👀', done: '✅' }
-const HR = '➖➖➖➖➖➖➖➖➖➖'
 
 function dateKey(env, offsetDays = 0) {
   const d = new Date(Date.now() + offsetDays * 86400000)
@@ -418,9 +417,6 @@ function targetGroups(env, board) {
   if (env.GROUP_CHAT_ID) return [{ chatId: String(env.GROUP_CHAT_ID), projectId: null, name: '' }]
   return []
 }
-function projectPrefix(group) {
-  return group && group.name ? `📁 <b>${esc(group.name)}</b>\n` : ''
-}
 // opts.showDate — печатать дату карточки перед названием (для просроченных,
 // которые пришли с разных прошлых дней). Многодневная задача — «дд.мм–дд.мм».
 function fmtCardLine(card, colById, opts) {
@@ -446,8 +442,7 @@ function tgHandle(raw) {
 }
 function groupHeader(g) {
   const handle = tgHandle(g.nick)
-  const icon = g.isMember ? '👤 ' : '📭 '
-  return `${icon}<b>${esc(g.name)}</b>${handle ? ` (${esc(handle)})` : ''}`
+  return `<b>${esc(g.name)}</b>${handle ? ` (${esc(handle)})` : ''}`
 }
 function byTime(a, b) {
   const as = a.start || ''
@@ -483,9 +478,6 @@ function renderOverdue(board, todayKey, projectId, colById, members, keepIds) {
   const body = renderGroups(groupByMember(cards, members, byDate), colById, { showDate: true })
   return `‼️ <b>Просрочено — надо закрыть:</b>\n\n${body}\n\n`
 }
-function legendBlock() {
-  return `\n\n${HR}\n<i>${EMOJI.todo} нужно сделать · ${EMOJI.doing} в работе · ${EMOJI.review} на проверке · ${EMOJI.done} готово</i>`
-}
 function movedCards(board, plannedIds, today) {
   const byId = board.cards || {}
   const moved = []
@@ -506,8 +498,8 @@ function renderMoved(moved) {
   })
   return `\n\n🔀 <b>Перенесены на другой день:</b>\n` + lines.join('\n')
 }
-// group = { chatId, projectId, name }. projectId==null и name=='' — «общий» режим
-// (старое поведение, все задачи, без строки с названием проекта).
+// group = { chatId, projectId, name }. projectId==null — «общий» режим (все задачи).
+// Название проекта в сообщение не пишем: отчёт и так приходит в чат своего проекта.
 export function morningText(env, board, group = { projectId: null, name: '' }, plannedIds = [], overdueIds = []) {
   const { colById, members } = buildIndex(board)
   const today = dateKey(env, 0)
@@ -516,7 +508,7 @@ export function morningText(env, board, group = { projectId: null, name: '' }, p
   // Просроченное — сверху, как в календаре: иначе про эти задачи забывают.
   const overdue = renderOverdue(board, today, group.projectId, colById, members, overdueIds)
   const moved = renderMoved(movedCards(board, plannedIds, today))
-  return `${projectPrefix(group)}☀️ <b>Доброе утро!</b>\n\n${overdue}📅 <b>Задачи на сегодня, ${ddmm(today)}:</b>\n\n${body}${moved}${legendBlock()}`
+  return `☀️ <b>Доброе утро!</b>\n\n${overdue}📅 <b>Задачи на сегодня, ${ddmm(today)}:</b>\n\n${body}${moved}`
 }
 export function eveningText(env, board, group = { projectId: null, name: '' }, plannedIds = []) {
   const { colById, members } = buildIndex(board)
@@ -539,8 +531,8 @@ export function eveningText(env, board, group = { projectId: null, name: '' }, p
   if (tomCards.length) {
     tomorrowBlock = `\n\n📅 <b>На завтра, ${ddmm(tomorrow)}:</b>\n\n` + renderGroups(groupByMember(tomCards, members), colById)
   }
-  const head = `${projectPrefix(group)}🌙 <b>Итоги дня, ${ddmm(today)}</b>\nВыполнено ${done.length} из ${cards.length}.`
-  return `${head}\n\n${summary}${moved}${tomorrowBlock}${legendBlock()}`
+  const head = `🌙 <b>Итоги дня, ${ddmm(today)}</b>\nВыполнено ${done.length} из ${cards.length}.`
+  return `${head}\n\n${summary}${moved}${tomorrowBlock}`
 }
 
 async function sendGroup(env, chatId, text) {

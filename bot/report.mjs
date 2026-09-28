@@ -29,7 +29,6 @@ const STATE = { owner: stateOwner, repo: stateRepo, branch: 'app-config', path: 
 
 const EMOJI = { todo: '⬜', doing: '🔧', review: '👀', done: '✅' }
 const STATUS_LABEL = { todo: 'нужно сделать', doing: 'в работе', review: 'на проверке', done: 'готово' }
-const HR = '➖➖➖➖➖➖➖➖➖➖' // горизонтальный разделитель перед легендой
 
 // ---------- Мелкие утилиты ----------
 
@@ -186,11 +185,10 @@ function tgHandle(raw) {
   return n.startsWith('@') ? n : '@' + n
 }
 
-/** Заголовок группы: «👤 Имя (@ник)» — эмодзи-человечек, чтобы людей было лучше видно. */
+/** Заголовок группы: «Имя (@ник)», имя жирным. */
 function groupHeader(g) {
   const handle = tgHandle(g.nick)
-  const icon = g.isMember ? '👤 ' : '📭 '
-  return `${icon}<b>${esc(g.name)}</b>${handle ? ` (${esc(handle)})` : ''}`
+  return `<b>${esc(g.name)}</b>${handle ? ` (${esc(handle)})` : ''}`
 }
 
 /** Хронологический порядок: задачи без времени сверху, затем по времени начала. */
@@ -234,11 +232,6 @@ function renderOverdue(board, todayKey, colById, members, keepIds) {
   return `‼️ <b>Просрочено — надо закрыть:</b>\n\n${body}\n\n`
 }
 
-/** Легенда статусов под горизонтальной чертой — чтобы не выглядела частью задач. */
-function legendBlock() {
-  return `\n\n${HR}\n<i>${EMOJI.todo} нужно сделать · ${EMOJI.doing} в работе · ${EMOJI.review} на проверке · ${EMOJI.done} готово</i>`
-}
-
 /** Задачи, которые утром были на сегодня, а теперь перенесены на другой день. */
 function movedCards(board, plannedIds, today) {
   const byId = board.cards || {}
@@ -273,7 +266,7 @@ export function morningText(board, plannedIds = [], overdueIds = []) {
   // Просроченное — сверху, как в календаре: иначе про эти задачи забывают.
   const overdue = renderOverdue(board, today, colById, members, overdueIds)
   const moved = renderMoved(movedCards(board, plannedIds, today))
-  return `☀️ <b>Доброе утро!</b>\n\n${overdue}📅 <b>Задачи на сегодня, ${ddmm(today)}:</b>\n\n${body}${moved}${legendBlock()}`
+  return `☀️ <b>Доброе утро!</b>\n\n${overdue}📅 <b>Задачи на сегодня, ${ddmm(today)}:</b>\n\n${body}${moved}`
 }
 
 export function eveningText(board, plannedIds = []) {
@@ -302,7 +295,7 @@ export function eveningText(board, plannedIds = []) {
   }
 
   const head = `🌙 <b>Итоги дня, ${ddmm(today)}</b>\nВыполнено ${done.length} из ${cards.length}.`
-  return `${head}\n\n${summary}${moved}${tomorrowBlock}${legendBlock()}`
+  return `${head}\n\n${summary}${moved}${tomorrowBlock}`
 }
 
 // ---------- Основной сценарий ----------
