@@ -445,7 +445,7 @@ export interface BoardStore {
   /** Добавить новый (пустой) проект; возвращает его id. */
   addProject(): ID
   updateProject(id: ID, patch: { name?: string; icon?: string | undefined; tgGroupId?: string; memberIds?: ID[] }): void
-  /** Удалить проект (надгробие) и снять его со всех карточек и серий. */
+  /** Удалить проект (надгробие) и снять его со всех карточек, серий и заметок. */
   deleteProject(id: ID): void
 
   // Колонки
@@ -514,11 +514,14 @@ export interface BoardStore {
   attachmentBlob(att: Attachment): Promise<Blob>
 
   // Заметки
-  /** Живые заметки: закреплённые сверху, дальше — по дате изменения (новые выше) */
+  /** Живые заметки, ВИДИМЫЕ текущему участнику (заметки закрытых для него проектов
+   *  скрыты): закреплённые сверху, дальше — по дате изменения (новые выше) */
   notes: Note[]
   note(id: ID): Note | undefined
-  addNote(): ID
-  updateNote(id: ID, patch: { title?: string; html?: string }): void
+  /** Новая заметка; projectId — сразу отнести к проекту */
+  addNote(projectId?: ID): ID
+  /** projectId: null — снять проект (заметку видят все) */
+  updateNote(id: ID, patch: { title?: string; html?: string; projectId?: ID | null }): void
   setNotePinned(id: ID, pinned: boolean): void
   /** Удалить заметку (надгробие) вместе с файлами вложений */
   deleteNote(id: ID): void
@@ -601,6 +604,8 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
   )
   const hiddenProjectIds = new Set(allProjects.filter((p) => !visibleProjects.includes(p)).map((p) => p.id))
   const cardVisible = (c: Card): boolean => !c.projectId || !hiddenProjectIds.has(c.projectId)
+  // Заметки — по тому же правилу: без проекта видят все, с проектом — кому виден проект
+  const noteVisible = (n: Note): boolean => !n.projectId || !hiddenProjectIds.has(n.projectId)
 
   const getCard = (id: ID): Card | undefined => {
     const c = data.cards[id]
@@ -704,6 +709,12 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
           if (s.projectId === id) {
             delete s.projectId
             touch(s)
+          }
+        }
+        for (const n of Object.values(d.notes ?? {})) {
+          if (n.projectId === id) {
+            delete n.projectId
+            touch(n)
           }
         }
       }),
@@ -1290,13 +1301,13 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
     attachmentBlob: (att) => engine.adapter.downloadAttachment(att),
 
     notes: Object.values(data.notes ?? {})
-      .filter((n) => !n.deleted)
+      .filter((n) => !n.deleted && noteVisible(n))
       .sort((a, b) => Number(!!b.pinned) - Number(!!a.pinned) || b.updatedAt.localeCompare(a.updatedAt)),
     note: (id) => {
       const n = data.notes?.[id]
-      return n && !n.deleted ? n : undefined
+      return n && !n.deleted && noteVisible(n) ? n : undefined
     },
-    addNote: () => {
+    addNote: (projectId) => {
       const id = uid()
       const ts = nowISO()
       engine.update((d) => {
@@ -1307,6 +1318,7 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
           html: '',
           attachments: [],
           ...(identity ? { authorId: identity.id } : {}),
+          ...(projectId ? { projectId } : {}),
           createdAt: ts,
           updatedAt: ts,
         }
@@ -1324,6 +1336,11 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
         }
         if (patch.html !== undefined && patch.html !== n.html) {
           n.html = patch.html
+          changed = true
+        }
+        if (patch.projectId !== undefined && patch.projectId !== (n.projectId ?? null)) {
+          if (patch.projectId) n.projectId = patch.projectId
+          else delete n.projectId
           changed = true
         }
         if (changed) touch(n)

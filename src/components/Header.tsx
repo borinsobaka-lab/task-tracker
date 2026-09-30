@@ -65,9 +65,9 @@ export function Header({
         ))}
       </nav>
 
-      {/* Проекты и поиск задач к заметкам не относятся — в «Заметках» у списка свой поиск */}
-      {view !== 'notes' && <ProjectTabs projectFilter={projectFilter} onChange={onProjectFilterChange} />}
+      <ProjectTabs projectFilter={projectFilter} onChange={onProjectFilterChange} />
 
+      {/* Поиск задач к заметкам не относится — в «Заметках» у списка свой поиск */}
       {view !== 'notes' && <SearchBox onOpenCard={onOpenCard} />}
 
       <div className="header-right">
@@ -132,7 +132,7 @@ export function BottomNav({
 
 /**
  * Табы проектов в шапке: по логотипу на каждый проект + таб «Все». Выбор задаёт
- * глобальный фильтр (projectFilter): в каждом разделе остаются только задачи этого
+ * глобальный фильтр (projectFilter): в каждом разделе остаются только задачи (и заметки) этого
  * проекта. Проекты (имя/иконка/Telegram-группа) добавляются в настройках.
  */
 function ProjectTabs({ projectFilter, onChange }: { projectFilter: ID | null; onChange: (id: ID | null) => void }) {

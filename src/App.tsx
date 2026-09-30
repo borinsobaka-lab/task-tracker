@@ -377,7 +377,7 @@ function Shell({ onLogout }: { onLogout: () => void }) {
           if (view === 'board') return <BoardView {...shared} />
           if (view === 'calendar') return <CalendarView {...shared} />
           if (view === 'matrix') return <EisenhowerView {...shared} />
-          if (view === 'notes') return <NotesView composeRef={composeNoteRef} />
+          if (view === 'notes') return <NotesView composeRef={composeNoteRef} projectFilter={projectFilter} />
           return <RecurringView {...shared} />
         })()}
       </main>

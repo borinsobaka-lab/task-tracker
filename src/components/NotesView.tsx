@@ -13,7 +13,7 @@ import { NodeSelection, Selection } from '@tiptap/pm/state'
 import TaskList from '@tiptap/extension-task-list'
 import TaskItem from '@tiptap/extension-task-item'
 import { useBoard } from '../store'
-import type { Attachment, ID, Note } from '../types'
+import type { Attachment, ID, Note, Project } from '../types'
 import { isMobileViewport } from '../config'
 import {
   addPendingUpload,
@@ -34,13 +34,17 @@ import { formatBytes, uid } from '../utils'
 import { EditorToolbar, RteButton, richTextExtensions, useSyncedEditor } from './RichTextEditor'
 import { NoteAttachment, NoteAttContext, TrailingParagraph } from './NoteAttachmentNode'
 import type { NoteAttContextValue } from './NoteAttachmentNode'
+import { ProjectAvatar } from './Avatar'
 import {
   IcoArrowLeft,
   IcoCamera,
+  IcoCheck,
   IcoChecklist,
+  IcoChevronDown,
   IcoCompose,
   IcoFile,
   IcoGallery,
+  IcoNone,
   IcoNotes,
   IcoPaperclip,
   IcoPin,
@@ -61,8 +65,15 @@ function enqueueUpload<T>(fn: () => Promise<T>): Promise<T> {
 /**
  * composeRef — сюда раздел кладёт функцию «новая заметка», чтобы кнопка «+» в нижнем
  * меню вызывала её прямо в обработчике нажатия (важно для клавиатуры на iOS).
+ * projectFilter — таб проекта в шапке: показываем только заметки этого проекта.
  */
-export function NotesView({ composeRef }: { composeRef: MutableRefObject<(() => void) | null> }) {
+export function NotesView({
+  composeRef,
+  projectFilter,
+}: {
+  composeRef: MutableRefObject<(() => void) | null>
+  projectFilter: ID | null
+}) {
   const store = useBoard()
   const [openId, setOpenId] = useState<ID | null>(null)
   const [query, setQuery] = useState('')
@@ -72,7 +83,11 @@ export function NotesView({ composeRef }: { composeRef: MutableRefObject<(() => 
   openIdRef.current = openId
   const pushedRef = useRef(false) // на телефоне открытие заметки кладёт шаг в историю («назад» закрывает)
 
-  const notes = store.notes
+  // store.notes — уже без заметок закрытых для участника проектов
+  const notes = useMemo(
+    () => (projectFilter === null ? store.notes : store.notes.filter((n) => n.projectId === projectFilter)),
+    [store.notes, projectFilter],
+  )
   const visible = useMemo(() => notes.filter((n) => noteMatchesQuery(n, query)), [notes, query])
   const openNote = openId ? store.note(openId) : undefined
 
@@ -129,7 +144,8 @@ export function NotesView({ composeRef }: { composeRef: MutableRefObject<(() => 
 
   const compose = () => {
     if (isMobileViewport()) kbProxyRef.current?.focus({ preventScroll: true })
-    const id = store.addNote()
+    // Выбран таб проекта — новая заметка сразу относится к нему (иначе пропала бы из списка)
+    const id = store.addNote(projectFilter ?? undefined)
     setFreshId(id)
     setQuery('')
     open(id)
@@ -246,7 +262,7 @@ export function NotesView({ composeRef }: { composeRef: MutableRefObject<(() => 
               <div className="notes-empty-ico" aria-hidden>
                 <IcoNotes size={44} color={NOTES_COLOR} />
               </div>
-              <div className="notes-empty-title">Заметок пока нет</div>
+              <div className="notes-empty-title">{projectFilter ? 'В этом проекте заметок пока нет' : 'Заметок пока нет'}</div>
               <div className="muted">Записывайте мысли, списки, фото и файлы — всё сохранится само.</div>
               <button type="button" className="btn btn-primary notes-empty-btn" onClick={compose}>
                 Новая заметка
@@ -328,6 +344,7 @@ function NoteRow({
 }) {
   const store = useBoard()
   const author = note.authorId ? store.members.find((m) => m.id === note.authorId) : undefined
+  const project = note.projectId ? store.projects.find((p) => p.id === note.projectId) : undefined
   const thumb = noteThumb(note)
   const contentRef = useRef<HTMLDivElement>(null)
   const drag = useRef<{ x: number; y: number; dx: number; axis: 'x' | 'y' | null } | null>(null)
@@ -416,7 +433,18 @@ function NoteRow({
             <span className="note-row-date">{noteShortDate(note.updatedAt)}</span>
             <span className="note-row-preview">{notePreview(note)}</span>
           </div>
-          {author && <div className="note-row-author">{author.name}</div>}
+          {(project || author) && (
+            <div className="note-row-author">
+              {project && (
+                <span className="note-row-project">
+                  <ProjectAvatar project={project} size="xs" />
+                  {project.name || 'Проект'}
+                </span>
+              )}
+              {project && author && ' · '}
+              {author?.name}
+            </div>
+          )}
         </div>
         {thumb && <img className="note-row-thumb" src={thumb} alt="" draggable={false} />}
         <div className="note-row-hover" onClick={(e) => e.stopPropagation()}>
@@ -671,6 +699,7 @@ function NoteEditor({
               {noteLongDate(note.updatedAt)}
               {author ? ` · ${author.name}` : ''}
             </div>
+            <NoteProjectPicker note={note} />
             <textarea
               ref={titleRef}
               className="note-title"
@@ -751,6 +780,85 @@ function NoteEditor({
             setViewerId(null)
           }}
         />
+      )}
+    </div>
+  )
+}
+
+// ---------- Проект заметки (кто её видит) ----------
+
+/** Кто видит заметку этого проекта: «все» или имена участников проекта. */
+function useAudience(): (project: Project | undefined) => string {
+  const store = useBoard()
+  return (project) => {
+    if (!project?.memberIds?.length) return 'видят все'
+    const names = project.memberIds
+      .map((id) => store.members.find((m) => m.id === id)?.name)
+      .filter(Boolean)
+    return names.length ? `видят только: ${names.join(', ')}` : 'видят только участники проекта'
+  }
+}
+
+/**
+ * Выбор проекта заметки. Без проекта заметку видят все; с проектом — только те,
+ * кому виден проект (участники проекта; у проекта без участников — тоже все).
+ */
+function NoteProjectPicker({ note }: { note: Note }) {
+  const store = useBoard()
+  const audience = useAudience()
+  const [open, setOpen] = useState(false)
+  const projects = store.projects
+  const current = note.projectId ? projects.find((p) => p.id === note.projectId) : undefined
+  if (projects.length === 0 && !current) return null // проектов нет — выбирать не из чего
+
+  const pick = (projectId: ID | null) => {
+    setOpen(false)
+    store.updateNote(note.id, { projectId })
+  }
+
+  return (
+    <div className="note-project">
+      <button
+        type="button"
+        className={'note-project-btn' + (current ? ' set' : '')}
+        onClick={() => setOpen((v) => !v)}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        title="Проект заметки — от него зависит, кто её видит"
+      >
+        {current ? <ProjectAvatar project={current} size="xs" /> : <IcoNone size={16} />}
+        <span className="note-project-name">{current ? current.name || 'Проект' : 'Без проекта'}</span>
+        <IcoChevronDown size={14} />
+      </button>
+      <span className="note-project-who">{audience(current)}</span>
+      {open && (
+        <>
+          <div className="note-attach-backdrop" onClick={() => setOpen(false)} />
+          <div className="note-project-menu" role="menu">
+            <button type="button" role="menuitemradio" aria-checked={!current} onClick={() => pick(null)}>
+              <span className="note-project-opt-ico">
+                <IcoNone size={18} />
+              </span>
+              <span className="note-project-opt-text">
+                <span className="note-project-opt-name">Без проекта</span>
+                <span className="note-project-opt-who">видят все</span>
+              </span>
+              {!current && <IcoCheck size={16} />}
+            </button>
+            {projects.map((p) => (
+              <button key={p.id} type="button" role="menuitemradio" aria-checked={current?.id === p.id} onClick={() => pick(p.id)}>
+                <span className="note-project-opt-ico">
+                  <ProjectAvatar project={p} size="xs" />
+                </span>
+                <span className="note-project-opt-text">
+                  <span className="note-project-opt-name">{p.name || 'Проект'}</span>
+                  <span className="note-project-opt-who">{audience(p)}</span>
+                </span>
+                {current?.id === p.id && <IcoCheck size={16} />}
+              </button>
+            ))}
+          </div>
+        </>
       )}
     </div>
   )
