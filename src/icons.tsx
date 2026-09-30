@@ -9,16 +9,22 @@ import {
   ArrowRightUp,
   Calendar,
   Camera,
+  Gallery,
   ChatRoundLine,
   CheckCircle,
   ClipboardList,
   CloseCircle,
+  DocumentText,
   Link,
+  ListCheck,
   Magnifer,
   MenuDots,
   MinusCircle,
+  Notebook,
   Notes,
   Paperclip,
+  PenNewSquare,
+  Pin,
   RepeatOneMinimalistic,
   Rocket,
   Settings,
@@ -60,6 +66,12 @@ export const IcoSearch = duotone(Magnifer)
 export const IcoLaunch = duotone(Rocket)
 export const IcoLink = duotone(Link)
 export const IcoComment = duotone(ChatRoundLine)
+export const IcoNotes = duotone(Notebook)
+export const IcoCompose = duotone(PenNewSquare)
+export const IcoPin = duotone(Pin)
+export const IcoChecklist = duotone(ListCheck)
+export const IcoGallery = duotone(Gallery)
+export const IcoFile = duotone(DocumentText)
 
 /** Чистый тонкий крестик закрытия (аккуратнее и крупнее, чем залитый кружок). */
 export function IcoX({ size = 22, color = 'currentColor' }: { size?: number; color?: string }) {

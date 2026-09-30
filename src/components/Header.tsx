@@ -6,7 +6,8 @@ import { useBoard } from '../store'
 import type { ID } from '../types'
 import { QUADRANT_COLOR, QUADRANT_LABEL } from '../eisenhower'
 import { cardMatchesQuery } from '../utils'
-import { IcoBoard, IcoCalendar, IcoMatrix, IcoRecurring, IcoSearch, IcoSettings } from '../icons'
+import { IcoBoard, IcoCalendar, IcoMatrix, IcoNotes, IcoRecurring, IcoSearch, IcoSettings } from '../icons'
+import { NOTES_COLOR } from '../notes'
 import './header.css'
 
 const STATUS_LABEL: Record<string, { text: string; cls: string }> = {
@@ -22,6 +23,7 @@ const VIEWS: { key: ViewKind; label: string; Icon: ComponentType<IconProps>; col
   { key: 'calendar', label: 'Календарь', Icon: IcoCalendar, color: '#f97316' }, // оранжевый
   { key: 'matrix', label: 'Матрица', Icon: IcoMatrix, color: '#ef4444' }, // красный
   { key: 'recurring', label: 'Повтор', Icon: IcoRecurring, color: '#22c55e' }, // зелёный
+  { key: 'notes', label: 'Заметки', Icon: IcoNotes, color: NOTES_COLOR }, // жёлтый, как у Apple Notes
 ]
 
 /** Верхний хедер: табы разделов, глобальный поиск и кнопка настроек. */
@@ -63,9 +65,10 @@ export function Header({
         ))}
       </nav>
 
-      <ProjectTabs projectFilter={projectFilter} onChange={onProjectFilterChange} />
+      {/* Проекты и поиск задач к заметкам не относятся — в «Заметках» у списка свой поиск */}
+      {view !== 'notes' && <ProjectTabs projectFilter={projectFilter} onChange={onProjectFilterChange} />}
 
-      <SearchBox onOpenCard={onOpenCard} />
+      {view !== 'notes' && <SearchBox onOpenCard={onOpenCard} />}
 
       <div className="header-right">
         <span
@@ -118,8 +121,8 @@ export function BottomNav({
         type="button"
         className="bottom-nav-item bottom-nav-add"
         onClick={onNewTask}
-        title="Добавить задачу"
-        aria-label="Добавить задачу"
+        title={view === 'notes' ? 'Новая заметка' : 'Добавить задачу'}
+        aria-label={view === 'notes' ? 'Новая заметка' : 'Добавить задачу'}
       >
         <span className="bottom-nav-add-circle" aria-hidden>+</span>
       </button>

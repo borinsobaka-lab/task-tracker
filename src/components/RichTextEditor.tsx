@@ -5,7 +5,7 @@
 import { useEffect, useRef } from 'react'
 import type { ReactNode } from 'react'
 import { EditorContent, useEditor } from '@tiptap/react'
-import type { ChainedCommands, Editor } from '@tiptap/core'
+import type { ChainedCommands, Editor, EditorOptions, Extensions } from '@tiptap/core'
 import StarterKit from '@tiptap/starter-kit'
 import Link from '@tiptap/extension-link'
 import Underline from '@tiptap/extension-underline'
@@ -33,8 +33,41 @@ export function RichTextEditor({
   onChange: (html: string) => void
   placeholder?: string
 }) {
+  const editor = useSyncedEditor({ value, onChange, extensions: richTextExtensions(placeholder) })
+  return (
+    <div className="rte">
+      <EditorToolbar editor={editor} />
+      <EditorContent editor={editor} />
+    </div>
+  )
+}
+
+/**
+ * Редактор TipTap, связанный с внешним значением: onChange с debounce, досылка
+ * изменений при потере фокуса и размонтировании, аккуратное применение внешних
+ * правок (пришедших по синхронизации). Общий для описания задачи и заметок.
+ * extensions и editorProps читаются один раз — при создании редактора.
+ */
+export function useSyncedEditor({
+  value,
+  onChange,
+  extensions,
+  editorProps,
+  className = 'rte-content',
+  onLocalUpdate,
+}: {
+  value: string
+  onChange: (html: string) => void
+  extensions: Extensions
+  editorProps?: EditorOptions['editorProps']
+  className?: string
+  /** Каждое изменение текста (без debounce) — например, чтобы помнить свежий HTML */
+  onLocalUpdate?: (html: string) => void
+}): Editor | null {
   const onChangeRef = useRef(onChange)
   onChangeRef.current = onChange
+  const onLocalUpdateRef = useRef(onLocalUpdate)
+  onLocalUpdateRef.current = onLocalUpdate
 
   // Последний HTML, порождённый самим редактором, — чтобы отличать
   // «своё» значение (round-trip через store) от внешних изменений.
@@ -56,15 +89,17 @@ export function RichTextEditor({
   }
 
   const editor = useEditor({
-    extensions: richTextExtensions(placeholder),
+    extensions,
     content: value,
     editorProps: {
-      attributes: { class: 'rte-content' },
+      ...editorProps,
+      attributes: { class: className },
     },
     onUpdate: ({ editor: ed }) => {
       const html = ed.getHTML()
       localHtmlRef.current = html
       pendingRef.current = html
+      onLocalUpdateRef.current?.(html)
       if (timerRef.current) clearTimeout(timerRef.current)
       timerRef.current = setTimeout(flush, CHANGE_DEBOUNCE_MS)
     },
@@ -90,16 +125,24 @@ export function RichTextEditor({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  return (
-    <div className="rte">
-      <EditorToolbar editor={editor} />
-      <EditorContent editor={editor} />
-    </div>
-  )
+  return editor
 }
 
 /** Тулбар форматирования — переиспользуется в описании и в комментариях. */
-export function EditorToolbar({ editor }: { editor: Editor | null }) {
+export function EditorToolbar({
+  editor,
+  compact,
+  leading,
+  children,
+}: {
+  editor: Editor | null
+  /** Короткий набор (для узкой панели над клавиатурой на телефоне) — без «убрать форматирование» */
+  compact?: boolean
+  /** Дополнительные кнопки в начале панели */
+  leading?: ReactNode
+  /** Дополнительные кнопки в конце панели */
+  children?: ReactNode
+}) {
   const run = (fn: (chain: ChainedCommands) => ChainedCommands) => {
     if (editor) fn(editor.chain().focus()).run()
   }
@@ -122,6 +165,7 @@ export function EditorToolbar({ editor }: { editor: Editor | null }) {
 
   return (
     <div className="rte-toolbar" role="toolbar" aria-label="Форматирование">
+      {leading}
       <RteButton title="Полужирный" active={active('bold')} onClick={() => run((c) => c.toggleBold())}>
         <b>Ж</b>
       </RteButton>
@@ -164,14 +208,17 @@ export function EditorToolbar({ editor }: { editor: Editor | null }) {
       <RteButton title="Ссылка" active={active('link')} onClick={editLink}>
         <IconLink />
       </RteButton>
-      <RteButton title="Убрать форматирование" onClick={() => run((c) => c.clearNodes().unsetAllMarks())}>
-        <IconClear />
-      </RteButton>
+      {!compact && (
+        <RteButton title="Убрать форматирование" onClick={() => run((c) => c.clearNodes().unsetAllMarks())}>
+          <IconClear />
+        </RteButton>
+      )}
+      {children}
     </div>
   )
 }
 
-function RteButton({
+export function RteButton({
   title,
   active,
   onClick,

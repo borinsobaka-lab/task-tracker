@@ -4,13 +4,13 @@
 
 import React, { createContext, useContext, useEffect, useMemo, useSyncExternalStore } from 'react'
 import { produce } from 'immer'
-import type { Attachment, BoardData, Card, CardKind, ChecklistItem, Column, ColumnRole, Comment, EisenhowerQuadrant, ID, Member, Project, RecurrenceRule, Series } from './types'
+import type { Attachment, BoardData, Card, CardKind, ChecklistItem, Column, ColumnRole, Comment, EisenhowerQuadrant, ID, Member, Note, Project, RecurrenceRule, Series } from './types'
 import type { StorageAdapter } from './storage/adapter'
 import { ConflictError } from './storage/adapter'
 import { emptyBoard, mergeBoards, normalizeBoard } from './merge'
 import { dateMatchesRule, firstOccurrence, nextOccurrence } from './recurrence'
 import { getIdentity, setIdentityId } from './config'
-import { clamp, nowISO, toDateKey, uid } from './utils'
+import { clamp, hasContent, nowISO, toDateKey, uid } from './utils'
 import { celebrate } from './confetti'
 
 export interface SeriesInput {
@@ -510,6 +510,22 @@ export interface BoardStore {
   uploadAttachment(cardId: ID, file: File): Promise<void>
   removeAttachment(cardId: ID, attId: ID): Promise<void>
   downloadAttachment(att: Attachment): Promise<void>
+  /** Содержимое вложения (для показа картинок) */
+  attachmentBlob(att: Attachment): Promise<Blob>
+
+  // Заметки
+  /** Живые заметки: закреплённые сверху, дальше — по дате изменения (новые выше) */
+  notes: Note[]
+  note(id: ID): Note | undefined
+  addNote(): ID
+  updateNote(id: ID, patch: { title?: string; html?: string }): void
+  setNotePinned(id: ID, pinned: boolean): void
+  /** Удалить заметку (надгробие) вместе с файлами вложений */
+  deleteNote(id: ID): void
+  /** Загрузить файл и добавить в заметку. meta.id — заранее выбранный id (узел в тексте уже вставлен). */
+  uploadNoteAttachment(noteId: ID, file: File, meta: { id: ID; thumb?: string; w?: number; h?: number }): Promise<void>
+  /** Уход из заметки: пустую удаляем, а вложения, убранные из текста, стираем вместе с файлами */
+  cleanupNote(id: ID): void
 
   flush(): Promise<void>
   refresh(): Promise<void>
@@ -557,6 +573,13 @@ export function useBoard(): BoardStore {
 /** Как useBoard, но возвращает null, пока данные не загрузились */
 export function useMaybeBoard(): BoardStore | null {
   return useContext(StoreContext)
+}
+
+/** Удаление файлов вложений в хранилище (в фоне; ошибки — только в консоль). */
+function deleteFiles(engine: SyncEngine, files: Attachment[]): void {
+  for (const att of files) {
+    engine.adapter.deleteAttachment(att).catch((e) => console.warn('Не удалось удалить файл вложения', e))
+  }
 }
 
 function touch(e: { updatedAt: string }): void {
@@ -1264,6 +1287,108 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
         }
       }
     },
+    attachmentBlob: (att) => engine.adapter.downloadAttachment(att),
+
+    notes: Object.values(data.notes ?? {})
+      .filter((n) => !n.deleted)
+      .sort((a, b) => Number(!!b.pinned) - Number(!!a.pinned) || b.updatedAt.localeCompare(a.updatedAt)),
+    note: (id) => {
+      const n = data.notes?.[id]
+      return n && !n.deleted ? n : undefined
+    },
+    addNote: () => {
+      const id = uid()
+      const ts = nowISO()
+      engine.update((d) => {
+        if (!d.notes) d.notes = {}
+        d.notes[id] = {
+          id,
+          title: '',
+          html: '',
+          attachments: [],
+          ...(identity ? { authorId: identity.id } : {}),
+          createdAt: ts,
+          updatedAt: ts,
+        }
+      })
+      return id
+    },
+    updateNote: (id, patch) =>
+      engine.update((d) => {
+        const n = d.notes?.[id]
+        if (!n || n.deleted) return
+        let changed = false
+        if (patch.title !== undefined && patch.title !== n.title) {
+          n.title = patch.title
+          changed = true
+        }
+        if (patch.html !== undefined && patch.html !== n.html) {
+          n.html = patch.html
+          changed = true
+        }
+        if (changed) touch(n)
+      }),
+    setNotePinned: (id, pinned) =>
+      engine.update((d) => {
+        const n = d.notes?.[id]
+        if (!n || n.deleted || !!n.pinned === pinned) return
+        if (pinned) n.pinned = true
+        else delete n.pinned
+        // updatedAt не трогаем через touch: закрепление не должно поднимать заметку
+        // в «Сегодня». Но для слияния (LWW) нужна отметка — сдвигаем на 1 мс вперёд.
+        n.updatedAt = new Date(Date.parse(n.updatedAt) + 1).toISOString()
+      }),
+    deleteNote: (id) => {
+      const files: Attachment[] = []
+      engine.update((d) => {
+        const n = d.notes?.[id]
+        if (!n || n.deleted) return
+        files.push(...n.attachments.map((a) => ({ ...a })))
+        n.deleted = true
+        n.title = ''
+        n.html = ''
+        n.attachments = []
+        touch(n)
+      })
+      deleteFiles(engine, files)
+    },
+    cleanupNote: (id) => {
+      const files: Attachment[] = []
+      engine.update((d) => {
+        const n = d.notes?.[id]
+        if (!n || n.deleted) return
+        const empty = !n.title.trim() && !hasContent(n.html) && !n.html.includes('data-note-att') && n.attachments.length === 0
+        if (empty) {
+          n.deleted = true
+          touch(n)
+          return
+        }
+        // Вложения, которых больше нет в тексте (узел удалили), — убираем вместе с файлом
+        const orphans = n.attachments.filter((a) => !n.html.includes(`data-note-att="${a.id}"`))
+        if (orphans.length === 0) return
+        files.push(...orphans.map((a) => ({ ...a })))
+        n.attachments = n.attachments.filter((a) => !orphans.includes(a))
+        touch(n)
+      })
+      deleteFiles(engine, files)
+    },
+    uploadNoteAttachment: async (noteId, file, meta) => {
+      const uploaded = await engine.adapter.uploadAttachment(`note-${noteId}`, file, snap.identityId ?? undefined, meta.id)
+      const att: Attachment = { ...uploaded }
+      if (meta.thumb) att.thumb = meta.thumb
+      if (meta.w && meta.h) {
+        att.w = meta.w
+        att.h = meta.h
+      }
+      engine.update((d) => {
+        const n = d.notes?.[noteId]
+        if (!n || n.deleted) return
+        if (n.attachments.some((a) => a.id === att.id)) return
+        n.attachments.push(att)
+        touch(n)
+      })
+    },
+
     downloadAttachment: async (att) => {
       const blob: Blob = await engine.adapter.downloadAttachment(att)
       const url = URL.createObjectURL(blob)

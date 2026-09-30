@@ -76,10 +76,10 @@ export function setIdentityId(id: string | null): void {
   else localStorage.removeItem(LS.identity)
 }
 
-export type SavedView = 'board' | 'calendar' | 'matrix' | 'recurring'
+export type SavedView = 'board' | 'calendar' | 'matrix' | 'recurring' | 'notes'
 export function getSavedView(): SavedView {
   const v = localStorage.getItem(LS.view)
-  return v === 'calendar' || v === 'matrix' || v === 'recurring' ? v : 'board'
+  return v === 'calendar' || v === 'matrix' || v === 'recurring' || v === 'notes' ? v : 'board'
 }
 export function setSavedView(v: SavedView): void {
   localStorage.setItem(LS.view, v)

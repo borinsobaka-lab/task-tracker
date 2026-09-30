@@ -3,7 +3,7 @@
 // удаления — через надгробия (deleted: true). После слияния доска нормализуется:
 // каждая живая карточка лежит ровно в одной живой колонке.
 
-import type { Attachment, BoardData, Card, ChecklistItem, Column, Comment, Member, ID, Project, Series } from './types'
+import type { Attachment, BoardData, Card, ChecklistItem, Column, Comment, Member, ID, Note, Project, Series } from './types'
 import { nowISO } from './utils'
 
 const TOMBSTONE_TTL_MS = 45 * 24 * 60 * 60 * 1000
@@ -65,6 +65,14 @@ function mergeChecklist(base: ChecklistItem[], other: ChecklistItem[]): Checklis
   return result
 }
 
+/** Слияние двух версий заметки: текст — по LWW, вложения объединяем (как у карточек). */
+function mergeNote(a: Note, b: Note): Note {
+  const base = newer(a, b)
+  if (base.deleted) return base
+  const other = base === a ? b : a
+  return { ...base, attachments: mergeAttachments(base.attachments, other.attachments) }
+}
+
 function mergeAttachments(a: Attachment[], b: Attachment[]): Attachment[] {
   const byId = new Map<ID, Attachment>()
   for (const x of a) byId.set(x.id, x)
@@ -108,6 +116,14 @@ export function mergeBoards(local: BoardData, remote: BoardData): BoardData {
     series[id] = l && r ? newer(l, r) : (l ?? r)!
   }
 
+  const notes: Record<ID, Note> = {}
+  const nids = new Set([...Object.keys(local.notes ?? {}), ...Object.keys(remote.notes ?? {})])
+  for (const id of nids) {
+    const l = local.notes?.[id]
+    const r = remote.notes?.[id]
+    notes[id] = l && r ? mergeNote(l, r) : (l ?? r)!
+  }
+
   return normalizeBoard({
     schemaVersion: 1,
     members,
@@ -115,6 +131,7 @@ export function mergeBoards(local: BoardData, remote: BoardData): BoardData {
     cards,
     series,
     projects,
+    notes,
     updatedAt: local.updatedAt >= remote.updatedAt ? local.updatedAt : remote.updatedAt,
   })
 }
@@ -200,7 +217,16 @@ export function normalizeBoard(data: BoardData): BoardData {
     series[id] = s
   }
 
-  const result = { ...data, columns: keptColumns, cards, series }
+  const notes: Record<ID, Note> = {}
+  for (const [id, n] of Object.entries(data.notes ?? {})) {
+    if (n.deleted) {
+      const t = Date.parse(n.updatedAt)
+      if (!Number.isNaN(t) && t < cutoff) continue // старое надгробие заметки — выкидываем
+    }
+    notes[id] = n
+  }
+
+  const result = { ...data, columns: keptColumns, cards, series, notes }
   // Журнал истории проекта убран из приложения — вычищаем его из старых данных,
   // чтобы не хранить и не тащить при загрузке.
   delete (result as { activity?: unknown }).activity
@@ -229,6 +255,7 @@ export function emptyBoard(): BoardData {
     cards: {},
     series: {},
     projects: [],
+    notes: {},
     updatedAt: ts,
   }
 }
