@@ -35,6 +35,11 @@ export interface Attachment {
   mime: string
   uploadedAt: string
   uploadedBy?: ID
+  /** Крошечное превью картинки (data-URL JPEG ~96px) — для списка заметок, без скачивания файла. */
+  thumb?: string
+  /** Размеры картинки в пикселях — чтобы заранее занять место под неё в тексте заметки. */
+  w?: number
+  h?: number
 }
 
 /** Комментарий к задаче. HTML из редактора (санитизируется при выводе). */
@@ -192,6 +197,30 @@ export interface Project {
   updatedAt: string
 }
 
+/**
+ * Заметка (раздел «Заметки»): название + текст с форматированием. Файлы и
+ * картинки вставляются прямо в текст (узел <div data-note-att="id">), а их
+ * метаданные лежат в attachments.
+ */
+export interface Note {
+  id: ID
+  title: string
+  /** HTML из редактора */
+  html: string
+  attachments: Attachment[]
+  /** Закреплена — показывается в самом верху списка */
+  pinned?: boolean
+  /** Проект заметки. Нет — заметку видят все; есть — только те, кому виден проект
+   *  (у проекта без списка участников — тоже все). */
+  projectId?: ID
+  /** Кто создал заметку */
+  authorId?: ID
+  /** Надгробие для синхронизации удалений */
+  deleted?: boolean
+  createdAt: string
+  updatedAt: string
+}
+
 export interface BoardData {
   schemaVersion: 1
   members: Member[]
@@ -201,5 +230,7 @@ export interface BoardData {
   series?: Record<ID, Series>
   /** Проекты для табов в шапке (может отсутствовать в старых данных) */
   projects?: Project[]
+  /** Заметки (может отсутствовать в старых данных) */
+  notes?: Record<ID, Note>
   updatedAt: string
 }

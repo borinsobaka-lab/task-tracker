@@ -39,9 +39,9 @@ export class LocalAdapter implements StorageAdapter {
     return { rev }
   }
 
-  async uploadAttachment(cardId: string, file: File, uploadedBy?: string): Promise<Attachment> {
+  async uploadAttachment(cardId: string, file: File, uploadedBy?: string, presetId?: string): Promise<Attachment> {
     if (file.size > 500 * 1024) throw new Error('В демо-режиме вложения ограничены 500 КБ')
-    const id = uid()
+    const id = presetId ?? uid()
     const path = `local/${cardId}/${id}`
     const buf = await file.arrayBuffer()
     const bytes = new Uint8Array(buf)

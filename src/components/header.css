@@ -249,4 +249,8 @@
     margin-left: 0;
     flex: 0 0 auto;
   }
+  /* Табов проектов нет (не заведены или раздел «Заметки») — настройки всё равно у правого края */
+  .app-header:not(:has(.project-tabs)) .header-right {
+    margin-left: auto;
+  }
 }

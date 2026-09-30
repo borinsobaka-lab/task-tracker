@@ -24,7 +24,8 @@ export interface StorageAdapter {
   init(data: BoardData): Promise<RemoteState>
   /** Сохраняет данные поверх ревизии baseRev; бросает ConflictError при гонке */
   save(data: BoardData, baseRev: string): Promise<{ rev: string }>
-  uploadAttachment(cardId: string, file: File, uploadedBy?: string): Promise<Attachment>
+  /** ownerId — id карточки или заметки (папка файла); id — заранее выбранный id вложения (необязательно) */
+  uploadAttachment(ownerId: string, file: File, uploadedBy?: string, id?: string): Promise<Attachment>
   deleteAttachment(att: Attachment): Promise<void>
   downloadAttachment(att: Attachment): Promise<Blob>
 }

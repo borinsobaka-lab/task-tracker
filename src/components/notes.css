@@ -1,0 +1,954 @@
+/* Раздел «Заметки» (.notes-*, .note-*) и вложения внутри текста (.natt-*).
+   --notes-color задаётся из NOTES_COLOR (жёлтый, как у Apple Notes). */
+
+.notes {
+  --notes-ink: #b7870a; /* тёмно-жёлтый для текста/иконок — читается на белом */
+  --notes-soft: #fcefbf; /* выделение активной заметки */
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  background: var(--surface);
+}
+
+/* Невидимое поле — держит клавиатуру открытой, пока появляется новая заметка */
+.notes-kb-proxy {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  font-size: 16px;
+  pointer-events: none;
+}
+
+/* ---------- Список ---------- */
+
+.notes-list-pane {
+  width: 320px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--bg-panel);
+  border-right: 1px solid var(--border);
+}
+.notes-list-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 10px 4px 16px;
+}
+.notes-list-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 17px;
+  font-weight: 700;
+}
+.notes-list-ico {
+  display: inline-flex;
+}
+.notes-count {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-faint);
+}
+.notes .notes-compose {
+  width: 36px;
+  height: 36px;
+}
+
+.notes-search {
+  position: relative;
+  margin: 6px 12px 8px;
+}
+.notes-search-ico {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  color: var(--text-faint);
+  pointer-events: none;
+}
+.notes-search-input {
+  width: 100%;
+  height: 34px;
+  padding: 0 12px 0 32px;
+  border: none;
+  border-radius: 9px;
+  background: var(--surface-2);
+  outline: none;
+}
+.notes-search-input:focus {
+  box-shadow: 0 0 0 2px var(--notes-soft);
+  background: var(--surface);
+}
+
+.notes-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 8px 20px;
+}
+.notes-group-title {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin: 14px 10px 4px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-soft);
+}
+.notes-group:first-child .notes-group-title {
+  margin-top: 6px;
+}
+.notes-group-pin {
+  display: inline-flex;
+  color: var(--notes-ink);
+}
+
+.note-row {
+  position: relative;
+  overflow: hidden;
+  border-radius: 9px;
+}
+.note-row-main {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: inherit;
+  cursor: pointer;
+  outline: none;
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+/* Тонкий разделитель между заметками (как в Apple Notes) */
+.note-row + .note-row::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 12px;
+  right: 12px;
+  border-top: 1px solid var(--border);
+  z-index: 2;
+}
+.note-row.active::before,
+.note-row.active + .note-row::before {
+  border-top-color: transparent;
+}
+.note-row.active .note-row-main {
+  background: var(--notes-soft);
+}
+.note-row-main:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--notes-color);
+}
+.note-row-text {
+  flex: 1;
+  min-width: 0;
+}
+.note-row-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.note-row-sub {
+  display: flex;
+  gap: 7px;
+  margin-top: 2px;
+  font-size: 12.5px;
+  white-space: nowrap;
+  min-width: 0;
+}
+.note-row-date {
+  flex-shrink: 0;
+  color: var(--text);
+  font-weight: 500;
+}
+.note-row-preview {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text-soft);
+}
+.note-row-author {
+  margin-top: 2px;
+  font-size: 11.5px;
+  color: var(--text-faint);
+}
+.note-row-project {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-soft);
+  font-weight: 600;
+}
+.note-row-thumb {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: 7px;
+  object-fit: cover;
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+
+/* Десктоп: при наведении — «закрепить» и «удалить» */
+.note-row-hover {
+  display: none;
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  gap: 2px;
+  padding: 2px;
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+@media (hover: hover) {
+  .note-row-main:hover {
+    background: var(--surface-2);
+  }
+  .note-row.active .note-row-main:hover {
+    background: var(--notes-soft);
+  }
+  .note-row-main:hover .note-row-hover {
+    display: flex;
+  }
+}
+
+/* Телефон/планшет: кнопки под строкой, открываются свайпом влево */
+.note-row-actions {
+  display: none;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 148px;
+}
+.note-row-act {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  border: none;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.note-row-act.pin {
+  background: #f59e0b;
+}
+.note-row-act.del {
+  background: var(--danger);
+}
+@media (hover: none) {
+  .note-row-actions {
+    display: flex;
+  }
+  .note-row-main {
+    background: var(--bg-panel); /* непрозрачная — прячет кнопки, пока не свайпнули */
+  }
+}
+
+.notes-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 48px 20px;
+  text-align: center;
+  font-size: 13.5px;
+}
+.notes-empty-ico {
+  display: inline-flex;
+  margin-bottom: 4px;
+}
+.notes-empty-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+}
+.notes-empty-btn {
+  margin-top: 10px;
+}
+
+/* ---------- Открытая заметка ---------- */
+
+.notes-editor-pane {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.notes-editor-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+}
+
+/* Десктоп: одна строка сверху — форматирование слева, действия справа */
+.note-editor {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-areas:
+    'format top'
+    'scroll scroll';
+  background: var(--surface);
+}
+.note-topbar {
+  grid-area: top;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px 0 4px;
+  border-bottom: 1px solid var(--border);
+}
+.note-back {
+  display: none;
+}
+.note-topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+}
+.note-topbar .icon-btn {
+  width: 34px;
+  height: 34px;
+}
+.note-pin-btn.on {
+  color: var(--notes-ink);
+}
+
+.note-format {
+  grid-area: format;
+  border-bottom: 1px solid var(--border);
+  min-width: 0;
+}
+.note-format .rte-toolbar {
+  border-bottom: none;
+  padding: 7px 12px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.note-format .rte-toolbar::-webkit-scrollbar {
+  display: none;
+}
+.note-format .rte-btn.active {
+  background: var(--notes-soft);
+  color: var(--notes-ink);
+}
+.note-attach-wrap {
+  position: relative;
+  display: inline-flex;
+}
+.note-attach-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+}
+.note-attach-menu {
+  position: fixed; /* у панели overflow: auto — иначе меню обрезалось бы */
+  z-index: 31;
+  margin-top: 36px;
+  min-width: 200px;
+  padding: 4px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow-md);
+  display: flex;
+  flex-direction: column;
+}
+.note-attach-menu button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border: none;
+  background: none;
+  border-radius: 8px;
+  text-align: left;
+  font-size: 14px;
+  cursor: pointer;
+  color: var(--text);
+}
+.note-attach-menu button:hover {
+  background: var(--surface-2);
+}
+.note-attach-menu button svg {
+  color: var(--notes-ink);
+}
+
+.note-scroll {
+  grid-area: scroll;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.note-paper {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 16px 36px 120px;
+}
+.note-date {
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-faint);
+  margin-bottom: 12px;
+}
+.note-title {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: none;
+  outline: none;
+  resize: none;
+  overflow: hidden;
+  background: none;
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+.note-title::placeholder {
+  color: var(--text-faint);
+}
+
+.rte-content.note-content {
+  padding: 10px 0 0;
+  min-height: 45vh;
+  max-height: none;
+  overflow: visible;
+  font-size: 15.5px;
+  line-height: 1.6;
+}
+.note-content h2 {
+  font-size: 20px;
+}
+.note-content h3 {
+  font-size: 17px;
+}
+
+/* Проект заметки: чип выбора + кто видит */
+.note-project {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  margin-bottom: 10px;
+}
+.note-project-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  padding: 4px 9px 4px 7px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--text-soft);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.note-project-btn:hover {
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+.note-project-btn.set {
+  background: var(--notes-soft);
+  border-color: transparent;
+  color: var(--text);
+}
+.note-project-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.note-project-who {
+  font-size: 12px;
+  color: var(--text-faint);
+}
+.note-project-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 31;
+  width: min(340px, calc(100vw - 32px));
+  max-height: 50vh;
+  overflow-y: auto;
+  padding: 4px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow-md);
+}
+.note-project-menu button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  color: var(--text);
+}
+.note-project-menu button:hover {
+  background: var(--surface-2);
+}
+.note-project-menu button[aria-checked='true'] {
+  background: var(--notes-soft);
+}
+.note-project-menu button > svg {
+  color: var(--notes-ink);
+  flex-shrink: 0;
+}
+.note-project-opt-ico {
+  display: inline-flex;
+  width: 22px;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--text-faint);
+}
+.note-project-opt-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.note-project-opt-name {
+  font-size: 14px;
+  font-weight: 600;
+}
+.note-project-opt-who {
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+/* Чек-лист (TaskList): круглые отметки, выполненное — серым */
+.note-content ul[data-type='taskList'] {
+  list-style: none;
+  padding-left: 0;
+  margin: 6px 0;
+}
+.note-content ul[data-type='taskList'] ul[data-type='taskList'] {
+  padding-left: 26px;
+  margin: 2px 0;
+}
+.note-content li[data-checked] {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  margin: 3px 0;
+}
+.note-content li[data-checked] > label {
+  flex-shrink: 0;
+  display: inline-flex;
+  margin-top: 3px;
+  user-select: none;
+}
+.note-content li[data-checked] > div {
+  flex: 1;
+  min-width: 0;
+}
+.note-content li[data-checked] input[type='checkbox'] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 19px;
+  height: 19px;
+  margin: 0;
+  border: 1.6px solid var(--border-strong);
+  border-radius: 50%;
+  background: var(--surface);
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+}
+.note-content li[data-checked] input[type='checkbox']:checked {
+  border-color: var(--notes-color);
+  background: var(--notes-color)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 8.4 6.8 11 12 5.4' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+    center / 15px no-repeat;
+}
+.note-content li[data-checked='true'] > div {
+  color: var(--text-faint);
+}
+
+/* ---------- Вложения внутри текста ---------- */
+
+.natt {
+  margin: 12px 0;
+}
+.natt-img-box {
+  position: relative;
+  display: block;
+  max-width: 100%;
+  min-height: 60px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--surface-2);
+  cursor: zoom-in;
+}
+.natt-img-box img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.natt-img-blur {
+  filter: blur(10px);
+  transform: scale(1.06);
+}
+.natt-img-ph {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 140px;
+  font-size: 13px;
+  color: var(--text-faint);
+}
+.natt-progress {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.4);
+}
+.natt-failed {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: var(--danger);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+}
+.natt-file-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: min(100%, 400px);
+  padding: 10px 44px 10px 10px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface-2);
+  cursor: pointer;
+}
+.natt-file-box.disabled {
+  cursor: default;
+}
+.natt-file-box:not(.disabled):hover {
+  border-color: var(--border-strong);
+}
+.natt-file-ico {
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9px;
+  background: var(--surface);
+  color: var(--notes-ink);
+}
+.natt-file-text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.natt-file-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.natt-file-meta {
+  font-size: 12px;
+  color: var(--text-faint);
+}
+.natt-selected .natt-img-box,
+.natt-selected .natt-file-box {
+  outline: 3px solid var(--notes-color);
+  outline-offset: 2px;
+}
+.natt-del {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgba(20, 22, 34, 0.6);
+  color: #fff;
+  cursor: pointer;
+}
+.natt-file-box .natt-del {
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  color: var(--text-faint);
+}
+.natt-selected .natt-del {
+  display: inline-flex;
+}
+@media (hover: hover) {
+  .natt:hover .natt-del {
+    display: inline-flex;
+  }
+}
+@media (hover: none) {
+  /* На телефоне у файла крестик виден всегда; картинку убирают из просмотрщика */
+  .natt-file-box .natt-del {
+    display: inline-flex;
+  }
+}
+
+/* ---------- Просмотр картинки ---------- */
+
+.note-viewer {
+  position: fixed;
+  inset: 0;
+  z-index: 400;
+  display: flex;
+  flex-direction: column;
+  background: rgba(10, 10, 14, 0.94);
+  animation: note-fade 0.15s ease-out;
+}
+.note-viewer-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  padding-top: calc(env(safe-area-inset-top) + 10px);
+  color: #fff;
+}
+.note-viewer-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+  opacity: 0.85;
+}
+.note-viewer-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 38px;
+  height: 38px;
+  padding: 0 8px;
+  border: none;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  cursor: pointer;
+  font-weight: 600;
+}
+.note-viewer-btn.text {
+  padding: 0 14px;
+}
+.note-viewer-btn.danger {
+  color: #fca5a5;
+}
+.note-viewer-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  padding-bottom: calc(env(safe-area-inset-bottom) + 12px);
+}
+.note-viewer-body img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 4px;
+}
+@keyframes note-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+/* ---------- Телефон: список на весь экран, заметка — поверх ---------- */
+
+@media (max-width: 720px) {
+  .notes-list-pane {
+    width: 100%;
+    border-right: none;
+    background: var(--bg);
+  }
+  /* Заголовок «Заметки» уже в шапке приложения, новая — кнопкой «+» в нижнем меню */
+  .notes-list-head {
+    display: none;
+  }
+  .notes-search {
+    margin: 10px 16px 4px;
+  }
+  .notes-search-input {
+    height: 38px;
+    font-size: 16px; /* 16px — чтобы iOS не приближал страницу */
+    background: var(--surface);
+  }
+  .notes-list {
+    padding: 0 16px 28px;
+  }
+  .notes-group-title {
+    margin: 18px 4px 8px;
+    font-size: 18px;
+    color: var(--text);
+  }
+  .notes-group:first-child .notes-group-title {
+    margin-top: 10px;
+  }
+  .notes-group-pin {
+    font-size: 16px;
+  }
+  .notes-group-items {
+    background: var(--surface);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .note-row {
+    border-radius: 0;
+  }
+  .note-row + .note-row::before {
+    left: 16px;
+    right: 0;
+  }
+  .note-row-main,
+  .note-row.active .note-row-main {
+    padding: 11px 16px;
+    background: var(--surface);
+  }
+  .note-row-title {
+    font-size: 16px;
+  }
+  .note-row-sub {
+    font-size: 14px;
+  }
+  .note-row-thumb {
+    width: 50px;
+    height: 50px;
+  }
+
+  .notes-editor-pane {
+    display: none;
+  }
+  .notes-has-open .notes-editor-pane {
+    display: block;
+  }
+  /* Заметка — отдельный экран поверх всего; высота = видимая часть над клавиатурой */
+  .note-editor {
+    position: fixed;
+    left: 0;
+    right: 0;
+    top: var(--vv-top, 0px);
+    height: var(--vv-h, 100%);
+    z-index: 150;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      'top'
+      'scroll'
+      'format';
+    animation: note-in 0.22s ease-out;
+  }
+  .note-topbar {
+    padding: 4px 8px;
+    padding-top: calc(env(safe-area-inset-top) + 4px);
+    border-bottom: none;
+  }
+  .note-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 0;
+    padding: 6px 4px;
+    border: none;
+    background: none;
+    color: var(--notes-ink);
+    font-size: 17px;
+    cursor: pointer;
+  }
+  .note-topbar .icon-btn {
+    width: 40px;
+    height: 40px;
+    color: var(--notes-ink);
+  }
+  .note-paper {
+    padding: 4px 18px 48px;
+  }
+  .note-title {
+    font-size: 24px;
+  }
+  .rte-content.note-content {
+    font-size: 16px;
+    min-height: 30vh;
+  }
+  /* Панель форматирования — внизу, над клавиатурой */
+  .note-format {
+    border-bottom: none;
+    border-top: 1px solid var(--border);
+    background: var(--bg-panel);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .note-format .rte-toolbar {
+    padding: 5px 8px;
+  }
+  .note-format .rte-btn {
+    min-width: 38px;
+    height: 38px;
+  }
+  /* Меню «Прикрепить» — над панелью (переменные --vv-* заданы на .note-editor) */
+  .note-attach-menu {
+    margin-top: 0;
+    left: 12px;
+    top: calc(var(--vv-top, 0px) + var(--vv-h, 100vh) - 56px - env(safe-area-inset-bottom));
+    transform: translateY(-100%);
+  }
+}
+@keyframes note-in {
+  from {
+    transform: translateX(100%);
+  }
+}

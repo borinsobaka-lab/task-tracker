@@ -269,10 +269,10 @@ test('комментарии: добавление, бейдж, правка и 
 test('мобильная навигация: разделы в нижнем меню', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 780 })
   await createIdentity(page)
-  // Верхние табы скрыты, снизу — навигация из 4 разделов
+  // Верхние табы скрыты, снизу — навигация из 5 разделов
   await expect(page.locator('.view-tabs')).toBeHidden()
   await expect(page.locator('.bottom-nav')).toBeVisible()
-  await expect(page.locator('.bottom-nav-item:not(.bottom-nav-add)')).toHaveCount(4)
+  await expect(page.locator('.bottom-nav-item:not(.bottom-nav-add)')).toHaveCount(5)
   // В шапке — название текущего раздела
   await expect(page.locator('.header-title-mobile')).toHaveText('Доска')
   // Переключаемся на «Календарь» через нижнее меню
@@ -512,4 +512,173 @@ test('живая публичная ссылка на таймлайн — вн�
   await expect(pub.locator('.tl-card', { hasText: 'Задача из виджета' })).toBeVisible()
   await expect(pub.locator('.view-tabs')).toHaveCount(0)
   await expect(pub.locator('.tl-card.clickable')).toHaveCount(0)
+})
+
+// ---------- Заметки ----------
+
+/** Маленькая PNG-картинка (1×1) для вложений */
+const PNG_1PX = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+  'base64',
+)
+
+test('заметки: создание, форматирование и сохранение после перезагрузки', async ({ page }) => {
+  await createIdentity(page)
+  await page.locator('.view-tabs button', { hasText: 'Заметки' }).click()
+  await expect(page.getByText('Заметок пока нет')).toBeVisible()
+  // В заметках своя кнопка создания — плавающей «Добавить задачу» нет
+  await expect(page.locator('.fab')).toBeHidden()
+
+  await page.getByRole('button', { name: 'Новая заметка' }).first().click()
+  await expect(page.locator('.note-title')).toBeFocused()
+  await page.keyboard.type('Идеи для отпуска')
+  await page.keyboard.press('Enter')
+  await expect(page.locator('.note-content')).toBeFocused()
+  await page.keyboard.type('Взять ')
+  await page.getByTitle('Полужирный').click()
+  await page.keyboard.type('паспорт')
+
+  // Строка в списке: название и превью текста
+  const row = page.locator('.note-row', { hasText: 'Идеи для отпуска' })
+  await expect(row).toBeVisible()
+  await expect(row.locator('.note-row-preview')).toHaveText('Взять паспорт')
+
+  // Раздел и заметка переживают перезагрузку
+  await page.waitForTimeout(1500)
+  await page.reload()
+  await expect(page.locator('.note-title')).toHaveValue('Идеи для отпуска')
+  await expect(page.locator('.note-content strong')).toHaveText('паспорт')
+})
+
+test('заметки: чек-лист, закрепление и удаление пустой заметки', async ({ page }) => {
+  await createIdentity(page)
+  await page.locator('.view-tabs button', { hasText: 'Заметки' }).click()
+  const compose = page.getByRole('button', { name: 'Новая заметка' }).first()
+
+  await compose.click()
+  await page.keyboard.type('Покупки')
+  await page.keyboard.press('Enter')
+  await page.getByTitle('Чек-лист').click()
+  await page.keyboard.type('Молоко')
+  await page.keyboard.press('Enter')
+  await page.keyboard.type('Хлеб')
+  await expect(page.locator('.note-content li[data-checked]')).toHaveCount(2)
+  await page.locator('.note-content input[type="checkbox"]').first().check()
+  await expect(page.locator('.note-content li[data-checked="true"]')).toHaveCount(1)
+
+  await compose.click()
+  await page.keyboard.type('Вторая')
+  await page.getByRole('button', { name: 'Закрепить' }).last().click()
+  await expect(page.locator('.notes-group').first().locator('.notes-group-title')).toHaveText('Закреплённые')
+  await expect(page.locator('.notes-group').first()).toContainText('Вторая')
+
+  // Пустая заметка при уходе из неё удаляется сама
+  await compose.click()
+  await expect(page.locator('.note-row')).toHaveCount(3)
+  await page.locator('.note-row', { hasText: 'Покупки' }).locator('.note-row-main').click()
+  await expect(page.locator('.note-row')).toHaveCount(2)
+})
+
+test('заметки: картинка прямо в тексте, миниатюра в списке и просмотр', async ({ page }) => {
+  await createIdentity(page)
+  await page.locator('.view-tabs button', { hasText: 'Заметки' }).click()
+  await page.getByRole('button', { name: 'Новая заметка' }).first().click()
+  await page.keyboard.type('С картинкой')
+  await page.keyboard.press('Enter')
+  await page.locator('input[type="file"][accept^="image"]').first().setInputFiles({
+    name: 'photo.png',
+    mimeType: 'image/png',
+    buffer: PNG_1PX,
+  })
+  await page.locator('input[type="file"]:not([accept])').setInputFiles({
+    name: 'readme.txt',
+    mimeType: 'text/plain',
+    buffer: Buffer.from('привет'),
+  })
+  // Картинка и файл — внутри текста заметки (вторая вставка не заменяет первую)
+  await expect(page.locator('.note-content .natt-img-box img')).toBeVisible()
+  await expect(page.locator('.note-content .natt-file-name')).toHaveText('readme.txt')
+  await expect(page.locator('.natt-uploading')).toHaveCount(0)
+  // Миниатюра в строке списка
+  await expect(page.locator('.note-row', { hasText: 'С картинкой' }).locator('.note-row-thumb')).toBeVisible()
+  // Просмотр на весь экран
+  await page.locator('.natt-img-box').click()
+  await expect(page.locator('.note-viewer')).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(page.locator('.note-viewer')).toBeHidden()
+})
+
+test('заметки на телефоне: «+» создаёт заметку, «‹ Заметки» возвращает к списку', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 780 })
+  await createIdentity(page)
+  await page.locator('.bottom-nav-item', { hasText: 'Заметки' }).click()
+  await expect(page.locator('.header-title-mobile')).toHaveText('Заметки')
+  await page.locator('.bottom-nav-add').click()
+  // Заметка открылась поверх списка, курсор в названии
+  await expect(page.locator('.note-editor')).toBeVisible()
+  await page.keyboard.type('С телефона')
+  await page.keyboard.press('Enter')
+  await page.keyboard.type('Текст заметки')
+  await page.locator('.note-back').click()
+  await expect(page.locator('.note-editor')).toBeHidden()
+  await expect(page.locator('.note-row', { hasText: 'С телефона' })).toBeVisible()
+  // Открываем снова и закрываем системным «назад»
+  await page.locator('.note-row', { hasText: 'С телефона' }).locator('.note-row-main').click()
+  await expect(page.locator('.note-editor')).toBeVisible()
+  await page.goBack()
+  await expect(page.locator('.note-editor')).toBeHidden()
+  await expect(page.locator('.note-row')).toHaveCount(1)
+})
+
+test('заметки: без проекта видят все, с проектом — только участники проекта', async ({ page }) => {
+  await createIdentity(page, 'Борис')
+  // Ждём, пока участник сохранится в хранилище (сохранение отложенное)
+  await page.waitForFunction(() => (JSON.parse(localStorage.getItem('tt.local.data') ?? '{}').members ?? []).length > 0)
+  // Готовим данные: второй участник, проекты с участниками и три заметки
+  await page.evaluate(() => {
+    const data = JSON.parse(localStorage.getItem('tt.local.data')!)
+    const boris = localStorage.getItem('tt.identity')!
+    const ts = new Date().toISOString()
+    data.members.push({ id: 'anya', name: 'Аня', color: '#ec4899', createdAt: ts, updatedAt: ts })
+    data.projects = [
+      { id: 'p-boris', name: 'Проект Бориса', memberIds: [boris], createdAt: ts, updatedAt: ts },
+      { id: 'p-anya', name: 'Проект Ани', memberIds: ['anya'], createdAt: ts, updatedAt: ts },
+    ]
+    const note = (id: string, title: string, projectId?: string) => ({
+      id, title, html: '<p>текст</p>', attachments: [], ...(projectId ? { projectId } : {}), createdAt: ts, updatedAt: ts,
+    })
+    data.notes = {
+      n1: note('n1', 'Общая заметка'),
+      n2: note('n2', 'Заметка Ани', 'p-anya'),
+      n3: note('n3', 'Заметка Бориса', 'p-boris'),
+    }
+    localStorage.setItem('tt.local.data', JSON.stringify(data))
+    localStorage.setItem('tt.local.rev', String(Number(localStorage.getItem('tt.local.rev') ?? '1') + 1))
+    localStorage.setItem('tt.view', 'notes')
+  })
+  await page.reload()
+
+  // Борис видит общую и заметку своего проекта, но не заметку проекта Ани
+  await expect(page.locator('.note-row', { hasText: 'Общая заметка' })).toBeVisible()
+  await expect(page.locator('.note-row', { hasText: 'Заметка Бориса' })).toBeVisible()
+  await expect(page.locator('.note-row', { hasText: 'Заметка Ани' })).toHaveCount(0)
+
+  // Относим общую заметку к проекту Бориса — в выборе нет чужого проекта
+  await page.locator('.note-row', { hasText: 'Общая заметка' }).locator('.note-row-main').click()
+  await page.locator('.note-project-btn').click()
+  await expect(page.locator('.note-project-menu')).not.toContainText('Проект Ани')
+  await page.locator('.note-project-menu button', { hasText: 'Проект Бориса' }).click()
+  await expect(page.locator('.note-project-who')).toHaveText('видят только: Борис')
+
+  // Таб проекта в шапке оставляет только его заметки
+  await page.getByRole('tab', { name: 'Проект Бориса' }).click()
+  await expect(page.locator('.note-row')).toHaveCount(2)
+  await page.getByRole('tab', { name: 'Все' }).click()
+
+  // Аня видит только заметку своего проекта
+  await page.waitForTimeout(1500)
+  await page.evaluate(() => localStorage.setItem('tt.identity', 'anya'))
+  await page.reload()
+  await expect(page.locator('.note-row', { hasText: 'Заметка Ани' })).toBeVisible()
+  await expect(page.locator('.note-row')).toHaveCount(1)
 })

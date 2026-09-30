@@ -174,8 +174,8 @@ export class GitHubAdapter implements StorageAdapter {
     }
   }
 
-  async uploadAttachment(cardId: string, file: File, uploadedBy?: string): Promise<Attachment> {
-    const id = uid()
+  async uploadAttachment(cardId: string, file: File, uploadedBy?: string, presetId?: string): Promise<Attachment> {
+    const id = presetId ?? uid()
     const path = `attachments/${cardId}/${id.slice(0, 8)}_${sanitizeFileName(file.name)}`
     const content = await fileToBase64(file)
     await api(this.auth, `${this.repoPath}/contents/${encPath(path)}`, {

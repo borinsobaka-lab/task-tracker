@@ -13,6 +13,7 @@ import { BoardView } from './components/BoardView'
 import { CalendarView } from './components/CalendarView'
 import { EisenhowerView } from './components/EisenhowerView'
 import { RecurringView } from './components/RecurringView'
+import { NotesView } from './components/NotesView'
 import { CardModal } from './components/CardModal'
 import { SettingsModal } from './components/SettingsModal'
 import { Confetti } from './components/Confetti'
@@ -206,7 +207,7 @@ function TimelinePublisher({ token }: { token: string }) {
   return null
 }
 
-export type ViewKind = 'board' | 'calendar' | 'matrix' | 'recurring'
+export type ViewKind = 'board' | 'calendar' | 'matrix' | 'recurring' | 'notes'
 
 function Shell({ onLogout }: { onLogout: () => void }) {
   const store = useMaybeBoard()
@@ -224,6 +225,8 @@ function Shell({ onLogout }: { onLogout: () => void }) {
     else alert('Неверный пароль.')
   }
   const [quickAddOpen, setQuickAddOpen] = useState(false)
+  // «+» в нижнем меню в разделе «Заметки» создаёт заметку (функцию кладёт NotesView)
+  const composeNoteRef = useRef<(() => void) | null>(null)
   const [memberFilter, setMemberFilter] = useState<ReadonlySet<ID>>(new Set())
   // Активный проект-фильтр (id) или null — «Все». Задаётся табами проектов в шапке.
   const [projectFilter, setProjectFilter] = useState<ID | null>(null)
@@ -374,15 +377,23 @@ function Shell({ onLogout }: { onLogout: () => void }) {
           if (view === 'board') return <BoardView {...shared} />
           if (view === 'calendar') return <CalendarView {...shared} />
           if (view === 'matrix') return <EisenhowerView {...shared} />
+          if (view === 'notes') return <NotesView composeRef={composeNoteRef} projectFilter={projectFilter} />
           return <RecurringView {...shared} />
         })()}
       </main>
-      <BottomNav view={view} onViewChange={changeView} onNewTask={() => setQuickAddOpen(true)} />
-      {/* Десктоп: плавающая кнопка быстрого создания задачи (во всех разделах) */}
-      <button className="fab" onClick={createTask} title="Добавить задачу" aria-label="Добавить задачу">
-        <span className="fab-plus" aria-hidden>+</span>
-        <span className="fab-text">Добавить задачу</span>
-      </button>
+      <BottomNav
+        view={view}
+        onViewChange={changeView}
+        onNewTask={() => (view === 'notes' && composeNoteRef.current ? composeNoteRef.current() : setQuickAddOpen(true))}
+      />
+      {/* Десктоп: плавающая кнопка быстрого создания задачи (во всех разделах, кроме заметок —
+          там своя кнопка «Новая заметка» над списком) */}
+      {view !== 'notes' && (
+        <button className="fab" onClick={createTask} title="Добавить задачу" aria-label="Добавить задачу">
+          <span className="fab-plus" aria-hidden>+</span>
+          <span className="fab-text">Добавить задачу</span>
+        </button>
+      )}
       {selectedCardId && <CardModal cardId={selectedCardId} onClose={closeCard} onOpenCard={setSelectedCardId} />}
       {settingsOpen && <SettingsModal onClose={() => setSettingsOpen(false)} onLogout={onLogout} />}
       {quickAddOpen && <QuickAddSheet onClose={() => setQuickAddOpen(false)} />}
