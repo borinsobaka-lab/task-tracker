@@ -226,7 +226,9 @@ export function normalizeBoard(data: BoardData): BoardData {
     notes[id] = n
   }
 
-  const result = { ...data, columns: keptColumns, cards, series, notes }
+  // Поле notes оставляем отсутствующим, если его не было: по его отсутствию SyncEngine
+  // узнаёт данные, сохранённые старой версией приложения (та при слиянии теряла заметки).
+  const result = { ...data, columns: keptColumns, cards, series, ...(data.notes ? { notes } : {}) }
   // Журнал истории проекта убран из приложения — вычищаем его из старых данных,
   // чтобы не хранить и не тащить при загрузке.
   delete (result as { activity?: unknown }).activity

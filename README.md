@@ -166,3 +166,21 @@ npm run test:e2e   # e2e-тесты Playwright (в демо-режиме, GitHub
 
 Публикация происходит автоматически: GitHub Actions собирает проект и выкладывает
 его на GitHub Pages при каждом push (см. `.github/workflows/deploy.yml`).
+
+### Публикация вручную (без GitHub Actions)
+
+GitHub Pages публикует сайт только через Actions (даже в режиме «Deploy from a
+branch»), поэтому если Actions недоступны (например, аккаунт заблокирован из-за
+оплаты), сайт выкладывается на другой бесплатный хостинг — Cloudflare Pages:
+
+1. `npm run pack:site` — собирает проект в папку `site/` (приложение внутри
+   `site/task-tracker/`, корень сайта перенаправляет туда).
+2. [dash.cloudflare.com](https://dash.cloudflare.com) → Workers & Pages → Create →
+   Pages → **Upload assets** → имя проекта (например, `task-tracker`) → перетащить
+   содержимое папки `site/` (или zip-архив с ним) → **Deploy**.
+3. Приложение откроется по адресу `https://<проект>.pages.dev/task-tracker/`.
+   Следующие версии — тот же проект → **Create new deployment** → загрузить заново.
+
+Данные по-прежнему лежат в GitHub (вход, задачи, заметки работают как раньше), но
+на новом адресе нужно один раз заново ввести пароль и выбрать себя. Android-оболочка
+и ссылки бота (`APP_URL`) ведут на адрес GitHub Pages.

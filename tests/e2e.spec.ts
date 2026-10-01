@@ -682,3 +682,33 @@ test('заметки: без проекта видят все, с проекто
   await expect(page.locator('.note-row', { hasText: 'Заметка Ани' })).toBeVisible()
   await expect(page.locator('.note-row')).toHaveCount(1)
 })
+
+test('заметки: старая версия приложения стёрла заметки — новая возвращает их', async ({ page }) => {
+  await createIdentity(page)
+  await page.locator('.view-tabs button', { hasText: 'Заметки' }).click()
+  await page.getByRole('button', { name: 'Новая заметка' }).first().click()
+  await page.keyboard.type('Важная заметка')
+  const savedNotes = () => page.evaluate(() => Object.keys(JSON.parse(localStorage.getItem('tt.local.data')!).notes ?? {}).length)
+  await expect.poll(savedNotes).toBe(1)
+
+  // Старая версия при слиянии конфликта сохраняет доску без поля notes
+  const dropNotes = () =>
+    page.evaluate(() => {
+      const data = JSON.parse(localStorage.getItem('tt.local.data')!)
+      delete data.notes
+      localStorage.setItem('tt.local.data', JSON.stringify(data))
+      localStorage.setItem('tt.local.rev', String(Number(localStorage.getItem('tt.local.rev')) + 1))
+    })
+
+  // 1) Приложение открыто: при опросе замечает пропажу и сохраняет заметки обратно
+  await dropNotes()
+  await page.evaluate(() => window.dispatchEvent(new Event('focus')))
+  await expect.poll(savedNotes).toBe(1)
+  await expect(page.locator('.note-row', { hasText: 'Важная заметка' })).toBeVisible()
+
+  // 2) Приложение открывают заново: заметки возвращаются из копии на устройстве
+  await dropNotes()
+  await page.reload()
+  await expect(page.locator('.note-row', { hasText: 'Важная заметка' })).toBeVisible()
+  await expect.poll(savedNotes).toBe(1)
+})
