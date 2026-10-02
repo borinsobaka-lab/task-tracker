@@ -280,8 +280,33 @@
   transition: background 0.12s, color 0.12s;
 }
 .app-header .view-tabs button:not(.active):hover {
-  background: var(--hdr-fill-hover);
-  color: var(--hdr-fg);
+  color: var(--hdr-fg); /* без плашки: при наведении — свечение за иконкой (ниже) */
+}
+/* Наведение на неактивный раздел — мягкое белое свечение за иконкой, иконка белеет */
+.app-header .view-tabs .view-ico {
+  position: relative;
+  display: inline-flex;
+}
+.app-header .view-tabs .view-ico::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 44px;
+  height: 44px;
+  transform: translate(-50%, -50%) scale(0.6);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.42) 0%, rgba(255, 255, 255, 0.2) 38%, transparent 68%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+.app-header .view-tabs .view-ico svg {
+  position: relative; /* поверх свечения */
+}
+.app-header .view-tabs button:not(.active):hover .view-ico::before {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
 }
 .app-header .view-tabs button.active {
   background: var(--hdr-active);
