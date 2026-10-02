@@ -336,7 +336,8 @@ export function CalendarView({ memberFilter, onMemberFilterChange, projectFilter
   // Встречи — фиксированного цвета, задачи — по цвету первого исполнителя.
   // Встречи — серые, полоса слева и текст всегда чёрные (независимо от участников).
   // Задачи — по цвету исполнителя.
-  const colorOf = (c: Card): string => (isMeeting(c) ? '#1f2937' : assigneesOf(c)[0]?.color ?? 'var(--accent-strong)')
+  // Все задачи — основного цвета (чья задача — видно по аватарке), встречи — тёмные
+  const colorOf = (c: Card): string => (isMeeting(c) ? '#1f2937' : 'var(--accent)')
 
   // ---------- Геометрия перетаскивания ----------
 
