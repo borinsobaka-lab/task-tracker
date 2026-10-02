@@ -2,7 +2,7 @@
 <resources>
     <style name="AppTheme" parent="@android:style/Theme.Material.Light.NoActionBar">
         <!-- Строка состояния — в цвет тёмной шапки приложения, значки на ней светлые -->
-        <item name="android:statusBarColor">#163300</item>
+        <item name="android:statusBarColor">#000000</item>
         <item name="android:windowLightStatusBar">false</item>
     </style>
 </resources>
