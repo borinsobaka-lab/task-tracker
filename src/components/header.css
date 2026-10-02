@@ -296,7 +296,14 @@
   height: 44px;
   transform: translate(-50%, -50%) scale(0.6);
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.42) 0%, rgba(255, 255, 255, 0.2) 38%, transparent 68%);
+  /* --glow — цвет свечения: белый при наведении, у активного раздела — цвет его иконки */
+  --glow: #ffffff;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--glow) 42%, transparent) 0%,
+    color-mix(in srgb, var(--glow) 20%, transparent) 38%,
+    transparent 68%
+  );
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.18s ease, transform 0.18s ease;
@@ -305,6 +312,12 @@
   position: relative; /* поверх свечения */
 }
 .app-header .view-tabs button:not(.active):hover .view-ico::before {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+/* Активный раздел — постоянное свечение в цвете его иконки (--section-color из Header) */
+.app-header .view-tabs button.active .view-ico::before {
+  --glow: var(--section-color, #ffffff);
   opacity: 1;
   transform: translate(-50%, -50%) scale(1);
 }
