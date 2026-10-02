@@ -362,20 +362,21 @@
 }
 
 .cal-chip {
-  --ev-color: var(--accent);
+  --ev-color: var(--accent-strong);
   --prio-color: var(--border-strong);
   display: flex;
   align-items: center;
   gap: 5px;
   padding: 2px 8px;
   border-radius: 12px;
-  /* Заливка — основной цвет (чья задача — по аватарке), полоса слева — по приоритету */
-  background: var(--ev-color);
-  border: none;
-  border-left: 3px solid var(--prio-color);
+  /* Как карточка на доске: белая, тонкая рамка, полоса слева — по приоритету */
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--prio-color);
+  box-shadow: var(--shadow-card);
   font-size: 12px;
   font-weight: 500;
-  color: var(--on-accent);
+  color: var(--text);
   cursor: pointer;
   user-select: none;
   touch-action: none;
@@ -383,7 +384,9 @@
 }
 
 .cal-chip:hover {
-  background: var(--accent-hover);
+  border-top-color: var(--border-strong);
+  border-right-color: var(--border-strong);
+  border-bottom-color: var(--border-strong);
 }
 
 /* Чекбокс «выполнено» на закреплённой (all-day) карточке */
@@ -392,8 +395,8 @@
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  border: 1.5px solid color-mix(in srgb, var(--on-accent) 45%, transparent);
-  background: rgba(255, 255, 255, 0.6);
+  border: 1.5px solid var(--border-strong);
+  background: var(--surface);
   color: transparent;
   display: inline-flex;
   align-items: center;
@@ -440,6 +443,11 @@
 .cal-event.overdue {
   background: var(--danger);
   color: #fff;
+}
+.cal-chip.overdue {
+  border-top-color: var(--danger);
+  border-right-color: var(--danger);
+  border-bottom-color: var(--danger);
 }
 .cal-chip.overdue:hover,
 .cal-event.overdue:not(.meeting):hover {
@@ -547,7 +555,7 @@
 /* ---------- Блоки задач ---------- */
 
 .cal-event {
-  --ev-color: var(--accent);
+  --ev-color: var(--accent-strong);
   --prio-color: var(--border-strong);
   position: absolute;
   z-index: 2;
@@ -556,9 +564,9 @@
   gap: 1px;
   padding: 3px 7px 4px 8px;
   border-radius: 14px;
-  /* Заливка — основной цвет (чья задача — по аватарке), полоса слева — по приоритету */
-  background: var(--ev-color);
-  box-shadow: inset 3px 0 0 var(--prio-color);
+  /* Как карточка на доске: белая, тонкая рамка (inset), полоса слева — по приоритету */
+  background: var(--surface);
+  box-shadow: inset 4px 0 0 var(--prio-color), inset 0 0 0 1px var(--border), var(--shadow-card);
   overflow: hidden;
   cursor: pointer;
   user-select: none;
@@ -568,41 +576,43 @@
 
 .cal-event:hover {
   z-index: 3;
-  box-shadow: inset 3px 0 0 var(--prio-color), var(--shadow-md);
+  box-shadow: inset 4px 0 0 var(--prio-color), inset 0 0 0 1px var(--border-strong), var(--shadow-md);
 }
-.cal-event:not(.meeting):hover {
-  background: var(--accent-hover);
+.cal-event.overdue {
+  box-shadow: inset 4px 0 0 var(--prio-color), var(--shadow-card);
 }
 
 .cal-event.is-dragging {
   opacity: 0.35;
 }
 
-/* Встречи — серые, с чёрной полосой слева; заголовок и время чёрные (у всех одинаково) */
+/* Встречи — фирменный зелёный с тёмным текстом (задачи — белые карточки) */
 .cal-event.meeting {
-  background: var(--surface-2);
-  box-shadow: inset 3px 0 0 var(--ev-color), 0 0 0 1px var(--border);
+  background: var(--accent);
+  box-shadow: var(--shadow-card);
 }
 .cal-event.meeting:hover {
-  box-shadow: inset 3px 0 0 var(--ev-color), 0 0 0 1px var(--border-strong), var(--shadow-md);
+  background: var(--accent-hover);
+  box-shadow: var(--shadow-md);
 }
-.cal-event.meeting .cal-event-title,
+.cal-event.meeting .cal-event-title {
+  color: var(--on-accent);
+}
 .cal-event.meeting .cal-event-time {
-  color: var(--ev-color);
+  color: color-mix(in srgb, var(--on-accent) 75%, transparent);
 }
 .cal-chip.meeting {
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  border-left: 3px solid var(--ev-color);
-  color: var(--ev-color);
+  background: var(--accent);
+  border: none;
+  color: var(--on-accent);
 }
 .cal-chip.meeting:hover {
-  background: var(--surface-2);
-  border-color: var(--border-strong);
+  background: var(--accent-hover);
 }
 .cal-side-card.meeting {
-  background: var(--surface-2);
-  border-left-color: var(--ev-color);
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
 }
 
 /* Верхняя строка: чекбокс + заголовок (заголовок с самого верха блока) */
@@ -628,8 +638,8 @@
   width: 15px;
   height: 15px;
   border-radius: 50%;
-  border: 1.5px solid color-mix(in srgb, var(--on-accent) 45%, transparent);
-  background: rgba(255, 255, 255, 0.6);
+  border: 1.5px solid var(--border-strong);
+  background: var(--surface);
   color: transparent;
   font-size: 10px;
   line-height: 1;
@@ -656,7 +666,7 @@
   font-size: 12px;
   font-weight: 600;
   line-height: 1.25;
-  color: var(--on-accent);
+  color: var(--text);
   overflow: hidden;
 }
 
@@ -671,7 +681,7 @@
 .cal-event-time {
   font-size: 10.5px;
   font-weight: 600;
-  color: color-mix(in srgb, var(--on-accent) 75%, transparent);
+  color: var(--text-soft);
   white-space: nowrap;
   flex-shrink: 0;
 }
@@ -760,7 +770,7 @@
   height: 3px;
   transform: translateX(-50%);
   border-radius: 2px;
-  background: color-mix(in srgb, var(--on-accent) 35%, transparent);
+  background: var(--border-strong);
   opacity: 0;
   transition: opacity 0.12s;
 }
