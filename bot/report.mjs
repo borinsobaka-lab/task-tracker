@@ -134,8 +134,9 @@ function statusOf(card, colById) {
   return 'todo'
 }
 
+// В чат идут только задачи с проектом: задачи без проекта — личные (как и в Worker)
 function cardsForDate(board, key) {
-  return Object.values(board.cards || {}).filter((c) => c && !c.deleted && c.date === key)
+  return Object.values(board.cards || {}).filter((c) => c && !c.deleted && !!c.projectId && c.date === key)
 }
 
 /** Просроченные задачи — те же, что календарь закрепляет сверху текущего дня:
@@ -150,6 +151,7 @@ export function overdueCards(board, todayKey, keepIds) {
       (c) =>
         c &&
         !c.deleted &&
+        !!c.projectId && // личные задачи (без проекта) в чат не идут
         !!c.date &&
         (c.endDate || c.date) < todayKey &&
         c.kind !== 'meeting' &&

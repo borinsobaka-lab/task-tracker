@@ -602,6 +602,15 @@
   background: var(--accent-hover);
   transform: translateY(-1px);
 }
+/* В «Заметках» — жёлтая «Добавить заметку» (белый на жёлтом не читается — текст тёмный) */
+.fab.fab-note {
+  background: #facc15;
+  color: #422006;
+  box-shadow: 0 8px 24px rgba(161, 98, 7, 0.35);
+}
+.fab.fab-note:hover {
+  background: #eab308;
+}
 .fab-plus {
   font-size: 22px;
   font-weight: 400;
@@ -754,6 +763,12 @@
     font-weight: 400;
     line-height: 1;
     box-shadow: 0 4px 12px rgba(53, 122, 23, 0.35);
+  }
+  /* В «Заметках» «+» создаёт заметку — жёлтый, как раздел */
+  .bottom-nav-add.notes .bottom-nav-add-circle {
+    background: #facc15;
+    color: #422006;
+    box-shadow: 0 4px 12px rgba(161, 98, 7, 0.4);
   }
 
   /* Плавающая кнопка — только десктоп */

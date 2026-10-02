@@ -119,7 +119,7 @@ export function BottomNav({
       })}
       <button
         type="button"
-        className="bottom-nav-item bottom-nav-add"
+        className={'bottom-nav-item bottom-nav-add' + (view === 'notes' ? ' notes' : '')}
         onClick={onNewTask}
         title={view === 'notes' ? 'Новая заметка' : 'Добавить задачу'}
         aria-label={view === 'notes' ? 'Новая заметка' : 'Добавить задачу'}

@@ -417,9 +417,19 @@ function Shell({ onLogout }: { onLogout: () => void }) {
         onViewChange={changeView}
         onNewTask={() => (view === 'notes' && composeNoteRef.current ? composeNoteRef.current() : setQuickAddOpen(true))}
       />
-      {/* Десктоп: плавающая кнопка быстрого создания задачи (во всех разделах, кроме заметок —
-          там своя кнопка «Новая заметка» над списком) */}
-      {view !== 'notes' && (
+      {/* Десктоп: плавающая кнопка быстрого создания — в «Заметках» жёлтая «Добавить заметку»,
+          в остальных разделах «Добавить задачу» */}
+      {view === 'notes' ? (
+        <button
+          className="fab fab-note"
+          onClick={() => composeNoteRef.current?.()}
+          title="Добавить заметку"
+          aria-label="Добавить заметку"
+        >
+          <span className="fab-plus" aria-hidden>+</span>
+          <span className="fab-text">Добавить заметку</span>
+        </button>
+      ) : (
         <button className="fab" onClick={createTask} title="Добавить задачу" aria-label="Добавить задачу">
           <span className="fab-plus" aria-hidden>+</span>
           <span className="fab-text">Добавить задачу</span>

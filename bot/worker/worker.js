@@ -7,11 +7,11 @@
 //       • вечером — итоги дня + задачи на завтра;
 //       • днём — то же утреннее сообщение постоянно обновляется под текущие
 //         статусы (проверка раз в минуту, а не раз в 15 минут).
-//     В группу проекта уходят задачи этого проекта + задачи вообще без проекта
-//     (последние попадают во все группы). Сообщение начинается с названия проекта.
+//     В группу проекта уходят ТОЛЬКО задачи этого проекта. Задачи без проекта —
+//     личные (их видят только исполнители и автор) и в чаты не попадают никогда.
 //     Группы берутся из board.projects[].tgGroupId (настраивается в приложении);
 //     если ни у одного проекта id не задан — работаем по-старому, в один чат
-//     GROUP_CHAT_ID со всеми задачами сразу.
+//     GROUP_CHAT_ID с задачами всех проектов.
 //
 //  2) ЛИЧНЫЕ УВЕДОМЛЕНИЯ (диалог в личке):
 //       /start → пароль сервиса → выбор участника → подписка. Дальше приходят:
@@ -233,8 +233,9 @@ async function ghPutBoard(env, board, sha, message) {
   })
 }
 
-// Форма новой карточки-«входящей» (без исполнителя — разберём в приложении)
-export function makeInboxCard(text, columnId, ts, id) {
+// Форма новой карточки-«входящей» (без исполнителя — разберём в приложении).
+// createdBy — участник, приславший задачу: без проекта она личная, её видит только он.
+export function makeInboxCard(text, columnId, ts, id, createdBy) {
   return {
     id,
     title: String(text).slice(0, 500),
@@ -242,6 +243,7 @@ export function makeInboxCard(text, columnId, ts, id) {
     description: '',
     columnId,
     assigneeIds: [],
+    ...(createdBy ? { createdBy } : {}),
     checklist: [],
     attachments: [],
     comments: [],
@@ -251,7 +253,7 @@ export function makeInboxCard(text, columnId, ts, id) {
 }
 
 // Создаём задачу в колонке со статусом «Входящие». Повторяем при конфликте sha.
-async function createInboxCard(env, text) {
+async function createInboxCard(env, text, createdBy) {
   if (!env.DATA_TOKEN) return { error: 'не задан секрет DATA_TOKEN' }
   for (let attempt = 0; attempt < 4; attempt++) {
     let got
@@ -266,7 +268,7 @@ async function createInboxCard(env, text) {
     const ts = nowISO()
     const id = crypto.randomUUID()
     board.cards = board.cards || {}
-    board.cards[id] = makeInboxCard(text, inbox.id, ts, id)
+    board.cards[id] = makeInboxCard(text, inbox.id, ts, id, createdBy)
     inbox.cardIds = Array.isArray(inbox.cardIds) ? inbox.cardIds : []
     inbox.cardIds.push(id)
     inbox.updatedAt = ts
@@ -356,12 +358,13 @@ function statusOf(card, colById) {
 function cardsForDate(board, key) {
   return Object.values(board.cards || {}).filter((c) => c && !c.deleted && c.date === key)
 }
-// Попадает ли карточка в группу проекта projectId. Без проекта (projectId == null)
-// — «общая» группа, в неё идёт всё. Для группы конкретного проекта берём задачи
-// этого проекта И задачи вообще без проекта (в т.ч. встречи) — они идут во все группы.
-function matchesProject(card, projectId) {
-  if (!projectId) return true
-  return !card.projectId || card.projectId === projectId
+// Попадает ли карточка в чат. В чаты идут ТОЛЬКО задачи с проектом: в группу
+// проекта — задачи этого проекта, в общий чат старого режима (projectId == null) —
+// задачи любых проектов. Задачи без проекта — личные (в приложении их видят только
+// исполнители и автор), в групповые чаты они не отправляются вовсе.
+export function matchesProject(card, projectId) {
+  if (!card.projectId) return false
+  return !projectId || card.projectId === projectId
 }
 function cardsForDateProj(board, key, projectId) {
   return cardsForDate(board, key).filter((c) => matchesProject(c, projectId))
@@ -400,7 +403,7 @@ export function overdueCards(board, todayKey, projectId, keepIds) {
     .sort(byDate)
 }
 // Список целевых групп: у каждого проекта с заданным tgGroupId — своя группа.
-// Если ни у кого не задан — падаем в старый режим (один чат GROUP_CHAT_ID, все задачи).
+// Если ни у кого не задан — падаем в старый режим (один чат GROUP_CHAT_ID, задачи всех проектов).
 function targetGroups(env, board) {
   const projects = (board.projects || []).filter((p) => p && !p.deleted && String(p.tgGroupId || '').trim())
   if (projects.length) {
@@ -498,7 +501,7 @@ function renderMoved(moved) {
   })
   return `\n\n🔀 <b>Перенесены на другой день:</b>\n` + lines.join('\n')
 }
-// group = { chatId, projectId, name }. projectId==null — «общий» режим (все задачи).
+// group = { chatId, projectId, name }. projectId==null — «общий» режим (задачи всех проектов).
 // Название проекта в сообщение не пишем: отчёт и так приходит в чат своего проекта.
 export function morningText(env, board, group = { projectId: null, name: '' }, plannedIds = [], overdueIds = []) {
   const { colById, members } = buildIndex(board)
@@ -890,7 +893,7 @@ async function onCallback(cbq, env) {
     }
     let result
     try {
-      result = await createInboxCard(env, text)
+      result = await createInboxCard(env, text, s.memberId)
     } catch (e) {
       result = { error: (e && e.message) || String(e) }
     }
