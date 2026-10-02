@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import type { ComponentType } from 'react'
+import type { ComponentType, CSSProperties } from 'react'
 import type { IconProps } from '@solar-icons/react'
 import type { ViewKind } from '../App'
 import { useBoard } from '../store'
@@ -56,6 +56,7 @@ export function Header({
             className={v.key === view ? 'active' : ''}
             onClick={() => onViewChange(v.key)}
             title={v.label}
+            style={{ '--section-color': v.color } as CSSProperties}
           >
             <span className="view-ico" aria-hidden>
               {/* В тёмной шапке иконки светлые монохромные, у активного раздела — его цвет */}
