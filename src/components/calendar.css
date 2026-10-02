@@ -371,7 +371,7 @@
   border-radius: 12px;
   /* Заливка — основной цвет (чья задача — по аватарке), полоса слева — по приоритету */
   background: var(--ev-color);
-  border: 1px solid color-mix(in srgb, var(--ev-color) 75%, var(--on-accent));
+  border: none;
   border-left: 3px solid var(--prio-color);
   font-size: 12px;
   font-weight: 500;
@@ -435,9 +435,33 @@
 }
 
 /* Просроченная задача — красный заголовок (закреплённая в зоне «весь день») */
-.cal-chip.overdue .cal-chip-title {
-  color: #b91c1c; /* темнее --danger: на зелёной заливке обычный красный плохо читается */
+/* Просроченная задача — красная заливка, белый текст (и в сетке, и в зоне «весь день») */
+.cal-chip.overdue,
+.cal-event.overdue {
+  background: var(--danger);
+  color: #fff;
+}
+.cal-chip.overdue:hover,
+.cal-event.overdue:not(.meeting):hover {
+  background: #b91c1c;
+}
+.cal-chip.overdue .cal-chip-title,
+.cal-event.overdue .cal-event-title {
+  color: #fff;
   font-weight: 600;
+}
+.cal-event.overdue .cal-event-time {
+  color: rgba(255, 255, 255, 0.85);
+}
+.cal-chip.overdue .cal-chip-check,
+.cal-event.overdue .cal-event-check {
+  border-color: rgba(255, 255, 255, 0.75);
+  background: rgba(255, 255, 255, 0.2);
+}
+.cal-chip.overdue .cal-chip-check:hover,
+.cal-event.overdue .cal-event-check:hover {
+  border-color: #fff;
+  color: #fff;
 }
 
 .cal-chip.done {
@@ -534,7 +558,7 @@
   border-radius: 14px;
   /* Заливка — основной цвет (чья задача — по аватарке), полоса слева — по приоритету */
   background: var(--ev-color);
-  box-shadow: inset 3px 0 0 var(--prio-color), 0 0 0 1px color-mix(in srgb, var(--ev-color) 75%, var(--on-accent));
+  box-shadow: inset 3px 0 0 var(--prio-color);
   overflow: hidden;
   cursor: pointer;
   user-select: none;
@@ -544,8 +568,7 @@
 
 .cal-event:hover {
   z-index: 3;
-  box-shadow: inset 3px 0 0 var(--prio-color), 0 0 0 1px color-mix(in srgb, var(--ev-color) 60%, var(--on-accent)),
-    var(--shadow-md);
+  box-shadow: inset 3px 0 0 var(--prio-color), var(--shadow-md);
 }
 .cal-event:not(.meeting):hover {
   background: var(--accent-hover);
@@ -708,10 +731,6 @@
   text-decoration: line-through;
 }
 
-/* Просроченная задача сегодняшнего дня — красный заголовок */
-.cal-event.overdue .cal-event-title {
-  color: #b91c1c; /* темнее --danger: на зелёной заливке обычный красный плохо читается */
-}
 
 /* Прошедшая встреча: без отметки выполнения — просто зачёркнута и приглушена */
 .cal-event.past {
