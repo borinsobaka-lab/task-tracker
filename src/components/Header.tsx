@@ -58,7 +58,8 @@ export function Header({
             title={v.label}
           >
             <span className="view-ico" aria-hidden>
-              <v.Icon size={17} color={v.color} />
+              {/* В тёмной шапке иконки светлые монохромные, у активного раздела — его цвет */}
+              <v.Icon size={18} color={v.key === view ? v.color : 'currentColor'} />
             </span>
             <span className="view-tab-label">{v.label}</span>
           </button>
