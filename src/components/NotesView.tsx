@@ -788,11 +788,12 @@ function NoteEditor({
 
 // ---------- Проект заметки (кто её видит) ----------
 
-/** Кто видит заметку этого проекта: «все» или имена участников проекта. */
-function useAudience(): (project: Project | undefined) => string {
+/** Кто видит заметку: без проекта — только автор; с проектом — «все» или участники проекта. */
+function useAudience(): (project: Project | undefined, note?: Note) => string {
   const store = useBoard()
-  return (project) => {
-    if (!project?.memberIds?.length) return 'видят все'
+  return (project, note) => {
+    if (!project) return note && !note.authorId ? 'видят все' : 'видите только вы'
+    if (!project.memberIds?.length) return 'видят все'
     const names = project.memberIds
       .map((id) => store.members.find((m) => m.id === id)?.name)
       .filter(Boolean)
@@ -801,8 +802,9 @@ function useAudience(): (project: Project | undefined) => string {
 }
 
 /**
- * Выбор проекта заметки. Без проекта заметку видят все; с проектом — только те,
- * кому виден проект (участники проекта; у проекта без участников — тоже все).
+ * Выбор проекта заметки. Без проекта заметка личная — её видит только автор;
+ * с проектом — те, кому виден проект (участники проекта; у проекта без
+ * участников — все).
  */
 function NoteProjectPicker({ note }: { note: Note }) {
   const store = useBoard()
@@ -810,7 +812,14 @@ function NoteProjectPicker({ note }: { note: Note }) {
   const [open, setOpen] = useState(false)
   const projects = store.projects
   const current = note.projectId ? projects.find((p) => p.id === note.projectId) : undefined
-  if (projects.length === 0 && !current) return null // проектов нет — выбирать не из чего
+  // Проектов нет — выбирать не из чего, но кто видит заметку, всё равно подскажем
+  if (projects.length === 0 && !current) {
+    return (
+      <div className="note-project">
+        <span className="note-project-who">{audience(undefined, note)}</span>
+      </div>
+    )
+  }
 
   const pick = (projectId: ID | null) => {
     setOpen(false)
@@ -831,7 +840,7 @@ function NoteProjectPicker({ note }: { note: Note }) {
         <span className="note-project-name">{current ? current.name || 'Проект' : 'Без проекта'}</span>
         <IcoChevronDown size={14} />
       </button>
-      <span className="note-project-who">{audience(current)}</span>
+      <span className="note-project-who">{audience(current, note)}</span>
       {open && (
         <>
           <div className="note-attach-backdrop" onClick={() => setOpen(false)} />
@@ -842,7 +851,7 @@ function NoteProjectPicker({ note }: { note: Note }) {
               </span>
               <span className="note-project-opt-text">
                 <span className="note-project-opt-name">Без проекта</span>
-                <span className="note-project-opt-who">видят все</span>
+                <span className="note-project-opt-who">видите только вы</span>
               </span>
               {!current && <IcoCheck size={16} />}
             </button>

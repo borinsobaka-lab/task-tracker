@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <style name="AppTheme" parent="@android:style/Theme.Material.Light.NoActionBar">
-        <!-- Основной цвет — светло-зелёный, поэтому значки строки состояния тёмные -->
-        <item name="android:statusBarColor">#9FE870</item>
-        <item name="android:windowLightStatusBar">true</item>
+        <!-- Строка состояния — в цвет тёмной шапки приложения, значки на ней светлые -->
+        <item name="android:statusBarColor">#163300</item>
+        <item name="android:windowLightStatusBar">false</item>
     </style>
 </resources>

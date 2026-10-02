@@ -15,14 +15,23 @@
 
 /* ---------- Шапка ---------- */
 
+/* Шапка тёмная (фирменный тёмно-зелёный), чтобы не сливаться с рабочей областью.
+   Цвета элементов внутри — в header.css (через переменные --hdr-*). */
 .app-header {
+  --hdr-bg: #163300;
+  --hdr-fg: #ffffff;
+  --hdr-soft: rgba(255, 255, 255, 0.72);
+  --hdr-faint: rgba(255, 255, 255, 0.5);
+  --hdr-fill: rgba(255, 255, 255, 0.09);
+  --hdr-fill-hover: rgba(255, 255, 255, 0.16);
   height: var(--header-h);
   display: flex;
   align-items: center;
   gap: 18px;
   padding: 0 16px;
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
+  background: var(--hdr-bg);
+  border-bottom: 1px solid var(--hdr-bg);
+  color: var(--hdr-fg);
   flex-shrink: 0;
 }
 
