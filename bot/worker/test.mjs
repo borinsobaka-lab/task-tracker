@@ -2,7 +2,7 @@
 // Запуск: node bot/worker/test.mjs   (Node ≥ 20 с глобальным Web Crypto)
 
 import assert from 'node:assert/strict'
-import { verifyPassword, authNeedsAppLogin, assignedCardIds, upcomingWithin, activeMembers, morningText, eveningText, makeInboxCard, overdueCards } from './worker.js'
+import { verifyPassword, authNeedsAppLogin, assignedCardIds, upcomingWithin, activeMembers, morningText, eveningText, makeInboxCard, overdueCards, matchesProject } from './worker.js'
 
 function b64(bytes) {
   let s = ''
@@ -95,7 +95,8 @@ const boardToday = {
 const allGroup = { chatId: 'g0', projectId: null, name: '' }
 const mt = morningText(env, boardToday, allGroup, [])
 assert.ok(mt.includes('Доброе утро'), 'утренний заголовок')
-assert.ok(mt.includes('Позвонить в банк'), 'утренний список содержит задачу без проекта')
+assert.ok(mt.includes('Задача Альфы') && mt.includes('Задача Беты'), 'в общем чате — задачи всех проектов')
+assert.ok(!mt.includes('Позвонить в банк'), 'личная задача (без проекта) в общий чат НЕ попадает')
 assert.ok(mt.includes('Вова'), 'группировка по исполнителю')
 assert.ok(!mt.includes('👤') && !mt.includes('📭'), 'нет эмодзи перед исполнителями')
 assert.ok(mt.includes('<b>Вова</b>'), 'имя исполнителя жирным')
@@ -103,9 +104,9 @@ assert.ok(!mt.includes('➖') && !mt.includes('нужно сделать'), 'н�
 const et = eveningText(env, boardToday, allGroup, [])
 assert.ok(et.includes('Итоги дня'), 'вечерний заголовок')
 
-// 3b) Режим по проектам: в группу проекта идут его задачи + задачи без проекта,
-//     названия проекта в сообщении нет (оно и так приходит в чат проекта),
-//     чужие задачи не попадают.
+// 3b) Режим по проектам: в группу проекта идут ТОЛЬКО его задачи (личные задачи
+//     без проекта — никуда), названия проекта в сообщении нет (оно и так приходит
+//     в чат проекта), чужие задачи не попадают.
 const alpha = { chatId: 'g1', projectId: 'proj-1', name: 'Альфа' }
 const beta = { chatId: 'g2', projectId: 'proj-2', name: 'Бета' }
 const mAlpha = morningText(env, boardToday, alpha, [])
@@ -113,11 +114,14 @@ assert.ok(!mAlpha.includes('📁'), 'нет строки с папкой и на
 assert.ok(mAlpha.startsWith('☀️ <b>Доброе утро!</b>'), 'сообщение начинается сразу с приветствия')
 assert.ok(eveningText(env, boardToday, alpha, []).startsWith('🌙 <b>Итоги дня'), 'вечерний отчёт без шапки проекта')
 assert.ok(mAlpha.includes('Задача Альфы'), 'задача проекта попала в его группу')
-assert.ok(mAlpha.includes('Позвонить в банк'), 'задача без проекта попала в группу проекта')
+assert.ok(!mAlpha.includes('Позвонить в банк'), 'личная задача без проекта в группу проекта НЕ попала')
 assert.ok(!mAlpha.includes('Задача Беты'), 'чужая задача не попала в группу проекта Альфа')
 const mBeta = morningText(env, boardToday, beta, [])
 assert.ok(mBeta.includes('Задача Беты'), 'задача Беты в группе Беты')
-assert.ok(mBeta.includes('Позвонить в банк'), 'задача без проекта попала и в группу Беты')
+assert.ok(!mBeta.includes('Позвонить в банк'), 'личная задача без проекта в группу Беты НЕ попала')
+assert.equal(matchesProject({ id: 'x' }, null), false, 'задача без проекта не идёт и в общий чат')
+assert.equal(matchesProject({ id: 'x', projectId: 'proj-1' }, 'proj-2'), false, 'чужой проект не идёт')
+assert.equal(matchesProject({ id: 'x', projectId: 'proj-1' }, 'proj-1'), true, 'свой проект идёт')
 assert.ok(!mBeta.includes('Задача Альфы'), 'чужая задача не попала в группу Беты')
 
 // 3c) «Входящие» (роль колонки 'inbox') не попадают в отчёты
@@ -128,8 +132,8 @@ const boardInbox = {
     { id: 'todo', title: 'Нужно сделать', role: 'todo' },
   ],
   cards: {
-    x: { id: 'x', title: 'Из телеграма', assigneeIds: ['m1'], columnId: 'inbox', date: today },
-    y: { id: 'y', title: 'Обычная задача', assigneeIds: ['m1'], columnId: 'todo', date: today },
+    x: { id: 'x', title: 'Из телеграма', assigneeIds: ['m1'], columnId: 'inbox', date: today, projectId: 'p' },
+    y: { id: 'y', title: 'Обычная задача', assigneeIds: ['m1'], columnId: 'todo', date: today, projectId: 'p' },
   },
 }
 const mi = morningText(env, boardInbox, allGroup, [])
@@ -163,6 +167,10 @@ const boardOverdue = {
     o8: { id: 'o8', title: 'Удалённая старая', assigneeIds: ['m1'], columnId: 'todo', date: past, deleted: true },
   },
 }
+// Все задачи этой доски — проектные (личные без проекта в чаты не идут — проверено выше),
+// кроме одной личной просроченной: её в отчёте быть не должно.
+for (const c of Object.values(boardOverdue.cards)) c.projectId = 'p'
+boardOverdue.cards.o9 = { id: 'o9', title: 'Личная просрочка', assigneeIds: ['m1'], columnId: 'todo', date: past }
 assert.deepEqual(
   overdueCards(boardOverdue, today, null).map((c) => c.id),
   ['o2', 'o1'],
@@ -180,6 +188,7 @@ assert.ok(!mo.includes('Прошедшая встреча'), 'прошедшая
 assert.ok(!mo.includes('Старое неразобранное'), '«Входящие» в блок просроченного не идут')
 assert.ok(!mo.includes('Тянется до завтра'), 'многодневная задача, идущая по сегодня, ещё не просрочена')
 assert.ok(!mo.includes('Удалённая старая'), 'удалённая карточка не просрочена')
+assert.ok(!mo.includes('Личная просрочка'), 'личная просроченная задача (без проекта) в чат не попадает')
 assert.ok(mo.includes('Задача на сегодня'), 'задачи дня остались на месте')
 
 // Доска без просрочки — блока нет вовсе
@@ -202,7 +211,8 @@ assert.ok(moAlpha.includes('Забытая задача'), 'просрочка �
 assert.ok(!moAlpha.includes('Совсем старая'), 'чужая просрочка в группу проекта не идёт')
 
 // 4) Форма задачи, созданной ботом из Telegram
-const card = makeInboxCard('  Купить корм  ', 'inbox', '2026-07-19T10:00:00.000Z', 'id1')
+const card = makeInboxCard('  Купить корм  ', 'inbox', '2026-07-19T10:00:00.000Z', 'id1', 'm1')
+assert.equal(card.createdBy, 'm1', 'автор — участник, приславший задачу (без проекта она личная)')
 assert.equal(card.title, '  Купить корм  ', 'заголовок = текст сообщения')
 assert.equal(card.columnId, 'inbox', 'карточка кладётся в колонку «Входящие»')
 assert.deepEqual(card.assigneeIds, [], 'без исполнителя — разберём в приложении')

@@ -773,3 +773,55 @@ test('фильтры: несколько проектов сразу и запо
   await page.getByRole('button', { name: 'Сбросить' }).click()
   await expect(page.locator('.board-card')).toHaveCount(4)
 })
+
+test('личные задачи (без проекта) видят только их исполнители и автор', async ({ page }) => {
+  await createIdentity(page, 'Борис')
+  await page.waitForFunction(() => (JSON.parse(localStorage.getItem('tt.local.data') ?? '{}').members ?? []).length > 0)
+  // Борис сам ставит себе задачу без проекта и без исполнителя — он её автор
+  await page.getByText('Добавить карточку').first().click()
+  await page.locator('textarea').first().fill('Моя заметка-задача')
+  await page.keyboard.press('Enter')
+  await expect(page.locator('.board-card', { hasText: 'Моя заметка-задача' })).toBeVisible()
+  await page.waitForTimeout(1500)
+  await page.evaluate(() => {
+    const data = JSON.parse(localStorage.getItem('tt.local.data')!)
+    const boris = localStorage.getItem('tt.identity')!
+    const ts = new Date().toISOString()
+    data.members.push({ id: 'anya', name: 'Аня', color: '#ec4899', createdAt: ts, updatedAt: ts })
+    data.projects = [{ id: 'p0', name: 'Общий проект', createdAt: ts, updatedAt: ts }]
+    const card = (id: string, title: string, extra: Record<string, unknown>) => ({
+      id, title, description: '', columnId: 'col-todo', assigneeIds: [], checklist: [], attachments: [], createdAt: ts, updatedAt: ts, ...extra,
+    })
+    const cards = [
+      card('b1', 'Личная Бориса', { assigneeIds: [boris] }),
+      card('a1', 'Личная Ани', { assigneeIds: ['anya'] }),
+      card('a2', 'Аня поставила Борису', { assigneeIds: [boris], createdBy: 'anya' }),
+      card('p1', 'Проектная Ани', { assigneeIds: ['anya'], projectId: 'p0' }),
+      card('o1', 'Старая без хозяина', {}),
+    ]
+    const col = data.columns.find((c: { id: string }) => c.id === 'col-todo')
+    for (const c of cards) {
+      data.cards[c.id] = c
+      col.cardIds.push(c.id)
+    }
+    localStorage.setItem('tt.local.data', JSON.stringify(data))
+    localStorage.setItem('tt.local.rev', String(Number(localStorage.getItem('tt.local.rev') ?? '1') + 1))
+  })
+  await page.reload()
+  const card = (t: string) => page.locator('.board-card', { hasText: t })
+
+  // Борис: свои личные + поставленная ему + проектные + старые без хозяина; чужой личной нет
+  for (const t of ['Моя заметка-задача', 'Личная Бориса', 'Аня поставила Борису', 'Проектная Ани', 'Старая без хозяина']) {
+    await expect(card(t)).toBeVisible()
+  }
+  await expect(card('Личная Ани')).toHaveCount(0)
+
+  // Аня: своя личная, поставленная ею Борису, проектная, старая; личных Бориса — нет
+  await page.evaluate(() => localStorage.setItem('tt.identity', 'anya'))
+  await page.reload()
+  for (const t of ['Личная Ани', 'Аня поставила Борису', 'Проектная Ани', 'Старая без хозяина']) {
+    await expect(card(t)).toBeVisible()
+  }
+  await expect(card('Личная Бориса')).toHaveCount(0)
+  await expect(card('Моя заметка-задача')).toHaveCount(0)
+})

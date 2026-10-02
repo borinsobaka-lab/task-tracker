@@ -47,6 +47,7 @@ function makeInstance(seriesId: ID, s: Series, dateKey: string, ts: string): Car
     updatedAt: ts,
   }
   if (s.projectId) c.projectId = s.projectId
+  if (s.createdBy) c.createdBy = s.createdBy
   if (s.kind === 'meeting') {
     c.kind = 'meeting'
     if (s.meetingUrl) c.meetingUrl = s.meetingUrl
@@ -652,7 +653,14 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
     (p) => !p.memberIds?.length || (identity !== null && p.memberIds.includes(identity.id)),
   )
   const hiddenProjectIds = new Set(allProjects.filter((p) => !visibleProjects.includes(p)).map((p) => p.id))
-  const cardVisible = (c: Card): boolean => !c.projectId || !hiddenProjectIds.has(c.projectId)
+  // Личные задачи (без проекта) видят только их исполнители и автор. Если нет ни
+  // исполнителей, ни автора (старые карточки) — владельца не определить, видят все.
+  const isOwn = (assigneeIds: ID[], createdBy?: ID): boolean => {
+    if (assigneeIds.length === 0 && !createdBy) return true
+    return identity !== null && (assigneeIds.includes(identity.id) || createdBy === identity.id)
+  }
+  const cardVisible = (c: Card): boolean =>
+    c.projectId ? !hiddenProjectIds.has(c.projectId) : isOwn(c.assigneeIds, c.createdBy)
   // Заметки — по тому же правилу: без проекта видят все, с проектом — кому виден проект
   const noteVisible = (n: Note): boolean => !n.projectId || !hiddenProjectIds.has(n.projectId)
 
@@ -681,7 +689,7 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
     allLiveCards: () => Object.values(data.cards).filter((c) => !c.deleted),
 
     series: Object.values(data.series ?? {}).filter(
-      (s) => !s.deleted && (!s.projectId || !hiddenProjectIds.has(s.projectId)),
+      (s) => !s.deleted && (s.projectId ? !hiddenProjectIds.has(s.projectId) : isOwn(s.assigneeIds, s.createdBy)),
     ),
     seriesById: (id) => data.series?.[id],
     recurringCards: () => Object.values(data.cards).filter((c) => !c.deleted && !!c.seriesId && cardVisible(c)),
@@ -867,6 +875,7 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
           assigneeIds: [],
           checklist: [],
           attachments: [],
+          ...(identity ? { createdBy: identity.id } : {}),
           createdAt: ts,
           updatedAt: ts,
         }
@@ -1033,6 +1042,7 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
           assigneeIds: [...input.assigneeIds],
           rule: input.rule,
           ...(input.projectId ? { projectId: input.projectId } : {}),
+          ...(identity ? { createdBy: identity.id } : {}),
           ...(input.start ? { start: input.start, durationMin: input.durationMin ?? 60 } : {}),
           createdAt: ts,
           updatedAt: ts,
@@ -1136,6 +1146,8 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
             assigneeIds: [...card.assigneeIds],
             rule,
             ...(card.meetingUrl ? { meetingUrl: card.meetingUrl } : {}),
+            ...(card.projectId ? { projectId: card.projectId } : {}),
+            ...(card.createdBy ? { createdBy: card.createdBy } : {}),
             ...(card.start ? { start: card.start, durationMin: card.durationMin ?? 60 } : {}),
             createdAt: ts,
             updatedAt: ts,
