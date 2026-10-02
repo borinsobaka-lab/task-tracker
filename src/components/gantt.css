@@ -200,6 +200,10 @@
   box-shadow: var(--shadow-md);
   z-index: 3;
 }
+/* Задача (не готовая, не встреча) — основного светло-зелёного цвета: подпись тёмная */
+.gantt-bar.task {
+  color: var(--on-accent);
+}
 /* Готовая задача — зелёная со штриховкой поверх, чтобы точно читалась как выполненная */
 .gantt-bar.done {
   background-image: repeating-linear-gradient(

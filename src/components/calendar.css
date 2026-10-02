@@ -362,20 +362,20 @@
 }
 
 .cal-chip {
-  --ev-color: var(--accent-strong);
+  --ev-color: var(--accent);
   --prio-color: var(--border-strong);
   display: flex;
   align-items: center;
   gap: 5px;
   padding: 2px 8px;
   border-radius: 12px;
-  /* Заливка — по исполнителю (для различения в календаре), полоса слева — по приоритету */
-  background: color-mix(in srgb, var(--ev-color) 14%, white);
-  border: 1px solid color-mix(in srgb, var(--ev-color) 30%, white);
+  /* Заливка — основной цвет (чья задача — по аватарке), полоса слева — по приоритету */
+  background: var(--ev-color);
+  border: 1px solid color-mix(in srgb, var(--ev-color) 75%, var(--on-accent));
   border-left: 3px solid var(--prio-color);
   font-size: 12px;
   font-weight: 500;
-  color: var(--text);
+  color: var(--on-accent);
   cursor: pointer;
   user-select: none;
   touch-action: none;
@@ -383,7 +383,7 @@
 }
 
 .cal-chip:hover {
-  background: color-mix(in srgb, var(--ev-color) 24%, white);
+  background: var(--accent-hover);
 }
 
 /* Чекбокс «выполнено» на закреплённой (all-day) карточке */
@@ -392,7 +392,7 @@
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  border: 1.5px solid color-mix(in srgb, var(--ev-color) 55%, var(--border-strong));
+  border: 1.5px solid color-mix(in srgb, var(--on-accent) 45%, transparent);
   background: rgba(255, 255, 255, 0.6);
   color: transparent;
   display: inline-flex;
@@ -436,7 +436,7 @@
 
 /* Просроченная задача — красный заголовок (закреплённая в зоне «весь день») */
 .cal-chip.overdue .cal-chip-title {
-  color: var(--danger);
+  color: #b91c1c; /* темнее --danger: на зелёной заливке обычный красный плохо читается */
   font-weight: 600;
 }
 
@@ -523,7 +523,7 @@
 /* ---------- Блоки задач ---------- */
 
 .cal-event {
-  --ev-color: var(--accent-strong);
+  --ev-color: var(--accent);
   --prio-color: var(--border-strong);
   position: absolute;
   z-index: 2;
@@ -532,9 +532,9 @@
   gap: 1px;
   padding: 3px 7px 4px 8px;
   border-radius: 14px;
-  /* Заливка — по исполнителю (различать задачи в календаре), полоса слева — по приоритету */
-  background: color-mix(in srgb, var(--ev-color) 18%, white);
-  box-shadow: inset 3px 0 0 var(--prio-color), 0 0 0 1px color-mix(in srgb, var(--ev-color) 30%, white);
+  /* Заливка — основной цвет (чья задача — по аватарке), полоса слева — по приоритету */
+  background: var(--ev-color);
+  box-shadow: inset 3px 0 0 var(--prio-color), 0 0 0 1px color-mix(in srgb, var(--ev-color) 75%, var(--on-accent));
   overflow: hidden;
   cursor: pointer;
   user-select: none;
@@ -544,8 +544,11 @@
 
 .cal-event:hover {
   z-index: 3;
-  box-shadow: inset 3px 0 0 var(--prio-color), 0 0 0 1px color-mix(in srgb, var(--ev-color) 45%, white),
+  box-shadow: inset 3px 0 0 var(--prio-color), 0 0 0 1px color-mix(in srgb, var(--ev-color) 60%, var(--on-accent)),
     var(--shadow-md);
+}
+.cal-event:not(.meeting):hover {
+  background: var(--accent-hover);
 }
 
 .cal-event.is-dragging {
@@ -602,7 +605,7 @@
   width: 15px;
   height: 15px;
   border-radius: 50%;
-  border: 1.5px solid color-mix(in srgb, var(--ev-color) 55%, var(--border-strong));
+  border: 1.5px solid color-mix(in srgb, var(--on-accent) 45%, transparent);
   background: rgba(255, 255, 255, 0.6);
   color: transparent;
   font-size: 10px;
@@ -630,7 +633,7 @@
   font-size: 12px;
   font-weight: 600;
   line-height: 1.25;
-  color: var(--text);
+  color: var(--on-accent);
   overflow: hidden;
 }
 
@@ -645,7 +648,7 @@
 .cal-event-time {
   font-size: 10.5px;
   font-weight: 600;
-  color: color-mix(in srgb, var(--ev-color) 72%, var(--text));
+  color: color-mix(in srgb, var(--on-accent) 75%, transparent);
   white-space: nowrap;
   flex-shrink: 0;
 }
@@ -707,7 +710,7 @@
 
 /* Просроченная задача сегодняшнего дня — красный заголовок */
 .cal-event.overdue .cal-event-title {
-  color: var(--danger);
+  color: #b91c1c; /* темнее --danger: на зелёной заливке обычный красный плохо читается */
 }
 
 /* Прошедшая встреча: без отметки выполнения — просто зачёркнута и приглушена */
@@ -738,7 +741,7 @@
   height: 3px;
   transform: translateX(-50%);
   border-radius: 2px;
-  background: color-mix(in srgb, var(--ev-color) 55%, white);
+  background: color-mix(in srgb, var(--on-accent) 35%, transparent);
   opacity: 0;
   transition: opacity 0.12s;
 }
