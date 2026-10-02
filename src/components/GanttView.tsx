@@ -53,8 +53,9 @@ export const GanttView = forwardRef<GanttHandle, { cards: Card[]; onOpenCard: (i
       c.assigneeIds.map((id) => memberById.get(id)).filter((m): m is Member => !!m)
     const projectOf = (c: Card) => (c.projectId ? store.projects.find((p) => p.id === c.projectId) : undefined)
     const isMeeting = (c: Card) => c.kind === 'meeting'
-    // Задачи — основного цвета (как в сетке календаря), готовые — тёмно-зелёные со штриховкой
-    const colorOf = (c: Card): string => (c.done ? '#16a34a' : isMeeting(c) ? '#1f2937' : 'var(--accent)')
+    // Задачи — белые (как карточки во всех разделах), встречи — фирменного зелёного,
+    // готовые — тёмно-зелёные со штриховкой
+    const colorOf = (c: Card): string => (c.done ? '#16a34a' : isMeeting(c) ? 'var(--accent)' : 'var(--surface)')
     // Прошедшая по времени встреча (у встреч нет отметки «выполнено» — гасим по времени)
     const nowMs = Date.now()
     const isPastMeeting = (c: Card): boolean => {
@@ -434,6 +435,7 @@ export const GanttView = forwardRef<GanttHandle, { cards: Card[]; onOpenCard: (i
                             'gantt-bar' +
                             (c.done ? ' done' : '') +
                             (!c.done && !isMeeting(c) ? ' task' : '') +
+                            (isMeeting(c) ? ' meeting' : '') +
                             (isPastMeeting(c) ? ' past' : '') +
                             (dr ? ' active' : '') +
                             (isTarget ? ' dep-target' : '')
