@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-02T21:39:57.121Z",
+  "generatedAt": "2026-10-02T21:40:04.624Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -3299,6 +3299,7 @@
       "date": "2026-10-03",
       "start": "13:00",
       "durationMin": 30,
+      "priorityColor": "#3b82f6",
       "members": [
         {
           "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
