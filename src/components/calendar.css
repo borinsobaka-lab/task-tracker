@@ -9,8 +9,9 @@
   --cal-hour-h: 48px;
   --cal-gutter-w: 56px;
   --cal-days: 7; /* число видимых дней; на мобильном задаётся из JS = 3 */
-  --cal-line: var(--border);
-  --cal-line-faint: color-mix(in srgb, var(--border) 45%, transparent);
+  /* Фон календаря — как в остальных разделах (--bg), поэтому линии сетки темнее --border */
+  --cal-line: #d5dad2;
+  --cal-line-faint: #e3e7e0;
 }
 
 .cal-root.is-dragging,
@@ -263,7 +264,7 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  background: var(--surface);
+  background: var(--bg);
 }
 
 .cal-scroll {
@@ -283,7 +284,7 @@
   z-index: 10;
   display: grid;
   grid-template-columns: var(--cal-gutter-w) repeat(var(--cal-days), 1fr);
-  background: var(--surface);
+  background: var(--bg);
   border-bottom: 1px solid var(--border-strong);
 }
 
@@ -506,7 +507,7 @@
   transform: translateY(-50%);
   font-size: 11px;
   color: var(--text-faint);
-  background: var(--surface);
+  background: var(--bg);
   padding: 0 2px;
 }
 
@@ -548,8 +549,8 @@
   right: 0;
   z-index: 0;
   pointer-events: none;
-  background: color-mix(in srgb, var(--text) 9%, transparent);
-  border-bottom: 1px dashed color-mix(in srgb, var(--text) 22%, transparent);
+  background: color-mix(in srgb, var(--text) 18%, transparent);
+  border-bottom: 1px dashed color-mix(in srgb, var(--text) 35%, transparent);
 }
 
 /* ---------- Блоки задач ---------- */
@@ -586,33 +587,37 @@
   opacity: 0.35;
 }
 
-/* Встречи — фирменный зелёный с тёмным текстом (задачи — белые карточки) */
+/* Встречи — чёрные с белым текстом (задачи — белые карточки) */
 .cal-event.meeting {
-  background: var(--accent);
+  background: #111111;
   box-shadow: var(--shadow-card);
 }
 .cal-event.meeting:hover {
-  background: var(--accent-hover);
+  background: #2a2a2a;
   box-shadow: var(--shadow-md);
 }
 .cal-event.meeting .cal-event-title {
-  color: var(--on-accent);
+  color: #ffffff;
 }
 .cal-event.meeting .cal-event-time {
-  color: color-mix(in srgb, var(--on-accent) 75%, transparent);
+  color: rgba(255, 255, 255, 0.72);
 }
 .cal-chip.meeting {
-  background: var(--accent);
+  background: #111111;
   border: none;
-  color: var(--on-accent);
+  color: #ffffff;
 }
 .cal-chip.meeting:hover {
-  background: var(--accent-hover);
+  background: #2a2a2a;
 }
 .cal-side-card.meeting {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: var(--on-accent);
+  background: #111111;
+  border-color: #111111;
+  color: #ffffff;
+}
+.cal-side-card.meeting .cal-side-title,
+.cal-side-card.meeting .cal-side-meta {
+  color: #ffffff;
 }
 
 /* Верхняя строка: чекбокс + заголовок (заголовок с самого верха блока) */
