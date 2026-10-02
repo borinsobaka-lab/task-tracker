@@ -30,7 +30,7 @@ import {
   NOTES_COLOR,
   prepareNoteFile,
 } from '../notes'
-import { formatBytes, uid } from '../utils'
+import { formatBytes, inProjectFilter, uid } from '../utils'
 import { EditorToolbar, RteButton, richTextExtensions, useSyncedEditor } from './RichTextEditor'
 import { NoteAttachment, NoteAttContext, TrailingParagraph } from './NoteAttachmentNode'
 import type { NoteAttContextValue } from './NoteAttachmentNode'
@@ -65,14 +65,14 @@ function enqueueUpload<T>(fn: () => Promise<T>): Promise<T> {
 /**
  * composeRef — сюда раздел кладёт функцию «новая заметка», чтобы кнопка «+» в нижнем
  * меню вызывала её прямо в обработчике нажатия (важно для клавиатуры на iOS).
- * projectFilter — таб проекта в шапке: показываем только заметки этого проекта.
+ * projectFilter — выбранные в шапке проекты (пустой набор — «Все»): показываем только их заметки.
  */
 export function NotesView({
   composeRef,
   projectFilter,
 }: {
   composeRef: MutableRefObject<(() => void) | null>
-  projectFilter: ID | null
+  projectFilter: ReadonlySet<ID>
 }) {
   const store = useBoard()
   const [openId, setOpenId] = useState<ID | null>(null)
@@ -85,7 +85,7 @@ export function NotesView({
 
   // store.notes — уже без заметок закрытых для участника проектов
   const notes = useMemo(
-    () => (projectFilter === null ? store.notes : store.notes.filter((n) => n.projectId === projectFilter)),
+    () => (projectFilter.size === 0 ? store.notes : store.notes.filter((n) => inProjectFilter(n.projectId, projectFilter))),
     [store.notes, projectFilter],
   )
   const visible = useMemo(() => notes.filter((n) => noteMatchesQuery(n, query)), [notes, query])
@@ -144,8 +144,9 @@ export function NotesView({
 
   const compose = () => {
     if (isMobileViewport()) kbProxyRef.current?.focus({ preventScroll: true })
-    // Выбран таб проекта — новая заметка сразу относится к нему (иначе пропала бы из списка)
-    const id = store.addNote(projectFilter ?? undefined)
+    // Выбраны проекты в шапке — новая заметка сразу относится к первому из них
+    // (иначе пропала бы из отфильтрованного списка)
+    const id = store.addNote(store.projects.find((p) => projectFilter.has(p.id))?.id)
     setFreshId(id)
     setQuery('')
     open(id)
@@ -262,7 +263,7 @@ export function NotesView({
               <div className="notes-empty-ico" aria-hidden>
                 <IcoNotes size={44} color={NOTES_COLOR} />
               </div>
-              <div className="notes-empty-title">{projectFilter ? 'В этом проекте заметок пока нет' : 'Заметок пока нет'}</div>
+              <div className="notes-empty-title">{projectFilter.size ? 'В выбранных проектах заметок пока нет' : 'Заметок пока нет'}</div>
               <div className="muted">Записывайте мысли, списки, фото и файлы — всё сохранится само.</div>
               <button type="button" className="btn btn-primary notes-empty-btn" onClick={compose}>
                 Новая заметка

@@ -45,7 +45,7 @@
   inset: 0;
   z-index: 50;
   border-radius: 14px;
-  background: rgba(91, 91, 214, 0.08);
+  background: rgba(159, 232, 112, 0.18);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -341,7 +341,7 @@
 }
 .cm-prio-check {
   margin-left: auto;
-  color: var(--accent);
+  color: var(--accent-strong);
   font-weight: 700;
 }
 .cm-prio-sep {
@@ -1050,7 +1050,7 @@
 }
 
 .rte-content a {
-  color: var(--accent);
+  color: var(--accent-strong);
   text-decoration: underline;
   cursor: pointer;
 }

@@ -206,6 +206,11 @@ export function cardMatchesQuery(c: { title: string; description?: string }, que
   return hay.includes(q)
 }
 
+/** Фильтр проектов: пустой набор — «Все»; иначе задача/заметка должна быть в одном из выбранных проектов. */
+export function inProjectFilter(projectId: string | undefined, filter: ReadonlySet<string>): boolean {
+  return filter.size === 0 || (!!projectId && filter.has(projectId))
+}
+
 export function initials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean)
   if (parts.length === 0) return '?'

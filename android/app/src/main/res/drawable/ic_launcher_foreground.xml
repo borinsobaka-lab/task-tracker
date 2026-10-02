@@ -3,11 +3,11 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- Чек-лист (белым) по центру -->
-    <path android:fillColor="#FFFFFF" android:pathData="M40,38 h32 v6 h-32 z" />
-    <path android:fillColor="#FFFFFF" android:pathData="M40,51 h32 v6 h-32 z" />
-    <path android:fillColor="#FFFFFF" android:pathData="M40,64 h32 v6 h-32 z" />
-    <path android:fillColor="#FFFFFF" android:pathData="M30,38 h6 v6 h-6 z" />
-    <path android:fillColor="#FFFFFF" android:pathData="M30,51 h6 v6 h-6 z" />
-    <path android:fillColor="#FFFFFF" android:pathData="M30,64 h6 v6 h-6 z" />
+    <!-- Чек-лист (тёмно-зелёным) по центру -->
+    <path android:fillColor="#163300" android:pathData="M40,38 h32 v6 h-32 z" />
+    <path android:fillColor="#163300" android:pathData="M40,51 h32 v6 h-32 z" />
+    <path android:fillColor="#163300" android:pathData="M40,64 h32 v6 h-32 z" />
+    <path android:fillColor="#163300" android:pathData="M30,38 h6 v6 h-6 z" />
+    <path android:fillColor="#163300" android:pathData="M30,51 h6 v6 h-6 z" />
+    <path android:fillColor="#163300" android:pathData="M30,64 h6 v6 h-6 z" />
 </vector>

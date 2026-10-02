@@ -4,7 +4,7 @@ import type { SeriesInput } from '../store'
 import type { Card, ID, Member, RecurFreq, RecurrenceRule, Series } from '../types'
 import { describeRule, ruleIsValid } from '../recurrence'
 import type { ViewProps } from '../viewProps'
-import { fmtDayMonth, hasContent, parseDateKey, plainSnippet } from '../utils'
+import { fmtDayMonth, hasContent, inProjectFilter, parseDateKey, plainSnippet } from '../utils'
 import { IcoCheck, IcoNone, IcoRecurring, IcoX } from '../icons'
 import { Avatar, AvatarStack, ProjectAvatar } from './Avatar'
 import { RichTextEditor } from './RichTextEditor'
@@ -38,7 +38,7 @@ export function RecurringView({ memberFilter, onMemberFilterChange, projectFilte
 
   const inFilter = (c: Card) =>
     (memberFilter.size === 0 || c.assigneeIds.some((id) => memberFilter.has(id))) &&
-    (projectFilter === null || c.projectId === projectFilter)
+    inProjectFilter(c.projectId, projectFilter)
   const freqOf = (c: Card) => (c.seriesId ? store.seriesById(c.seriesId)?.rule.freq : undefined)
   const inFreq = (c: Card) => freqFilter === 'all' || freqOf(c) === freqFilter
   // Раздел «Регулярное» — только задачи; повторяющиеся встречи живут в календаре

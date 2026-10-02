@@ -18,7 +18,7 @@ interface Particle {
 }
 
 // Живые, но не кислотные цвета (в тон акцентам приложения и статусам).
-const COLORS = ['#5b5bd6', '#22c55e', '#f59e0b', '#ef4444', '#3b82f6', '#ec4899', '#14b8a6', '#a855f7']
+const COLORS = ['#9fe870', '#22c55e', '#f59e0b', '#ef4444', '#3b82f6', '#ec4899', '#14b8a6', '#a855f7']
 
 export function Confetti() {
   const canvasRef = useRef<HTMLCanvasElement>(null)

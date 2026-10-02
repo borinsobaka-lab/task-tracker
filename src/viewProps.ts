@@ -5,8 +5,8 @@ import type { ID } from './types'
 export interface ViewProps {
   memberFilter: ReadonlySet<ID>
   onMemberFilterChange: (f: ReadonlySet<ID>) => void
-  /** Активный проект-фильтр (id) или null — «Все». Управляется табами в шапке. */
-  projectFilter: ID | null
+  /** Выбранные в шапке проекты; пустой набор — «Все». */
+  projectFilter: ReadonlySet<ID>
   onOpenCard: (id: ID) => void
   /** Создать новую задачу-черновик (пустой заголовок, курсор в поле) и открыть её.
    *  Можно сразу запланировать на дату/время (клик по календарю). */

@@ -55,7 +55,7 @@
             android:layout_height="34dp"
             android:padding="6dp"
             android:indeterminate="true"
-            android:indeterminateTint="#5B5BD6"
+            android:indeterminateTint="#357A17"
             android:visibility="gone" />
     </LinearLayout>
 
@@ -68,7 +68,7 @@
         android:gravity="center"
         android:padding="8dp"
         android:text="@string/usage_connect_hint"
-        android:textColor="#5B5BD6"
+        android:textColor="#357A17"
         android:textSize="14sp"
         android:visibility="gone" />
 
@@ -113,7 +113,7 @@
                 android:layout_height="wrap_content"
                 android:fontFamily="sans-serif-medium"
                 android:text="—"
-                android:textColor="#5B5BD6"
+                android:textColor="#357A17"
                 android:textSize="15sp" />
         </LinearLayout>
 
@@ -175,7 +175,7 @@
                 android:layout_height="wrap_content"
                 android:fontFamily="sans-serif-medium"
                 android:text="—"
-                android:textColor="#5B5BD6"
+                android:textColor="#357A17"
                 android:textSize="15sp" />
         </LinearLayout>
 
@@ -237,7 +237,7 @@
                 android:layout_height="wrap_content"
                 android:fontFamily="sans-serif-medium"
                 android:text="—"
-                android:textColor="#5B5BD6"
+                android:textColor="#357A17"
                 android:textSize="15sp" />
         </LinearLayout>
 

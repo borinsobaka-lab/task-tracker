@@ -129,7 +129,7 @@ export const TimelineView = forwardRef<TimelineHandle, TimelineViewProps>(functi
     const mtg = isMtg(it)
     const past = mtg && endMsOf(it) < nowMs // прошедшая встреча — зачёркиваем
     const active = !it.done && !!it.start && startMsOf(it) <= nowMs && nowMs < endMsOf(it)
-    const color = mtg ? MEETING_COLOR : it.members[0]?.color ?? 'var(--accent)'
+    const color = mtg ? MEETING_COLOR : it.members[0]?.color ?? 'var(--accent-strong)'
     const cls =
       'tl-card' +
       (it.done ? ' done' : '') +

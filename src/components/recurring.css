@@ -187,7 +187,7 @@
   color: var(--accent-strong);
 }
 .rec-member-check {
-  color: var(--accent);
+  color: var(--accent-strong);
   font-weight: 700;
 }
 
@@ -216,7 +216,7 @@
 .rec-wd.on {
   background: var(--accent);
   border-color: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
 }
 
 /* Ежегодно: выбор дня и месяца (напр. для дней рождения) */
@@ -252,7 +252,7 @@
 .rec-md.on {
   background: var(--accent);
   border-color: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
 }
 
 .rec-time-toggle {

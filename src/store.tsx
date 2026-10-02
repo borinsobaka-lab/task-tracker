@@ -151,6 +151,31 @@ export interface StoreSnapshot {
   identityId: ID | null
 }
 
+// ---------- Страховка заметок от старых версий приложения ----------
+// Версии до раздела «Заметки» при слиянии конфликтующих правок собирали доску
+// заново и теряли поле notes целиком. Пока такие версии могут быть открыты
+// (старый адрес, Android-оболочка), новая версия держит копию заметок на
+// устройстве и, увидев данные без поля notes, возвращает заметки обратно.
+
+function notesCacheKey(adapter: StorageAdapter): string {
+  return `tt.notesCache.${adapter.kind}`
+}
+
+function readNotesCache(adapter: StorageAdapter): Record<ID, Note> | null {
+  try {
+    const raw = localStorage.getItem(notesCacheKey(adapter))
+    return raw ? (JSON.parse(raw) as Record<ID, Note>) : null
+  } catch {
+    return null
+  }
+}
+
+/** Данные без поля notes (их сохранила старая версия) + известные нам заметки → доска с заметками. */
+function healNotes(data: BoardData, known: Record<ID, Note> | null | undefined): BoardData | null {
+  if (data.notes !== undefined || !known || Object.keys(known).length === 0) return null
+  return { ...data, notes: known }
+}
+
 const SAVE_DEBOUNCE_MS = 1200
 const POLL_INTERVAL_MS = 25_000
 const MAX_CONFLICT_RETRIES = 6
@@ -206,7 +231,19 @@ export class SyncEngine {
     }
   }
 
+  private cachedNotes: BoardData['notes'] = undefined
+
   private emit(): void {
+    // Копия заметок на устройстве (см. healNotes) — только когда они изменились
+    const notes = this.data?.notes
+    if (notes && notes !== this.cachedNotes) {
+      this.cachedNotes = notes
+      try {
+        localStorage.setItem(notesCacheKey(this.adapter), JSON.stringify(notes))
+      } catch {
+        /* нет места — не страшно, это страховка */
+      }
+    }
     this.snapshot = this.buildSnapshot()
     for (const fn of this.listeners) fn()
   }
@@ -225,8 +262,11 @@ export class SyncEngine {
       if (aborted()) return
       if (!state) state = await this.adapter.init(emptyBoard())
       if (aborted()) return
-      this.data = state.data
+      // Заметки потеряны старой версией приложения — возвращаем из копии на устройстве
+      const healed = healNotes(state.data, readNotesCache(this.adapter))
+      this.data = healed ?? state.data
       this.rev = state.rev
+      if (healed) this.dirty = true
       this.status = 'synced'
       this.lastSyncAt = Date.now()
       this.lastError = null
@@ -246,6 +286,7 @@ export class SyncEngine {
     window.addEventListener('focus', this.onFocus)
     window.addEventListener('online', this.onOnline)
     window.addEventListener('beforeunload', this.onBeforeUnload)
+    if (this.dirty) this.scheduleSave()
   }
 
   stop(): void {
@@ -391,9 +432,17 @@ export class SyncEngine {
       // откатим только что сохранённое и регрессируем rev).
       if (!remote || this.saving || this.dirty || this.stopped || this.saveGen !== genBefore) return
       const revChanged = remote.rev !== this.rev
+      let healed = false
       if (revChanged) {
-        this.data = remote.data
+        // Старая версия приложения сохранила доску без заметок — возвращаем наши
+        const fixed = healNotes(remote.data, this.data.notes)
+        this.data = fixed ?? remote.data
         this.rev = remote.rev
+        if (fixed) {
+          healed = true
+          this.dirty = true
+          this.scheduleSave()
+        }
       }
       this.lastSyncAt = Date.now() // обновляем тихо: подхватится следующим emit
       let statusChanged = false
@@ -404,7 +453,7 @@ export class SyncEngine {
       }
       // Не эмитим на каждый опрос при неизменных данных — иначе весь UI
       // (все карточки доски) перерисовывался бы каждые 25 секунд впустую.
-      if (revChanged || statusChanged) this.emit()
+      if (revChanged || statusChanged || healed) this.emit()
     } catch {
       // Ошибки фонового опроса не показываем — покажем при сохранении
     }
@@ -434,7 +483,7 @@ export interface BoardStore {
 
   // Участники
   addMember(name: string, color: string): Member
-  updateMember(id: ID, patch: Partial<Pick<Member, 'name' | 'color' | 'sleepUntil' | 'tgUsername' | 'avatar'>>): void
+  updateMember(id: ID, patch: Partial<Pick<Member, 'name' | 'color' | 'sleepUntil' | 'tgUsername' | 'avatar' | 'filters'>>): void
   archiveMember(id: ID): void
 
   // Проекты (табы в шапке; фильтр задач; группа Telegram; доступ по участникам)

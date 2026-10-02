@@ -21,6 +21,7 @@ import { IcoMeeting } from '../icons'
 import { AvatarStack, ProjectAvatar } from './Avatar'
 import { SubHeader } from './SubHeader'
 import './eisenhower.css'
+import { inProjectFilter } from '../utils'
 
 const INBOX = 'inbox'
 
@@ -38,7 +39,7 @@ export function EisenhowerView({ memberFilter, onMemberFilterChange, projectFilt
 
   const inFilter = (c: Card) =>
     (memberFilter.size === 0 || c.assigneeIds.some((id) => memberFilter.has(id))) &&
-    (projectFilter === null || c.projectId === projectFilter)
+    inProjectFilter(c.projectId, projectFilter)
   // В матрице только обычные задачи: без встреч, без регулярных и без готовых
   const cards = store.liveCards().filter((c) => c.kind !== 'meeting' && !c.seriesId && !c.done && inFilter(c))
 

@@ -13,6 +13,9 @@ export interface Member {
   tgUsername?: string
   /** До скольки часов спит (0–12). Слоты 00:00–это_время в календаре серые. */
   sleepUntil?: number
+  /** Сохранённые фильтры этого участника (восстанавливаются при входе на любом устройстве).
+   *  Пустой список / нет поля — «все». */
+  filters?: { members?: ID[]; projects?: ID[] }
   archived?: boolean
   createdAt: string // ISO
   updatedAt: string
