@@ -287,6 +287,16 @@
 .notes-empty-btn {
   margin-top: 10px;
 }
+/* Как и плавающая «Добавить заметку» — жёлтая, с тёмным текстом */
+.notes .notes-empty-btn {
+  background: #facc15;
+  border-color: #facc15;
+  color: #422006;
+}
+.notes .notes-empty-btn:hover {
+  background: #eab308;
+  border-color: #eab308;
+}
 
 /* ---------- Открытая заметка ---------- */
 

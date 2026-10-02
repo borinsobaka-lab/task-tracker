@@ -526,10 +526,13 @@ test('заметки: создание, форматирование и сохр
   await createIdentity(page)
   await page.locator('.view-tabs button', { hasText: 'Заметки' }).click()
   await expect(page.getByText('Заметок пока нет')).toBeVisible()
-  // В заметках своя кнопка создания — плавающей «Добавить задачу» нет
-  await expect(page.locator('.fab')).toBeHidden()
+  // В заметках плавающая кнопка — жёлтая «Добавить заметку» (вместо «Добавить задачу»)
+  await expect(page.getByRole('button', { name: 'Добавить задачу' })).toHaveCount(0)
+  const fab = page.locator('.fab.fab-note')
+  await expect(fab).toHaveText(/Добавить заметку/)
+  await expect(fab).toHaveCSS('background-color', 'rgb(250, 204, 21)')
 
-  await page.getByRole('button', { name: 'Новая заметка' }).first().click()
+  await fab.click()
   await expect(page.locator('.note-title')).toBeFocused()
   await page.keyboard.type('Идеи для отпуска')
   await page.keyboard.press('Enter')
