@@ -409,7 +409,7 @@ final class ClaudeUsage {
         if (!w.known()) return 0xFF9CA3AF;
         if (w.percent >= 90) return 0xFFDC2626;
         if (w.percent >= 75) return 0xFFF59E0B;
-        return 0xFF5B5BD6;
+        return 0xFF357A17;
     }
 
     // ---------------------------------------------------------------- PKCE

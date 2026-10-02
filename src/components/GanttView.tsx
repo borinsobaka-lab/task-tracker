@@ -54,7 +54,7 @@ export const GanttView = forwardRef<GanttHandle, { cards: Card[]; onOpenCard: (i
     const projectOf = (c: Card) => (c.projectId ? store.projects.find((p) => p.id === c.projectId) : undefined)
     const isMeeting = (c: Card) => c.kind === 'meeting'
     const colorOf = (c: Card): string =>
-      c.done ? '#16a34a' : isMeeting(c) ? '#1f2937' : assigneesOf(c)[0]?.color ?? 'var(--accent)'
+      c.done ? '#16a34a' : isMeeting(c) ? '#1f2937' : assigneesOf(c)[0]?.color ?? 'var(--accent-strong)'
     // Прошедшая по времени встреча (у встреч нет отметки «выполнено» — гасим по времени)
     const nowMs = Date.now()
     const isPastMeeting = (c: Card): boolean => {

@@ -39,7 +39,7 @@ public class TimelineRemoteViewsFactory implements RemoteViewsService.RemoteView
             "https://raw.githubusercontent.com/borinsobaka-lab/task-tracker/app-config/timeline.json";
     static final String APP_URL = "https://borinsobaka-lab.github.io/task-tracker/";
     static final int RED = 0xFFDC2626;
-    static final int ACCENT = 0xFF5B5BD6;
+    static final int ACCENT = 0xFF357A17;
     static final int MEETING_COLOR = 0xFF1F2937; // тёмная полоса у встреч
     static final int CARD_H_DP = 50; // высота карточки — для позиционирования красной линии
 
@@ -421,7 +421,7 @@ public class TimelineRemoteViewsFactory implements RemoteViewsService.RemoteView
                 if ("meeting".equals(it.kind)) {
                     it.color = MEETING_COLOR;
                 } else if (mem != null && mem.length() > 0) {
-                    it.color = parseColor(mem.getJSONObject(0).optString("color", "#5B5BD6"));
+                    it.color = parseColor(mem.getJSONObject(0).optString("color", "#357A17"));
                 } else {
                     it.color = ACCENT;
                 }

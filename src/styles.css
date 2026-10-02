@@ -1,18 +1,24 @@
 /* Дизайн-токены и общие элементы интерфейса */
 
 :root {
-  --bg: #eef0f7;
-  --bg-panel: #f7f8fc;
+  /* Фон за задачами (доска, календарь, матрица, повтор…) и родственные ему оттенки
+     — нейтральные с лёгким зелёным подтоном под основной цвет */
+  --bg: #eff1ee;
+  --bg-panel: #f7f8f6;
   --surface: #ffffff;
-  --surface-2: #f1f2f8;
+  --surface-2: #f2f4f1;
   --border: #e2e4ef;
   --border-strong: #c9ccdd;
   --text: #1e2130;
   --text-soft: #5b6070;
   --text-faint: #9095a8;
-  --accent: #5b5bd6;
-  --accent-strong: #4a4ac4;
-  --accent-soft: #ececfb;
+  /* Основной цвет — светло-зелёный. На нём текст тёмно-зелёный (--on-accent):
+     белый на #9FE870 не читается. Зелёный текст/иконки на белом — --accent-strong. */
+  --accent: #9fe870;
+  --accent-hover: #8bdb59;
+  --accent-strong: #357a17;
+  --accent-soft: #eefadf;
+  --on-accent: #163300;
   --danger: #dc2626;
   --danger-soft: #fee2e2;
   --ok: #16a34a;
@@ -91,10 +97,10 @@ select {
 .btn-primary {
   background: var(--accent);
   border-color: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
 }
 .btn-primary:hover {
-  background: var(--accent-strong);
+  background: var(--accent-hover);
 }
 
 .btn-ghost {

@@ -20,10 +20,10 @@
   width: 290px;
   min-width: 290px;
   max-height: 100%;
-  /* Подложка колонки — почти белая (лишь лёгкий холодный оттенок), независимо от
+  /* Подложка колонки — почти белая (лишь лёгкий зеленоватый оттенок), независимо от
      статуса; белые карточки различимы за счёт тени и рамки, а цвет статуса
      показывает полоса сверху. Так полосы приоритета на карточках не сливаются с фоном. */
-  background: #fbfcfe;
+  background: #fbfcfa;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   box-shadow: var(--shadow-sm);
@@ -169,7 +169,7 @@
 }
 .col-menu-check {
   margin-left: auto;
-  color: var(--accent);
+  color: var(--accent-strong);
   font-weight: 700;
 }
 .col-menu-sep {
@@ -428,7 +428,7 @@
 }
 .card-assign-btn:hover .card-add-avatar {
   border-color: var(--accent);
-  color: var(--accent);
+  color: var(--accent-strong);
 }
 
 .card-assign-pop {
@@ -471,7 +471,7 @@
   white-space: nowrap;
 }
 .card-assign-check {
-  color: var(--accent);
+  color: var(--accent-strong);
   font-weight: 700;
 }
 

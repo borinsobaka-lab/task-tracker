@@ -43,7 +43,7 @@
   height: 28px;
   border-radius: 8px;
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
   font-size: 15px;
 }
 
@@ -154,7 +154,7 @@
 }
 .view-switch-check {
   margin-left: auto;
-  color: var(--accent);
+  color: var(--accent-strong);
   font-weight: 700;
 }
 
@@ -239,7 +239,7 @@
   align-items: center;
   justify-content: center;
   padding: 24px 16px;
-  background: linear-gradient(160deg, #eef0f7 0%, #e6e6f5 100%);
+  background: linear-gradient(160deg, #eff1ee 0%, #e4e9e1 100%);
   overflow-y: auto;
 }
 
@@ -265,7 +265,7 @@
   height: 44px;
   border-radius: 12px;
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
   font-size: 22px;
   margin-bottom: 16px;
 }
@@ -280,7 +280,7 @@
 }
 
 .login-steps a {
-  color: var(--accent);
+  color: var(--accent-strong);
   font-weight: 600;
 }
 
@@ -499,7 +499,7 @@
   border-radius: 50%;
   border: none;
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -550,7 +550,7 @@
 .qa-pop-check {
   margin-left: auto;
   display: inline-flex;
-  color: var(--accent);
+  color: var(--accent-strong);
 }
 .qa-pop-empty {
   padding: 10px;
@@ -591,7 +591,7 @@
   border: none;
   border-radius: 999px;
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
@@ -599,7 +599,7 @@
   transition: background 0.12s, transform 0.12s;
 }
 .fab:hover {
-  background: var(--accent-strong);
+  background: var(--accent-hover);
   transform: translateY(-1px);
 }
 .fab-plus {
@@ -749,11 +749,11 @@
     height: 54px;
     border-radius: 50%;
     background: var(--accent);
-    color: #fff;
+    color: var(--on-accent);
     font-size: 36px;
     font-weight: 400;
     line-height: 1;
-    box-shadow: 0 4px 12px rgba(91, 91, 214, 0.4);
+    box-shadow: 0 4px 12px rgba(53, 122, 23, 0.35);
   }
 
   /* Плавающая кнопка — только десктоп */

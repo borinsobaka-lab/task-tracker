@@ -83,7 +83,7 @@
             android:layout_marginStart="2dp"
             android:padding="6dp"
             android:indeterminate="true"
-            android:indeterminateTint="#5B5BD6"
+            android:indeterminateTint="#357A17"
             android:visibility="gone" />
     </LinearLayout>
 
