@@ -483,7 +483,7 @@ export interface BoardStore {
 
   // Участники
   addMember(name: string, color: string): Member
-  updateMember(id: ID, patch: Partial<Pick<Member, 'name' | 'color' | 'sleepUntil' | 'tgUsername' | 'avatar'>>): void
+  updateMember(id: ID, patch: Partial<Pick<Member, 'name' | 'color' | 'sleepUntil' | 'tgUsername' | 'avatar' | 'filters'>>): void
   archiveMember(id: ID): void
 
   // Проекты (табы в шапке; фильтр задач; группа Telegram; доступ по участникам)

@@ -671,9 +671,9 @@ test('заметки: без проекта видят все, с проекто
   await expect(page.locator('.note-project-who')).toHaveText('видят только: Борис')
 
   // Таб проекта в шапке оставляет только его заметки
-  await page.getByRole('tab', { name: 'Проект Бориса' }).click()
+  await page.locator('.project-tabs').getByRole('button', { name: 'Проект Бориса' }).click()
   await expect(page.locator('.note-row')).toHaveCount(2)
-  await page.getByRole('tab', { name: 'Все' }).click()
+  await page.locator('.project-tabs').getByRole('button', { name: 'Все' }).click()
 
   // Аня видит только заметку своего проекта
   await page.waitForTimeout(1500)
@@ -711,4 +711,62 @@ test('заметки: старая версия приложения стёрл�
   await page.reload()
   await expect(page.locator('.note-row', { hasText: 'Важная заметка' })).toBeVisible()
   await expect.poll(savedNotes).toBe(1)
+})
+
+test('фильтры: несколько проектов сразу и запоминание фильтров за участником', async ({ page }) => {
+  await createIdentity(page, 'Борис')
+  await page.waitForFunction(() => (JSON.parse(localStorage.getItem('tt.local.data') ?? '{}').members ?? []).length > 0)
+  await page.evaluate(() => {
+    const data = JSON.parse(localStorage.getItem('tt.local.data')!)
+    const boris = localStorage.getItem('tt.identity')!
+    const ts = new Date().toISOString()
+    data.members.push({ id: 'anya', name: 'Аня', color: '#ec4899', createdAt: ts, updatedAt: ts })
+    data.projects = ['Альфа', 'Бета', 'Гамма'].map((name, i) => ({ id: `p${i}`, name, createdAt: ts, updatedAt: ts }))
+    const card = (id: string, title: string, projectId: string | undefined, who: string) => ({
+      id, title, description: '', columnId: 'col-todo', assigneeIds: [who], checklist: [], attachments: [],
+      ...(projectId ? { projectId } : {}), createdAt: ts, updatedAt: ts,
+    })
+    const cards = [
+      card('c0', 'Задача Альфы', 'p0', boris),
+      card('c1', 'Задача Беты', 'p1', 'anya'),
+      card('c2', 'Задача Гаммы', 'p2', boris),
+      card('c3', 'Задача без проекта', undefined, boris),
+    ]
+    for (const c of cards) data.cards[c.id] = c
+    data.columns.find((c: { id: string }) => c.id === 'col-todo').cardIds = cards.map((c) => c.id)
+    localStorage.setItem('tt.local.data', JSON.stringify(data))
+    localStorage.setItem('tt.local.rev', String(Number(localStorage.getItem('tt.local.rev') ?? '1') + 1))
+  })
+  await page.reload()
+  const tabs = page.locator('.project-tabs')
+  const card = (t: string) => page.locator('.board-card', { hasText: t })
+  await expect(page.locator('.board-card')).toHaveCount(4)
+
+  // Два проекта сразу
+  await tabs.getByRole('button', { name: 'Альфа' }).click()
+  await tabs.getByRole('button', { name: 'Бета' }).click()
+  await expect(card('Задача Альфы')).toBeVisible()
+  await expect(card('Задача Беты')).toBeVisible()
+  await expect(card('Задача Гаммы')).toHaveCount(0)
+  await expect(card('Задача без проекта')).toHaveCount(0)
+  await expect(tabs.getByRole('button', { name: 'Все' })).toHaveAttribute('aria-pressed', 'false')
+
+  // Плюс фильтр по участнику
+  await page.locator('.member-filter-btn[title^="Аня"]').click()
+  await expect(page.locator('.board-card')).toHaveCount(1)
+  await expect(card('Задача Беты')).toBeVisible()
+
+  // Перезаходим — фильтры на месте
+  await page.waitForTimeout(1500)
+  await page.reload()
+  await expect(tabs.getByRole('button', { name: 'Альфа' })).toHaveAttribute('aria-pressed', 'true')
+  await expect(tabs.getByRole('button', { name: 'Бета' })).toHaveAttribute('aria-pressed', 'true')
+  await expect(tabs.getByRole('button', { name: 'Гамма' })).toHaveAttribute('aria-pressed', 'false')
+  await expect(page.locator('.member-filter-btn[title^="Аня"]')).toHaveClass(/active/)
+  await expect(page.locator('.board-card')).toHaveCount(1)
+
+  // «Все» и «Сбросить» возвращают всё
+  await tabs.getByRole('button', { name: 'Все' }).click()
+  await page.getByRole('button', { name: 'Сбросить' }).click()
+  await expect(page.locator('.board-card')).toHaveCount(4)
 })

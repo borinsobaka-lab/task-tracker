@@ -227,9 +227,10 @@ function Shell({ onLogout }: { onLogout: () => void }) {
   const [quickAddOpen, setQuickAddOpen] = useState(false)
   // «+» в нижнем меню в разделе «Заметки» создаёт заметку (функцию кладёт NotesView)
   const composeNoteRef = useRef<(() => void) | null>(null)
-  const [memberFilter, setMemberFilter] = useState<ReadonlySet<ID>>(new Set())
-  // Активный проект-фильтр (id) или null — «Все». Задаётся табами проектов в шапке.
-  const [projectFilter, setProjectFilter] = useState<ID | null>(null)
+  // Фильтры по участникам и проектам (пустой набор — «все»). Запоминаются за
+  // выбранным участником в board.json и восстанавливаются при следующем входе.
+  const [memberFilter, setMemberFilterState] = useState<ReadonlySet<ID>>(new Set())
+  const [projectFilter, setProjectFilterState] = useState<ReadonlySet<ID>>(new Set())
   // Карточка, созданная кнопкой «+» и ещё не заполненная (черновик). Ref на
   // свежий store — чтобы после закрытия увидеть досохранённые название/описание.
   const draftIdRef = useRef<ID | null>(null)
@@ -243,6 +244,18 @@ function Shell({ onLogout }: { onLogout: () => void }) {
       toppedUp.current = true
       store.topUpMeetings()
     }
+  }, [store])
+
+  // Вход (или смена участника): восстанавливаем его сохранённые фильтры. Участников,
+  // которых уже нет (в архиве), отбрасываем; проекты проверяет ProjectTabs.
+  const filtersLoadedFor = useRef<ID | null>(null)
+  useEffect(() => {
+    const me = store?.identity
+    if (!store || !me || filtersLoadedFor.current === me.id) return
+    filtersLoadedFor.current = me.id
+    const alive = new Set(store.members.map((m) => m.id))
+    setMemberFilterState(new Set((me.filters?.members ?? []).filter((id) => alive.has(id))))
+    setProjectFilterState(new Set(me.filters?.projects ?? []))
   }, [store])
 
   // Кто выбран в «Кто вы?» — сообщаем Android-оболочке: виджет на рабочем столе
@@ -316,6 +329,24 @@ function Shell({ onLogout }: { onLogout: () => void }) {
 
   if (!store.identity) {
     return <IdentityScreen />
+  }
+
+  // Сохраняем фильтры за текущим участником (если что-то изменилось)
+  const saveFilters = (members: ReadonlySet<ID>, projects: ReadonlySet<ID>) => {
+    const me = store.identity
+    if (!me) return
+    const next = { members: [...members].sort(), projects: [...projects].sort() }
+    const prev = { members: [...(me.filters?.members ?? [])].sort(), projects: [...(me.filters?.projects ?? [])].sort() }
+    if (JSON.stringify(next) === JSON.stringify(prev)) return
+    store.updateMember(me.id, { filters: next })
+  }
+  const setMemberFilter = (f: ReadonlySet<ID>) => {
+    setMemberFilterState(f)
+    saveFilters(f, projectFilter)
+  }
+  const setProjectFilter = (f: ReadonlySet<ID>) => {
+    setProjectFilterState(f)
+    saveFilters(memberFilter, f)
   }
 
   const changeView = (v: ViewKind) => {

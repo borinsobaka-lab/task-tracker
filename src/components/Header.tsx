@@ -39,8 +39,8 @@ export function Header({
   onViewChange: (v: ViewKind) => void
   onOpenSettings: () => void
   onOpenCard: (id: ID) => void
-  projectFilter: ID | null
-  onProjectFilterChange: (id: ID | null) => void
+  projectFilter: ReadonlySet<ID>
+  onProjectFilterChange: (f: ReadonlySet<ID>) => void
 }) {
   const store = useBoard()
   const status = STATUS_LABEL[store.status] ?? STATUS_LABEL.synced
@@ -131,38 +131,47 @@ export function BottomNav({
 }
 
 /**
- * Табы проектов в шапке: по логотипу на каждый проект + таб «Все». Выбор задаёт
- * глобальный фильтр (projectFilter): в каждом разделе остаются только задачи (и заметки) этого
- * проекта. Проекты (имя/иконка/Telegram-группа) добавляются в настройках.
+ * Табы проектов в шапке: по логотипу на каждый проект + таб «Все». Как и фильтр
+ * участников, это набор: можно выбрать один проект, несколько (клик включает и
+ * выключает) или «Все» (пустой набор). В каждом разделе остаются только задачи
+ * выбранных проектов. Проекты (имя/иконка/Telegram-группа) добавляются в настройках.
  */
-function ProjectTabs({ projectFilter, onChange }: { projectFilter: ID | null; onChange: (id: ID | null) => void }) {
+function ProjectTabs({ projectFilter, onChange }: { projectFilter: ReadonlySet<ID>; onChange: (f: ReadonlySet<ID>) => void }) {
   const store = useBoard()
   const projects = store.projects
 
-  // Если активный фильтр указывает на удалённый проект — сбрасываем на «Все»
+  // В фильтре есть удалённые/недоступные проекты (например, из сохранённого
+  // фильтра) — убираем их, иначе фильтр «молча» прятал бы всё
   useEffect(() => {
-    if (projectFilter && !projects.some((p) => p.id === projectFilter)) onChange(null)
+    const live = [...projectFilter].filter((id) => projects.some((p) => p.id === id))
+    if (live.length !== projectFilter.size) onChange(new Set(live))
   }, [projectFilter, projects, onChange])
 
   if (projects.length === 0) return null // проектов ещё нет — табы не показываем
 
+  const toggle = (id: ID) => {
+    const next = new Set(projectFilter)
+    if (next.has(id)) next.delete(id)
+    else next.add(id)
+    onChange(next)
+  }
+
   return (
-    <div className="project-tabs" role="tablist" aria-label="Проекты">
+    <div className="project-tabs" role="group" aria-label="Фильтр по проектам">
       {projects.map((p, i) => {
         const named = p.name?.trim()
         const label = named || `Проект ${i + 1}`
         const ph = named ? named.charAt(0).toUpperCase() : String(i + 1)
-        const selected = projectFilter === p.id
+        const selected = projectFilter.has(p.id)
         return (
           <button
             key={p.id}
             type="button"
-            role="tab"
-            aria-selected={selected}
+            aria-pressed={selected}
             aria-label={label}
-            title={label}
+            title={selected ? `${label} — убрать из фильтра` : `${label} — показать задачи проекта`}
             className={'project-tab project-tab-logo' + (selected ? ' active' : '')}
-            onClick={() => onChange(p.id)}
+            onClick={() => toggle(p.id)}
           >
             {p.icon ? (
               <img className="project-tab-icon" src={p.icon} alt="" />
@@ -176,10 +185,9 @@ function ProjectTabs({ projectFilter, onChange }: { projectFilter: ID | null; on
       })}
       <button
         type="button"
-        role="tab"
-        aria-selected={projectFilter === null}
-        className={'project-tab project-tab-all' + (projectFilter === null ? ' active' : '')}
-        onClick={() => onChange(null)}
+        aria-pressed={projectFilter.size === 0}
+        className={'project-tab project-tab-all' + (projectFilter.size === 0 ? ' active' : '')}
+        onClick={() => onChange(new Set())}
       >
         Все
       </button>

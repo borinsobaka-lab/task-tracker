@@ -17,6 +17,7 @@ import {
   parseDateKey,
   fmtDayMonth,
   fmtWeekday,
+  inProjectFilter,
   minToTime,
   startOfWeek,
   timeToMin,
@@ -288,7 +289,7 @@ export function CalendarView({ memberFilter, onMemberFilterChange, projectFilter
 
   const passesFilter = (c: Card): boolean =>
     (memberFilter.size === 0 || c.assigneeIds.some((id) => memberFilter.has(id))) &&
-    (projectFilter === null || c.projectId === projectFilter)
+    inProjectFilter(c.projectId, projectFilter)
 
   const visible = store.liveCards().filter(passesFilter)
   const liveColumns = store.columns.filter((c) => !c.deleted)
@@ -335,7 +336,7 @@ export function CalendarView({ memberFilter, onMemberFilterChange, projectFilter
   // Встречи — фиксированного цвета, задачи — по цвету первого исполнителя.
   // Встречи — серые, полоса слева и текст всегда чёрные (независимо от участников).
   // Задачи — по цвету исполнителя.
-  const colorOf = (c: Card): string => (isMeeting(c) ? '#1f2937' : assigneesOf(c)[0]?.color ?? 'var(--accent)')
+  const colorOf = (c: Card): string => (isMeeting(c) ? '#1f2937' : assigneesOf(c)[0]?.color ?? 'var(--accent-strong)')
 
   // ---------- Геометрия перетаскивания ----------
 

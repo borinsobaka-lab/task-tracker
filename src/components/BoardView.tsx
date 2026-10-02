@@ -34,7 +34,7 @@ import { useBoard } from '../store'
 import type { Card, Column, ColumnRole, ID, Member } from '../types'
 import { ROLE_META, ROLE_ORDER } from '../columnRoles'
 import { priorityStripeColor } from '../eisenhower'
-import { COLUMN_COLORS, fmtDayMonth, hasContent, parseDateKey, toDateKey } from '../utils'
+import { COLUMN_COLORS, fmtDayMonth, hasContent, inProjectFilter, parseDateKey, toDateKey } from '../utils'
 import type { ViewProps } from '../viewProps'
 import { IcoCalendar, IcoCheck, IcoClose, IcoComment, IcoDescription, IcoMeeting, IcoMenu, IcoNone, IcoPaperclip, IcoSort, IcoTrash } from '../icons'
 import { Avatar, AvatarStack, ProjectAvatar } from './Avatar'
@@ -88,7 +88,7 @@ export function BoardView({ memberFilter, onMemberFilterChange, projectFilter, o
       card.kind !== 'meeting' &&
       !card.seriesId &&
       (memberFilter.size === 0 || card.assigneeIds.some((id) => memberFilter.has(id))) &&
-      (projectFilter === null || card.projectId === projectFilter),
+      inProjectFilter(card.projectId, projectFilter),
     [memberFilter, projectFilter],
   )
 
