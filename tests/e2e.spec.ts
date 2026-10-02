@@ -633,11 +633,11 @@ test('заметки на телефоне: «+» создаёт заметку,
   await expect(page.locator('.note-row')).toHaveCount(1)
 })
 
-test('заметки: без проекта видят все, с проектом — только участники проекта', async ({ page }) => {
+test('заметки: без проекта — только автору, с проектом — участникам проекта', async ({ page }) => {
   await createIdentity(page, 'Борис')
   // Ждём, пока участник сохранится в хранилище (сохранение отложенное)
   await page.waitForFunction(() => (JSON.parse(localStorage.getItem('tt.local.data') ?? '{}').members ?? []).length > 0)
-  // Готовим данные: второй участник, проекты с участниками и три заметки
+  // Готовим данные: второй участник, проекты с участниками и заметки
   await page.evaluate(() => {
     const data = JSON.parse(localStorage.getItem('tt.local.data')!)
     const boris = localStorage.getItem('tt.identity')!
@@ -647,27 +647,31 @@ test('заметки: без проекта видят все, с проекто
       { id: 'p-boris', name: 'Проект Бориса', memberIds: [boris], createdAt: ts, updatedAt: ts },
       { id: 'p-anya', name: 'Проект Ани', memberIds: ['anya'], createdAt: ts, updatedAt: ts },
     ]
-    const note = (id: string, title: string, projectId?: string) => ({
-      id, title, html: '<p>текст</p>', attachments: [], ...(projectId ? { projectId } : {}), createdAt: ts, updatedAt: ts,
+    const note = (id: string, title: string, extra: Record<string, unknown> = {}) => ({
+      id, title, html: '<p>текст</p>', attachments: [], createdAt: ts, updatedAt: ts, ...extra,
     })
     data.notes = {
-      n1: note('n1', 'Общая заметка'),
-      n2: note('n2', 'Заметка Ани', 'p-anya'),
-      n3: note('n3', 'Заметка Бориса', 'p-boris'),
+      n1: note('n1', 'Старая без автора'),
+      n2: note('n2', 'Заметка проекта Ани', { projectId: 'p-anya', authorId: 'anya' }),
+      n3: note('n3', 'Заметка проекта Бориса', { projectId: 'p-boris', authorId: boris }),
+      n4: note('n4', 'Личная Бориса', { authorId: boris }),
+      n5: note('n5', 'Личная Ани', { authorId: 'anya' }),
     }
     localStorage.setItem('tt.local.data', JSON.stringify(data))
     localStorage.setItem('tt.local.rev', String(Number(localStorage.getItem('tt.local.rev') ?? '1') + 1))
     localStorage.setItem('tt.view', 'notes')
   })
   await page.reload()
+  const row = (t: string) => page.locator('.note-row', { hasText: t })
 
-  // Борис видит общую и заметку своего проекта, но не заметку проекта Ани
-  await expect(page.locator('.note-row', { hasText: 'Общая заметка' })).toBeVisible()
-  await expect(page.locator('.note-row', { hasText: 'Заметка Бориса' })).toBeVisible()
-  await expect(page.locator('.note-row', { hasText: 'Заметка Ани' })).toHaveCount(0)
+  // Борис: своя личная, заметка своего проекта и старая без автора; чужих — нет
+  for (const t of ['Личная Бориса', 'Заметка проекта Бориса', 'Старая без автора']) await expect(row(t)).toBeVisible()
+  await expect(row('Личная Ани')).toHaveCount(0)
+  await expect(row('Заметка проекта Ани')).toHaveCount(0)
 
-  // Относим общую заметку к проекту Бориса — в выборе нет чужого проекта
-  await page.locator('.note-row', { hasText: 'Общая заметка' }).locator('.note-row-main').click()
+  // Личная заметка: видит только автор. Относим её к проекту Бориса — в выборе нет чужого проекта
+  await row('Личная Бориса').locator('.note-row-main').click()
+  await expect(page.locator('.note-project-who')).toHaveText('видите только вы')
   await page.locator('.note-project-btn').click()
   await expect(page.locator('.note-project-menu')).not.toContainText('Проект Ани')
   await page.locator('.note-project-menu button', { hasText: 'Проект Бориса' }).click()
@@ -678,12 +682,12 @@ test('заметки: без проекта видят все, с проекто
   await expect(page.locator('.note-row')).toHaveCount(2)
   await page.locator('.project-tabs').getByRole('button', { name: 'Все' }).click()
 
-  // Аня видит только заметку своего проекта
+  // Аня: своя личная, заметка своего проекта и старая без автора; заметок Бориса — нет
   await page.waitForTimeout(1500)
   await page.evaluate(() => localStorage.setItem('tt.identity', 'anya'))
   await page.reload()
-  await expect(page.locator('.note-row', { hasText: 'Заметка Ани' })).toBeVisible()
-  await expect(page.locator('.note-row')).toHaveCount(1)
+  for (const t of ['Личная Ани', 'Заметка проекта Ани', 'Старая без автора']) await expect(row(t)).toBeVisible()
+  await expect(page.locator('.note-row')).toHaveCount(3)
 })
 
 test('заметки: старая версия приложения стёрла заметки — новая возвращает их', async ({ page }) => {

@@ -662,7 +662,10 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
   const cardVisible = (c: Card): boolean =>
     c.projectId ? !hiddenProjectIds.has(c.projectId) : isOwn(c.assigneeIds, c.createdBy)
   // Заметки — по тому же правилу: без проекта видят все, с проектом — кому виден проект
-  const noteVisible = (n: Note): boolean => !n.projectId || !hiddenProjectIds.has(n.projectId)
+  // Заметки: с проектом — кому виден проект; без проекта — личная заметка, её видит
+  // только автор (у старых заметок без автора владельца не определить — видят все)
+  const noteVisible = (n: Note): boolean =>
+    n.projectId ? !hiddenProjectIds.has(n.projectId) : !n.authorId || (identity !== null && n.authorId === identity.id)
 
   const getCard = (id: ID): Card | undefined => {
     const c = data.cards[id]
@@ -1401,7 +1404,12 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
         }
         if (patch.projectId !== undefined && patch.projectId !== (n.projectId ?? null)) {
           if (patch.projectId) n.projectId = patch.projectId
-          else delete n.projectId
+          else {
+            delete n.projectId
+            // Заметка стала личной; у старой заметки без автора им становится тот,
+            // кто снял проект, — иначе её видели бы все
+            if (!n.authorId && identity) n.authorId = identity.id
+          }
           changed = true
         }
         if (changed) touch(n)
