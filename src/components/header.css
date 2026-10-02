@@ -254,3 +254,78 @@
     margin-left: auto;
   }
 }
+
+/* ---------- Тёмная шапка ----------
+   Фирменный тёмно-зелёный, чтобы шапка не сливалась с рабочей областью.
+   Элементы внутри — полупрозрачные светлые; активный таб — белый, как раньше. */
+/* Фон и цвета самой шапки (--hdr-*) заданы в .app-header в app.css. */
+/* Выпадающие результаты и мобильный полноэкранный поиск лежат внутри шапки,
+   но они светлые — возвращаем им обычный тёмный текст */
+.app-header .search-results,
+.app-header .search-overlay {
+  color: var(--text);
+}
+/* Табы разделов и проектов */
+.app-header .view-tabs,
+.app-header .project-tabs {
+  background: var(--hdr-fill);
+}
+.app-header .view-tabs button,
+.app-header .project-tab {
+  color: var(--hdr-soft);
+}
+.app-header .view-tabs button:not(.active):hover,
+.app-header .project-tab:not(.active):hover {
+  background: var(--hdr-fill-hover);
+  color: var(--hdr-fg);
+}
+.app-header .view-tabs button.active,
+.app-header .project-tab.active {
+  background: #ffffff;
+  color: var(--on-accent);
+  box-shadow: none;
+}
+.app-header .project-tab-ph {
+  background: rgba(255, 255, 255, 0.18);
+  color: var(--hdr-fg);
+}
+.app-header .project-tab.active .project-tab-ph {
+  background: var(--surface-2);
+  color: var(--on-accent);
+}
+/* Поиск */
+.app-header .header-search-input {
+  background: var(--hdr-fill);
+  color: var(--hdr-fg);
+}
+.app-header .header-search-input::placeholder {
+  color: var(--hdr-faint);
+}
+.app-header .header-search-input:focus {
+  background: var(--hdr-fill-hover);
+  box-shadow: 0 0 0 2px var(--accent);
+}
+.app-header .header-search-field .header-search-ico {
+  color: var(--hdr-faint);
+}
+/* Справа: статус сохранения и настройки; на телефоне — название раздела и поиск */
+.app-header .sync-status {
+  color: var(--hdr-faint);
+}
+.app-header .sync-status.err {
+  color: #fca5a5;
+}
+.app-header .icon-btn {
+  color: var(--hdr-soft);
+}
+.app-header .icon-btn:hover {
+  background: var(--hdr-fill-hover);
+  color: var(--hdr-fg);
+}
+.app-header .header-title-mobile {
+  color: var(--hdr-fg);
+}
+/* Системный крестик очистки поля поиска — светлый на тёмной шапке */
+.app-header .header-search-input::-webkit-search-cancel-button {
+  filter: invert(1) grayscale(1) brightness(1.6);
+}
