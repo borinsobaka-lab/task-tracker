@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { Suspense, lazy, useState } from 'react'
 import { useBoard } from '../store'
 import type { SeriesInput } from '../store'
 import type { Card, ID, Member, RecurFreq, RecurrenceRule, Series } from '../types'
@@ -7,11 +7,13 @@ import type { ViewProps } from '../viewProps'
 import { fmtDayMonth, hasContent, inProjectFilter, parseDateKey, plainSnippet } from '../utils'
 import { IcoCheck, IcoNone, IcoRecurring, IcoX } from '../icons'
 import { Avatar, AvatarStack, ProjectAvatar } from './Avatar'
-import { RichTextEditor } from './RichTextEditor'
 import { RecurrenceFields } from './RecurrenceFields'
 import { SubHeader } from './SubHeader'
 import { SheetGrabber } from './SheetGrabber'
 import './recurring.css'
+
+// Редактор описания (TipTap) — отдельным чанком, только когда открыта форма серии
+const RichTextEditor = lazy(() => import('./RichTextEditor').then((m) => ({ default: m.RichTextEditor })))
 
 const DURATIONS: { v: number; label: string }[] = [
   { v: 30, label: '30 мин' },
@@ -233,7 +235,9 @@ function RecurringEditor({ series, onClose }: { series: Series | null; onClose: 
         <label className="field-label" style={{ marginTop: 14 }}>
           Описание
         </label>
-        <RichTextEditor value={description} onChange={setDescription} placeholder="Добавьте описание… (появится в задаче в календаре)" />
+        <Suspense fallback={<div className="rte" style={{ minHeight: 120 }} />}>
+          <RichTextEditor value={description} onChange={setDescription} placeholder="Добавьте описание… (появится в задаче в календаре)" />
+        </Suspense>
 
         <label className="field-label" style={{ marginTop: 14 }}>
           Ответственные

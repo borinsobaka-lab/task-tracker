@@ -5,13 +5,14 @@
 import React, { createContext, useContext, useEffect, useMemo, useSyncExternalStore } from 'react'
 import { produce } from 'immer'
 import type { Attachment, BoardData, Card, CardKind, ChecklistItem, Column, ColumnRole, Comment, EisenhowerQuadrant, ID, Member, Note, Project, RecurrenceRule, Series } from './types'
-import type { StorageAdapter } from './storage/adapter'
+import type { RemoteState, StorageAdapter } from './storage/adapter'
 import { ConflictError } from './storage/adapter'
 import { emptyBoard, mergeBoards, normalizeBoard } from './merge'
 import { dateMatchesRule, firstOccurrence, nextOccurrence } from './recurrence'
 import { getIdentity, setIdentityId } from './config'
 import { clamp, hasContent, nowISO, toDateKey, uid } from './utils'
 import { celebrate } from './confetti'
+import { flushBoardCache, readBoardCache, writeBoardCache } from './boardCache'
 
 export interface SeriesInput {
   title: string
@@ -150,6 +151,8 @@ export interface StoreSnapshot {
   lastSyncAt: number | null
   lastError: string | null
   identityId: ID | null
+  /** Данные сверены с сервером в этом запуске (а не только копия с устройства) */
+  fresh: boolean
 }
 
 // ---------- Страховка заметок от старых версий приложения ----------
@@ -178,12 +181,17 @@ function healNotes(data: BoardData, known: Record<ID, Note> | null | undefined):
 }
 
 const SAVE_DEBOUNCE_MS = 1200
+/** Копию старше этого не показываем: на сервере давно удалённое (надгробия
+ *  живут 45 дней) могло бы «воскреснуть» при слиянии с правками поверх неё */
+const MAX_CACHE_AGE_MS = 14 * 24 * 60 * 60 * 1000
 const POLL_INTERVAL_MS = 25_000
 const MAX_CONFLICT_RETRIES = 6
 
 export class SyncEngine {
   private data: BoardData | null = null
   private rev: string | null = null
+  /** ETag серверной ревизии rev (для условных запросов «изменилось ли?») */
+  private etag: string | undefined
   private dirty = false
   private saving = false
   private stopped = false
@@ -208,6 +216,7 @@ export class SyncEngine {
   lastSyncAt: number | null = null
   lastError: string | null = null
   identityId: ID | null = getIdentity()
+  fresh = false
 
   constructor(public readonly adapter: StorageAdapter) {
     this.snapshot = this.buildSnapshot()
@@ -229,6 +238,7 @@ export class SyncEngine {
       lastSyncAt: this.lastSyncAt,
       lastError: this.lastError,
       identityId: this.identityId,
+      fresh: this.fresh,
     }
   }
 
@@ -258,26 +268,65 @@ export class SyncEngine {
     const myEpoch = ++this.epoch
     this.stopped = false
     const aborted = () => this.stopped || this.epoch !== myEpoch
-    try {
-      let state = await this.adapter.load()
-      if (aborted()) return
-      if (!state) state = await this.adapter.init(emptyBoard())
-      if (aborted()) return
-      // Заметки потеряны старой версией приложения — возвращаем из копии на устройстве
-      const healed = healNotes(state.data, readNotesCache(this.adapter))
-      this.data = healed ?? state.data
-      this.rev = state.rev
+    const cacheKey = this.adapter.cacheKey
+
+    // 1) Копия доски на устройстве — показываем сразу, не дожидаясь сети
+    const cached = cacheKey ? await readBoardCache(cacheKey) : null
+    if (aborted()) return
+    if (cached && !this.data && Date.now() - cached.savedAt < MAX_CACHE_AGE_MS) {
+      const healed = healNotes(cached.data, readNotesCache(this.adapter))
+      this.data = healed ?? cached.data
+      this.rev = cached.rev
+      this.etag = cached.etag
       if (healed) this.dirty = true
-      this.status = 'synced'
+      this.status = 'loading' // в шапке «Загрузка…», пока не сверились с сервером
+      this.lastSyncAt = cached.savedAt
+      this.emit()
+    }
+
+    // 2) Сервер. С копией — условный запрос: если ничего не менялось, GitHub
+    //    отвечает 304 без тела, и доска уже актуальна.
+    const genBefore = this.saveGen
+    try {
+      let remote = this.data ? await this.loadRemote() : await this.adapter.load()
+      if (aborted()) return
+      if (remote === null) remote = await this.adapter.init(emptyBoard())
+      if (aborted()) return
+      if (remote !== 'unchanged') {
+        this.cacheRemote(remote.data, remote.rev, remote.etag)
+        if (this.saving || this.saveGen !== genBefore) {
+          // Сохранение поверх копии уже идёт/прошло — оно само сольётся с сервером
+        } else if (this.data && this.dirty) {
+          // Пока грузились, поверх копии успели что-то поменять — сливаем
+          // с сервером так же, как при конфликте сохранения (LWW по updatedAt)
+          this.data = mergeBoards(this.data, remote.data)
+          this.rev = remote.rev
+          this.etag = remote.etag
+        } else {
+          // Заметки потеряны старой версией приложения — возвращаем из копии на устройстве
+          const healed = healNotes(remote.data, this.data?.notes ?? readNotesCache(this.adapter))
+          this.data = healed ?? remote.data
+          this.rev = remote.rev
+          this.etag = remote.etag
+          if (healed) this.dirty = true
+        }
+      } else if (!this.dirty && this.data && this.rev) {
+        // 304: копия совпадает с сервером — обновляем её «свежесть» (savedAt)
+        this.cacheRemote(this.data, this.rev, this.etag)
+      }
+      this.fresh = true
+      if (this.status === 'loading') this.status = this.saving ? 'saving' : 'synced'
       this.lastSyncAt = Date.now()
       this.lastError = null
       this.emit()
     } catch (e) {
       if (aborted()) return
-      this.status = 'error'
+      this.status = this.data && (e instanceof TypeError || !navigator.onLine) ? 'offline' : 'error'
       this.lastError = e instanceof Error ? e.message : String(e)
       this.emit()
-      return
+      // Без копии показывать нечего — экран ошибки с «Повторить». С копией
+      // работаем дальше (офлайн) и сверимся при следующем опросе.
+      if (!this.data) return
     }
 
     if (aborted()) return
@@ -287,7 +336,20 @@ export class SyncEngine {
     window.addEventListener('focus', this.onFocus)
     window.addEventListener('online', this.onOnline)
     window.addEventListener('beforeunload', this.onBeforeUnload)
+    document.addEventListener('visibilitychange', this.onVisibility)
     if (this.dirty) this.scheduleSave()
+  }
+
+  /** Загрузка с сервера; если адаптер умеет — условная («изменилось ли с rev?») */
+  private loadRemote(): Promise<RemoteState | null | 'unchanged'> {
+    const a = this.adapter
+    return a.loadIfChanged && this.rev ? a.loadIfChanged(this.rev, this.etag) : a.load()
+  }
+
+  /** Подтверждённое сервером состояние — в копию на устройстве */
+  private cacheRemote(data: BoardData, rev: string, etag?: string): void {
+    const key = this.adapter.cacheKey
+    if (key && !this.stopped) writeBoardCache({ key, data, rev, etag }) // после выхода — не пишем
   }
 
   stop(): void {
@@ -299,6 +361,15 @@ export class SyncEngine {
     window.removeEventListener('focus', this.onFocus)
     window.removeEventListener('online', this.onOnline)
     window.removeEventListener('beforeunload', this.onBeforeUnload)
+    document.removeEventListener('visibilitychange', this.onVisibility)
+  }
+
+  /** Уход в фон (свернули PWA): не ждём дебаунс — отправляем правки сразу и
+   *  дописываем копию доски, пока приложение ещё живо */
+  private onVisibility = (): void => {
+    if (document.visibilityState !== 'hidden') return
+    if (this.dirty) void this.flush()
+    void flushBoardCache()
   }
 
   private onFocus = (): void => {
@@ -347,6 +418,11 @@ export class SyncEngine {
     }
   }
 
+  /** Есть правки, ещё не записанные на сервер */
+  get busy(): boolean {
+    return this.dirty || this.saving
+  }
+
   /** Пометить, что в текущем update() задача выполнена — выпустить конфетти. */
   requestCelebrate(): void {
     this.pendingCelebrate = true
@@ -379,6 +455,8 @@ export class SyncEngine {
     try {
       const { rev } = await this.adapter.save(snapshot, this.rev)
       this.rev = rev
+      this.etag = undefined // ETag новой ревизии неизвестен — адаптер выведет его из rev
+      this.cacheRemote(snapshot, rev)
       this.saveGen++
       this.conflictRetries = 0
       this.errorBackoffMs = 5000
@@ -392,6 +470,7 @@ export class SyncEngine {
         if (this.conflictRetries <= MAX_CONFLICT_RETRIES) {
           this.data = mergeBoards(this.data!, e.remote.data)
           this.rev = e.remote.rev
+          this.etag = e.remote.etag
           this.saving = false
           this.emit()
           // Немедленный повтор поверх свежей ревизии
@@ -427,27 +506,33 @@ export class SyncEngine {
     }
     const genBefore = this.saveGen
     try {
-      const remote = await this.adapter.load()
+      const remote = await this.loadRemote()
       // Пока летел GET, могло начаться/завершиться сохранение или появиться
       // локальная правка — тогда ответ устарел, применять его нельзя (иначе
       // откатим только что сохранённое и регрессируем rev).
       if (!remote || this.saving || this.dirty || this.stopped || this.saveGen !== genBefore) return
-      const revChanged = remote.rev !== this.rev
+      // 'unchanged' — сервер ответил 304: ревизия та же, данные не скачивали
+      const revChanged = remote !== 'unchanged' && remote.rev !== this.rev
       let healed = false
-      if (revChanged) {
+      if (remote !== 'unchanged' && revChanged) {
+        this.cacheRemote(remote.data, remote.rev, remote.etag)
         // Старая версия приложения сохранила доску без заметок — возвращаем наши
         const fixed = healNotes(remote.data, this.data.notes)
         this.data = fixed ?? remote.data
         this.rev = remote.rev
+        this.etag = remote.etag
         if (fixed) {
           healed = true
           this.dirty = true
           this.scheduleSave()
         }
+      } else if (remote !== 'unchanged' && remote.etag) {
+        this.etag = remote.etag
       }
       this.lastSyncAt = Date.now() // обновляем тихо: подхватится следующим emit
-      let statusChanged = false
-      if (this.status === 'offline' || this.status === 'error') {
+      let statusChanged = !this.fresh
+      this.fresh = true
+      if (this.status === 'offline' || this.status === 'error' || this.status === 'loading') {
         this.status = 'synced'
         this.lastError = null
         statusChanged = true
@@ -465,6 +550,8 @@ export class SyncEngine {
 
 export interface BoardStore {
   data: BoardData
+  /** false — пока показана копия с устройства и сервер ещё не ответил */
+  fresh: boolean
   status: SyncStatus
   lastSyncAt: number | null
   lastError: string | null
@@ -584,6 +671,13 @@ export interface BoardStore {
   refresh(): Promise<void>
 }
 
+let activeEngine: SyncEngine | null = null
+
+/** Есть несохранённые правки (например, перед тихой перезагрузкой для обновления) */
+export function hasUnsavedChanges(): boolean {
+  return !!activeEngine?.busy
+}
+
 const StoreContext = createContext<BoardStore | null>(null)
 const EngineContext = createContext<SyncEngine | null>(null)
 
@@ -591,8 +685,12 @@ export function BoardProvider({ adapter, children }: { adapter: StorageAdapter; 
   const engine = useMemo(() => new SyncEngine(adapter), [adapter])
 
   useEffect(() => {
+    activeEngine = engine
     void engine.start()
-    return () => engine.stop()
+    return () => {
+      engine.stop()
+      if (activeEngine === engine) activeEngine = null
+    }
   }, [engine])
 
   const snap = useSyncExternalStore(engine.subscribe, engine.getSnapshot)
@@ -674,6 +772,7 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
 
   return {
     data,
+    fresh: snap.fresh,
     status: snap.status,
     lastSyncAt: snap.lastSyncAt,
     lastError: snap.lastError,

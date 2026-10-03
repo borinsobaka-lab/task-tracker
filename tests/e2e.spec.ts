@@ -829,3 +829,60 @@ test('личные задачи (без проекта) видят только 
   await expect(card('Личная Бориса')).toHaveCount(0)
   await expect(card('Моя заметка-задача')).toHaveCount(0)
 })
+
+test('быстрый запуск: доска сразу из копии на устройстве, свежие данные — в фоне', async ({ page }) => {
+  // Копия доски включена (как у GitHub); «сервер» (localStorage) отвечает с задержкой
+  await page.evaluate(() => localStorage.setItem('tt.local.cache', '1'))
+  await page.reload()
+  await createIdentity(page)
+  await page.getByText('Добавить карточку').first().click()
+  await page.locator('textarea').first().fill('Задача из копии')
+  await page.keyboard.press('Enter')
+  // Сохранилось на «сервер» и (с небольшой задержкой) в копию на устройстве
+  await page.waitForFunction(() => (localStorage.getItem('tt.local.data') ?? '').includes('Задача из копии'))
+  const cachedHasTask = () =>
+    page.evaluate(
+      () =>
+        new Promise<boolean>((resolve) => {
+          const req = indexedDB.open('tt-cache')
+          req.onsuccess = () => {
+            try {
+              const get = req.result.transaction('kv').objectStore('kv').get('board')
+              get.onsuccess = () => resolve(JSON.stringify(get.result ?? '').includes('Задача из копии'))
+              get.onerror = () => resolve(false)
+            } catch {
+              resolve(false)
+            }
+          }
+          req.onerror = () => resolve(false)
+        }),
+    )
+  await expect.poll(cachedHasTask, { timeout: 5000 }).toBe(true)
+
+  // Медленная сеть: доска видна сразу, в шапке «Загрузка…», пока сервер не ответил
+  await page.evaluate(() => localStorage.setItem('tt.local.latency', '4000'))
+  await page.reload()
+  await expect(page.getByText('Задача из копии')).toBeVisible({ timeout: 2000 })
+  await expect(page.locator('.sync-status')).toHaveText('Загрузка…')
+  await expect(page.locator('.sync-status')).toHaveText('Сохранено', { timeout: 8000 })
+
+  // Пока приложение закрыто, на «сервере» появилась задача от коллеги: сначала
+  // видна копия, а после ответа сервера — и новая задача
+  await page.evaluate(() => {
+    const data = JSON.parse(localStorage.getItem('tt.local.data')!)
+    const col = data.columns.find((c: { role?: string }) => c.role === 'todo') ?? data.columns[0]
+    const now = new Date().toISOString()
+    data.cards['colleague'] = {
+      id: 'colleague', title: 'Задача коллеги', description: '', columnId: col.id, assigneeIds: [],
+      checklist: [], attachments: [], createdAt: now, updatedAt: now,
+    }
+    col.cardIds.push('colleague')
+    localStorage.setItem('tt.local.data', JSON.stringify(data))
+    localStorage.setItem('tt.local.rev', String(Number(localStorage.getItem('tt.local.rev')) + 1))
+  })
+  await page.reload()
+  await expect(page.getByText('Задача из копии')).toBeVisible({ timeout: 2000 })
+  await expect(page.getByText('Задача коллеги')).toBeHidden()
+  await expect(page.getByText('Задача коллеги')).toBeVisible({ timeout: 8000 })
+  await expect(page.locator('.sync-status')).toHaveText('Сохранено')
+})

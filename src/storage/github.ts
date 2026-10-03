@@ -25,7 +25,8 @@ interface GitHubAuth extends DataRepoConfig {
   token: string
 }
 
-async function api<T = any>(auth: GitHubAuth, path: string, init: RequestInit = {}, accept = 'application/vnd.github+json'): Promise<T> {
+/** Запрос к API; ошибки (кроме 304 — «не изменилось») бросаются как GitHubApiError. */
+async function request(auth: GitHubAuth, path: string, init: RequestInit = {}, accept = 'application/vnd.github+json'): Promise<Response> {
   const res = await fetch(`${API}${path}`, {
     ...init,
     // GitHub присылает Cache-Control: max-age=60, из-за чего браузер отдавал бы
@@ -40,7 +41,7 @@ async function api<T = any>(auth: GitHubAuth, path: string, init: RequestInit = 
       ...(init.headers ?? {}),
     },
   })
-  if (!res.ok) {
+  if (!res.ok && res.status !== 304) {
     let msg = `GitHub API: ${res.status}`
     try {
       const body = await res.json()
@@ -50,6 +51,11 @@ async function api<T = any>(auth: GitHubAuth, path: string, init: RequestInit = 
     }
     throw new GitHubApiError(res.status, msg)
   }
+  return res
+}
+
+async function api<T = any>(auth: GitHubAuth, path: string, init: RequestInit = {}, accept = 'application/vnd.github+json'): Promise<T> {
+  const res = await request(auth, path, init, accept)
   if (res.status === 204) return undefined as T
   if (accept === 'application/vnd.github.raw+json') {
     return (await res.blob()) as T
@@ -80,18 +86,52 @@ export class GitHubAdapter implements StorageAdapter {
 
   constructor(private auth: GitHubAuth) {}
 
+  get cacheKey(): string {
+    return `github:${this.auth.owner}/${this.auth.repo}@${this.auth.branch}`
+  }
+
   private get repoPath(): string {
     return `/repos/${this.auth.owner}/${this.auth.repo}`
   }
 
   async load(): Promise<RemoteState | null> {
-    let file: any
+    const r = await this.fetchBoard()
+    return r === 'unchanged' ? null : r
+  }
+
+  /** Условный запрос (If-None-Match): GitHub отвечает 304 без тела, если файл
+   *  не менялся, — фоновый опрос и запуск не скачивают и не разбирают всю доску.
+   *  ETag ответа совпадает с sha файла; если вдруг нет — просто всегда 200. */
+  async loadIfChanged(knownRev: string, etag?: string): Promise<RemoteState | null | 'unchanged'> {
+    if (!this.conditional) return this.load()
     try {
-      file = await api<any>(this.auth, `${this.repoPath}/contents/${BOARD_FILE}?ref=${encodeURIComponent(this.auth.branch)}`)
+      return await this.fetchBoard(etag ?? `"${knownRev}"`)
+    } catch (e) {
+      // Сетевая ошибка (TypeError) на условном запросе: возможно, CORS не
+      // пропустил заголовок. Если без него получается — больше его не шлём.
+      if (!(e instanceof TypeError)) throw e
+      const plain = await this.load()
+      this.conditional = false
+      return plain
+    }
+  }
+
+  private conditional = true
+
+  private async fetchBoard(ifNoneMatch?: string): Promise<RemoteState | null | 'unchanged'> {
+    let res: Response
+    try {
+      res = await request(
+        this.auth,
+        `${this.repoPath}/contents/${BOARD_FILE}?ref=${encodeURIComponent(this.auth.branch)}`,
+        ifNoneMatch ? { headers: { 'If-None-Match': ifNoneMatch } } : {},
+      )
     } catch (e) {
       if ((e as GitHubApiError).status === 404) return null // нет ветки или файла — нужна инициализация
       throw e
     }
+    if (res.status === 304) return 'unchanged'
+    const file: any = await res.json()
     let content: string | undefined = file.content
     if (!content && file.sha) {
       // Файлы больше ~1 МБ приходят без содержимого — берём blob напрямую
@@ -100,7 +140,7 @@ export class GitHubAdapter implements StorageAdapter {
     }
     if (!content) throw new Error('Не удалось прочитать board.json')
     const data = JSON.parse(b64DecodeUtf8(content)) as BoardData
-    return { data: normalizeBoard(data), rev: file.sha }
+    return { data: normalizeBoard(data), rev: file.sha, etag: res.headers.get('ETag') ?? undefined }
   }
 
   async init(data: BoardData): Promise<RemoteState> {

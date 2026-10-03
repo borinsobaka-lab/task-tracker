@@ -1,60 +1,17 @@
 // Комментарии к задаче: панель со списком (автор, аватар, дата-время, текст с
-// форматированием), формой добавления и правкой/удалением своих. Плюс контекст
-// «прочитанного» (локально на устройстве) для красного бейджа непрочитанных.
+// форматированием), формой добавления и правкой/удалением своих. Контекст
+// «прочитанного» — в commentsSeen.tsx.
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import type { ReactNode } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { EditorContent, useEditor } from '@tiptap/react'
 import { useBoard } from '../store'
-import type { Card, Comment, ID, Member } from '../types'
-import { getCommentsSeen, setCommentsSeen } from '../config'
-import { fmtDateTime, initials, nowISO } from '../utils'
+import type { Card, Comment, Member } from '../types'
+import { fmtDateTime, initials } from '../utils'
 import { sanitizeCommentHtml } from '../richText'
 import { Avatar } from './Avatar'
 import { IcoComment } from '../icons'
 import { EditorToolbar, richTextExtensions } from './RichTextEditor'
-
-// ---------- Контекст «прочитанного» (локально на устройстве) ----------
-
-interface SeenCtx {
-  seenAt: (cardId: ID) => string | null
-  markSeen: (cardId: ID) => void
-}
-
-const CommentsSeenContext = createContext<SeenCtx>({ seenAt: () => null, markSeen: () => {} })
-
-export function useCommentsSeen(): SeenCtx {
-  return useContext(CommentsSeenContext)
-}
-
-export function CommentsSeenProvider({ children }: { children: ReactNode }) {
-  const [map, setMap] = useState<Record<string, string>>(getCommentsSeen)
-
-  useEffect(() => {
-    setCommentsSeen(map)
-  }, [map])
-
-  const seenAt = useCallback((cardId: ID) => map[cardId] ?? null, [map])
-  const markSeen = useCallback((cardId: ID) => {
-    setMap((prev) => ({ ...prev, [cardId]: nowISO() }))
-  }, [])
-
-  const value = useMemo(() => ({ seenAt, markSeen }), [seenAt, markSeen])
-  return <CommentsSeenContext.Provider value={value}>{children}</CommentsSeenContext.Provider>
-}
-
-// ---------- Помощники для бейджа на доске ----------
-
-export function liveComments(card: Card): Comment[] {
-  return card.comments ? card.comments.filter((c) => !c.deleted) : []
-}
-
-export function hasUnseenComments(card: Card, myId: ID | null, seenAt: string | null): boolean {
-  if (!card.comments) return false
-  return card.comments.some(
-    (c) => !c.deleted && c.authorId !== myId && (!seenAt || c.createdAt > seenAt),
-  )
-}
+import { liveComments, useCommentsSeen } from './commentsSeen'
 
 // ---------- Панель комментариев ----------
 

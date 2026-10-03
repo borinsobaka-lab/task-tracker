@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { lazy, startTransition, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { BoardProvider, useMaybeBoard, useSyncMeta } from './store'
 import type { StorageAdapter } from './storage/adapter'
 import { GitHubAdapter } from './storage/github'
@@ -6,29 +6,74 @@ import { LocalAdapter } from './storage/local'
 import { getDataRepoConfig, getSavedView, getToken, isDemoMode, OWNER_PASSWORD, setSavedView, setToken } from './config'
 import { getAuthState } from './auth'
 import type { EncryptedBlob } from './crypto'
-import { PasswordScreen } from './components/PasswordScreen'
-import { OwnerSetupScreen } from './components/OwnerSetupScreen'
 import { Header, BottomNav } from './components/Header'
-import { BoardView } from './components/BoardView'
-import { CalendarView } from './components/CalendarView'
-import { EisenhowerView } from './components/EisenhowerView'
-import { RecurringView } from './components/RecurringView'
-import { NotesView } from './components/NotesView'
-import { CardModal } from './components/CardModal'
-import { SettingsModal } from './components/SettingsModal'
 import { Confetti } from './components/Confetti'
 import { TaskStartChime } from './components/TaskStartChime'
 import { QuickAddSheet } from './components/QuickAddSheet'
 import { IdentityScreen } from './components/IdentityScreen'
-import { PublicTimeline } from './components/PublicTimeline'
-import { CommentsSeenProvider } from './components/Comments'
+import { CommentsSeenProvider } from './components/commentsSeen'
+import { LazyBoundary as Lazy, ViewFallback } from './components/LazyBoundary'
+import { BootScreen } from './components/BootScreen'
+import { clearBoardCache } from './boardCache'
 import { isLiveTimelineHash, parseTimelineHash } from './timelineShare'
 import { reportIdentityToNative } from './nativeBridge'
 import { buildTimelineItems, publishTimeline } from './publicTimelinePublisher'
 import type { TLItem } from './timelineShare'
 import type { Card, ID } from './types'
 import { hasContent } from './utils'
+// Стили разделов, которые грузятся лениво (ниже), остаются в общем CSS и в
+// прежнем порядке — каскад не меняется и нет «вспышки» без стилей.
+import './components/subheader.css'
+import './components/modal.css'
+import './components/board.css'
+import './components/gantt.css'
+import './components/calendar.css'
+import './components/eisenhower.css'
+import './components/recurring.css'
+import './components/notes.css'
+import './components/settings.css'
 import './app.css'
+
+// ---------- Ленивые части ----------
+// Разделы, карточка задачи (редактор TipTap), настройки и экраны входа — в
+// отдельных чанках: стартовый бандл меньше, PWA открывается быстрее. Раздел,
+// который откроется первым, начинаем грузить сразу, остальное — в простое после
+// старта (prefetchChunks), чтобы переходы и открытие задачи были мгновенными.
+const chunks = {
+  board: () => import('./components/BoardView'),
+  calendar: () => import('./components/CalendarView'),
+  matrix: () => import('./components/EisenhowerView'),
+  recurring: () => import('./components/RecurringView'),
+  notes: () => import('./components/NotesView'),
+  card: () => import('./components/CardModal'),
+  settings: () => import('./components/SettingsModal'),
+}
+const BoardView = lazy(() => chunks.board().then((m) => ({ default: m.BoardView })))
+const CalendarView = lazy(() => chunks.calendar().then((m) => ({ default: m.CalendarView })))
+const EisenhowerView = lazy(() => chunks.matrix().then((m) => ({ default: m.EisenhowerView })))
+const RecurringView = lazy(() => chunks.recurring().then((m) => ({ default: m.RecurringView })))
+const NotesView = lazy(() => chunks.notes().then((m) => ({ default: m.NotesView })))
+const CardModal = lazy(() => chunks.card().then((m) => ({ default: m.CardModal })))
+const SettingsModal = lazy(() => chunks.settings().then((m) => ({ default: m.SettingsModal })))
+const PasswordScreen = lazy(() => import('./components/PasswordScreen').then((m) => ({ default: m.PasswordScreen })))
+const OwnerSetupScreen = lazy(() => import('./components/OwnerSetupScreen').then((m) => ({ default: m.OwnerSetupScreen })))
+const PublicTimeline = lazy(() => import('./components/PublicTimeline').then((m) => ({ default: m.PublicTimeline })))
+
+// Первый раздел — сразу, параллельно с запуском React и чтением кэша данных
+if (!isLiveTimelineHash(location.hash) && !parseTimelineHash(location.hash)) void chunks[getSavedView()]().catch(() => {})
+
+let prefetched = false
+/** Подгрузить все чанки в простое (после первого показа) */
+function prefetchChunks(): void {
+  if (prefetched) return
+  prefetched = true
+  const run = () => {
+    for (const load of Object.values(chunks)) void load().catch(() => {})
+  }
+  const ric = (window as Window & { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number }).requestIdleCallback
+  if (ric) ric(run, { timeout: 2500 })
+  else setTimeout(run, 1200)
+}
 
 /** Пустой черновик задачи (создан кнопкой «+», но ничего не заполнено) — такой при закрытии удаляем. */
 function isEmptyDraft(card: Card): boolean {
@@ -63,9 +108,9 @@ type Phase =
 export default function App() {
   // Публичный таймлайн (только просмотр) — до всякой авторизации и загрузки данных.
   const hash = location.hash
-  if (isLiveTimelineHash(hash)) return <PublicTimeline live /> // живая ссылка-виджет: сама обновляется
+  if (isLiveTimelineHash(hash)) return <Lazy><PublicTimeline live /></Lazy> // живая ссылка-виджет: сама обновляется
   const snapshot = parseTimelineHash(hash) // старые одноразовые ссылки-снимки
-  if (snapshot) return <PublicTimeline items={snapshot} />
+  if (snapshot) return <Lazy><PublicTimeline items={snapshot} /></Lazy>
 
   return <MainApp />
 }
@@ -108,17 +153,13 @@ function MainApp() {
 
   const onLogout = () => {
     setToken(null)
+    void clearBoardCache() // копия доски на устройстве — только для вошедшего
     void bootstrap()
   }
 
   switch (phase.kind) {
     case 'loading':
-      return (
-        <div className="fullscreen-note">
-          <div className="spinner" style={{ width: 28, height: 28 }} />
-          <div>Загрузка…</div>
-        </div>
-      )
+      return <BootScreen text="Загрузка…" />
     case 'error':
       return (
         <div className="fullscreen-note">
@@ -135,9 +176,9 @@ function MainApp() {
     case 'token':
       return <AppWithSession adapterKind="github" token={phase.token} onLogout={onLogout} />
     case 'password':
-      return <PasswordScreen blob={phase.blob} onUnlock={onAuthenticated} />
+      return <Lazy fallback={<BootScreen text="Загрузка…" />}><PasswordScreen blob={phase.blob} onUnlock={onAuthenticated} /></Lazy>
     case 'setup':
-      return <OwnerSetupScreen onDone={onAuthenticated} />
+      return <Lazy fallback={<BootScreen text="Загрузка…" />}><OwnerSetupScreen onDone={onAuthenticated} /></Lazy>
   }
 }
 
@@ -173,7 +214,9 @@ function TimelinePublisher({ token }: { token: string }) {
   const lastJson = useRef<string>('')
 
   useEffect(() => {
-    if (!store) return
+    // Пока показана копия с устройства (сервер ещё не ответил) — не публикуем,
+    // иначе виджет мог бы на миг получить устаревший таймлайн.
+    if (!store?.fresh) return
     // Публичный таймлайн — общий файл для всех: собираем из ПОЛНОГО списка задач,
     // без фильтра доступа по проектам (иначе устройство участника с ограниченным
     // доступом перезаписало бы общий таймлайн урезанной версией).
@@ -237,10 +280,12 @@ function Shell({ onLogout }: { onLogout: () => void }) {
   const storeRef = useRef(store)
   storeRef.current = store
 
-  // При загрузке один раз пополняем будущие экземпляры повторяющихся встреч
+  // При загрузке один раз пополняем будущие экземпляры повторяющихся встреч.
+  // Только по свежим данным с сервера: по устаревшей копии с устройства можно
+  // создать «пустой» экземпляр поверх уже заполненного на сервере.
   const toppedUp = useRef(false)
   useEffect(() => {
-    if (store && !toppedUp.current) {
+    if (store?.fresh && !toppedUp.current) {
       toppedUp.current = true
       store.topUpMeetings()
     }
@@ -269,6 +314,11 @@ function Shell({ onLogout }: { onLogout: () => void }) {
     if (!boardReady) return
     reportIdentityToNative(identityId, identityName)
   }, [boardReady, identityId, identityName])
+
+  // Доска показана — в простое подгружаем остальные разделы и карточку задачи
+  useEffect(() => {
+    if (boardReady) prefetchChunks()
+  }, [boardReady])
 
   // Диплинки из виджета Android: ...#card=<id> открывает задачу, ...#new — новая задача.
   useEffect(() => {
@@ -319,12 +369,7 @@ function Shell({ onLogout }: { onLogout: () => void }) {
         </div>
       )
     }
-    return (
-      <div className="fullscreen-note">
-        <div className="spinner" style={{ width: 28, height: 28 }} />
-        <div>Загружаем задачи…</div>
-      </div>
-    )
+    return <BootScreen text="Загружаем задачи…" />
   }
 
   if (!store.identity) {
@@ -349,8 +394,9 @@ function Shell({ onLogout }: { onLogout: () => void }) {
     saveFilters(memberFilter, f)
   }
 
+  // В переходе: пока чанк нового раздела грузится, остаётся видным текущий (без мигания)
   const changeView = (v: ViewKind) => {
-    setView(v)
+    startTransition(() => setView(v))
     setSavedView(v)
   }
 
@@ -397,6 +443,7 @@ function Shell({ onLogout }: { onLogout: () => void }) {
         onProjectFilterChange={setProjectFilter}
       />
       <main className="app-main">
+        <Lazy fallback={<ViewFallback />}>
         {(() => {
           const shared = {
             memberFilter,
@@ -411,6 +458,7 @@ function Shell({ onLogout }: { onLogout: () => void }) {
           if (view === 'notes') return <NotesView composeRef={composeNoteRef} projectFilter={projectFilter} />
           return <RecurringView {...shared} />
         })()}
+        </Lazy>
       </main>
       <BottomNav
         view={view}
@@ -435,8 +483,10 @@ function Shell({ onLogout }: { onLogout: () => void }) {
           <span className="fab-text">Добавить задачу</span>
         </button>
       )}
-      {selectedCardId && <CardModal cardId={selectedCardId} onClose={closeCard} onOpenCard={setSelectedCardId} />}
-      {settingsOpen && <SettingsModal onClose={() => setSettingsOpen(false)} onLogout={onLogout} />}
+      <Lazy>
+        {selectedCardId && <CardModal cardId={selectedCardId} onClose={closeCard} onOpenCard={setSelectedCardId} />}
+        {settingsOpen && <SettingsModal onClose={() => setSettingsOpen(false)} onLogout={onLogout} />}
+      </Lazy>
       {quickAddOpen && <QuickAddSheet onClose={() => setQuickAddOpen(false)} />}
       <Confetti />
       <TaskStartChime />

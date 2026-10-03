@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ComponentType, CSSProperties } from 'react'
-import type { IconProps } from '@solar-icons/react'
 import type { ViewKind } from '../App'
 import { useBoard } from '../store'
 import type { ID } from '../types'
 import { QUADRANT_COLOR, QUADRANT_LABEL } from '../eisenhower'
 import { cardMatchesQuery } from '../utils'
 import { IcoBoard, IcoCalendar, IcoMatrix, IcoNotes, IcoRecurring, IcoSearch, IcoSettings } from '../icons'
+import type { IconProps } from '../icons'
 import { NOTES_COLOR } from '../notes'
 import './header.css'
 
