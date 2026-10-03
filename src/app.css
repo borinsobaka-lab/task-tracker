@@ -786,3 +786,23 @@
     display: none;
   }
 }
+
+/* Пока грузится чанк раздела (обычно доли секунды) — пусто; спиннер только если ждать заметно */
+.lazy-fallback {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+}
+.lazy-fallback .spinner {
+  width: 24px;
+  height: 24px;
+  opacity: 0;
+  animation: lazy-fallback-in 0.2s ease 0.4s forwards, spin 0.8s linear infinite;
+}
+@keyframes lazy-fallback-in {
+  to {
+    opacity: 1;
+  }
+}

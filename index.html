@@ -15,9 +15,26 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="Задачи" />
+
+    <!-- Экран запуска: рисуется сразу, ещё до загрузки скриптов, — те же фон и
+         шапка, что у приложения, без белой вспышки. React заменит его собой. -->
+    <style>
+      html, body { margin: 0; height: 100%; background: #eff1ee; }
+      .boot { position: fixed; inset: 0; display: flex; flex-direction: column; }
+      .boot-hdr { height: 56px; flex-shrink: 0; background: #000; }
+      .boot-main { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; color: #5b6070; font: 14px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; }
+      .boot-nav { display: none; }
+      .boot-wait { opacity: 0; animation: boot-in 0.2s ease 0.6s forwards; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+      .boot-spin { width: 28px; height: 28px; border: 2px solid #c9ccdd; border-top-color: #9fe870; border-radius: 50%; animation: boot-spin 0.8s linear infinite; }
+      @keyframes boot-in { to { opacity: 1; } }
+      @keyframes boot-spin { to { transform: rotate(360deg); } }
+      @media (max-width: 720px) {
+        .boot-nav { display: block; flex-shrink: 0; height: calc(57px + env(safe-area-inset-bottom)); background: #fff; border-top: 1px solid #e2e4ef; }
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root"><div class="boot" aria-busy="true"><div class="boot-hdr"></div><div class="boot-main"></div><div class="boot-nav"></div></div></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

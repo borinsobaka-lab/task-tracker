@@ -13,14 +13,36 @@ const ATT_PREFIX = 'tt.local.att.'
 export class LocalAdapter implements StorageAdapter {
   readonly kind = 'local' as const
 
+  // Для e2e-тестов запуска из копии на устройстве: tt.local.cache=1 включает
+  // копию доски (как у GitHub), tt.local.latency=<мс> имитирует медленную сеть.
+  get cacheKey(): string | undefined {
+    return localStorage.getItem('tt.local.cache') === '1' ? 'local' : undefined
+  }
+
+  async loadIfChanged(knownRev: string): Promise<RemoteState | null | 'unchanged'> {
+    await this.latency()
+    if ((localStorage.getItem(REV_KEY) ?? '0') === knownRev && localStorage.getItem(DATA_KEY)) return 'unchanged'
+    return this.read()
+  }
+
   async load(): Promise<RemoteState | null> {
+    await this.latency()
+    return this.read()
+  }
+
+  private async latency(): Promise<void> {
+    const ms = Number(localStorage.getItem('tt.local.latency') || 0)
+    if (ms > 0) await new Promise((r) => setTimeout(r, ms))
+  }
+
+  private read(): RemoteState | null {
     const raw = localStorage.getItem(DATA_KEY)
     if (!raw) return null
     return { data: normalizeBoard(JSON.parse(raw) as BoardData), rev: localStorage.getItem(REV_KEY) ?? '0' }
   }
 
   async init(data: BoardData): Promise<RemoteState> {
-    const existing = await this.load()
+    const existing = this.read()
     if (existing) return existing
     localStorage.setItem(DATA_KEY, JSON.stringify(data))
     localStorage.setItem(REV_KEY, '1')
@@ -30,7 +52,7 @@ export class LocalAdapter implements StorageAdapter {
   async save(data: BoardData, baseRev: string): Promise<{ rev: string }> {
     const currentRev = localStorage.getItem(REV_KEY) ?? '0'
     if (currentRev !== baseRev) {
-      const remote = await this.load()
+      const remote = this.read()
       if (remote) throw new ConflictError(remote)
     }
     const rev = String(Number(currentRev) + 1)

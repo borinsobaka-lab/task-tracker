@@ -39,7 +39,7 @@ import type { ViewProps } from '../viewProps'
 import { IcoCalendar, IcoCheck, IcoClose, IcoComment, IcoDescription, IcoMeeting, IcoMenu, IcoNone, IcoPaperclip, IcoSort, IcoTrash } from '../icons'
 import { Avatar, AvatarStack, ProjectAvatar } from './Avatar'
 import { SubHeader } from './SubHeader'
-import { hasUnseenComments, liveComments, useCommentsSeen } from './Comments'
+import { hasUnseenComments, liveComments, useCommentsSeen } from './commentsSeen'
 import './board.css'
 
 type CardsByCol = Record<ID, ID[]>
