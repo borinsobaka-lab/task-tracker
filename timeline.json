@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-04T21:18:51.459Z",
+  "generatedAt": "2026-10-04T21:19:00.482Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -3518,6 +3518,36 @@
           "id": "4e018f91-dee4-4006-9a63-6f48b46a3d2d",
           "name": "Настя",
           "color": "#ec4899"
+        }
+      ]
+    },
+    {
+      "id": "8f807901-cfb2-47fc-9658-5ee9dcf2c823",
+      "title": "Протестировать функционал whitelabel в продуктах",
+      "date": "2026-10-06",
+      "start": "15:30",
+      "durationMin": 60,
+      "priorityColor": "#eab308",
+      "members": [
+        {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
+          "name": "Вова",
+          "color": "#84cc16"
+        }
+      ]
+    },
+    {
+      "id": "8726e37d-cac1-4218-bdf3-d25dbd22290d",
+      "title": "Подготовить информационный раздел в приложении об Eventbase для партнерских мероприятий.",
+      "date": "2026-10-06",
+      "start": "16:30",
+      "durationMin": 60,
+      "priorityColor": "#eab308",
+      "members": [
+        {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
+          "name": "Вова",
+          "color": "#84cc16"
         }
       ]
     },
