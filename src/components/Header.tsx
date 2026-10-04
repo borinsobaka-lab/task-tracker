@@ -4,7 +4,7 @@ import type { ViewKind } from '../App'
 import { useBoard } from '../store'
 import type { ID } from '../types'
 import { QUADRANT_COLOR, QUADRANT_LABEL } from '../eisenhower'
-import { cardMatchesQuery } from '../utils'
+import { cardMatchesQuery, NO_PROJECT } from '../utils'
 import { IcoBoard, IcoCalendar, IcoMatrix, IcoNotes, IcoRecurring, IcoSearch, IcoSettings } from '../icons'
 import type { IconProps } from '../icons'
 import { NOTES_COLOR } from '../notes'
@@ -133,10 +133,12 @@ export function BottomNav({
 }
 
 /**
- * Табы проектов в шапке: по логотипу на каждый проект + таб «Все». Как и фильтр
- * участников, это набор: можно выбрать один проект, несколько (клик включает и
- * выключает) или «Все» (пустой набор). В каждом разделе остаются только задачи
- * выбранных проектов. Проекты (имя/иконка/Telegram-группа) добавляются в настройках.
+ * Табы проектов в шапке: по логотипу на каждый проект, таб «Без проекта» и таб
+ * «Все». Как и фильтр участников, это набор: можно выбрать один проект, несколько
+ * (клик включает и выключает) или «Все» (пустой набор). «Без проекта» входит в тот
+ * же набор и сочетается с проектами: «все проекты, кроме одного, плюс задачи без
+ * проекта». В каждом разделе остаются только задачи выбранного. Проекты
+ * (имя/иконка/Telegram-группа) добавляются в настройках.
  */
 function ProjectTabs({ projectFilter, onChange }: { projectFilter: ReadonlySet<ID>; onChange: (f: ReadonlySet<ID>) => void }) {
   const store = useBoard()
@@ -145,7 +147,7 @@ function ProjectTabs({ projectFilter, onChange }: { projectFilter: ReadonlySet<I
   // В фильтре есть удалённые/недоступные проекты (например, из сохранённого
   // фильтра) — убираем их, иначе фильтр «молча» прятал бы всё
   useEffect(() => {
-    const live = [...projectFilter].filter((id) => projects.some((p) => p.id === id))
+    const live = [...projectFilter].filter((id) => id === NO_PROJECT || projects.some((p) => p.id === id))
     if (live.length !== projectFilter.size) onChange(new Set(live))
   }, [projectFilter, projects, onChange])
 
@@ -185,6 +187,21 @@ function ProjectTabs({ projectFilter, onChange }: { projectFilter: ReadonlySet<I
           </button>
         )
       })}
+      <button
+        type="button"
+        aria-pressed={projectFilter.has(NO_PROJECT)}
+        title={projectFilter.has(NO_PROJECT) ? 'Без проекта — убрать из фильтра' : 'Показать задачи без проекта'}
+        aria-label="Без проекта"
+        className={'project-tab project-tab-all project-tab-none' + (projectFilter.has(NO_PROJECT) ? ' active' : '')}
+        onClick={() => toggle(NO_PROJECT)}
+      >
+        {/* На телефоне — значок размером с логотип проекта (подпись не влезает
+            рядом с «Все»), на широком экране — подпись */}
+        <span className="project-tab-none-icon" aria-hidden>
+          ∅
+        </span>
+        <span className="project-tab-none-label">Без проекта</span>
+      </button>
       <button
         type="button"
         aria-pressed={projectFilter.size === 0}
