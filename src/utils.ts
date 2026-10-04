@@ -207,8 +207,16 @@ export function cardMatchesQuery(c: { title: string; description?: string }, que
 }
 
 /** Фильтр проектов: пустой набор — «Все»; иначе задача/заметка должна быть в одном из выбранных проектов. */
+/**
+ * Особый ключ в фильтре проектов: «задачи без проекта». Живёт в том же наборе,
+ * что и ID проектов, поэтому сочетается с ними: «Альфа + Бета + без проекта» —
+ * всё, кроме Гаммы. Сохраняется вместе с фильтром участника, как обычный ID.
+ */
+export const NO_PROJECT = '__no_project__'
+
 export function inProjectFilter(projectId: string | undefined, filter: ReadonlySet<string>): boolean {
-  return filter.size === 0 || (!!projectId && filter.has(projectId))
+  if (filter.size === 0) return true
+  return projectId ? filter.has(projectId) : filter.has(NO_PROJECT)
 }
 
 export function initials(name: string): string {

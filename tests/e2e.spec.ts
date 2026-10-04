@@ -758,6 +758,12 @@ test('фильтры: несколько проектов сразу и запо
   await expect(card('Задача без проекта')).toHaveCount(0)
   await expect(tabs.getByRole('button', { name: 'Все' })).toHaveAttribute('aria-pressed', 'false')
 
+  // Плюс задачи без проекта: «все, кроме Гаммы»
+  await tabs.getByRole('button', { name: 'Без проекта' }).click()
+  await expect(page.locator('.board-card')).toHaveCount(3)
+  await expect(card('Задача без проекта')).toBeVisible()
+  await expect(card('Задача Гаммы')).toHaveCount(0)
+
   // Плюс фильтр по участнику
   await page.locator('.member-filter-btn[title^="Аня"]').click()
   await expect(page.locator('.board-card')).toHaveCount(1)
@@ -769,12 +775,19 @@ test('фильтры: несколько проектов сразу и запо
   await expect(tabs.getByRole('button', { name: 'Альфа' })).toHaveAttribute('aria-pressed', 'true')
   await expect(tabs.getByRole('button', { name: 'Бета' })).toHaveAttribute('aria-pressed', 'true')
   await expect(tabs.getByRole('button', { name: 'Гамма' })).toHaveAttribute('aria-pressed', 'false')
+  await expect(tabs.getByRole('button', { name: 'Без проекта' })).toHaveAttribute('aria-pressed', 'true')
   await expect(page.locator('.member-filter-btn[title^="Аня"]')).toHaveClass(/active/)
   await expect(page.locator('.board-card')).toHaveCount(1)
 
-  // «Все» и «Сбросить» возвращают всё
+  // Без фильтра по участнику — снова «все, кроме Гаммы»; «Без проекта» выключается повторным нажатием
+  await page.locator('.member-filter-btn[title^="Аня"]').click()
+  await expect(page.locator('.board-card')).toHaveCount(3)
+  await tabs.getByRole('button', { name: 'Без проекта' }).click()
+  await expect(card('Задача без проекта')).toHaveCount(0)
+  await expect(page.locator('.board-card')).toHaveCount(2)
+
+  // «Все» возвращает всё (фильтр по участнику уже снят выше)
   await tabs.getByRole('button', { name: 'Все' }).click()
-  await page.getByRole('button', { name: 'Сбросить' }).click()
   await expect(page.locator('.board-card')).toHaveCount(4)
 })
 

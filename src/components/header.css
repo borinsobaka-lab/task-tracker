@@ -57,6 +57,13 @@
   font-size: 13px;
   white-space: nowrap;
 }
+/* «Без проекта»: подпись на широком экране, значок ∅ на узком (см. @media ниже) */
+.project-tab-none-icon {
+  display: none;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1;
+}
 .project-tab.active {
   background: var(--surface);
   color: var(--text);
@@ -223,6 +230,18 @@
 }
 
 @media (max-width: 720px) {
+  /* «Без проекта» сжимается до плитки шириной с логотип: подпись выталкивала
+     «Все» за край полосы проектов */
+  .app-header .project-tab-none {
+    padding: 0;
+    width: 30px;
+  }
+  .project-tab-none-icon {
+    display: inline;
+  }
+  .project-tab-none-label {
+    display: none;
+  }
   /* Поиск на телефоне — только иконка (открывает полноэкранный поиск). Поле убрано,
      на его месте — табы проектов. Порядок: [название][табы] … [настройки][поиск]. */
   .header-search-field {
