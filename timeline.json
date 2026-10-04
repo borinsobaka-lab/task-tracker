@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-04T21:17:31.257Z",
+  "generatedAt": "2026-10-04T21:17:51.116Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -3344,6 +3344,21 @@
       "title": "Революция в продажах подготовить два демо",
       "date": "2026-10-05",
       "start": "07:30",
+      "durationMin": 60,
+      "priorityColor": "#ef4444",
+      "members": [
+        {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
+          "name": "Вова",
+          "color": "#84cc16"
+        }
+      ]
+    },
+    {
+      "id": "974151d7-daf0-412c-b77c-e187f522aa3f",
+      "title": "Сделайте и протестируйте разграничение ролей в продуктах EventBase",
+      "date": "2026-10-05",
+      "start": "08:30",
       "durationMin": 60,
       "priorityColor": "#ef4444",
       "members": [
