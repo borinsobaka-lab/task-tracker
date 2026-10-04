@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-04T12:37:20.425Z",
+  "generatedAt": "2026-10-04T12:37:26.830Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -3430,10 +3430,11 @@
     },
     {
       "id": "53f4a701-d3de-41d8-ab18-dfb1d148cb3f",
-      "title": "Без названия",
+      "title": "Падел",
       "date": "2026-10-07",
       "start": "11:00",
       "durationMin": 60,
+      "kind": "meeting",
       "members": []
     },
     {
