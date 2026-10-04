@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-04T21:15:34.140Z",
+  "generatedAt": "2026-10-04T21:15:51.376Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -3315,6 +3315,7 @@
       "date": "2026-10-05",
       "start": "06:00",
       "durationMin": 30,
+      "priorityColor": "#ef4444",
       "members": [
         {
           "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
@@ -3329,6 +3330,7 @@
       "date": "2026-10-05",
       "start": "06:30",
       "durationMin": 60,
+      "priorityColor": "#ef4444",
       "members": [
         {
           "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
@@ -3538,6 +3540,7 @@
       "date": "2026-10-11",
       "start": "15:00",
       "durationMin": 60,
+      "priorityColor": "#eab308",
       "members": [
         {
           "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
