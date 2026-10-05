@@ -22,7 +22,8 @@
 //       колонке со статусом «Входящие» (роль 'inbox'), которую потом разбираешь в
 //       приложении. Для записи board.json секрету DATA_TOKEN нужны права записи.
 //
-// Состояние — в Cloudflare KV (binding BOT_KV). board.json читается из приватного
+// Состояние — в Cloudflare KV (binding BOT_KV); отчёты групп — ключ rep/<чат>/<день>
+// и строгое окно отправки (см. inSendWindow). board.json читается из приватного
 // репозитория (DATA_TOKEN). Пароль проверяется расшифровкой auth.json (как вход
 // в приложение) и нигде не хранится.
 
@@ -561,6 +562,43 @@ async function editGroup(env, chatId, msgId, text) {
   return r
 }
 
+// Окно отправки: утреннее уходит ТОЛЬКО с MORNING до MORNING + REPORT_WINDOW_MIN
+// (по умолчанию 60 минут), вечернее — с EVENING до EVENING + окно. Раньше утро
+// разрешалось слать в любой момент до вечера, поэтому любая потеря отметки
+// «уже отправлено» (сбой записи KV, свежий изолят в другом дата-центре — память
+// и Cache API там пустые) оборачивалась «Доброе утро!» посреди дня. Опоздали —
+// значит, сегодня утреннего уже не будет: лучше пропуск, чем приветствие в 14:42.
+function hmToMin(hm) {
+  const [h, m] = String(hm).split(':').map(Number)
+  return h * 60 + m
+}
+export function inSendWindow(nowHM, startHM, windowMin) {
+  const n = hmToMin(nowHM)
+  const s = hmToMin(startHM)
+  return n >= s && n < s + windowMin
+}
+
+// Состояние отчёта — отдельный ключ KV на каждую группу и день, а не один общий
+// объект на все группы: запись одной группы не перетирает другую (ни при двух
+// наложившихся тиках cron, ни при лимите KV «не чаще раза в секунду на ключ»,
+// в который упиралась запись подряд после отправки в несколько групп).
+function reportKey(chatId, day) {
+  return `rep/${chatId}/${day}`
+}
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
+async function kvPutRetry(env, key, obj, opts) {
+  for (let i = 0; i < 3; i++) {
+    try {
+      await env.BOT_KV.put(key, JSON.stringify(obj), opts)
+      return true
+    } catch (e) {
+      console.log('kvPut failed:', key, (e && e.message) || e)
+      if (i < 2) await sleep(1100)
+    }
+  }
+  return false
+}
+
 export async function runGroupReport(env, board) {
   const groups = targetGroups(env, board)
   if (!groups.length) return
@@ -568,72 +606,71 @@ export async function runGroupReport(env, board) {
   const nowHM = tzHHMM(env)
   const morning = env.MORNING || '10:00'
   const evening = env.EVENING || '20:00'
+  const windowMin = Number(env.REPORT_WINDOW_MIN) > 0 ? Number(env.REPORT_WINDOW_MIN) : 60
+  const keep = { expirationTtl: 3 * 86400 }
 
-  const state = await kvGet(env, 'report')
-  state.groups = state.groups || {} // состояние по каждому чату отдельно
-
-  // Состояние пишем СРАЗУ после каждой отправки, а не одним махом в конце:
-  // иначе сбой на следующей группе (сеть, лимит KV) терял бы факт отправки,
-  // и на следующей минуте отчёт улетал бы повторно.
-  const persist = async () => {
-    try {
-      await kvPut(env, 'report', state)
-    } catch (e) {
-      console.log('report kvPut failed:', (e && e.message) || e)
+  // Прежний формат (один ключ 'report') читаем только как подсказку, чтобы при
+  // обновлении кода посреди утреннего окна не продублировать уже ушедшее утро.
+  let legacy = null
+  const legacyDay = async (chatId) => {
+    if (legacy === null) legacy = await kvGet(env, 'report').catch(() => ({}))
+    const gs = (legacy.groups || {})[chatId] || {}
+    return {
+      ...((gs.days || {})[today] || {}),
+      morningSent: gs.morningDate === today,
+      eveningSent: gs.eveningDate === today,
     }
   }
 
   // Каждая группа проекта живёт своим циклом (утро/день/вечер) независимо;
-  // ошибка в одной группе не должна ломать остальные и сохранение состояния.
+  // ошибка в одной группе не должна ломать остальные.
   for (const group of groups) {
     try {
-      const gs = (state.groups[group.chatId] = state.groups[group.chatId] || {})
-      gs.days = gs.days || {}
-      const day = (gs.days[today] = gs.days[today] || {})
+      const key = reportKey(group.chatId, today)
+      // Если KV не читается — исключение, и группу в этот тик пропускаем:
+      // не знаешь, отправлено ли, — не отправляй.
+      const raw = await env.BOT_KV.get(key)
+      let day = raw ? JSON.parse(raw) : null
+      if (!day) {
+        const old = await legacyDay(group.chatId)
+        day = {}
+        if (old.morningSent) Object.assign(day, { morningSent: true, morningMsgId: old.morningMsgId, plannedIds: old.plannedIds, overdueIds: old.overdueIds })
+        if (old.eveningSent) day.eveningSent = true
+      }
+      const sentMorning = `sent/morning/${group.chatId}/${today}`
+      const sentEvening = `sent/evening/${group.chatId}/${today}`
 
-      // Утро (один раз за день, как только наступило время)
-      if (gs.morningDate !== today && nowHM >= morning && nowHM < evening) {
-        // Маркер в кэше — страховка от повтора, если KV-запись вчера не удалась
-        if (await hasMarker(`sent/morning/${group.chatId}/${today}`)) {
-          gs.morningDate = today
-          await persist()
-          continue
-        }
+      // Утро — один раз за день и только в своё окно
+      if (!day.morningSent && inSendWindow(nowHM, morning, windowMin)) {
+        // Страховка, если KV-запись после отправки не удалась
+        if (await hasMarker(sentMorning)) continue
         const planned = reportCards(board, today, group.projectId).map((c) => c.id)
         const overdue = overdueCards(board, today, group.projectId).map((c) => c.id)
         const id = await sendGroup(env, group.chatId, morningText(env, board, group, planned, overdue))
         if (id) {
-          day.morningMsgId = id
-          day.plannedIds = planned
-          day.overdueIds = overdue
-          gs.morningDate = today
-          await putMarker(`sent/morning/${group.chatId}/${today}`, 100000) // ≈ 28 часов
-          await persist()
+          await putMarker(sentMorning, 100000) // ≈ 28 часов
+          Object.assign(day, { morningSent: true, morningMsgId: id, plannedIds: planned, overdueIds: overdue })
+          await kvPutRetry(env, key, day, keep)
         }
         continue
       }
 
-      // Вечер (один раз за день)
-      if (gs.eveningDate !== today && nowHM >= evening) {
-        if (await hasMarker(`sent/evening/${group.chatId}/${today}`)) {
-          gs.eveningDate = today
-          await persist()
-          continue
-        }
+      // Вечер — один раз за день и только в своё окно
+      if (!day.eveningSent && inSendWindow(nowHM, evening, windowMin)) {
+        if (await hasMarker(sentEvening)) continue
         const planned = day.plannedIds || []
         if (day.morningMsgId) await editGroup(env, group.chatId, day.morningMsgId, morningText(env, board, group, planned, day.overdueIds || []))
         const id = await sendGroup(env, group.chatId, eveningText(env, board, group, planned))
         if (id) {
-          day.eveningMsgId = id
-          gs.eveningDate = today
-          await putMarker(`sent/evening/${group.chatId}/${today}`, 100000)
-          await persist()
+          await putMarker(sentEvening, 100000)
+          Object.assign(day, { eveningSent: true, eveningMsgId: id })
+          await kvPutRetry(env, key, day, keep)
         }
         continue
       }
 
       // Днём — обновляем утреннее сообщение под текущие статусы (идемпотентно, без записи в KV)
-      if (gs.morningDate === today && day.morningMsgId && nowHM >= morning && nowHM < evening) {
+      if (day.morningMsgId && nowHM >= morning && nowHM < evening) {
         await editGroup(env, group.chatId, day.morningMsgId, morningText(env, board, group, day.plannedIds || [], day.overdueIds || []))
       }
     } catch (e) {

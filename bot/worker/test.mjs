@@ -218,4 +218,103 @@ assert.equal(card.columnId, 'inbox', 'карточка кладётся в ко�
 assert.deepEqual(card.assigneeIds, [], 'без исполнителя — разберём в приложении')
 assert.equal(card.kind, 'task', 'это задача, не встреча')
 
+// 5) Расписание групповых отчётов: симуляция тиков cron с поддельными
+//    часами, Telegram и KV. Каждый импорт с новым ?query — свежий модуль, то есть
+//    «новый изолят» с пустой памятью отправок (как после перезапуска воркера).
+const RealDate = Date
+let fakeNow = RealDate.now()
+class FakeDate extends RealDate {
+  constructor(...a) {
+    if (a.length) super(...a)
+    else super(fakeNow)
+  }
+  static now() {
+    return fakeNow
+  }
+}
+// Момент «сегодня в hh:mm по Тбилиси» (UTC+4, без перехода на летнее время)
+const tbilisi = (hm) => RealDate.parse(`${today}T${hm}:00+04:00`)
+const tgCalls = []
+let msgSeq = 100
+const realFetch = globalThis.fetch
+globalThis.fetch = async (url, init) => {
+  const method = String(url).split('/').pop()
+  tgCalls.push({ method, body: JSON.parse(init.body) })
+  return new Response(JSON.stringify({ ok: true, result: { message_id: ++msgSeq } }))
+}
+function makeKV({ failPut = false } = {}) {
+  const m = new Map()
+  return {
+    m,
+    async get(k) {
+      return m.has(k) ? m.get(k) : null
+    },
+    async put(k, v) {
+      if (failPut) throw new Error('KV put failed: 429 Too Many Requests')
+      m.set(k, v)
+    },
+  }
+}
+const groupsBoard = JSON.parse(JSON.stringify(boardToday))
+groupsBoard.projects = [
+  { id: 'proj-1', name: 'Альфа', tgGroupId: '-1001' },
+  { id: 'proj-2', name: 'Бета', tgGroupId: '-1002' },
+]
+let isolate = 0
+async function tick(kv, hm, { fresh = false } = {}) {
+  if (fresh) isolate++
+  const mod = await import(`./worker.js?isolate=${isolate}`)
+  fakeNow = tbilisi(hm)
+  globalThis.Date = FakeDate
+  const before = tgCalls.length
+  try {
+    await mod.runGroupReport({ ...env, BOT_KV: kv, TELEGRAM_BOT_TOKEN: 't', APP_URL: 'x' }, groupsBoard)
+  } finally {
+    globalThis.Date = RealDate
+  }
+  return tgCalls.slice(before)
+}
+const sends = (calls) => calls.filter((c) => c.method === 'sendMessage')
+const mornings = (calls) => sends(calls).filter((c) => c.body.text.includes('Доброе утро'))
+const evenings = (calls) => sends(calls).filter((c) => c.body.text.includes('Итоги дня'))
+
+{
+  // Обычный день: утро в 10:00 в обе группы, дальше только правки, вечер в 20:00
+  const kv = makeKV()
+  assert.equal(sends(await tick(kv, '09:59', { fresh: true })).length, 0, 'до 10:00 ничего не шлём')
+  assert.equal(mornings(await tick(kv, '10:00')).length, 2, 'утро в 10:00 — в каждую группу')
+  const t1 = await tick(kv, '10:01', { fresh: true })
+  assert.equal(sends(t1).length, 0, 'повторного утра нет даже в новом изоляте')
+  assert.equal(t1.filter((c) => c.method === 'editMessageText').length, 2, 'днём утреннее обновляется')
+  assert.equal(sends(await tick(kv, '14:42', { fresh: true })).length, 0, 'в 14:42 ничего не отправляется')
+  assert.equal(evenings(await tick(kv, '20:00')).length, 2, 'вечер в 20:00 — в каждую группу')
+  assert.equal(sends(await tick(kv, '20:01', { fresh: true })).length, 0, 'повторного вечера нет')
+}
+{
+  // Отметка «утро отправлено» потеряна (пустой KV, свежий изолят) — днём
+  // «Доброе утро!» не уходит никогда
+  const kv = makeKV()
+  assert.equal(mornings(await tick(kv, '14:42', { fresh: true })).length, 0, 'потеряна отметка — в 14:42 утро НЕ шлётся')
+  assert.equal(mornings(await tick(kv, '11:00', { fresh: true })).length, 0, 'окно утра — до 11:00, позже не шлём')
+  assert.equal(evenings(await tick(kv, '23:30', { fresh: true })).length, 0, 'вечер после окна не шлётся')
+}
+{
+  // KV не принимает записи вовсе: дубли возможны лишь при смене изолята и только
+  // в пределах окна; в одном изоляте — ровно одна отправка
+  const kv = makeKV({ failPut: true })
+  assert.equal(mornings(await tick(kv, '10:00', { fresh: true })).length, 2, 'утро ушло')
+  for (const hm of ['10:01', '10:02', '10:03']) assert.equal(sends(await tick(kv, hm)).length, 0, `без KV в том же изоляте повтора нет (${hm})`)
+  assert.equal(mornings(await tick(kv, '12:00', { fresh: true })).length, 0, 'без KV и в новом изоляте после окна — тишина')
+}
+{
+  // Обновление кода посреди утреннего окна: утро уже ушло по старому формату
+  // состояния — второй раз не шлём и продолжаем править то же сообщение
+  const kv = makeKV()
+  kv.m.set('report', JSON.stringify({ groups: { '-1001': { morningDate: today, days: { [today]: { morningMsgId: 7, plannedIds: ['a'] } } }, '-1002': { morningDate: today } } }))
+  const t = await tick(kv, '10:30', { fresh: true })
+  assert.equal(sends(t).length, 0, 'старое состояние учтено — утро не дублируется')
+  assert.ok(t.some((c) => c.method === 'editMessageText' && c.body.message_id === 7), 'правим утреннее из старого состояния')
+}
+globalThis.fetch = realFetch
+
 console.log('OK: все проверки логики Worker пройдены')
