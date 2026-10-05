@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-05T15:14:09.520Z",
+  "generatedAt": "2026-10-05T16:06:11.306Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -3526,7 +3526,7 @@
       "id": "8eb4c099-658c-4854-a81d-4239c25594f6",
       "title": "LadyStretch отчет за месяц",
       "date": "2026-10-06",
-      "start": "15:30",
+      "start": "16:00",
       "durationMin": 60,
       "kind": "meeting",
       "members": [
@@ -3546,8 +3546,8 @@
       "id": "1ae8ba9e-9761-4d2c-b195-0f7bf1efeaed",
       "title": "Подготовить инфраструктуру для сервисов Lady Stretch и запустить MVP базы знаний.",
       "date": "2026-10-06",
-      "start": "16:30",
-      "durationMin": 240,
+      "start": "17:00",
+      "durationMin": 210,
       "priorityColor": "#ef4444",
       "members": [
         {
