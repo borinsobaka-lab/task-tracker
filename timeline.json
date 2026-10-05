@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-05T11:33:32.094Z",
+  "generatedAt": "2026-10-05T11:33:38.695Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -3376,21 +3376,6 @@
       ]
     },
     {
-      "id": "1ae8ba9e-9761-4d2c-b195-0f7bf1efeaed",
-      "title": "Подготовить инфраструктуру для сервисов Lady Stretch и запустить MVP базы знаний.",
-      "date": "2026-10-05",
-      "start": "16:00",
-      "durationMin": 240,
-      "priorityColor": "#ef4444",
-      "members": [
-        {
-          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
-          "name": "Вова",
-          "color": "#84cc16"
-        }
-      ]
-    },
-    {
       "id": "46a06cfe-7554-4f0f-9dae-01ef9dfdd3a6",
       "title": "Зарегистрировать Eventbase в списке отечественного ПО.",
       "date": "2026-10-05",
@@ -3526,10 +3511,25 @@
       ]
     },
     {
+      "id": "1ae8ba9e-9761-4d2c-b195-0f7bf1efeaed",
+      "title": "Подготовить инфраструктуру для сервисов Lady Stretch и запустить MVP базы знаний.",
+      "date": "2026-10-06",
+      "start": "16:30",
+      "durationMin": 240,
+      "priorityColor": "#ef4444",
+      "members": [
+        {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
+          "name": "Вова",
+          "color": "#84cc16"
+        }
+      ]
+    },
+    {
       "id": "de6b9b49-b0a9-4180-a7b8-64924103e6b9",
       "title": "Распределить в работу по ответственным задачам со встреч с Натальей",
       "date": "2026-10-06",
-      "start": "17:30",
+      "start": "19:30",
       "durationMin": 60,
       "priorityColor": "#eab308",
       "members": [
