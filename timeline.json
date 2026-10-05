@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-05T05:10:38.882Z",
+  "generatedAt": "2026-10-05T05:22:13.678Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -3320,7 +3320,7 @@
       "id": "79eadfda-ad9c-4de2-80af-673292612866",
       "title": "Революция в продажах подготовить два демо",
       "date": "2026-10-05",
-      "start": "09:30",
+      "start": "11:00",
       "durationMin": 60,
       "priorityColor": "#ef4444",
       "members": [
@@ -3335,7 +3335,7 @@
       "id": "c98030f7-e68b-442c-8171-ef774d83fb8f",
       "title": "Чат с аудио перед продажами мертвый - нужны комменты от Насти",
       "date": "2026-10-05",
-      "start": "10:30",
+      "start": "12:30",
       "durationMin": 30,
       "priorityColor": "#ef4444",
       "members": [
@@ -3355,7 +3355,7 @@
       "id": "37b614de-11e1-401b-96d4-5e1139ddaf37",
       "title": "Запланировать встречи еженедельные с админами.",
       "date": "2026-10-05",
-      "start": "11:00",
+      "start": "13:00",
       "durationMin": 30,
       "priorityColor": "#ef4444",
       "members": [
@@ -3370,7 +3370,7 @@
       "id": "346fb98e-d11b-4055-8ea2-0b868c0d9e9a:2026-10-01",
       "title": "Сформировать отчет по конверсии тренеров из 1С",
       "date": "2026-10-05",
-      "start": "11:30",
+      "start": "13:30",
       "durationMin": 30,
       "members": [
         {
@@ -3384,7 +3384,7 @@
       "id": "b6651a0c-1a28-4c90-abe4-68bb08adc636",
       "title": "Планирование оформления Лизы - старшего тренера",
       "date": "2026-10-05",
-      "start": "12:00",
+      "start": "14:00",
       "durationMin": 60,
       "priorityColor": "#ef4444",
       "members": [
@@ -3399,7 +3399,7 @@
       "id": "1ae8ba9e-9761-4d2c-b195-0f7bf1efeaed",
       "title": "Подготовить инфраструктуру для сервисов Lady Stretch и запустить MVP базы знаний.",
       "date": "2026-10-05",
-      "start": "14:00",
+      "start": "16:00",
       "durationMin": 240,
       "priorityColor": "#ef4444",
       "members": [
@@ -3414,7 +3414,7 @@
       "id": "46a06cfe-7554-4f0f-9dae-01ef9dfdd3a6",
       "title": "Зарегистрировать Eventbase в списке отечественного ПО.",
       "date": "2026-10-05",
-      "start": "18:00",
+      "start": "20:00",
       "durationMin": 180,
       "priorityColor": "#ef4444",
       "members": [
@@ -3429,7 +3429,7 @@
       "id": "3e431e18-6a99-4c6d-bfc2-9d994025024e",
       "title": "Реализация долгов по проекту",
       "date": "2026-10-05",
-      "start": "18:00",
+      "start": "20:00",
       "durationMin": 180,
       "priorityColor": "#ef4444",
       "members": [
