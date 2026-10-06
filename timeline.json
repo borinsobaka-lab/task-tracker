@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-06T22:19:36.416Z",
+  "generatedAt": "2026-10-06T22:19:45.683Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -3504,7 +3504,27 @@
       "title": "Разбор новых скриптов и замена старых.",
       "date": "2026-10-08",
       "start": "14:00",
-      "durationMin": 120,
+      "durationMin": 90,
+      "kind": "meeting",
+      "members": [
+        {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
+          "name": "Вова",
+          "color": "#84cc16"
+        },
+        {
+          "id": "4e018f91-dee4-4006-9a63-6f48b46a3d2d",
+          "name": "Настя",
+          "color": "#ec4899"
+        }
+      ]
+    },
+    {
+      "id": "b49faba3-7b04-4398-be2c-7651ecd77537",
+      "title": "Созвон с тренерами",
+      "date": "2026-10-08",
+      "start": "15:30",
+      "durationMin": 60,
       "kind": "meeting",
       "members": [
         {
@@ -3602,26 +3622,6 @@
           "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
-        }
-      ]
-    },
-    {
-      "id": "b49faba3-7b04-4398-be2c-7651ecd77537",
-      "title": "Созвон с тренерами",
-      "date": "2026-10-09",
-      "start": "16:30",
-      "durationMin": 60,
-      "kind": "meeting",
-      "members": [
-        {
-          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
-          "name": "Вова",
-          "color": "#84cc16"
-        },
-        {
-          "id": "4e018f91-dee4-4006-9a63-6f48b46a3d2d",
-          "name": "Настя",
-          "color": "#ec4899"
         }
       ]
     },
