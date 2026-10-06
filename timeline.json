@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-06T21:33:44.509Z",
+  "generatedAt": "2026-10-06T21:33:50.558Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -3366,7 +3366,7 @@
       "id": "3e431e18-6a99-4c6d-bfc2-9d994025024e",
       "title": "Реализация долгов по проекту",
       "date": "2026-10-07",
-      "start": "08:00",
+      "start": "04:00",
       "durationMin": 60,
       "priorityColor": "#ef4444",
       "members": [
