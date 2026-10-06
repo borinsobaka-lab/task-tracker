@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-06T21:34:03.037Z",
+  "generatedAt": "2026-10-06T21:34:13.624Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -3456,7 +3456,7 @@
       "title": "Посмотреть скрипты от Lady Stretch в заметках. Внедрить в работу.",
       "date": "2026-10-07",
       "start": "14:30",
-      "durationMin": 60,
+      "durationMin": 90,
       "priorityColor": "#ef4444",
       "members": [
         {
@@ -3490,8 +3490,8 @@
       "id": "60becdd0-9112-4c04-a75a-67448d3e0a09",
       "title": "Оформить Инстаграм для массажного салона.",
       "date": "2026-10-07",
-      "start": "17:30",
-      "durationMin": 180,
+      "start": "17:00",
+      "durationMin": 360,
       "priorityColor": "#eab308",
       "members": [
         {
