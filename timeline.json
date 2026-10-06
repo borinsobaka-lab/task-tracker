@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-06T22:10:50.368Z",
+  "generatedAt": "2026-10-06T22:19:28.698Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -3604,6 +3604,15 @@
           "color": "#84cc16"
         }
       ]
+    },
+    {
+      "id": "b49faba3-7b04-4398-be2c-7651ecd77537",
+      "title": "Без названия",
+      "date": "2026-10-09",
+      "start": "16:30",
+      "durationMin": 60,
+      "kind": "meeting",
+      "members": []
     },
     {
       "id": "4222d4f2-242b-4c83-ab92-89db87c6aab3:2026-10-10",
