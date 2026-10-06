@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-06T22:53:06.811Z",
+  "generatedAt": "2026-10-06T22:53:14.780Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -3308,7 +3308,7 @@
       "id": "91cbe59d-9362-4c89-b535-fcfa92cf6e22:2026-10-07",
       "title": "Оплата Роялти",
       "date": "2026-10-07",
-      "start": "00:30",
+      "start": "03:00",
       "durationMin": 30,
       "done": true,
       "members": [
