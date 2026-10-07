@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-07T20:03:42.785Z",
+  "generatedAt": "2026-10-07T20:04:07.600Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -3430,9 +3430,24 @@
       "id": "60becdd0-9112-4c04-a75a-67448d3e0a09",
       "title": "Оформить Инстаграм для массажного салона.",
       "date": "2026-10-08",
-      "start": "02:30",
-      "durationMin": 360,
+      "start": "00:30",
+      "durationMin": 210,
       "priorityColor": "#eab308",
+      "members": [
+        {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
+          "name": "Вова",
+          "color": "#84cc16"
+        }
+      ]
+    },
+    {
+      "id": "3e431e18-6a99-4c6d-bfc2-9d994025024e",
+      "title": "Реализация долгов по проекту",
+      "date": "2026-10-08",
+      "start": "00:30",
+      "durationMin": 210,
+      "priorityColor": "#ef4444",
       "members": [
         {
           "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
@@ -3561,21 +3576,6 @@
       "start": "19:00",
       "durationMin": 120,
       "kind": "meeting",
-      "members": [
-        {
-          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
-          "name": "Вова",
-          "color": "#84cc16"
-        }
-      ]
-    },
-    {
-      "id": "3e431e18-6a99-4c6d-bfc2-9d994025024e",
-      "title": "Реализация долгов по проекту",
-      "date": "2026-10-08",
-      "start": "21:00",
-      "durationMin": 180,
-      "priorityColor": "#ef4444",
       "members": [
         {
           "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
