@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-09T09:10:49.451Z",
+  "generatedAt": "2026-10-09T09:44:21.659Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -3575,12 +3575,11 @@
       ]
     },
     {
-      "id": "baeb594a-e205-4e28-8782-2cadb846e8fe",
-      "title": "Посмотреть скрипты от Lady Stretch в заметках. Внедрить в работу.",
+      "id": "452640cd-98a0-4d6a-ab5f-c4abfb51c84d",
+      "title": "Подготовка брифов для леди стретч - Битрикс и Платум",
       "date": "2026-10-09",
       "start": "14:00",
-      "durationMin": 90,
-      "priorityColor": "#ef4444",
+      "durationMin": 60,
       "members": [
         {
           "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
@@ -3596,20 +3595,6 @@
       "start": "16:30",
       "durationMin": 60,
       "kind": "meeting",
-      "members": [
-        {
-          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
-          "name": "Вова",
-          "color": "#84cc16"
-        }
-      ]
-    },
-    {
-      "id": "452640cd-98a0-4d6a-ab5f-c4abfb51c84d",
-      "title": "Подготовка брифов для леди стретч - Битрикс и Платум",
-      "date": "2026-10-09",
-      "start": "18:30",
-      "durationMin": 60,
       "members": [
         {
           "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
