@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-09T09:47:53.947Z",
+  "generatedAt": "2026-10-09T09:47:58.655Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -3605,7 +3605,7 @@
       "id": "52bfc9ec-84f2-4bf4-b902-37606cd2bcd0",
       "title": "Доработать форму тренеров для Дианы.",
       "date": "2026-10-09",
-      "start": "20:30",
+      "start": "19:30",
       "durationMin": 30,
       "priorityColor": "#22c55e",
       "members": [
