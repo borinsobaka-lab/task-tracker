@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-09T09:44:21.659Z",
+  "generatedAt": "2026-10-09T09:44:28.306Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -3607,7 +3607,7 @@
       "id": "9221ee71-a62d-4a95-bd14-bf9e7feb4dad",
       "title": "Отправка промо-email писем клиентам",
       "date": "2026-10-09",
-      "start": "19:30",
+      "start": "17:30",
       "durationMin": 60,
       "members": [
         {
