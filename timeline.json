@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-10T18:05:41.678Z",
+  "generatedAt": "2026-10-10T18:53:32.053Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -3616,21 +3616,6 @@
       ]
     },
     {
-      "id": "3e431e18-6a99-4c6d-bfc2-9d994025024e",
-      "title": "Реализация долгов по проекту",
-      "date": "2026-10-10",
-      "start": "00:00",
-      "durationMin": 120,
-      "priorityColor": "#ef4444",
-      "members": [
-        {
-          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
-          "name": "Вова",
-          "color": "#84cc16"
-        }
-      ]
-    },
-    {
       "id": "b09e8ace-1a9c-40c4-99d4-7eeb535e8275:2026-10-10",
       "title": "Зарплата Настя",
       "date": "2026-10-10",
@@ -3667,6 +3652,21 @@
       "start": "22:00",
       "durationMin": 30,
       "done": true,
+      "members": [
+        {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
+          "name": "Вова",
+          "color": "#84cc16"
+        }
+      ]
+    },
+    {
+      "id": "3e431e18-6a99-4c6d-bfc2-9d994025024e",
+      "title": "Реализация долгов по проекту",
+      "date": "2026-10-10",
+      "start": "22:00",
+      "durationMin": 120,
+      "priorityColor": "#ef4444",
       "members": [
         {
           "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
