@@ -246,8 +246,9 @@ function makeKV({ failPut = false } = {}) {
   const m = new Map()
   return {
     m,
-    async get(k) {
-      return m.has(k) ? m.get(k) : null
+    async get(k, type) {
+      if (!m.has(k)) return null
+      return type === 'json' ? JSON.parse(m.get(k)) : m.get(k)
     },
     async put(k, v) {
       if (failPut) throw new Error('KV put failed: 429 Too Many Requests')
@@ -261,14 +262,14 @@ groupsBoard.projects = [
   { id: 'proj-2', name: 'Бета', tgGroupId: '-1002' },
 ]
 let isolate = 0
-async function tick(kv, hm, { fresh = false } = {}) {
+async function tick(kv, hm, { fresh = false, board = groupsBoard } = {}) {
   if (fresh) isolate++
   const mod = await import(`./worker.js?isolate=${isolate}`)
   fakeNow = tbilisi(hm)
   globalThis.Date = FakeDate
   const before = tgCalls.length
   try {
-    await mod.runGroupReport({ ...env, BOT_KV: kv, TELEGRAM_BOT_TOKEN: 't', APP_URL: 'x' }, groupsBoard)
+    await mod.runGroupReport({ ...env, BOT_KV: kv, TELEGRAM_BOT_TOKEN: 't', APP_URL: 'x' }, board)
   } finally {
     globalThis.Date = RealDate
   }
@@ -314,6 +315,68 @@ const evenings = (calls) => sends(calls).filter((c) => c.body.text.includes('И�
   const t = await tick(kv, '10:30', { fresh: true })
   assert.equal(sends(t).length, 0, 'старое состояние учтено — утро не дублируется')
   assert.ok(t.some((c) => c.method === 'editMessageText' && c.body.message_id === 7), 'правим утреннее из старого состояния')
+}
+{
+  // Днём в том же изоляте с той же доской Telegram не дёргаем каждую минуту —
+  // только когда текст утреннего сообщения действительно меняется
+  const kv = makeKV()
+  await tick(kv, '10:00', { fresh: true })
+  const edits = (calls) => calls.filter((c) => c.method === 'editMessageText')
+  assert.equal(edits(await tick(kv, '10:01')).length, 2, 'первое дневное обновление')
+  assert.equal(edits(await tick(kv, '10:02')).length, 0, 'доска та же — правок нет')
+  // Новая версия доски (в бою — новый объект после изменения board.json)
+  const board2 = { ...groupsBoard, cards: { ...groupsBoard.cards, a: { ...groupsBoard.cards.a, done: true } } }
+  const changed = edits(await tick(kv, '10:03', { board: board2 }))
+  assert.equal(changed.length, 1, 'изменилась задача Альфы — правим только её группу')
+  assert.ok(changed[0].body.text.includes('<s>Задача Альфы</s>'), 'в правке новый статус')
+}
+{
+  // Кэш доски: GitHub отвечает 304 — большой board.json не скачиваем и не разбираем;
+  // свежий изолят берёт облегчённую копию из KV
+  const full = {
+    members: [{ id: 'm1', name: 'Вова', color: '#f00' }],
+    columns: [{ id: 'todo', title: 'Нужно сделать', role: 'todo' }],
+    projects: [{ id: 'p1', name: 'Альфа', tgGroupId: '-1001', color: '#0f0' }],
+    cards: {
+      a: { id: 'a', title: 'Задача', description: '<p>длинный текст</p>', comments: [{ text: 'x' }], assigneeIds: ['m1'], columnId: 'todo', date: today },
+      z: { id: 'z', title: 'Удалена', deleted: true },
+    },
+  }
+  let ghCalls = 0
+  let lastInm = null
+  globalThis.fetch = async (url, init) => {
+    ghCalls++
+    lastInm = init.headers['If-None-Match'] || null
+    if (lastInm === 'W/"v1"') return new Response(null, { status: 304 })
+    return new Response(JSON.stringify(full), { status: 200, headers: { ETag: 'W/"v1"' } })
+  }
+  const kv = makeKV()
+  const benv = { ...env, BOT_KV: kv, DATA_OWNER: 'o', DATA_REPO: 'r', DATA_BRANCH: 'b', DATA_TOKEN: 't' }
+  const m1 = await import('./worker.js?board=1')
+  const b1 = await m1.loadBoardCached(benv)
+  assert.equal(lastInm, null, 'первый раз — без If-None-Match')
+  assert.deepEqual(Object.keys(b1.cards), ['a'], 'удалённые карточки отброшены')
+  assert.equal(b1.cards.a.description, undefined, 'описание в копию не попадает')
+  assert.equal(b1.cards.a.comments, undefined, 'комментарии в копию не попадают')
+  assert.equal(b1.projects[0].tgGroupId, '-1001', 'id группы проекта сохранён')
+  assert.ok(kv.m.has('boardDigest'), 'копия сохранена в KV')
+  const b2 = await m1.loadBoardCached(benv)
+  assert.equal(lastInm, 'W/"v1"', 'повторный запрос — условный')
+  assert.equal(b2, b1, '304 — тот же объект доски, без разбора')
+  const m2 = await import('./worker.js?board=2')
+  const b3 = await m2.loadBoardCached(benv)
+  assert.equal(lastInm, 'W/"v1"', 'свежий изолят спрашивает с версией из KV')
+  assert.deepEqual(b3, b1, 'свежий изолят получил копию из KV')
+  assert.equal(ghCalls, 3)
+}
+{
+  // Событие сразу после полуночи попадает в окно «через 30 минут» в 23:50
+  const nowMs = RealDate.parse(`${today}T23:50:00+04:00`)
+  const next = wall(nowMs + 20 * 60000, tz)
+  const b = { cards: { n: { id: 'n', title: 'Ночное', assigneeIds: ['m1'], date: next.date, start: next.start } } }
+  assert.equal(upcomingWithin(b, 'm1', tz, nowMs, 30).length, 1, 'событие завтра в 00:10 видно в 23:50')
+  const far = { cards: { f: { id: 'f', title: 'Через день', assigneeIds: ['m1'], date: shiftDays(today, 2), start: '00:10' } } }
+  assert.equal(upcomingWithin(far, 'm1', tz, nowMs, 30).length, 0, 'события других дней отсекаются')
 }
 globalThis.fetch = realFetch
 
