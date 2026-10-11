@@ -144,7 +144,9 @@ export async function loadAuthBlob(env) {
   return res.json()
 }
 
-export async function loadBoard(env) {
+// etag — версия, которая уже есть у нас: если доска не менялась, GitHub отвечает
+// 304 без тела (и такие запросы не тратят его лимит).
+async function fetchBoard(env, etag) {
   const missing = ['DATA_OWNER', 'DATA_REPO', 'DATA_BRANCH'].filter((k) => !env[k])
   if (missing.length) throw new Error('не заданы переменные ' + missing.join(', '))
   if (!env.DATA_TOKEN) throw new Error('не задан секрет DATA_TOKEN')
@@ -160,11 +162,13 @@ export async function loadBoard(env) {
         Accept: 'application/vnd.github.raw+json',
         'X-GitHub-Api-Version': '2022-11-28',
         'User-Agent': 'tasktracker-bot',
+        ...(etag ? { 'If-None-Match': etag } : {}),
       },
     })
   } catch (e) {
     throw new Error('нет сети до GitHub (' + ((e && e.message) || e) + ')')
   }
+  if (etag && res.status === 304) return res
   if (!res.ok) {
     const hint =
       res.status === 401 ? ' — токен DATA_TOKEN неверный или просрочен'
@@ -172,7 +176,66 @@ export async function loadBoard(env) {
       : ''
     throw new Error(`GitHub вернул ${res.status} для ${where}${hint}`)
   }
-  return res.json()
+  return res
+}
+
+export async function loadBoard(env) {
+  return (await fetchBoard(env)).json()
+}
+
+// ---------- Доска для cron: кэш между запусками ----------
+// Каждую минуту качать и разбирать весь board.json (описания, комментарии,
+// чек-листы, превью картинок) — основная трата процессора. Поэтому:
+//  - спрашиваем GitHub с If-None-Match: не менялась доска — ответ 304 без тела;
+//  - держим облегчённую копию (только поля, нужные отчётам и уведомлениям)
+//    в памяти изолята и в KV — свежий изолят берёт её оттуда и тоже не парсит
+//    большой файл, пока доска та же. В KV пишем не чаще раза в 10 минут
+//    (дневной лимит записей бесплатного тарифа).
+const DIGEST_KEY = 'boardDigest'
+const DIGEST_SAVE_MS = 10 * 60000
+let boardMemo = null // { etag, board, savedAt }
+
+const pick = (o, keys) => {
+  const r = {}
+  for (const k of keys) if (o[k] !== undefined) r[k] = o[k]
+  return r
+}
+const CARD_KEYS = ['id', 'title', 'kind', 'meetingUrl', 'projectId', 'seriesId', 'columnId', 'assigneeIds', 'date', 'endDate', 'start', 'done']
+export function slimBoard(board) {
+  const cards = {}
+  for (const [id, c] of Object.entries(board.cards || {})) if (c && !c.deleted) cards[id] = pick(c, CARD_KEYS)
+  return {
+    members: (board.members || []).filter(Boolean).map((m) => pick(m, ['id', 'name', 'archived', 'tgUsername'])),
+    columns: (board.columns || []).filter(Boolean).map((c) => pick(c, ['id', 'title', 'role', 'deleted'])),
+    projects: (board.projects || []).filter(Boolean).map((p) => pick(p, ['id', 'name', 'deleted', 'tgGroupId'])),
+    cards,
+  }
+}
+
+export async function loadBoardCached(env) {
+  if (!boardMemo) {
+    try {
+      const d = await env.BOT_KV.get(DIGEST_KEY, 'json')
+      if (d && d.etag && d.board) boardMemo = d
+    } catch {
+      /* нет копии — скачаем целиком */
+    }
+  }
+  const res = await fetchBoard(env, boardMemo && boardMemo.etag)
+  if (res.status === 304) return boardMemo.board
+  const board = slimBoard(await res.json())
+  const etag = res.headers.get('ETag')
+  const savedAt = (boardMemo && boardMemo.savedAt) || 0
+  boardMemo = etag ? { etag, board, savedAt } : null
+  if (boardMemo && Date.now() - savedAt >= DIGEST_SAVE_MS) {
+    boardMemo.savedAt = Date.now()
+    try {
+      await env.BOT_KV.put(DIGEST_KEY, JSON.stringify(boardMemo), { expirationTtl: 7 * 86400 })
+    } catch (e) {
+      console.log('digest kvPut failed:', (e && e.message) || e)
+    }
+  }
+  return board
 }
 
 // ---------- Запись board.json (создание задач из Telegram) ----------
@@ -329,16 +392,30 @@ export async function verifyPassword(blob, password) {
 
 const EMOJI = { inbox: '📥', todo: '⬜', doing: '🔧', review: '👀', done: '✅' }
 
+// Форматтеры Intl создаются дорого (десятки–сотни микросекунд каждый), а бот на
+// бесплатном тарифе Cloudflare укладывается в 10 мс процессора на запуск. Поэтому
+// создаём каждый форматтер один раз на изолят и переиспользуем.
+const fmtCache = new Map()
+function dtf(locale, opts) {
+  const k = locale + JSON.stringify(opts)
+  let f = fmtCache.get(k)
+  if (!f) fmtCache.set(k, (f = new Intl.DateTimeFormat(locale, opts)))
+  return f
+}
+const ruCollator = new Intl.Collator('ru')
+
+function dateKeyAt(tz, ms) {
+  return dtf('en-CA', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(ms))
+}
 function dateKey(env, offsetDays = 0) {
-  const d = new Date(Date.now() + offsetDays * 86400000)
-  return new Intl.DateTimeFormat('en-CA', { timeZone: env.TZ_NAME, year: 'numeric', month: '2-digit', day: '2-digit' }).format(d)
+  return dateKeyAt(env.TZ_NAME, Date.now() + offsetDays * 86400000)
 }
 function ddmm(key) {
   const [, m, d] = key.split('-')
   return `${d}.${m}`
 }
 function tzHHMM(env) {
-  return new Intl.DateTimeFormat('en-GB', { timeZone: env.TZ_NAME, hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date())
+  return dtf('en-GB', { timeZone: env.TZ_NAME, hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date())
 }
 
 function buildIndex(board) {
@@ -451,8 +528,8 @@ function groupHeader(g) {
 function byTime(a, b) {
   const as = a.start || ''
   const bs = b.start || ''
-  if (as && bs) return as.localeCompare(bs) || (a.title || '').localeCompare(b.title || '', 'ru')
-  if (!as && !bs) return (a.title || '').localeCompare(b.title || '', 'ru')
+  if (as && bs) return as.localeCompare(bs) || ruCollator.compare(a.title || '', b.title || '')
+  if (!as && !bs) return ruCollator.compare(a.title || '', b.title || '')
   return as ? 1 : -1
 }
 // Для просроченных: сначала самые давние (их забыли раньше всех), внутри дня — по времени.
@@ -585,6 +662,10 @@ export function inSendWindow(nowHM, startHM, windowMin) {
 function reportKey(chatId, day) {
   return `rep/${chatId}/${day}`
 }
+// Последнее дневное обновление утреннего сообщения по каждой группе (память
+// изолята). Текст не изменился — в Telegram не ходим: иначе каждую минуту
+// впустую собирали отчёт и получали 400 «message is not modified».
+const lastDayEdit = new Map()
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 async function kvPutRetry(env, key, obj, opts) {
   for (let i = 0; i < 3; i++) {
@@ -671,7 +752,17 @@ export async function runGroupReport(env, board) {
 
       // Днём — обновляем утреннее сообщение под текущие статусы (идемпотентно, без записи в KV)
       if (day.morningMsgId && nowHM >= morning && nowHM < evening) {
-        await editGroup(env, group.chatId, day.morningMsgId, morningText(env, board, group, day.plannedIds || [], day.overdueIds || []))
+        const last = lastDayEdit.get(group.chatId)
+        // Та же доска (кэш вернул тот же объект), тот же день и сообщение — текст тот же
+        if (last && last.board === board && last.msgId === day.morningMsgId && last.today === today) continue
+        const text = morningText(env, board, group, day.plannedIds || [], day.overdueIds || [])
+        if (!(last && last.msgId === day.morningMsgId && last.text === text)) {
+          const r = await editGroup(env, group.chatId, day.morningMsgId, text)
+          // Временный сбой (нет ответа, 429, 5xx) — повторим в следующий тик. Ответ 4xx
+          // («not modified», сообщение удалено) окончателен: не долбим Telegram каждую минуту.
+          if (!r.ok && !(r.error_code >= 400 && r.error_code < 500 && r.error_code !== 429)) continue
+        }
+        lastDayEdit.set(group.chatId, { board, msgId: day.morningMsgId, today, text })
       }
     } catch (e) {
       console.log('group report failed for', group.chatId, (e && e.message) || e)
@@ -693,7 +784,7 @@ export function assignedCardIds(board, memberId) {
   return out
 }
 function tzOffsetMinutes(date, tz) {
-  const dtf = new Intl.DateTimeFormat('en-US', {
+  const f = dtf('en-US', {
     timeZone: tz,
     hour12: false,
     year: 'numeric',
@@ -704,7 +795,7 @@ function tzOffsetMinutes(date, tz) {
     second: '2-digit',
   })
   const p = {}
-  for (const part of dtf.formatToParts(date)) p[part.type] = part.value
+  for (const part of f.formatToParts(date)) p[part.type] = part.value
   const asUTC = Date.UTC(+p.year, +p.month - 1, +p.day, +p.hour, +p.minute, +p.second)
   return (asUTC - date.getTime()) / 60000
 }
@@ -716,9 +807,12 @@ function tzWallToEpoch(dateKeyStr, hhmm, tz) {
 }
 export function upcomingWithin(board, memberId, tz, nowMs, minutes) {
   const out = []
+  // В окно «через N минут» попадают только сегодняшние (и, ближе к полуночи,
+  // завтрашние) события — остальные отсекаем по строке даты, не считая время.
+  const days = new Set([dateKeyAt(tz, nowMs), dateKeyAt(tz, nowMs + minutes * 60000)])
   for (const c of Object.values(board.cards || {})) {
     if (!c || c.deleted || c.done) continue
-    if (!c.date || !c.start) continue
+    if (!c.date || !c.start || !days.has(c.date)) continue
     if (!(c.assigneeIds || []).includes(memberId)) continue
     const mins = Math.round((tzWallToEpoch(c.date, c.start, tz) - nowMs) / 60000)
     if (mins > 0 && mins <= minutes) out.push({ id: c.id, title: c.title || 'Без названия', start: c.start, kind: c.kind, mins })
@@ -1118,7 +1212,7 @@ export default {
       (async () => {
         let board
         try {
-          board = await loadBoard(env)
+          board = await loadBoardCached(env)
         } catch (e) {
           console.log('board load failed:', e && e.message)
           return
