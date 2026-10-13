@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-13T23:59:02.390Z",
+  "generatedAt": "2026-10-13T23:59:11.441Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -3774,7 +3774,7 @@
       "id": "3a7c5e1f-fa32-4c47-821f-b60a78881ae1",
       "title": "Демо нового портала LS",
       "date": "2026-10-14",
-      "start": "11:00",
+      "start": "11:10",
       "durationMin": 60,
       "kind": "meeting",
       "members": [
