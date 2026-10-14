@@ -589,6 +589,34 @@
   z-index: 2000;
 }
 
+/* Плашка «Включить уведомления?» — слева внизу (справа кнопка «Добавить задачу»),
+   над контентом, под модалками. На телефоне — сверху, над нижней навигацией места нет. */
+.notify-prompt {
+  position: fixed;
+  left: 24px;
+  bottom: 24px;
+  z-index: 95;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px 14px;
+  width: max-content;
+  max-width: calc(100vw - 32px);
+  padding: 10px 12px 10px 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: var(--shadow-md);
+  font-size: 14px;
+  color: var(--text);
+}
+.notify-prompt-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
 .fab {
   position: fixed;
   right: 24px;
@@ -709,6 +737,13 @@
   }
 
   /* Нижняя навигация: 4 раздела, иконка сверху + подпись снизу */
+  .notify-prompt {
+    top: calc(env(safe-area-inset-top) + 12px);
+    bottom: auto;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
   .bottom-nav {
     display: flex;
     flex-shrink: 0;

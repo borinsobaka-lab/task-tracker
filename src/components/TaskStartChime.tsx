@@ -1,12 +1,14 @@
-// Звуковой сигнал в момент начала запланированной задачи, пока приложение открыто
+// Сигнал в момент начала запланированной задачи/встречи, пока приложение открыто
 // в браузере. Раз в несколько секунд проверяем задачи текущего пользователя на
-// сегодня и «дзинькаем», когда наступает время начала. Ничего не рисует.
+// сегодня и, когда наступает время начала, «дзинькаем» и показываем всплывающее
+// уведомление браузера (если на него дали разрешение). Ничего не рисует.
 import { useEffect, useRef } from 'react'
 import { useBoard } from '../store'
 import type { BoardStore } from '../store'
-import { getSoundOn } from '../config'
+import { getNotifyOn, getSoundOn } from '../config'
 import { parseDateKey, toDateKey } from '../utils'
 import { initAudioUnlock, playTaskChime } from '../sound'
+import { notifyPermission, notifyTaskStart } from '../notify'
 
 const TICK_MS = 15_000
 // Не «догоняем» задачи, начавшиеся давно (например, вкладка была в фоне/спала) —
@@ -24,7 +26,9 @@ export function TaskStartChime() {
 
   useEffect(() => {
     const check = () => {
-      if (!getSoundOn()) return
+      const soundOn = getSoundOn()
+      const notifyOn = getNotifyOn() && notifyPermission() === 'granted'
+      if (!soundOn && !notifyOn) return
       const s = storeRef.current
       const me = s.identity
       const nowMs = Date.now()
@@ -39,7 +43,8 @@ export function TaskStartChime() {
         const startMs = new Date(d.getFullYear(), d.getMonth(), d.getDate(), hh, mm).getTime()
         if (startMs <= nowMs && startMs > nowMs - GRACE_MS) {
           announced.current.add(c.id)
-          playTaskChime()
+          if (soundOn) playTaskChime()
+          if (notifyOn) notifyTaskStart(c)
         }
       }
     }

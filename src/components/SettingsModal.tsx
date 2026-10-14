@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState, type ChangeEvent } from 'react'
 import { useBoard } from '../store'
-import { getDataRepoConfig, getSoundOn, getToken, setDataRepoConfig, setSoundOn } from '../config'
+import { getDataRepoConfig, getNotifyOn, getSoundOn, getToken, setDataRepoConfig, setNotifyOn, setSoundOn } from '../config'
 import { playTaskChime } from '../sound'
+import { notifyPermission, notifyTest, requestNotifyPermission } from '../notify'
+import type { NotifyPermission } from '../notify'
 import { saveEncryptedToken } from '../auth'
 import { imageFileToAvatar, imageFileToIcon, MEMBER_COLORS } from '../utils'
 import { IcoCamera, IcoChevronRight, IcoClose, IcoX } from '../icons'
@@ -473,6 +475,16 @@ function NotificationsSection() {
     setSoundOnState(on)
     if (on) playTaskChime() // клик — это жест: заодно разблокируем звук и даём послушать сигнал
   }
+  const [notifyOn, setNotifyOnState] = useState<boolean>(() => getNotifyOn())
+  const [permission, setPermission] = useState<NotifyPermission>(() => notifyPermission())
+  const toggleNotify = async (on: boolean) => {
+    setNotifyOn(on)
+    setNotifyOnState(on)
+    if (!on) return
+    const p = await requestNotifyPermission() // клик — жест: браузер покажет запрос разрешения
+    setPermission(p)
+    if (p === 'granted') notifyTest()
+  }
   return (
     <section className="settings-section">
       <h3 className="field-label settings-section-title">Уведомления</h3>
@@ -480,8 +492,21 @@ function NotificationsSection() {
         <input type="checkbox" checked={soundOn} onChange={(e) => toggle(e.target.checked)} />
         <span>Звук в начале задачи</span>
       </label>
+      <label className="settings-check" style={{ marginTop: 10 }}>
+        <input
+          type="checkbox"
+          checked={notifyOn && permission === 'granted'}
+          disabled={permission === 'unsupported' || permission === 'denied'}
+          onChange={(e) => void toggleNotify(e.target.checked)}
+        />
+        <span>Всплывающие уведомления</span>
+      </label>
       <p className="settings-hint">
-        Пока приложение открыто в браузере, в момент начала вашей задачи со временем прозвучит сигнал.
+        Пока приложение открыто в браузере (можно в фоновой вкладке), в момент начала вашей задачи или
+        встречи со временем прозвучит сигнал и появится уведомление.
+        {permission === 'denied' &&
+          ' Браузер запретил уведомления для этого сайта — разрешите их в настройках сайта (значок слева от адреса) и обновите страницу.'}
+        {permission === 'unsupported' && ' Этот браузер не поддерживает всплывающие уведомления.'}
       </p>
     </section>
   )
