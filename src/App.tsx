@@ -9,6 +9,7 @@ import type { EncryptedBlob } from './crypto'
 import { Header, BottomNav } from './components/Header'
 import { Confetti } from './components/Confetti'
 import { TaskStartChime } from './components/TaskStartChime'
+import { NotifyPrompt } from './components/NotifyPrompt'
 import { QuickAddSheet } from './components/QuickAddSheet'
 import { IdentityScreen } from './components/IdentityScreen'
 import { CommentsSeenProvider } from './components/commentsSeen'
@@ -490,6 +491,7 @@ function Shell({ onLogout }: { onLogout: () => void }) {
       {quickAddOpen && <QuickAddSheet onClose={() => setQuickAddOpen(false)} />}
       <Confetti />
       <TaskStartChime />
+      <NotifyPrompt />
     </div>
   )
 }

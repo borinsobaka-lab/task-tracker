@@ -3,6 +3,7 @@
 // ничего не потеряется (нет несохранённых правок, открытых карточек и форм).
 
 import { hasUnsavedChanges } from './store'
+import { openCardFromNotification } from './notify'
 
 /** Версия этой сборки — её пишет в index.html плагин в vite.config.ts */
 const BUILD = document.querySelector<HTMLMetaElement>('meta[name="tt-build"]')?.content ?? ''
@@ -13,8 +14,10 @@ export function setupServiceWorker(): void {
   if (!('serviceWorker' in navigator)) return
   let updateReady = false
   navigator.serviceWorker.addEventListener('message', (e) => {
-    const msg = e.data as { type?: string; version?: string } | null
+    const msg = e.data as { type?: string; version?: string; id?: string } | null
     if (msg?.type === 'tt-sw-activated' && msg.version && msg.version !== BUILD) updateReady = true
+    // Клик по уведомлению о начале задачи — открыть её
+    if (msg?.type === 'tt-open-card' && msg.id) openCardFromNotification(msg.id)
   })
 
   const register = () => {

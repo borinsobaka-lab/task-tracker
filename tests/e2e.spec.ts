@@ -899,3 +899,59 @@ test('быстрый запуск: доска сразу из копии на у
   await expect(page.getByText('Задача коллеги')).toBeVisible({ timeout: 8000 })
   await expect(page.locator('.sync-status')).toHaveText('Сохранено')
 })
+
+test('уведомления: плашка просит разрешение, в начале встречи всплывает уведомление', async ({ page }) => {
+  // Подменяем Notification API: разрешение «ещё не спрашивали», показанные уведомления копим
+  await page.addInitScript(() => {
+    const shown: { title: string; body?: string }[] = []
+    let permission: NotificationPermission = (localStorage.getItem('test.perm') as NotificationPermission) || 'default'
+    class FakeNotification {
+      onclick: (() => void) | null = null
+      static get permission() {
+        return permission
+      }
+      static async requestPermission() {
+        permission = 'granted'
+        localStorage.setItem('test.perm', 'granted')
+        return permission
+      }
+      constructor(title: string, opts?: NotificationOptions) {
+        shown.push({ title, body: opts?.body })
+      }
+      close() {}
+    }
+    ;(window as unknown as { Notification: unknown }).Notification = FakeNotification
+    ;(window as unknown as { __shown: unknown }).__shown = shown
+  })
+  await page.goto('?demo=1')
+  await createIdentity(page, 'Борис')
+  const shown = () => page.evaluate(() => (window as unknown as { __shown: { title: string; body?: string }[] }).__shown)
+
+  const prompt = page.locator('.notify-prompt')
+  await expect(prompt).toContainText('Показывать уведомления')
+  await prompt.getByRole('button', { name: 'Включить' }).click()
+  await expect(prompt).toBeHidden()
+  expect((await shown()).map((n) => n.title)).toEqual(['Уведомления включены'])
+
+  // Встреча, которая начинается в текущую минуту
+  await page.waitForFunction(() => (JSON.parse(localStorage.getItem('tt.local.data') ?? '{}').members ?? []).length > 0)
+  await page.evaluate(() => {
+    const data = JSON.parse(localStorage.getItem('tt.local.data')!)
+    const now = new Date()
+    const pad = (n: number) => String(n).padStart(2, '0')
+    const ts = now.toISOString()
+    data.cards['m1'] = {
+      id: 'm1', title: 'Созвон с командой', kind: 'meeting', description: '', columnId: data.columns[0].id,
+      assigneeIds: [], checklist: [], attachments: [], createdAt: ts, updatedAt: ts,
+      date: `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`,
+      start: `${pad(now.getHours())}:${pad(now.getMinutes())}`, durationMin: 30,
+    }
+    localStorage.setItem('tt.local.data', JSON.stringify(data))
+    localStorage.setItem('tt.local.rev', String(Number(localStorage.getItem('tt.local.rev') ?? '1') + 1))
+  })
+  await page.reload()
+  // Разрешение уже дано — плашки нет, а уведомление о встрече приходит
+  await expect.poll(async () => (await shown()).map((n) => n.title)).toContain('Созвон с командой')
+  await expect(prompt).toBeHidden()
+  expect((await shown()).find((n) => n.title === 'Созвон с командой')?.body).toMatch(/^Встреча начинается · \d\d:\d\d–\d\d:\d\d$/)
+})

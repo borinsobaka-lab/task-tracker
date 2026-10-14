@@ -157,6 +157,24 @@ export function setSoundOn(on: boolean): void {
   localStorage.setItem('tt.sound', on ? '1' : '0')
 }
 
+/**
+ * Всплывающие уведомления браузера в момент начала задачи/встречи (на этом
+ * устройстве). По умолчанию включены — работают, когда браузер дал разрешение.
+ */
+export function getNotifyOn(): boolean {
+  return localStorage.getItem('tt.notify') !== '0'
+}
+export function setNotifyOn(on: boolean): void {
+  localStorage.setItem('tt.notify', on ? '1' : '0')
+}
+/** Плашку «Включить уведомления?» закрыли — больше не показываем (включить можно в настройках) */
+export function getNotifyPromptDismissed(): boolean {
+  return localStorage.getItem('tt.notifyPrompt') === '0'
+}
+export function setNotifyPromptDismissed(): void {
+  localStorage.setItem('tt.notifyPrompt', '0')
+}
+
 /** Демо-режим: локальное хранилище вместо GitHub (для тестов и предпросмотра) */
 export function isDemoMode(): boolean {
   if (typeof location === 'undefined') return false

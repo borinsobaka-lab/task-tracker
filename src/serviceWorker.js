@@ -110,3 +110,22 @@ self.addEventListener('fetch', (event) => {
     )
   }
 })
+
+// Клик по уведомлению о начале задачи (на Android их показывает SW) —
+// открываем приложение на этой задаче: в уже открытом окне или в новом.
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close()
+  const cardId = event.notification.data && event.notification.data.cardId
+  event.waitUntil(
+    (async () => {
+      const wins = await self.clients.matchAll({ type: 'window', includeUncontrolled: true })
+      const win = wins.find((w) => w.url.startsWith(SCOPE))
+      if (win) {
+        await win.focus()
+        if (cardId) win.postMessage({ type: 'tt-open-card', id: cardId })
+        return
+      }
+      await self.clients.openWindow(cardId ? `${SCOPE}#card=${encodeURIComponent(cardId)}` : SCOPE)
+    })(),
+  )
+})
