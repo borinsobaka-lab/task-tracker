@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-15T18:00:11.811Z",
+  "generatedAt": "2026-10-15T18:00:18.166Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -3850,7 +3850,7 @@
       "id": "efca547e-877d-43d2-a102-e796d235cbc5",
       "title": "Отвезти таблички в студии",
       "date": "2026-10-16",
-      "start": "09:30",
+      "start": "09:45",
       "durationMin": 60,
       "kind": "meeting",
       "members": [
