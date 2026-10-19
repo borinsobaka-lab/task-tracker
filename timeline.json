@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-19T17:02:26.200Z",
+  "generatedAt": "2026-10-19T17:02:32.419Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -3974,7 +3974,7 @@
       "title": "Реализация долгов по проекту",
       "date": "2026-10-20",
       "start": "13:30",
-      "durationMin": 330,
+      "durationMin": 270,
       "priorityColor": "#ef4444",
       "members": [
         {
@@ -3988,7 +3988,7 @@
       "id": "210836cf-c57f-4e35-8eaf-be8ba1b769e1",
       "title": "Падел",
       "date": "2026-10-20",
-      "start": "19:00",
+      "start": "18:00",
       "durationMin": 120,
       "kind": "meeting",
       "members": [
