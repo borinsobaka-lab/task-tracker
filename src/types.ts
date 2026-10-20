@@ -229,6 +229,135 @@ export interface Note {
   updatedAt: string
 }
 
+// ---------- CRM (раздел «CRM»: сделки, задачи и история, партнёры) ----------
+// Повторяет рабочую таблицу отдела продаж (листы «Сделки», «Задачи и история»,
+// «Партнёрства», «Обзор»). Неизвестное оставляем пустым: пустая сумма — «не
+// знаем», а 0 — настоящий ноль. Даты — 'YYYY-MM-DD'.
+
+/** Этап сделки (порядок и подписи — CRM_STAGES в crm.ts) */
+export type DealStage = 'new' | 'contact' | 'need' | 'solution' | 'proposal' | 'terms' | 'won' | 'lost' | 'paused'
+export type LeadSource = 'inbound' | 'outbound' | 'referral' | 'partner' | 'repeat' | 'event' | 'other'
+export type ContractStatus = 'none' | 'prep' | 'review' | 'signed'
+export type PaymentStatus = 'none' | 'invoiced' | 'partial' | 'paid'
+/** Актуальность данных: подтверждено / требует уточнения */
+export type DataQuality = 'confirmed' | 'unclear'
+
+export interface Deal {
+  id: ID
+  /** Постоянный ID сделки, который видят люди (например «А-1-10.26»). Не номер строки. */
+  code?: string
+  /** Компания / агентство */
+  company: string
+  /** Мероприятие клиента (в таблице — «Проект / мероприятие») */
+  event?: string
+  /** Проект в приложении (фильтр в шапке). Нет — сделку видят все. */
+  projectId?: ID
+  stage: DealStage
+  /** Сумма предложения, ₽ */
+  amount?: number
+  /** Ответственный — участник */
+  ownerId?: ID
+  nextStep?: string
+  /** Срок шага (для отложенной — дата возврата) */
+  nextStepDate?: string
+  /** Решение клиента до */
+  decisionDate?: string
+  /** Блокер / какое решение нужно от руководителя */
+  blocker?: string
+  lastContactDate?: string
+  /** Подтверждённый итог последнего контакта */
+  outcome?: string
+  contactName?: string
+  contactInfo?: string
+  source?: LeadSource
+  /** Потребность / модули */
+  needs?: string
+  eventDate?: string
+  /** Участники мероприятия, чел. (текст: «до 2000») */
+  attendees?: string
+  /** КП: ссылка и версия */
+  proposalLink?: string
+  proposalDate?: string
+  contractStatus?: ContractStatus
+  /** Сумма заказа, ₽ */
+  orderAmount?: number
+  /** Дата выигрыша / проигрыша */
+  closedDate?: string
+  paymentStatus?: PaymentStatus
+  /** Получено всего, ₽ — накопленная сумма, а не последний платёж */
+  paidTotal?: number
+  lastPaymentDate?: string
+  /** Причина проигрыша / паузы */
+  lossReason?: string
+  /** Основание / ссылка */
+  basis?: string
+  quality?: DataQuality
+  partnerId?: ID
+  createdBy?: ID
+  deleted?: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export type CrmRecordType = 'call' | 'email' | 'meeting' | 'proposal' | 'task' | 'payment' | 'stage' | 'other'
+export type CrmTaskStatus = 'planned' | 'doing' | 'done' | 'cancelled'
+
+/** Строка листа «Задачи и история»: контакт, задача или смена этапа. */
+export interface CrmRecord {
+  id: ID
+  dealId?: ID
+  partnerId?: ID
+  /** Дата записи / контакта */
+  date: string
+  type: CrmRecordType
+  /** Итог / подтверждённый факт */
+  result?: string
+  /** Следующее действие */
+  nextAction?: string
+  ownerId?: ID
+  /** Срок следующего действия */
+  due?: string
+  status: CrmTaskStatus
+  doneDate?: string
+  createdBy?: ID
+  deleted?: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export type PartnerStatus = 'contact' | 'discussion' | 'agreement' | 'active' | 'paused' | 'finished'
+
+/** Партнёр (лист «Партнёрства»). Выручку партнёрство не приносит само —
+ *  коммерческие проекты заводятся сделками со ссылкой на партнёра. */
+export interface Partner {
+  id: ID
+  code?: string
+  name: string
+  contact?: string
+  /** Формат сотрудничества */
+  format?: string
+  status: PartnerStatus
+  /** Подтверждённые договорённости */
+  agreements?: string
+  nextStep?: string
+  ownerId?: ID
+  nextStepDate?: string
+  blocker?: string
+  basis?: string
+  lastContactDate?: string
+  quality?: DataQuality
+  projectId?: ID
+  deleted?: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CrmData {
+  deals: Record<ID, Deal>
+  records: Record<ID, CrmRecord>
+  partners: Record<ID, Partner>
+}
+
 export interface BoardData {
   schemaVersion: 1
   members: Member[]
@@ -240,5 +369,7 @@ export interface BoardData {
   projects?: Project[]
   /** Заметки (может отсутствовать в старых данных) */
   notes?: Record<ID, Note>
+  /** CRM: сделки, задачи и история, партнёры (может отсутствовать в старых данных) */
+  crm?: CrmData
   updatedAt: string
 }

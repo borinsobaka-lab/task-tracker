@@ -815,6 +815,11 @@
     color: #422006;
     box-shadow: 0 4px 12px rgba(161, 98, 7, 0.4);
   }
+  .bottom-nav-add.crm .bottom-nav-add-circle {
+    background: #8b5cf6;
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(109, 40, 217, 0.4);
+  }
 
   /* Плавающая кнопка — только десктоп */
   .fab {

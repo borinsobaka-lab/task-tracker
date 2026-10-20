@@ -3,7 +3,7 @@
 // удаления — через надгробия (deleted: true). После слияния доска нормализуется:
 // каждая живая карточка лежит ровно в одной живой колонке.
 
-import type { Attachment, BoardData, Card, ChecklistItem, Column, Comment, Member, ID, Note, Project, Series } from './types'
+import type { Attachment, BoardData, Card, ChecklistItem, Column, Comment, CrmData, Member, ID, Note, Project, Series } from './types'
 import { nowISO } from './utils'
 
 const TOMBSTONE_TTL_MS = 45 * 24 * 60 * 60 * 1000
@@ -95,6 +95,27 @@ function mergeById<T extends { id: ID; updatedAt: string }>(local: T[], remote: 
   return out
 }
 
+/** Слияние двух словарей сущностей по id: одна и та же — по более свежему updatedAt (LWW). */
+function mergeRecords<T extends { updatedAt: string }>(a: Record<ID, T> | undefined, b: Record<ID, T> | undefined): Record<ID, T> {
+  const out: Record<ID, T> = {}
+  for (const id of new Set([...Object.keys(a ?? {}), ...Object.keys(b ?? {})])) {
+    const l = a?.[id]
+    const r = b?.[id]
+    out[id] = l && r ? newer(l, r) : (l ?? r)!
+  }
+  return out
+}
+
+/** CRM: сделки, записи истории и партнёры сливаются независимо, каждая — по LWW. */
+function mergeCrm(a: CrmData | undefined, b: CrmData | undefined): CrmData | undefined {
+  if (!a && !b) return undefined
+  return {
+    deals: mergeRecords(a?.deals, b?.deals),
+    records: mergeRecords(a?.records, b?.records),
+    partners: mergeRecords(a?.partners, b?.partners),
+  }
+}
+
 export function mergeBoards(local: BoardData, remote: BoardData): BoardData {
   const members: Member[] = mergeById(local.members, remote.members)
   const columns: Column[] = mergeById(local.columns, remote.columns)
@@ -132,6 +153,7 @@ export function mergeBoards(local: BoardData, remote: BoardData): BoardData {
     series,
     projects,
     notes,
+    ...((local.crm || remote.crm) ? { crm: mergeCrm(local.crm, remote.crm) } : {}),
     updatedAt: local.updatedAt >= remote.updatedAt ? local.updatedAt : remote.updatedAt,
   })
 }
@@ -226,13 +248,36 @@ export function normalizeBoard(data: BoardData): BoardData {
     notes[id] = n
   }
 
-  // Поле notes оставляем отсутствующим, если его не было: по его отсутствию SyncEngine
-  // узнаёт данные, сохранённые старой версией приложения (та при слиянии теряла заметки).
-  const result = { ...data, columns: keptColumns, cards, series, ...(data.notes ? { notes } : {}) }
+  // Поля notes и crm оставляем отсутствующими, если их не было: по их отсутствию SyncEngine
+  // узнаёт данные, сохранённые старой версией приложения (та при слиянии теряла поля,
+  // которых не знала).
+  const result = {
+    ...data,
+    columns: keptColumns,
+    cards,
+    series,
+    ...(data.notes ? { notes } : {}),
+    ...(data.crm ? { crm: dropOldTombstones(data.crm, cutoff) } : {}),
+  }
   // Журнал истории проекта убран из приложения — вычищаем его из старых данных,
   // чтобы не хранить и не тащить при загрузке.
   delete (result as { activity?: unknown }).activity
   return result
+}
+
+function dropOldTombstones(crm: CrmData, cutoff: number): CrmData {
+  const keep = <T extends { deleted?: boolean; updatedAt: string }>(m: Record<ID, T> | undefined): Record<ID, T> => {
+    const out: Record<ID, T> = {}
+    for (const [id, x] of Object.entries(m ?? {})) {
+      if (x.deleted) {
+        const t = Date.parse(x.updatedAt)
+        if (!Number.isNaN(t) && t < cutoff) continue
+      }
+      out[id] = x
+    }
+    return out
+  }
+  return { deals: keep(crm.deals), records: keep(crm.records), partners: keep(crm.partners) }
 }
 
 export function emptyBoard(): BoardData {

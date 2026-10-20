@@ -49,6 +49,9 @@ export const IcoPin = duotone('Pin')
 export const IcoChecklist = duotone('ListCheck')
 export const IcoGallery = duotone('Gallery')
 export const IcoFile = duotone('DocumentText')
+export const IcoCrm = duotone('CaseMinimalistic')
+export const IcoChart = duotone('ChartSquare')
+export const IcoHandshake = duotone('HandShake')
 
 /** Чистый тонкий крестик закрытия (аккуратнее и крупнее, чем залитый кружок). */
 export function IcoX({ size = 22, color = 'currentColor' }: { size?: number; color?: string }) {
