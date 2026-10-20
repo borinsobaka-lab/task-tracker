@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-20T18:39:07.965Z",
+  "generatedAt": "2026-10-20T19:31:54.924Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -3880,6 +3880,7 @@
       "date": "2026-10-20",
       "start": "22:30",
       "durationMin": 30,
+      "done": true,
       "members": [
         {
           "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
@@ -4178,6 +4179,18 @@
           "id": "4e018f91-dee4-4006-9a63-6f48b46a3d2d",
           "name": "Настя",
           "color": "#ec4899"
+        }
+      ]
+    },
+    {
+      "id": "eed9deba-a652-4faa-9de4-bcb5acf584ff:2026-11-01",
+      "title": "Зарплаты сотрудникам",
+      "date": "2026-11-01",
+      "members": [
+        {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
+          "name": "Вова",
+          "color": "#84cc16"
         }
       ]
     },
