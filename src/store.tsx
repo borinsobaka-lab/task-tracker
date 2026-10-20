@@ -4,7 +4,7 @@
 
 import React, { createContext, useContext, useEffect, useMemo, useSyncExternalStore } from 'react'
 import { produce } from 'immer'
-import type { Attachment, BoardData, Card, CardKind, ChecklistItem, Column, ColumnRole, Comment, CrmData, CrmRecord, Deal, EisenhowerQuadrant, ID, Member, Note, Partner, Project, RecurrenceRule, Series } from './types'
+import type { Attachment, BoardData, Card, CardKind, ChecklistItem, Column, ColumnRole, Comment, Contact, CrmData, CrmRecord, Deal, EisenhowerQuadrant, ID, Member, Note, Partner, Project, RecurrenceRule, Series } from './types'
 import type { RemoteState, StorageAdapter } from './storage/adapter'
 import { ConflictError } from './storage/adapter'
 import { emptyBoard, mergeBoards, normalizeBoard } from './merge'
@@ -197,7 +197,7 @@ function healLost(data: BoardData, known: KnownFields): BoardData | null {
   let out: BoardData | null = null
   if (data.notes === undefined && known.notes && Object.keys(known.notes).length > 0) out = { ...(out ?? data), notes: known.notes }
   const crm = known.crm
-  if (data.crm === undefined && crm && Object.keys(crm.deals ?? {}).length + Object.keys(crm.records ?? {}).length + Object.keys(crm.partners ?? {}).length > 0)
+  if (data.crm === undefined && crm && Object.keys(crm.deals ?? {}).length + Object.keys(crm.records ?? {}).length + Object.keys(crm.partners ?? {}).length + Object.keys(crm.contacts ?? {}).length > 0)
     out = { ...(out ?? data), crm }
   return out
 }
@@ -719,13 +719,29 @@ export interface BoardStore {
   addCrmRecord(init: Partial<Omit<CrmRecord, 'id' | 'createdAt' | 'updatedAt'>>): ID
   updateCrmRecord(id: ID, patch: Partial<Omit<CrmRecord, 'id' | 'createdAt' | 'updatedAt'>>): void
   deleteCrmRecord(id: ID): void
-  /** Живые партнёры, видимые участнику */
+  /** Живые компании (раздел «Компании», в данных — partners), видимые участнику */
   partners: Partner[]
   partner(id: ID): Partner | undefined
   addPartner(init: Partial<Omit<Partner, 'id' | 'createdAt' | 'updatedAt'>>): ID
   updatePartner(id: ID, patch: Partial<Omit<Partner, 'id' | 'createdAt' | 'updatedAt'>>): void
   /** Удалить партнёра (надгробие); ссылки сделок на него снимаются */
   deletePartner(id: ID): void
+  /** Живые контакты, видимые участнику */
+  contacts: Contact[]
+  contact(id: ID): Contact | undefined
+  addContact(init: Partial<Omit<Contact, 'id' | 'createdAt' | 'updatedAt'>>): ID
+  /** Переименование контакта обновляет имя во всех его сделках */
+  updateContact(id: ID, patch: Partial<Omit<Contact, 'id' | 'createdAt' | 'updatedAt'>>): void
+  /** Удалить контакт; в сделках остаётся только имя */
+  deleteContact(id: ID): void
+  /** Компания и контакт сделки, введённые текстом, — в справочники: находит такие же
+   *  по названию / имени или заводит новые и связывает со сделкой. */
+  ensureDealLinks(dealId: ID): void
+  /** Правка контакта прямо из карточки сделки: если контакт ещё не в справочнике
+   *  (имя только что ввели), он заводится тут же */
+  updateDealContact(dealId: ID, patch: Partial<Pick<Contact, 'role' | 'phone' | 'email'>>): void
+  /** То же для всех сделок — перенос данных, заведённых до справочников компаний и контактов */
+  migrateCrmLinks(): void
 
   flush(): Promise<void>
   refresh(): Promise<void>
@@ -803,7 +819,101 @@ function crmOf(d: BoardData): CrmData {
   if (!d.crm.deals) d.crm.deals = {}
   if (!d.crm.records) d.crm.records = {}
   if (!d.crm.partners) d.crm.partners = {}
+  if (!d.crm.contacts) d.crm.contacts = {}
   return d.crm
+}
+
+/** Постоянный id по тексту: одна и та же компания / контакт, заведённые при переносе
+ *  на двух устройствах, получают один id и при синхронизации не двоятся. */
+function stableId(prefix: string, text: string): string {
+  let h = 0x811c9dc5
+  for (let i = 0; i < text.length; i++) {
+    h ^= text.charCodeAt(i)
+    h = Math.imul(h, 0x01000193)
+  }
+  return `${prefix}-${(h >>> 0).toString(36)}`
+}
+
+const normName = (s: string): string => s.trim().replace(/\s+/g, ' ').toLowerCase()
+
+/** Телефон / email одной строкой (как в старых сделках) → отдельно телефон и email */
+function splitContactInfo(info: string): { phone?: string; email?: string } {
+  const emails = info.match(/[^\s,;]+@[^\s,;]+/g) ?? []
+  const phone = emails.reduce((t, e) => t.replace(e, ' '), info).replace(/[\s,;/]+$/g, '').replace(/^[\s,;/]+/g, '').replace(/\s{2,}/g, ' ').trim()
+  return { ...(phone ? { phone } : {}), ...(emails.length ? { email: emails.join(', ') } : {}) }
+}
+
+/**
+ * Связать сделку с компанией и контактом из справочников по тексту в её полях.
+ * touchDeal = false — при переносе старых данных: сделку не помечаем изменённой, чтобы
+ * не перебить чужую правку при синхронизации (перенос на всех устройствах одинаков).
+ */
+function linkDeal(crm: CrmData, deal: Deal, identity: Member | null, touchDeal: boolean): void {
+  const contacts = (crm.contacts ??= {})
+  const ts = nowISO()
+  let changed = false
+  const live = <T extends { deleted?: boolean }>(x: T | undefined): T | undefined => (x && !x.deleted ? x : undefined)
+
+  // Компания
+  const name = deal.company.trim()
+  const linked = live(deal.partnerId ? crm.partners[deal.partnerId] : undefined)
+  if (name && (!linked || normName(linked.name) !== normName(name))) {
+    // В старых версиях поле «Партнёр» было отдельным: запомним его в истории сделки
+    if (linked) {
+      const rid = stableId('rec', `partner|${deal.id}`)
+      if (!crm.records[rid])
+        crm.records[rid] = { id: rid, dealId: deal.id, date: deal.createdAt.slice(0, 10), type: 'other', result: `Партнёр сделки: ${linked.name}`, status: 'done', createdAt: ts, updatedAt: ts }
+    }
+    let company = Object.values(crm.partners).find((p) => !p.deleted && normName(p.name) === normName(name))
+    if (!company) {
+      const id = stableId('co', normName(name))
+      company = { id, name, kind: 'client', status: 'contact', createdAt: ts, updatedAt: ts }
+      if (identity) company.ownerId = identity.id
+      if (deal.projectId) company.projectId = deal.projectId
+      crm.partners[id] = company
+    }
+    deal.partnerId = company.id
+    changed = true
+  } else if (!name && linked) {
+    deal.company = linked.name
+    changed = true
+  } else if (deal.partnerId && !linked) {
+    delete deal.partnerId
+    changed = true
+  }
+
+  // Контактное лицо
+  const contactName = deal.contactName?.trim() || (deal.contactInfo?.trim() ? 'Без имени' : '')
+  const linkedContact = live(deal.contactId ? contacts[deal.contactId] : undefined)
+  if (contactName && !linkedContact) {
+    const same = Object.values(contacts).filter((c) => !c.deleted && normName(c.name) === normName(contactName))
+    let contact = same.find((c) => c.companyId === deal.partnerId) ?? same.find((c) => !c.companyId)
+    if (!contact) {
+      const id = stableId('ct', `${deal.partnerId ?? ''}|${normName(contactName)}`)
+      contact = { id, name: contactName, ...splitContactInfo(deal.contactInfo ?? ''), createdAt: ts, updatedAt: ts }
+      if (deal.partnerId) contact.companyId = deal.partnerId
+      if (deal.projectId) contact.projectId = deal.projectId
+      if (identity) contact.createdBy = identity.id
+      contacts[id] = contact
+    }
+    deal.contactId = contact.id
+    deal.contactName = contact.name
+    changed = true
+  } else if (deal.contactId && !linkedContact) {
+    delete deal.contactId
+    changed = true
+  }
+  if (changed && touchDeal) touch(deal)
+}
+
+/** Нужно ли связывать сделку со справочниками (есть текст без ссылки или ссылка битая) */
+function dealNeedsLinks(crm: CrmData, d: Deal): boolean {
+  const p = d.partnerId ? crm.partners[d.partnerId] : undefined
+  const c = d.contactId ? crm.contacts?.[d.contactId] : undefined
+  if (d.partnerId && (!p || p.deleted)) return true
+  if (d.contactId && (!c || c.deleted)) return true
+  if (d.company.trim() && (!p || normName(p.name) !== normName(d.company))) return true
+  return !d.contactId && !!(d.contactName?.trim() || d.contactInfo?.trim())
 }
 
 /** Обязательные текстовые поля сущностей CRM: их не удаляем, а держим пустой строкой */
@@ -1027,7 +1137,7 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
             touch(n)
           }
         }
-        for (const x of [...Object.values(d.crm?.deals ?? {}), ...Object.values(d.crm?.partners ?? {})]) {
+        for (const x of [...Object.values(d.crm?.deals ?? {}), ...Object.values(d.crm?.partners ?? {}), ...Object.values(d.crm?.contacts ?? {})]) {
           if (x.projectId === id) {
             delete x.projectId
             touch(x)
@@ -1841,7 +1951,16 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
       engine.update((d) => {
         const p = d.crm?.partners?.[id]
         if (!p || p.deleted) return
-        if (applyCrmPatch(p, patch)) touch(p)
+        if (!applyCrmPatch(p, patch)) return
+        touch(p)
+        // Название компании в сделках — копия: обновляем вслед за переименованием
+        if (patch.name !== undefined && p.name.trim())
+          for (const dl of Object.values(d.crm!.deals ?? {})) {
+            if (dl.partnerId === id && !dl.deleted && dl.company !== p.name) {
+              dl.company = p.name
+              touch(dl)
+            }
+          }
       }),
     deletePartner: (id) =>
       engine.update((d) => {
@@ -1861,7 +1980,81 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
             touch(r)
           }
         }
+        for (const c of Object.values(d.crm!.contacts ?? {})) {
+          if (c.companyId === id) {
+            delete c.companyId
+            touch(c)
+          }
+        }
       }),
+
+    contacts: Object.values(crm?.contacts ?? {})
+      .filter((x) => !x.deleted && crmVisible(x))
+      .sort((a, b) => a.name.localeCompare(b.name, 'ru') || a.id.localeCompare(b.id)),
+    contact: (id) => {
+      const x = crm?.contacts?.[id]
+      return x && !x.deleted && crmVisible(x) ? x : undefined
+    },
+    addContact: (init) => {
+      const id = uid()
+      const ts = nowISO()
+      engine.update((d) => {
+        const c: Contact = { id, name: '', createdAt: ts, updatedAt: ts }
+        applyCrmPatch(c, { ...(identity ? { createdBy: identity.id } : {}), ...init })
+        crmOf(d).contacts![id] = c
+      })
+      return id
+    },
+    updateContact: (id, patch) =>
+      engine.update((d) => {
+        const c = d.crm?.contacts?.[id]
+        if (!c || c.deleted) return
+        if (!applyCrmPatch(c, patch)) return
+        touch(c)
+        if (patch.name !== undefined && c.name.trim())
+          for (const dl of Object.values(d.crm!.deals ?? {})) {
+            if (dl.contactId === id && !dl.deleted && dl.contactName !== c.name) {
+              dl.contactName = c.name
+              touch(dl)
+            }
+          }
+      }),
+    deleteContact: (id) =>
+      engine.update((d) => {
+        const c = d.crm?.contacts?.[id]
+        if (!c || c.deleted) return
+        d.crm!.contacts![id] = { id, name: '', deleted: true, createdAt: c.createdAt, updatedAt: nowISO() }
+        for (const dl of Object.values(d.crm!.deals ?? {})) {
+          if (dl.contactId === id) {
+            delete dl.contactId
+            touch(dl)
+          }
+        }
+      }),
+    ensureDealLinks: (dealId) => {
+      const dl = crm?.deals?.[dealId]
+      if (!crm || !dl || dl.deleted || !dealNeedsLinks(crm, dl)) return
+      engine.update((d) => {
+        const deal = d.crm?.deals?.[dealId]
+        if (deal && !deal.deleted) linkDeal(crmOf(d), deal, identity, true)
+      })
+    },
+    updateDealContact: (dealId, patch) =>
+      engine.update((d) => {
+        const deal = d.crm?.deals?.[dealId]
+        if (!deal || deal.deleted || !deal.contactName?.trim()) return
+        const c = crmOf(d)
+        if (dealNeedsLinks(c, deal)) linkDeal(c, deal, identity, true)
+        const contact = deal.contactId ? c.contacts![deal.contactId] : undefined
+        if (contact && !contact.deleted && applyCrmPatch(contact, patch)) touch(contact)
+      }),
+    migrateCrmLinks: () => {
+      if (!crm || !Object.values(crm.deals ?? {}).some((x) => !x.deleted && dealNeedsLinks(crm, x))) return
+      engine.update((d) => {
+        const c = crmOf(d)
+        for (const deal of Object.values(c.deals)) if (!deal.deleted && dealNeedsLinks(c, deal)) linkDeal(c, deal, identity, false)
+      })
+    },
 
     downloadAttachment: async (att) => {
       const blob: Blob = await engine.adapter.downloadAttachment(att)

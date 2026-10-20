@@ -4,6 +4,8 @@
 // их же считает раздел «CRM» и проверяют тесты.
 
 import type {
+  CompanyKind,
+  Contact,
   ContractStatus,
   CrmRecord,
   CrmRecordType,
@@ -94,6 +96,14 @@ export const PARTNER_STATUSES: { key: PartnerStatus; label: string }[] = [
   { key: 'finished', label: 'Завершено' },
 ]
 
+export const COMPANY_KINDS: { key: CompanyKind; label: string }[] = [
+  { key: 'client', label: 'Клиент' },
+  { key: 'agency', label: 'Агентство' },
+  { key: 'partner', label: 'Партнёр' },
+]
+/** Тип компании; у старых записей раздела «Партнёры» типа нет — это партнёры */
+export const companyKind = (p: Partner): CompanyKind => p.kind ?? 'partner'
+
 export function labelOf<K extends string>(list: { key: K; label: string }[], key: K | undefined): string {
   return list.find((x) => x.key === key)?.label ?? ''
 }
@@ -120,6 +130,11 @@ export function fmtShortDate(key: string | undefined): string {
 /** '2026-10-23' → «23.10.2026» */
 export function fmtDate(key: string | undefined): string {
   return key ? FULL_DATE.format(parseDateKey(key)) : ''
+}
+const MONEY_INPUT = new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 2 })
+/** Сумма для поля ввода: 1250000 → «1 250 000» (без знака ₽) */
+export function fmtMoneyInput(v: number | undefined): string {
+  return v === undefined || Number.isNaN(v) ? '' : MONEY_INPUT.format(v)
 }
 /** Строка суммы из поля ввода: пусто — неизвестно (undefined), «0» — настоящий ноль */
 export function parseMoney(s: string): number | undefined {
@@ -161,10 +176,8 @@ export function decisionControl(d: Deal, today: string): Control | null {
   return { label: 'Позже', tone: 'ok' }
 }
 
-/** «Контроль записи»: чего не хватает в карточке сделки. dupCodes — ID, встречающиеся больше одного раза. */
-export function recordIssue(d: Deal, dupCodes: ReadonlySet<string>): string {
-  const code = d.code?.trim()
-  if (code && dupCodes.has(code)) return 'Повтор ID'
+/** «Контроль записи»: чего не хватает в карточке сделки. */
+export function recordIssue(d: Deal): string {
   if (!d.company.trim()) return 'Нет компании'
   if (d.quality !== 'confirmed') return 'Уточнить данные'
   if ((d.stage === 'lost' || d.stage === 'paused') && !d.lossReason?.trim()) return 'Указать причину'
@@ -172,16 +185,114 @@ export function recordIssue(d: Deal, dupCodes: ReadonlySet<string>): string {
   return ''
 }
 
-export function duplicateCodes(deals: Deal[]): Set<string> {
-  const seen = new Set<string>()
-  const dup = new Set<string>()
-  for (const d of deals) {
-    const c = d.code?.trim()
-    if (!c) continue
-    if (seen.has(c)) dup.add(c)
-    seen.add(c)
+// ---------- Обязательные поля этапов ----------
+
+/** Поля карточки сделки, которые этап требует заполнить (по ним же подсвечиваются поля) */
+export type DealFieldKey =
+  | 'company'
+  | 'contactName'
+  | 'contactReach'
+  | 'lastContactDate'
+  | 'nextStep'
+  | 'nextStepDate'
+  | 'event'
+  | 'eventDate'
+  | 'needs'
+  | 'outcome'
+  | 'amount'
+  | 'proposalLink'
+  | 'decisionDate'
+  | 'orderAmount'
+  | 'basis'
+  | 'lossReason'
+
+const filled = (v: string | undefined): boolean => !!v?.trim()
+
+/** Заполнено ли поле. contact — контактное лицо сделки (для телефона / email). */
+function fieldFilled(key: DealFieldKey, d: Deal, contact: Contact | undefined): boolean {
+  switch (key) {
+    case 'company':
+      return filled(d.company)
+    case 'contactName':
+      return filled(contact?.name ?? d.contactName)
+    case 'contactReach':
+      return filled(contact?.phone) || filled(contact?.email) || (!contact && filled(d.contactInfo))
+    case 'amount':
+      return d.amount !== undefined
+    // Сумму заказа при выигрыше приложение берёт из суммы предложения, если её не ввели
+    case 'orderAmount':
+      return d.orderAmount !== undefined || d.amount !== undefined
+    default:
+      return filled(d[key])
   }
-  return dup
+}
+
+/** Что этап требует заполнить. Открытая воронка — накопительно: каждый следующий этап
+ *  требует всё, что предыдущие, и своё. Даты КП и выигрыша / проигрыша ставятся сами. */
+const STAGE_FIELDS: Record<DealStage, DealFieldKey[]> = (() => {
+  const contact: DealFieldKey[] = ['company', 'contactName', 'contactReach', 'lastContactDate', 'nextStep', 'nextStepDate']
+  const need: DealFieldKey[] = [...contact, 'event', 'eventDate', 'needs']
+  const solution: DealFieldKey[] = [...need, 'outcome']
+  const proposal: DealFieldKey[] = [...solution, 'amount', 'proposalLink']
+  const terms: DealFieldKey[] = [...proposal, 'decisionDate']
+  return {
+    new: ['company'],
+    contact,
+    need,
+    solution,
+    proposal,
+    terms,
+    won: ['company', 'contactName', 'orderAmount', 'basis'],
+    lost: ['company', 'lossReason'],
+    paused: ['company', 'lossReason', 'nextStep', 'nextStepDate'],
+  }
+})()
+
+/** Название поля в списке «что заполнить» — с поправкой на этап */
+export function dealFieldLabel(key: DealFieldKey, stage: DealStage): string {
+  switch (key) {
+    case 'company':
+      return 'Компания / агентство'
+    case 'contactName':
+      return 'Контактное лицо'
+    case 'contactReach':
+      return 'Телефон или email контакта'
+    case 'lastContactDate':
+      return 'Последний контакт'
+    case 'nextStep':
+      return 'Следующий шаг'
+    case 'nextStepDate':
+      return stage === 'paused' ? 'Дата возврата' : 'Срок шага'
+    case 'event':
+      return 'Мероприятие'
+    case 'eventDate':
+      return 'Дата мероприятия'
+    case 'needs':
+      return 'Потребность / модули'
+    case 'outcome':
+      return 'Подтверждённый итог'
+    case 'amount':
+      return 'Сумма предложения'
+    case 'proposalLink':
+      return 'КП: ссылка и версия'
+    case 'decisionDate':
+      return 'Решение клиента до'
+    case 'orderAmount':
+      return 'Сумма заказа'
+    case 'basis':
+      return 'Основание / ссылка'
+    case 'lossReason':
+      return stage === 'paused' ? 'Причина паузы' : stage === 'lost' ? 'Причина проигрыша' : 'Причина проигрыша / паузы'
+  }
+}
+
+export function stageFields(stage: DealStage): DealFieldKey[] {
+  return STAGE_FIELDS[stage]
+}
+
+/** Чего не хватает сделке для этапа stage (пусто — можно переводить) */
+export function missingForStage(d: Deal, stage: DealStage, contact: Contact | undefined): DealFieldKey[] {
+  return STAGE_FIELDS[stage].filter((k) => !fieldFilled(k, d, contact))
 }
 
 /** «Контроль» задачи: выполнена, просрочена, в срок или её надо уточнить. */
@@ -193,9 +304,9 @@ export function taskControl(r: CrmRecord, today: string): Control | null {
   return { label: 'В срок', tone: 'ok' }
 }
 
-/** «Контроль» партнёра: шаг и срок, как у сделки. */
+/** «Контроль» партнёра: шаг и срок, как у сделки. У клиентов и агентств контроля нет. */
 export function partnerControl(p: Partner, today: string): Control | null {
-  if (p.status === 'finished') return null
+  if (companyKind(p) !== 'partner' || p.status === 'finished') return null
   if (!p.nextStep?.trim() || !p.ownerId || !p.nextStepDate) return { label: 'Нет шага / срока', tone: 'warn' }
   if (p.nextStepDate < today) return { label: 'Просрочено', tone: 'bad' }
   return { label: 'В срок', tone: 'ok' }
@@ -244,7 +355,7 @@ export const ATTENTION_LABEL: Record<AttentionKey, string> = {
 }
 
 /** Попадает ли сделка в счётчик «Требует внимания» (для перехода из обзора к списку) */
-export function dealMatchesAttention(d: Deal, key: AttentionKey, today: string, dup: ReadonlySet<string>): boolean {
+export function dealMatchesAttention(d: Deal, key: AttentionKey, today: string): boolean {
   switch (key) {
     case 'overdueSteps':
       return stepControl(d, today)?.label === 'Просрочено'
@@ -257,14 +368,13 @@ export function dealMatchesAttention(d: Deal, key: AttentionKey, today: string, 
     case 'blockers':
       return !isClosedStage(d.stage) && hasBlocker(d.blocker)
     case 'issues':
-      return recordIssue(d, dup) !== ''
+      return recordIssue(d) !== ''
     default:
       return false
   }
 }
 
 export function crmOverview(deals: Deal[], records: CrmRecord[], partners: Partner[], today: string): CrmOverview {
-  const dup = duplicateCodes(deals)
   const stages: StageStat[] = CRM_STAGES.map((stage) => {
     const list = deals.filter((d) => d.stage === stage.key)
     return {
@@ -275,7 +385,7 @@ export function crmOverview(deals: Deal[], records: CrmRecord[], partners: Partn
     }
   })
   const openStats = stages.filter((s) => OPEN_STAGES.includes(s.stage.key))
-  const count = (key: AttentionKey) => deals.filter((d) => dealMatchesAttention(d, key, today, dup)).length
+  const count = (key: AttentionKey) => deals.filter((d) => dealMatchesAttention(d, key, today)).length
   const weekFrom = toDateKey(addDays(parseDateKey(today), -6))
   const inWeek = (k: string | undefined) => !!k && k >= weekFrom && k <= today
   return {
@@ -304,7 +414,7 @@ export function crmOverview(deals: Deal[], records: CrmRecord[], partners: Partn
   }
 }
 
-/** Поиск по сделке: компания, мероприятие, ID, контакт, шаг */
+/** Поиск по сделке: компания, мероприятие, контакт, шаг */
 export function dealMatchesQuery(d: Deal, q: string): boolean {
   const t = q.trim().toLowerCase()
   if (!t) return true
@@ -317,9 +427,9 @@ export function isEmptyDeal(d: Deal): boolean {
   return (
     !d.company.trim() &&
     !d.event?.trim() &&
-    !d.code?.trim() &&
     d.amount === undefined &&
     !d.nextStep?.trim() &&
+    !d.contactId &&
     !d.contactName?.trim() &&
     !d.contactInfo?.trim() &&
     !d.comments?.some((c) => !c.deleted)
@@ -329,14 +439,14 @@ export function isEmptyDeal(d: Deal): boolean {
 // ---------- Правила ведения (лист «Правила», применительно к приложению) ----------
 
 export const CRM_RULES: { title: string; text: string }[] = [
-  { title: 'ID', text: 'У каждой сделки — постоянный уникальный ID, например «А-1-10.26» или «EB-0001». Повтор ID подсвечивается в контроле записи.' },
+  { title: 'Обязательные поля', text: 'Каждый этап требует заполнить свои поля (список — выше, у этапов). Пока они пустые, сделку не перевести: карточка подсветит их красным.' },
   { title: 'Подтверждение', text: 'Указывайте дату контакта, подтверждённый итог и источник. Неизвестное оставляйте пустым и выбирайте «Требует уточнения».' },
   { title: 'Следующий шаг', text: 'У каждой открытой или отложенной сделки должен быть конкретный шаг и срок. Для паузы срок означает дату возврата.' },
   { title: 'Суммы', text: 'Все суммы в рублях на одной базе: полная сумма к оплате, включая НДС при наличии. Неизвестная сумма — пустое поле, реальный ноль — 0.' },
   { title: 'Оплаты', text: '«Получено всего» — накопленная фактическая сумма по сделке, а не размер последнего платежа. Каждый платёж записывайте в историю сделки (тип «Оплата»).' },
   { title: 'Выигранная сделка', text: 'Переводите в «Выиграна» после подписания договора. Иное письменное подтверждение допустимо, только если вы приняли его как критерий заказа; укажите основание.' },
   { title: 'История', text: 'Выполненные задачи и контакты сохраняйте. При смене этапа приложение само добавляет запись с прежним и новым этапом. Обзор показывает текущую воронку, а не историческую конверсию.' },
-  { title: 'Партнёрства', text: 'Во вкладке «Партнёры» фиксируйте договорённости. Выручку учитывайте только через отдельные сделки со ссылкой на партнёра — партнёрство не увеличивает сумму воронки.' },
+  { title: 'Компании и контакты', text: 'Компанию и контактное лицо выбирайте из списка — новые сами попадают во вкладки «Компании» и «Контакты». У партнёров фиксируйте договорённости; выручку учитывайте только через сделки — партнёрство не увеличивает сумму воронки.' },
   { title: 'Цвета', text: 'Красный — прошедший срок. Жёлтый — сведения или действия требуют внимания. Зелёный — всё в срок.' },
   { title: 'Недельный статус', text: 'Статистика — отправная точка. Подтверждённый прогресс берите из истории; риски и неизвестное отмечайте отдельно. Приоритеты выбирайте по ближайшим решениям и блокерам.' },
 ]

@@ -667,6 +667,168 @@
   padding: 7px 10px;
   min-height: 38px;
 }
+/* Обязательное для этапа поле, которое пусто, — красная рамка и подпись */
+.crm-field.invalid .crm-field-label {
+  color: var(--danger);
+}
+.crm-field.invalid .input {
+  border-color: var(--danger);
+  background-color: #fff7f7;
+}
+.crm-field.invalid .input:focus {
+  box-shadow: 0 0 0 3px var(--danger-soft);
+}
+.crm-field .input:disabled {
+  background-color: var(--surface-2);
+  color: var(--text-faint);
+  cursor: not-allowed;
+}
+/* Суммы: цифры одной ширины — разряды стоят ровно */
+.crm-money {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Плашка «что заполнить для этапа» */
+.crm-required {
+  margin-top: 10px;
+  padding: 12px 14px;
+  border: 1px solid #fecaca;
+  border-radius: var(--radius);
+  background: #fff5f5;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 13.5px;
+}
+.crm-required.blocking {
+  border-color: var(--danger);
+  box-shadow: inset 4px 0 0 var(--danger);
+}
+.crm-required.ready {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  box-shadow: inset 4px 0 0 var(--accent);
+}
+.crm-required-text {
+  font-weight: 650;
+  color: var(--text);
+}
+.crm-required-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.crm-required-chip {
+  border: 1px solid #fecaca;
+  background: var(--surface);
+  color: var(--danger);
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.crm-required-chip:hover {
+  border-color: var(--danger);
+}
+.crm-required-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Окно «Сначала заполните поля» после перетаскивания на доске */
+.crm-modal.crm-blocked {
+  max-width: 440px;
+  padding: 20px 22px 18px;
+  margin-top: 10vh;
+}
+.crm-blocked h3 {
+  margin: 0 0 8px;
+  font-size: 18px;
+}
+.crm-blocked p {
+  margin: 0 0 8px;
+  color: var(--text-soft);
+  line-height: 1.45;
+}
+.crm-blocked-list {
+  margin: 0 0 16px;
+  padding-left: 20px;
+  color: var(--danger);
+  font-weight: 600;
+  line-height: 1.6;
+}
+.crm-blocked-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* Поле с подсказками из справочника (компании, контакты) */
+.combo {
+  position: relative;
+}
+.combo-list {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-md);
+  max-height: 280px;
+  overflow-y: auto;
+}
+.combo-opt {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 7px 9px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 13.5px;
+}
+.combo-opt.active {
+  background: var(--surface-2);
+}
+.combo-opt-label {
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.combo-opt-sub {
+  flex-shrink: 1;
+  min-width: 0;
+  font-size: 12px;
+  color: var(--text-faint);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.combo-new {
+  color: var(--accent-strong);
+  font-weight: 600;
+}
+.crm-contact-company {
+  margin-top: 12px;
+  font-size: 13px;
+}
+.crm-rules-req {
+  display: block;
+  margin-top: 2px;
+  font-size: 12.5px;
+  color: var(--text-faint);
+}
+
 .crm-textarea {
   resize: vertical;
   min-height: 38px;

@@ -2,7 +2,9 @@
 //  • Воронка — доска сделок по этапам (перетаскивание меняет этап и пишет историю);
 //  • Сделки — таблица со всеми контролями (шаг, решение, запись) и сортировкой;
 //  • Статистика — лист «Обзор»: этапы, «Требует внимания», деньги, неделя;
-//  • Партнёры, Задачи (лист «Задачи и история») и Правила ведения.
+//  • Компании (бывшие «Партнёры»), Контакты, Задачи (лист «Задачи и история») и Правила.
+// Перевод сделки на этап, для которого не заполнены нужные поля, не проходит:
+// доска показывает, чего не хватает, и предлагает открыть карточку.
 // Фильтр проектов из шапки и фильтр участников (ответственный) действуют на всё.
 
 import { useEffect, useMemo, useState } from 'react'
@@ -10,49 +12,54 @@ import type { CSSProperties, MutableRefObject, ReactNode } from 'react'
 import { DndContext, DragOverlay, PointerSensor, TouchSensor, useDraggable, useDroppable, useSensor, useSensors } from '@dnd-kit/core'
 import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core'
 import { useBoard } from '../store'
-import type { CrmRecord, Deal, DealStage, ID, Partner } from '../types'
+import type { Contact, CrmRecord, Deal, DealStage, ID, Partner } from '../types'
 import {
   ATTENTION_LABEL,
+  COMPANY_KINDS,
+  companyKind,
   CRM_COLOR,
   CRM_RULES,
   CRM_STAGES,
   crmOverview,
   dealMatchesAttention,
+  dealFieldLabel,
   dealMatchesQuery,
   decisionControl,
-  duplicateCodes,
   fmtMoney,
   fmtMoneyShort,
   fmtShortDate,
   hasBlocker,
   isEmptyDeal,
   labelOf,
+  missingForStage,
   OPEN_STAGES,
-  PARTNER_STATUSES,
   partnerControl,
   recordIssue,
   RECORD_TYPES,
   STAGE_BY_KEY,
+  stageFields,
   stepControl,
   TASK_STATUSES,
   taskControl,
 } from '../crm'
-import type { AttentionKey } from '../crm'
+import type { AttentionKey, DealFieldKey } from '../crm'
 import { inProjectFilter } from '../utils'
 import { SubHeader } from './SubHeader'
 import { Avatar, ProjectAvatar } from './Avatar'
-import { ControlBadge, DealModal, PartnerModal, RecordModal, todayKey } from './CrmModals'
+import { CompanyModal, ContactModal, ControlBadge, DealModal, RecordModal, todayKey } from './CrmModals'
 import { hasUnseenComments, liveComments, useCommentsSeen } from './commentsSeen'
-import { IcoBoard, IcoChart, IcoChecklist, IcoComment, IcoFile, IcoHandshake, IcoSearch } from '../icons'
+import { IcoBoard, IcoChart, IcoChecklist, IcoComment, IcoCrm, IcoFile, IcoMeeting, IcoSearch } from '../icons'
 import './crm.css'
 
-export type CrmTab = 'funnel' | 'deals' | 'stats' | 'partners' | 'tasks' | 'rules'
+/** 'partners' — вкладка «Компании» (ключ прежний, чтобы запомненная вкладка не сбилась) */
+export type CrmTab = 'funnel' | 'deals' | 'stats' | 'partners' | 'contacts' | 'tasks' | 'rules'
 
 const TABS: { key: CrmTab; label: string; Icon: typeof IcoBoard }[] = [
   { key: 'funnel', label: 'Воронка', Icon: IcoBoard },
   { key: 'deals', label: 'Сделки', Icon: IcoFile },
   { key: 'stats', label: 'Статистика', Icon: IcoChart },
-  { key: 'partners', label: 'Партнёры', Icon: IcoHandshake },
+  { key: 'partners', label: 'Компании', Icon: IcoCrm },
+  { key: 'contacts', label: 'Контакты', Icon: IcoMeeting },
   { key: 'tasks', label: 'Задачи', Icon: IcoChecklist },
   { key: 'rules', label: 'Правила', Icon: IcoFile },
 ]
@@ -68,7 +75,7 @@ function readTab(): CrmTab {
   return 'funnel'
 }
 
-/** Открытое окно: сделка, партнёр или запись истории (поверх них) */
+/** Открытое окно: сделка, компания, контакт или запись истории (поверх них) */
 type RecordEdit = { record: CrmRecord } | { init: Partial<CrmRecord> }
 
 /**
@@ -89,8 +96,11 @@ export function CrmView({
   const store = useBoard()
   const [tab, setTabState] = useState<CrmTab>(readTab)
   const [query, setQuery] = useState('')
-  const [dealId, setDealId] = useState<ID | null>(null)
+  const [dealId, setDealIdState] = useState<ID | null>(null)
+  // Этап, в который сделку не пустили с доски, — карточка откроется с этим переходом
+  const [dealTarget, setDealTarget] = useState<DealStage | undefined>(undefined)
   const [partnerId, setPartnerId] = useState<ID | null>(null)
+  const [contactId, setContactId] = useState<ID | null>(null)
   const [recordEdit, setRecordEdit] = useState<RecordEdit | null>(null)
   const [draftId, setDraftId] = useState<ID | null>(null)
   const [attention, setAttention] = useState<AttentionKey | null>(null)
@@ -105,6 +115,17 @@ export function CrmView({
       /* не запомним — не страшно */
     }
   }
+
+  const setDealId = (id: ID | null, target?: DealStage) => {
+    setDealTarget(target)
+    setDealIdState(id)
+  }
+
+  // Компании и контакты из сделок, заведённых до справочников, — в справочники (один раз)
+  useEffect(() => {
+    store.migrateCrmLinks()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const today = todayKey()
   const byOwner = (ownerId: ID | undefined) => memberFilter.size === 0 || (!!ownerId && memberFilter.has(ownerId))
@@ -132,7 +153,16 @@ export function CrmView({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [store.crmRecords, store.deals, store.partners, projectFilter, memberFilter])
 
+  const contacts = useMemo(() => store.contacts.filter((c) => inProjectFilter(c.projectId, projectFilter)), [store.contacts, projectFilter])
+
   const shownDeals = useMemo(() => deals.filter((d) => dealMatchesQuery(d, query)), [deals, query])
+  const q = query.trim().toLowerCase()
+  const shownPartners = useMemo(() => (q ? partners.filter((p) => [p.name, p.note].some((x) => x?.toLowerCase().includes(q))) : partners), [partners, q])
+  const shownContacts = useMemo(
+    () => (q ? contacts.filter((c) => [c.name, c.role, c.phone, c.email, c.companyId ? store.partner(c.companyId)?.name : ''].some((x) => x?.toLowerCase().includes(q))) : contacts),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [contacts, q, store.partners],
+  )
 
   // Проект новой сделки — выбранный в шапке (если выбран)
   const defaultProject = store.projects.find((p) => projectFilter.has(p.id))?.id
@@ -143,9 +173,14 @@ export function CrmView({
     setDealId(id)
   }
   const newPartner = () => {
-    const id = store.addPartner({ projectId: defaultProject })
+    const id = store.addPartner({ kind: 'client', projectId: defaultProject })
     setDraftId(id)
     setPartnerId(id)
+  }
+  const newContact = (companyId?: ID) => {
+    const id = store.addContact({ companyId, projectId: defaultProject })
+    setDraftId(id)
+    setContactId(id)
   }
   composeRef.current = () => newDeal()
 
@@ -153,20 +188,30 @@ export function CrmView({
   const closeDeal = () => {
     const id = dealId
     setDealId(null)
+    // Компанию / контакт ввели текстом и сразу закрыли окно — всё равно заносим в справочники
+    if (id) store.ensureDealLinks(id)
     if (id && id === draftId) {
       setDraftId(null)
       const d = store.deal(id)
       if (d && isEmptyDeal(d) && !store.crmRecords.some((r) => r.dealId === id)) store.deleteDeal(id)
     }
   }
-  // То же для нового партнёра
+  // То же для новой компании и нового контакта
+  const closeContact = () => {
+    const id = contactId
+    setContactId(null)
+    if (!id || id !== draftId) return
+    setDraftId(null)
+    const c = store.contact(id)
+    if (c && !c.name.trim() && !c.phone && !c.email && !store.deals.some((d) => d.contactId === id)) store.deleteContact(id)
+  }
   const closePartner = () => {
     const id = partnerId
     setPartnerId(null)
     if (!id || id !== draftId) return
     setDraftId(null)
     const p = store.partner(id)
-    if (p && !p.name.trim() && !p.contact && !p.nextStep && !store.crmRecords.some((r) => r.partnerId === id) && !store.deals.some((d) => d.partnerId === id))
+    if (p && !p.name.trim() && !p.contact && !p.nextStep && !p.note && !store.crmRecords.some((r) => r.partnerId === id) && !store.deals.some((d) => d.partnerId === id) && !store.contacts.some((c) => c.companyId === id))
       store.deletePartner(id)
   }
 
@@ -176,6 +221,7 @@ export function CrmView({
       if (e.key !== 'Escape') return
       if (recordEdit) setRecordEdit(null)
       else if (dealId) closeDeal()
+      else if (contactId) closeContact()
       else if (partnerId) closePartner()
     }
     window.addEventListener('keydown', onKey)
@@ -200,10 +246,16 @@ export function CrmView({
         memberFilter={memberFilter}
         onMemberFilterChange={onMemberFilterChange}
         right={
-          tab === 'funnel' || tab === 'deals' ? (
+          tab === 'funnel' || tab === 'deals' || tab === 'partners' || tab === 'contacts' ? (
             <label className="crm-search">
               <IcoSearch size={16} />
-              <input type="search" placeholder="Поиск сделок" value={query} onChange={(e) => setQuery(e.target.value)} aria-label="Поиск сделок" />
+              <input
+                type="search"
+                placeholder={tab === 'partners' ? 'Поиск компаний' : tab === 'contacts' ? 'Поиск контактов' : 'Поиск сделок'}
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                aria-label={tab === 'partners' ? 'Поиск компаний' : tab === 'contacts' ? 'Поиск контактов' : 'Поиск сделок'}
+              />
             </label>
           ) : undefined
         }
@@ -232,7 +284,8 @@ export function CrmView({
           />
         )}
         {tab === 'stats' && <Stats deals={deals} records={records} partners={partners} onAttention={openAttention} />}
-        {tab === 'partners' && <PartnersTable partners={partners} onOpen={setPartnerId} onAdd={newPartner} />}
+        {tab === 'partners' && <CompaniesTable companies={shownPartners} onOpen={setPartnerId} onAdd={newPartner} />}
+        {tab === 'contacts' && <ContactsTable contacts={shownContacts} onOpen={setContactId} onAdd={() => newContact()} />}
         {tab === 'tasks' && (
           <TasksList
             records={records}
@@ -252,19 +305,34 @@ export function CrmView({
 
       {dealId && (
         <DealModal
+          key={dealId}
           dealId={dealId}
+          initialTarget={dealTarget}
           onClose={closeDeal}
           onOpenRecord={(r) => setRecordEdit({ record: r })}
           onNewRecord={(init) => setRecordEdit({ init })}
         />
       )}
-      {partnerId && !dealId && (
-        <PartnerModal
-          partnerId={partnerId}
+      {partnerId && !dealId && !contactId && (
+        <CompanyModal
+          companyId={partnerId}
           onClose={closePartner}
           onOpenDeal={setDealId}
+          onOpenContact={setContactId}
+          onNewContact={newContact}
           onOpenRecord={(r) => setRecordEdit({ record: r })}
           onNewRecord={(init) => setRecordEdit({ init })}
+        />
+      )}
+      {contactId && !dealId && (
+        <ContactModal
+          contactId={contactId}
+          onClose={closeContact}
+          onOpenDeal={setDealId}
+          onOpenCompany={(id) => {
+            setContactId(null)
+            setPartnerId(id)
+          }}
         />
       )}
       {recordEdit && (
@@ -288,9 +356,23 @@ function byNextStep(a: Deal, b: Deal): number {
   return x.localeCompare(y) || a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id)
 }
 
-function Funnel({ deals, onOpen, onAdd, showProject }: { deals: Deal[]; onOpen: (id: ID) => void; onAdd: (stage: DealStage) => void; showProject: boolean }) {
+/** Перевод, который не прошёл: чего не хватает сделке для этапа */
+type Blocked = { id: ID; to: DealStage; missing: DealFieldKey[] }
+
+function Funnel({
+  deals,
+  onOpen,
+  onAdd,
+  showProject,
+}: {
+  deals: Deal[]
+  onOpen: (id: ID, target?: DealStage) => void
+  onAdd: (stage: DealStage) => void
+  showProject: boolean
+}) {
   const store = useBoard()
   const [dragId, setDragId] = useState<ID | null>(null)
+  const [blocked, setBlocked] = useState<Blocked | null>(null)
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 220, tolerance: 6 } }),
@@ -302,6 +384,8 @@ function Funnel({ deals, onOpen, onAdd, showProject }: { deals: Deal[]; onOpen: 
     const id = String(e.active.id)
     const d = store.deal(id)
     if (!d || !to || d.stage === to) return
+    const missing = missingForStage(d, to, d.contactId ? store.contact(d.contactId) : undefined)
+    if (missing.length) return setBlocked({ id, to, missing })
     store.updateDeal(id, { stage: to })
     // Выигрыш, проигрыш и пауза требуют подробностей (сумма, причина, дата возврата) — открываем карточку
     if (to === 'won' || to === 'lost' || to === 'paused') onOpen(id)
@@ -337,7 +421,52 @@ function Funnel({ deals, onOpen, onAdd, showProject }: { deals: Deal[]; onOpen: 
         })}
       </div>
       <DragOverlay>{dragged ? <DealCard deal={dragged} showProject={showProject} overlay /> : null}</DragOverlay>
+      {blocked && (
+        <StageBlockedDialog
+          blocked={blocked}
+          onFill={() => {
+            onOpen(blocked.id, blocked.to)
+            setBlocked(null)
+          }}
+          onCancel={() => setBlocked(null)}
+        />
+      )}
     </DndContext>
+  )
+}
+
+/** «Сначала заполните поля»: сделку перетащили на этап, а нужные для него поля пустые */
+function StageBlockedDialog({ blocked, onFill, onCancel }: { blocked: Blocked; onFill: () => void; onCancel: () => void }) {
+  const store = useBoard()
+  const deal = store.deal(blocked.id)
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onCancel()
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onCancel])
+  const stage = STAGE_BY_KEY[blocked.to]
+  return (
+    <div className="modal-overlay" onMouseDown={(e) => e.target === e.currentTarget && onCancel()}>
+      <div className="modal crm-modal crm-blocked" role="alertdialog" aria-modal="true" aria-labelledby="crm-blocked-title">
+        <h3 id="crm-blocked-title">Сначала заполните поля</h3>
+        <p>
+          Чтобы перевести «{deal?.company || 'сделку'}» в <b style={{ color: stage.color }}>«{stage.label}»</b>, в карточке не хватает:
+        </p>
+        <ul className="crm-blocked-list">
+          {blocked.missing.map((k) => (
+            <li key={k}>{dealFieldLabel(k, blocked.to)}</li>
+          ))}
+        </ul>
+        <div className="crm-blocked-actions">
+          <button type="button" className="btn" onClick={onCancel}>
+            Отмена
+          </button>
+          <button type="button" className="btn btn-primary" onClick={onFill} autoFocus>
+            Заполнить
+          </button>
+        </div>
+      </div>
+    </div>
   )
 }
 
@@ -372,7 +501,6 @@ function DealCard({ deal, showProject, overlay }: { deal: Deal; showProject: boo
   return (
     <article className={'crm-card' + (overlay ? ' overlay' : '')}>
       <div className="crm-card-top">
-        {deal.code && <span className="crm-card-code">{deal.code}</span>}
         {deal.amount !== undefined && <span className="crm-card-amount">{fmtMoney(deal.amount)}</span>}
       </div>
       <div className="crm-card-company">{deal.company || <span className="muted">Без названия</span>}</div>
@@ -412,7 +540,7 @@ function DealCard({ deal, showProject, overlay }: { deal: Deal; showProject: boo
 
 // ---------- Таблица сделок ----------
 
-type SortKey = 'code' | 'company' | 'stage' | 'amount' | 'owner' | 'nextStepDate' | 'decisionDate' | 'lastContactDate'
+type SortKey = 'company' | 'stage' | 'amount' | 'owner' | 'nextStepDate' | 'decisionDate' | 'lastContactDate'
 
 function DealsTable({
   deals,
@@ -434,7 +562,6 @@ function DealsTable({
   const store = useBoard()
   const today = todayKey()
   const [sort, setSort] = useState<{ key: SortKey; dir: 1 | -1 }>({ key: 'nextStepDate', dir: 1 })
-  const dup = useMemo(() => duplicateCodes(store.deals), [store.deals])
   const memberName = (id?: ID) => store.data.members.find((m) => m.id === id)?.name ?? ''
   const stageIdx = (s: DealStage) => CRM_STAGES.findIndex((x) => x.key === s)
 
@@ -442,7 +569,7 @@ function DealsTable({
     let list = deals
     if (stageFilter === 'open') list = list.filter((d) => OPEN_STAGES.includes(d.stage))
     else if (stageFilter !== 'all') list = list.filter((d) => d.stage === stageFilter)
-    if (attention) list = list.filter((d) => dealMatchesAttention(d, attention, today, dup))
+    if (attention) list = list.filter((d) => dealMatchesAttention(d, attention, today))
     const val = (d: Deal): string | number => {
       switch (sort.key) {
         case 'amount':
@@ -465,7 +592,7 @@ function DealsTable({
       return c * sort.dir || a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id)
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [deals, stageFilter, attention, sort, dup, today])
+  }, [deals, stageFilter, attention, sort, today])
 
   const th = (key: SortKey, label: string) => (
     <th
@@ -510,7 +637,6 @@ function DealsTable({
           <table className="crm-table">
             <thead>
               <tr>
-                {th('code', 'ID')}
                 {th('company', 'Компания')}
                 <th>Мероприятие</th>
                 {th('stage', 'Этап')}
@@ -528,10 +654,9 @@ function DealsTable({
             </thead>
             <tbody>
               {rows.map((d) => {
-                const issue = recordIssue(d, dup)
+                const issue = recordIssue(d)
                 return (
                   <tr key={d.id} onClick={() => onOpen(d.id)}>
-                    <td className="nowrap muted">{d.code}</td>
                     <td className="strong">{d.company || <span className="muted">Без названия</span>}</td>
                     <td>{d.event}</td>
                     <td className="nowrap">
@@ -666,52 +791,99 @@ function Kpi({ label, value, sub, tone }: { label: string; value: string; sub?: 
   )
 }
 
-// ---------- Партнёры ----------
+// ---------- Компании ----------
 
-function PartnersTable({ partners, onOpen, onAdd }: { partners: Partner[]; onOpen: (id: ID) => void; onAdd: () => void }) {
+function CompaniesTable({ companies, onOpen, onAdd }: { companies: Partner[]; onOpen: (id: ID) => void; onAdd: () => void }) {
   const store = useBoard()
   const today = todayKey()
   const memberName = (id?: ID) => store.data.members.find((m) => m.id === id)?.name ?? ''
+  const rows = useMemo(() => [...companies].sort((a, b) => a.name.localeCompare(b.name, 'ru') || a.id.localeCompare(b.id)), [companies])
   return (
     <div className="crm-page">
       <div className="crm-toolbar">
-        <span className="muted">Партнёрство не увеличивает сумму воронки: коммерческие проекты — отдельные сделки со ссылкой на партнёра.</span>
+        <span className="muted">Клиенты, агентства и партнёры. Новая компания, введённая в сделке, появляется здесь сама.</span>
         <button type="button" className="btn btn-sm crm-add-btn" onClick={onAdd}>
-          + Партнёр
+          + Компания
         </button>
       </div>
-      {partners.length === 0 ? (
-        <Empty text="Партнёров пока нет." />
+      {rows.length === 0 ? (
+        <Empty text="Компаний пока нет." />
       ) : (
         <div className="crm-table-wrap">
           <table className="crm-table">
             <thead>
               <tr>
-                <th>ID</th>
-                <th>Партнёр</th>
-                <th>Формат</th>
-                <th>Статус</th>
-                <th>Следующий шаг</th>
+                <th>Компания</th>
+                <th>Тип</th>
+                <th className="num">Контакты</th>
+                <th className="num">Сделок</th>
+                <th className="num">В работе, ₽</th>
                 <th>Ответственный</th>
-                <th>Срок шага</th>
                 <th>Контроль</th>
-                <th>Сделок</th>
               </tr>
             </thead>
             <tbody>
-              {partners.map((p) => (
-                <tr key={p.id} onClick={() => onOpen(p.id)}>
-                  <td className="nowrap muted">{p.code}</td>
-                  <td className="strong">{p.name || <span className="muted">Без названия</span>}</td>
-                  <td>{p.format}</td>
-                  <td className="nowrap">{labelOf(PARTNER_STATUSES, p.status)}</td>
-                  <td>{p.nextStep}</td>
-                  <td className="nowrap">{memberName(p.ownerId)}</td>
-                  <td className="nowrap">{fmtShortDate(p.nextStepDate)}</td>
-                  <td>
-                    <ControlBadge c={partnerControl(p, today)} />
-                  </td>
-                  <td className="num">{store.deals.filter((d) => d.partnerId === p.id).length || ''}</td>
+              {rows.map((p) => {
+                const deals = store.deals.filter((d) => d.partnerId === p.id)
+                const open = deals.filter((d) => OPEN_STAGES.includes(d.stage)).reduce((sum, d) => sum + (d.amount ?? 0), 0)
+                return (
+                  <tr key={p.id} onClick={() => onOpen(p.id)}>
+                    <td className="strong">{p.name || <span className="muted">Без названия</span>}</td>
+                    <td className="nowrap">{labelOf(COMPANY_KINDS, companyKind(p))}</td>
+                    <td className="num">{store.contacts.filter((c) => c.companyId === p.id).length || ''}</td>
+                    <td className="num">{deals.length || ''}</td>
+                    <td className="num">{open ? fmtMoney(open).replace(' ₽', '') : ''}</td>
+                    <td className="nowrap">{memberName(p.ownerId)}</td>
+                    <td>
+                      <ControlBadge c={partnerControl(p, today)} />
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ---------- Контакты ----------
+
+function ContactsTable({ contacts, onOpen, onAdd }: { contacts: Contact[]; onOpen: (id: ID) => void; onAdd: () => void }) {
+  const store = useBoard()
+  return (
+    <div className="crm-page">
+      <div className="crm-toolbar">
+        <span className="muted">Новый контакт, введённый в сделке, появляется здесь сам; выбранный из списка — подставляет телефон и email.</span>
+        <button type="button" className="btn btn-sm crm-add-btn" onClick={onAdd}>
+          + Контакт
+        </button>
+      </div>
+      {contacts.length === 0 ? (
+        <Empty text="Контактов пока нет." />
+      ) : (
+        <div className="crm-table-wrap">
+          <table className="crm-table">
+            <thead>
+              <tr>
+                <th>Имя</th>
+                <th>Должность</th>
+                <th>Компания</th>
+                <th>Телефон</th>
+                <th>Email</th>
+                <th className="num">Сделок</th>
+              </tr>
+            </thead>
+            <tbody>
+              {contacts.map((c) => (
+                <tr key={c.id} onClick={() => onOpen(c.id)}>
+                  <td className="strong">{c.name || <span className="muted">Без имени</span>}</td>
+                  <td>{c.role}</td>
+                  <td>{c.companyId ? store.partner(c.companyId)?.name : ''}</td>
+                  <td className="nowrap">{c.phone}</td>
+                  <td>{c.email}</td>
+                  <td className="num">{store.deals.filter((d) => d.contactId === c.id).length || ''}</td>
                 </tr>
               ))}
             </tbody>
@@ -778,7 +950,7 @@ function TasksList({
             <thead>
               <tr>
                 <th>Дата</th>
-                <th>Сделка / партнёр</th>
+                <th>Сделка / компания</th>
                 <th>Тип</th>
                 <th>Итог / факт</th>
                 <th>Следующее действие</th>
@@ -827,6 +999,14 @@ function TasksList({
 
 // ---------- Правила ----------
 
+/** Что этап требует заполнить. Этапы открытой воронки накопительные — у них только новое. */
+function requiredText(stage: DealStage): string {
+  const i = OPEN_STAGES.indexOf(stage)
+  const prev = i > 1 ? new Set(stageFields(OPEN_STAGES[i - 1])) : null
+  const fields = stageFields(stage).filter((k) => !prev?.has(k))
+  return `${prev ? 'Плюс к прежним этапам' : 'Заполнить'}: ${fields.map((k) => dealFieldLabel(k, stage)).join(', ')}.`
+}
+
 function Rules() {
   return (
     <div className="crm-page crm-rules">
@@ -837,7 +1017,10 @@ function Rules() {
             <li key={s.key}>
               <span className="crm-stage-dot" style={{ background: s.color }} />
               <b>{s.label}</b>
-              <span>{s.criterion}</span>
+              <span>
+                {s.criterion}
+                <span className="crm-rules-req">{requiredText(s.key)}</span>
+              </span>
             </li>
           ))}
         </ul>
