@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-20T19:33:21.078Z",
+  "generatedAt": "2026-10-20T19:33:28.766Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -4101,7 +4101,7 @@
       "title": "Забрать подушки из студии Ваке. Для стирки",
       "date": "2026-10-25",
       "start": "14:00",
-      "durationMin": 90,
+      "durationMin": 60,
       "priorityColor": "#eab308",
       "members": [
         {
@@ -4115,7 +4115,7 @@
       "id": "8d605497-1d81-4426-ade9-bb32e7f68730",
       "title": "Починить неоновую ленту в студии Ваке.",
       "date": "2026-10-25",
-      "start": "15:30",
+      "start": "15:00",
       "durationMin": 30,
       "priorityColor": "#ef4444",
       "members": [
