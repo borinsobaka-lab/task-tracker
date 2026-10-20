@@ -234,7 +234,7 @@
      «Все» за край полосы проектов */
   .app-header .project-tab-none {
     padding: 0;
-    width: 30px;
+    width: 26px;
   }
   .project-tab-none-icon {
     display: inline;
@@ -403,7 +403,12 @@
   box-shadow: none;
 }
 /* «Без проекта» — фильтр, как и логотипы проектов: выбранный обводится той же
-   зелёной рамкой (у «Все» рамки нет — это сброс фильтра, а не выбор) */
+   зелёной рамкой (у «Все» рамки нет — это сброс фильтра, а не выбор). Высота —
+   как у логотипа (26px), чтобы рамки в шапке были одного размера. */
+.app-header .project-tab-none {
+  height: 26px;
+  border-radius: 7px;
+}
 .app-header .project-tab-none.active {
   box-shadow: 0 0 0 2px var(--hdr-bg), 0 0 0 4px var(--accent);
 }
