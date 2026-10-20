@@ -698,8 +698,12 @@
   .modal-overlay > .modal.cm {
     overflow: hidden; /* у карточки задачи свой внутренний скролл (cm-body) */
   }
-  .modal-overlay > .modal.cm.cm-wide {
+  .modal-overlay > .modal.cm.cm-wide,
+  .modal-overlay > .modal.crm-deal-modal {
     max-width: none;
+  }
+  .modal-overlay > .modal.crm-deal-modal {
+    overflow: hidden; /* у карточки сделки свой внутренний скролл (crm-deal-body) */
   }
   .sheet-grabber {
     display: flex;

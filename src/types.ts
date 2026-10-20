@@ -45,7 +45,7 @@ export interface Attachment {
   h?: number
 }
 
-/** Комментарий к задаче. HTML из редактора (санитизируется при выводе). */
+/** Комментарий к задаче или сделке. HTML из редактора (санитизируется при выводе). */
 export interface Comment {
   id: ID
   /** Автор — id участника. Может отсутствовать, если участник неизвестен. */
@@ -293,6 +293,8 @@ export interface Deal {
   basis?: string
   quality?: DataQuality
   partnerId?: ID
+  /** Обсуждение сделки — как комментарии к задаче */
+  comments?: Comment[]
   createdBy?: ID
   deleted?: boolean
   createdAt: string

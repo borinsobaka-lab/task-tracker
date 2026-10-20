@@ -1,6 +1,7 @@
-// Окна CRM: карточка сделки (все поля листа «Сделки» + её история и задачи),
-// карточка партнёра и редактор записи «Задачи и история». Сделка и партнёр
-// сохраняются по ходу ввода; запись истории — кнопкой «Сохранить».
+// Окна CRM: карточка сделки (все поля листа «Сделки» на подложках по смыслу,
+// её история и задачи, справа — комментарии), карточка партнёра и редактор записи
+// «Задачи и история». Сделка и партнёр сохраняются по ходу ввода; запись истории —
+// кнопкой «Сохранить».
 
 import { useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
@@ -30,6 +31,7 @@ import {
 import type { Control } from '../crm'
 import { toDateKey } from '../utils'
 import { SheetGrabber } from './SheetGrabber'
+import { DealCommentsPanel } from './Comments'
 import { IcoX } from '../icons'
 
 export const todayKey = (): string => toDateKey(new Date())
@@ -45,9 +47,10 @@ export function ControlBadge({ c, title }: { c: Control | null; title?: string }
   )
 }
 
-function Field({ label, wide, children }: { label: string; wide?: boolean; children: ReactNode }) {
+/** span — ширина в колонках шестиколоночной сетки (.crm-grid-6): 2 — треть, 3 — половина, 4 — две трети */
+function Field({ label, wide, span, children }: { label: string; wide?: boolean; span?: 2 | 3 | 4; children: ReactNode }) {
   return (
-    <label className={'crm-field' + (wide ? ' wide' : '')}>
+    <label className={'crm-field' + (wide ? ' wide' : '') + (span ? ` s${span}` : '')}>
       <span className="crm-field-label">{label}</span>
       {children}
     </label>
@@ -149,6 +152,20 @@ function ModalShell({ onClose, className, children }: { onClose: () => void; cla
   )
 }
 
+/** Подложка с группой полей */
+function Panel({ title, hint, accent, action, children }: { title: string; hint?: ReactNode; accent?: boolean; action?: ReactNode; children: ReactNode }) {
+  return (
+    <section className={'crm-section' + (accent ? ' accent' : '')}>
+      <div className="crm-section-head">
+        <h4>{title}</h4>
+        {hint && <span className="crm-section-hint">{hint}</span>}
+        {action}
+      </div>
+      {children}
+    </section>
+  )
+}
+
 function Head({ title, sub, onClose, children }: { title: string; sub?: string; onClose: () => void; children?: ReactNode }) {
   return (
     <header className="crm-modal-head">
@@ -230,6 +247,9 @@ export function DealModal({
     }
   }
 
+  const hasProjects = store.projects.length > 0
+  const left = deal.orderAmount !== undefined && deal.paidTotal !== undefined ? deal.orderAmount - deal.paidTotal : undefined
+
   return (
     <ModalShell onClose={onClose} className="crm-deal-modal">
       <Head title={deal.company || 'Новая сделка'} sub={[deal.code, deal.event].filter(Boolean).join(' · ') || 'Сделка'} onClose={onClose}>
@@ -249,155 +269,165 @@ export function DealModal({
         </select>
       </Head>
 
-      <div className="crm-modal-body">
-        <div className="crm-controls">
-          <ControlBadge c={stepControl(deal, today)} title="Контроль шага" />
-          <ControlBadge c={decisionControl(deal, today)} title="Контроль решения" />
-          {issue ? <ControlBadge c={{ label: issue, tone: 'warn' }} title="Контроль записи" /> : <ControlBadge c={{ label: 'Запись в порядке', tone: 'ok' }} title="Контроль записи" />}
-          <span className="crm-criterion muted">{stage.criterion}</span>
-        </div>
+      <div className="crm-deal-body">
+        <div className="crm-modal-body crm-deal-main">
+          <div className="crm-controls">
+            <ControlBadge c={stepControl(deal, today)} title="Контроль шага" />
+            <ControlBadge c={decisionControl(deal, today)} title="Контроль решения" />
+            {issue ? <ControlBadge c={{ label: issue, tone: 'warn' }} title="Контроль записи" /> : <ControlBadge c={{ label: 'Запись в порядке', tone: 'ok' }} title="Контроль записи" />}
+            <span className="crm-criterion muted">{stage.criterion}</span>
+          </div>
 
-        <section className="crm-section">
-          <h4>Сделка</h4>
-          <div className="crm-grid">
-            <Field label="Компания / агентство">
-              <TextIn value={deal.company} onChange={(v) => set({ company: v })} placeholder="Например: МТС" />
-            </Field>
-            <Field label="Мероприятие">
-              <TextIn value={deal.event} onChange={(v) => set({ event: v })} placeholder="Конференция 27.11.26" />
-            </Field>
-            <Field label="ID сделки">
-              <TextIn value={deal.code} onChange={(v) => set({ code: v })} placeholder="А-1-10.26" />
-            </Field>
-            <Field label="Сумма предложения, ₽">
-              <MoneyIn value={deal.amount} onChange={(v) => set({ amount: v })} />
-            </Field>
-            <Field label="Ответственный">
-              <MemberIn value={deal.ownerId} onChange={(v) => set({ ownerId: v })} />
-            </Field>
-            {store.projects.length > 0 && (
-              <Field label="Проект">
-                <ProjectIn value={deal.projectId} onChange={(v) => set({ projectId: v })} />
+          <Panel title="Сделка">
+            <div className="crm-grid crm-grid-6">
+              <Field label="Компания / агентство" span={3}>
+                <TextIn value={deal.company} onChange={(v) => set({ company: v })} placeholder="Например: МТС" />
               </Field>
-            )}
-            <Field label="Источник лида">
-              <SelectIn value={deal.source} onChange={(v) => set({ source: v })} options={LEAD_SOURCES} />
-            </Field>
-            <Field label="Партнёр">
-              <SelectIn
-                value={deal.partnerId}
-                onChange={(v) => set({ partnerId: v })}
-                options={store.partners.map((p) => ({ key: p.id, label: p.name || 'Без названия' }))}
-                empty="Без партнёра"
-              />
-            </Field>
-          </div>
-        </section>
+              <Field label="Мероприятие" span={3}>
+                <TextIn value={deal.event} onChange={(v) => set({ event: v })} placeholder="Конференция 27.11.26" />
+              </Field>
+              <Field label="ID сделки" span={2}>
+                <TextIn value={deal.code} onChange={(v) => set({ code: v })} placeholder="А-1-10.26" />
+              </Field>
+              <Field label="Сумма предложения, ₽" span={2}>
+                <MoneyIn value={deal.amount} onChange={(v) => set({ amount: v })} />
+              </Field>
+              <Field label="Ответственный" span={2}>
+                <MemberIn value={deal.ownerId} onChange={(v) => set({ ownerId: v })} />
+              </Field>
+              {hasProjects && (
+                <Field label="Проект" span={2}>
+                  <ProjectIn value={deal.projectId} onChange={(v) => set({ projectId: v })} />
+                </Field>
+              )}
+              <Field label="Источник лида" span={hasProjects ? 2 : 3}>
+                <SelectIn value={deal.source} onChange={(v) => set({ source: v })} options={LEAD_SOURCES} />
+              </Field>
+              <Field label="Партнёр" span={hasProjects ? 2 : 3}>
+                <SelectIn
+                  value={deal.partnerId}
+                  onChange={(v) => set({ partnerId: v })}
+                  options={store.partners.map((p) => ({ key: p.id, label: p.name || 'Без названия' }))}
+                  empty="Без партнёра"
+                />
+              </Field>
+            </div>
+          </Panel>
 
-        <section className="crm-section">
-          <h4>Следующий шаг</h4>
-          <div className="crm-grid">
-            <Field label="Следующий шаг" wide>
-              <TextIn value={deal.nextStep} onChange={(v) => set({ nextStep: v })} placeholder="Согласовать условия" />
-            </Field>
-            <Field label={deal.stage === 'paused' ? 'Дата возврата' : 'Срок шага'}>
-              <DateIn value={deal.nextStepDate} onChange={(v) => set({ nextStepDate: v })} />
-            </Field>
-            <Field label="Решение клиента до">
-              <DateIn value={deal.decisionDate} onChange={(v) => set({ decisionDate: v })} />
-            </Field>
-            <Field label="Последний контакт">
-              <DateIn value={deal.lastContactDate} onChange={(v) => set({ lastContactDate: v })} />
-            </Field>
-            <Field label="Блокер / нужное решение руководителя">
-              <TextIn value={deal.blocker} onChange={(v) => set({ blocker: v })} placeholder="нет" />
-            </Field>
-            <Field label="Подтверждённый итог" wide>
-              <TextIn value={deal.outcome} onChange={(v) => set({ outcome: v })} placeholder="Что точно известно после последнего контакта" multiline />
-            </Field>
-          </div>
-        </section>
+          <Panel title="Следующий шаг" accent>
+            <div className="crm-grid crm-grid-6">
+              <Field label="Что делаем дальше" wide>
+                <TextIn value={deal.nextStep} onChange={(v) => set({ nextStep: v })} placeholder="Согласовать условия" />
+              </Field>
+              <Field label={deal.stage === 'paused' ? 'Дата возврата' : 'Срок шага'} span={2}>
+                <DateIn value={deal.nextStepDate} onChange={(v) => set({ nextStepDate: v })} />
+              </Field>
+              <Field label="Решение клиента до" span={2}>
+                <DateIn value={deal.decisionDate} onChange={(v) => set({ decisionDate: v })} />
+              </Field>
+              <Field label="Последний контакт" span={2}>
+                <DateIn value={deal.lastContactDate} onChange={(v) => set({ lastContactDate: v })} />
+              </Field>
+              <Field label="Подтверждённый итог" span={3}>
+                <TextIn value={deal.outcome} onChange={(v) => set({ outcome: v })} placeholder="Что точно известно после последнего контакта" multiline />
+              </Field>
+              <Field label="Блокер / нужное решение руководителя" span={3}>
+                <TextIn value={deal.blocker} onChange={(v) => set({ blocker: v })} placeholder="нет" multiline />
+              </Field>
+            </div>
+          </Panel>
 
-        <section className="crm-section">
-          <h4>Клиент и мероприятие</h4>
-          <div className="crm-grid">
-            <Field label="Контактное лицо / роль">
-              <TextIn value={deal.contactName} onChange={(v) => set({ contactName: v })} />
-            </Field>
-            <Field label="Телефон / email">
-              <TextIn value={deal.contactInfo} onChange={(v) => set({ contactInfo: v })} multiline />
-            </Field>
-            <Field label="Дата мероприятия">
-              <DateIn value={deal.eventDate} onChange={(v) => set({ eventDate: v })} />
-            </Field>
-            <Field label="Участники, чел.">
-              <TextIn value={deal.attendees} onChange={(v) => set({ attendees: v })} placeholder="до 1000" />
-            </Field>
-            <Field label="Потребность / модули" wide>
-              <TextIn value={deal.needs} onChange={(v) => set({ needs: v })} multiline />
-            </Field>
-          </div>
-        </section>
+          <Panel title="Клиент и мероприятие">
+            <div className="crm-grid crm-grid-6">
+              <Field label="Контактное лицо / роль" span={3}>
+                <TextIn value={deal.contactName} onChange={(v) => set({ contactName: v })} placeholder="Имя, должность" />
+              </Field>
+              <Field label="Телефон / email" span={3}>
+                <TextIn value={deal.contactInfo} onChange={(v) => set({ contactInfo: v })} placeholder="+7 … / mail@…" multiline />
+              </Field>
+              <Field label="Дата мероприятия" span={3}>
+                <DateIn value={deal.eventDate} onChange={(v) => set({ eventDate: v })} />
+              </Field>
+              <Field label="Участники, чел." span={3}>
+                <TextIn value={deal.attendees} onChange={(v) => set({ attendees: v })} placeholder="до 1000" />
+              </Field>
+              <Field label="Потребность / модули" wide>
+                <TextIn value={deal.needs} onChange={(v) => set({ needs: v })} placeholder="Что нужно клиенту" multiline />
+              </Field>
+            </div>
+          </Panel>
 
-        <section className="crm-section">
-          <h4>КП, договор и оплата</h4>
-          <div className="crm-grid">
-            <Field label="КП: ссылка и версия">
-              <TextIn value={deal.proposalLink} onChange={(v) => set({ proposalLink: v })} placeholder="https://… v2" />
-            </Field>
-            <Field label="Дата отправки КП">
-              <DateIn value={deal.proposalDate} onChange={(v) => set({ proposalDate: v })} />
-            </Field>
-            <Field label="Статус договора">
-              <SelectIn value={deal.contractStatus} onChange={(v) => set({ contractStatus: v })} options={CONTRACT_STATUSES} />
-            </Field>
-            <Field label="Сумма заказа, ₽">
-              <MoneyIn value={deal.orderAmount} onChange={(v) => set({ orderAmount: v })} />
-            </Field>
-            <Field label="Дата выигрыша / проигрыша">
-              <DateIn value={deal.closedDate} onChange={(v) => set({ closedDate: v })} />
-            </Field>
-            <Field label="Статус оплаты">
-              <SelectIn value={deal.paymentStatus} onChange={(v) => set({ paymentStatus: v })} options={PAYMENT_STATUSES} />
-            </Field>
-            <Field label="Получено всего, ₽">
-              <MoneyIn value={deal.paidTotal} onChange={(v) => set({ paidTotal: v })} />
-            </Field>
-            <Field label="Дата последней оплаты">
-              <DateIn value={deal.lastPaymentDate} onChange={(v) => set({ lastPaymentDate: v })} />
-            </Field>
-            <Field label="Причина проигрыша / паузы" wide>
-              <TextIn value={deal.lossReason} onChange={(v) => set({ lossReason: v })} />
-            </Field>
-            <Field label="Основание / ссылка">
-              <TextIn value={deal.basis} onChange={(v) => set({ basis: v })} placeholder="Договор, письмо, ссылка" />
-            </Field>
-            <Field label="Актуальность данных">
-              <SelectIn value={deal.quality} onChange={(v) => set({ quality: v })} options={QUALITY} empty="Не проверено" />
-            </Field>
-          </div>
-        </section>
+          <Panel title="КП и договор">
+            <div className="crm-grid crm-grid-6">
+              <Field label="КП: ссылка и версия" span={4}>
+                <TextIn value={deal.proposalLink} onChange={(v) => set({ proposalLink: v })} placeholder="https://… v2" />
+              </Field>
+              <Field label="Дата отправки КП" span={2}>
+                <DateIn value={deal.proposalDate} onChange={(v) => set({ proposalDate: v })} />
+              </Field>
+              <Field label="Статус договора" span={2}>
+                <SelectIn value={deal.contractStatus} onChange={(v) => set({ contractStatus: v })} options={CONTRACT_STATUSES} />
+              </Field>
+              <Field label="Сумма заказа, ₽" span={2}>
+                <MoneyIn value={deal.orderAmount} onChange={(v) => set({ orderAmount: v })} />
+              </Field>
+              <Field label="Дата выигрыша / проигрыша" span={2}>
+                <DateIn value={deal.closedDate} onChange={(v) => set({ closedDate: v })} />
+              </Field>
+            </div>
+          </Panel>
 
-        <section className="crm-section">
-          <div className="crm-section-head">
-            <h4>Задачи и история</h4>
-            <button
-              type="button"
-              className="btn btn-sm"
-              onClick={() => onNewRecord({ dealId: deal.id, type: 'call', status: 'done', ownerId: deal.ownerId ?? store.identity?.id })}
-            >
-              + Запись
+          <Panel title="Оплата" hint={left !== undefined && left > 0 ? `Осталось получить ${fmtMoney(left)}` : undefined}>
+            <div className="crm-grid crm-grid-6">
+              <Field label="Статус оплаты" span={2}>
+                <SelectIn value={deal.paymentStatus} onChange={(v) => set({ paymentStatus: v })} options={PAYMENT_STATUSES} />
+              </Field>
+              <Field label="Получено всего, ₽" span={2}>
+                <MoneyIn value={deal.paidTotal} onChange={(v) => set({ paidTotal: v })} />
+              </Field>
+              <Field label="Дата последней оплаты" span={2}>
+                <DateIn value={deal.lastPaymentDate} onChange={(v) => set({ lastPaymentDate: v })} />
+              </Field>
+            </div>
+          </Panel>
+
+          <Panel title="Итог и проверка данных">
+            <div className="crm-grid crm-grid-6">
+              <Field label="Причина проигрыша / паузы" wide>
+                <TextIn value={deal.lossReason} onChange={(v) => set({ lossReason: v })} placeholder="Заполняется, если сделка проиграна или на паузе" />
+              </Field>
+              <Field label="Основание / ссылка" span={4}>
+                <TextIn value={deal.basis} onChange={(v) => set({ basis: v })} placeholder="Договор, письмо, ссылка" />
+              </Field>
+              <Field label="Актуальность данных" span={2}>
+                <SelectIn value={deal.quality} onChange={(v) => set({ quality: v })} options={QUALITY} empty="Не проверено" />
+              </Field>
+            </div>
+          </Panel>
+
+          <Panel
+            title="Задачи и история"
+            action={
+              <button
+                type="button"
+                className="btn btn-sm"
+                onClick={() => onNewRecord({ dealId: deal.id, type: 'call', status: 'done', ownerId: deal.ownerId ?? store.identity?.id })}
+              >
+                + Запись
+              </button>
+            }
+          >
+            <HistoryList records={records} onOpen={onOpenRecord} />
+          </Panel>
+
+          <div className="crm-modal-foot">
+            <button type="button" className="btn btn-danger" onClick={remove}>
+              Удалить сделку
             </button>
+            <span className="muted">Изменения сохраняются сами</span>
           </div>
-          <HistoryList records={records} onOpen={onOpenRecord} />
-        </section>
-
-        <div className="crm-modal-foot">
-          <button type="button" className="btn btn-danger" onClick={remove}>
-            Удалить сделку
-          </button>
-          <span className="muted">Изменения сохраняются сами</span>
         </div>
+        <DealCommentsPanel deal={deal} />
       </div>
     </ModalShell>
   )
@@ -442,7 +472,7 @@ export function PartnerModal({
       </Head>
       <div className="crm-modal-body">
         <p className="muted crm-hint">Партнёрство не увеличивает сумму воронки. Коммерческие проекты заводите сделками со ссылкой на партнёра.</p>
-        <section className="crm-section">
+        <Panel title="Партнёр">
           <div className="crm-grid">
             <Field label="Компания / партнёр">
               <TextIn value={p.name} onChange={(v) => set({ name: v })} />
@@ -467,10 +497,12 @@ export function PartnerModal({
                 <ProjectIn value={p.projectId} onChange={(v) => set({ projectId: v })} />
               </Field>
             )}
-            <Field label="Подтверждённые договорённости" wide>
-              <TextIn value={p.agreements} onChange={(v) => set({ agreements: v })} multiline />
-            </Field>
-            <Field label="Следующий шаг" wide>
+          </div>
+        </Panel>
+
+        <Panel title="Следующий шаг" accent>
+          <div className="crm-grid">
+            <Field label="Что делаем дальше" wide>
               <TextIn value={p.nextStep} onChange={(v) => set({ nextStep: v })} />
             </Field>
             <Field label="Срок шага">
@@ -479,8 +511,16 @@ export function PartnerModal({
             <Field label="Последний контакт">
               <DateIn value={p.lastContactDate} onChange={(v) => set({ lastContactDate: v })} />
             </Field>
-            <Field label="Блокер / решение">
+            <Field label="Блокер / решение" wide>
               <TextIn value={p.blocker} onChange={(v) => set({ blocker: v })} />
+            </Field>
+          </div>
+        </Panel>
+
+        <Panel title="Договорённости и проверка данных">
+          <div className="crm-grid">
+            <Field label="Подтверждённые договорённости" wide>
+              <TextIn value={p.agreements} onChange={(v) => set({ agreements: v })} multiline />
             </Field>
             <Field label="Основание / ссылка">
               <TextIn value={p.basis} onChange={(v) => set({ basis: v })} />
@@ -489,10 +529,9 @@ export function PartnerModal({
               <SelectIn value={p.quality} onChange={(v) => set({ quality: v })} options={QUALITY} empty="Не проверено" />
             </Field>
           </div>
-        </section>
+        </Panel>
 
-        <section className="crm-section">
-          <h4>Сделки партнёра</h4>
+        <Panel title="Сделки партнёра">
           {deals.length === 0 ? (
             <div className="muted crm-empty-line">Сделок с этим партнёром пока нет — выберите его в поле «Партнёр» у сделки.</div>
           ) : (
@@ -511,17 +550,18 @@ export function PartnerModal({
               ))}
             </ul>
           )}
-        </section>
+        </Panel>
 
-        <section className="crm-section">
-          <div className="crm-section-head">
-            <h4>Задачи и история</h4>
+        <Panel
+          title="Задачи и история"
+          action={
             <button type="button" className="btn btn-sm" onClick={() => onNewRecord({ partnerId: p.id, type: 'call', status: 'done', ownerId: p.ownerId ?? store.identity?.id })}>
               + Запись
             </button>
-          </div>
+          }
+        >
           <HistoryList records={records} onOpen={onOpenRecord} />
-        </section>
+        </Panel>
 
         <div className="crm-modal-foot">
           <button type="button" className="btn btn-danger" onClick={remove}>

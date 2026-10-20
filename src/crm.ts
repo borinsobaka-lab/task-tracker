@@ -321,7 +321,8 @@ export function isEmptyDeal(d: Deal): boolean {
     d.amount === undefined &&
     !d.nextStep?.trim() &&
     !d.contactName?.trim() &&
-    !d.contactInfo?.trim()
+    !d.contactInfo?.trim() &&
+    !d.comments?.some((c) => !c.deleted)
   )
 }
 

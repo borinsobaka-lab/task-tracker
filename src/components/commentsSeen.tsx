@@ -4,7 +4,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
-import type { Card, Comment, ID } from '../types'
+import type { Comment, ID } from '../types'
 import { getCommentsSeen, setCommentsSeen } from '../config'
 import { nowISO } from '../utils'
 
@@ -35,15 +35,18 @@ export function CommentsSeenProvider({ children }: { children: ReactNode }) {
   return <CommentsSeenContext.Provider value={value}>{children}</CommentsSeenContext.Provider>
 }
 
-// ---------- Помощники для бейджа на доске ----------
+// ---------- Помощники для бейджа (задача на доске, сделка в воронке) ----------
 
-export function liveComments(card: Card): Comment[] {
-  return card.comments ? card.comments.filter((c) => !c.deleted) : []
+/** У чего есть комментарии: задача или сделка */
+type Commented = { comments?: Comment[] }
+
+export function liveComments(item: Commented): Comment[] {
+  return item.comments ? item.comments.filter((c) => !c.deleted) : []
 }
 
-export function hasUnseenComments(card: Card, myId: ID | null, seenAt: string | null): boolean {
-  if (!card.comments) return false
-  return card.comments.some(
+export function hasUnseenComments(item: Commented, myId: ID | null, seenAt: string | null): boolean {
+  if (!item.comments) return false
+  return item.comments.some(
     (c) => !c.deleted && c.authorId !== myId && (!seenAt || c.createdAt > seenAt),
   )
 }

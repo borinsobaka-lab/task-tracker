@@ -1,11 +1,11 @@
-// Комментарии к задаче: панель со списком (автор, аватар, дата-время, текст с
+// Комментарии к задаче и к сделке: панель со списком (автор, аватар, дата-время, текст с
 // форматированием), формой добавления и правкой/удалением своих. Контекст
 // «прочитанного» — в commentsSeen.tsx.
 
 import { useEffect, useMemo, useState } from 'react'
 import { EditorContent, useEditor } from '@tiptap/react'
 import { useBoard } from '../store'
-import type { Card, Comment, Member } from '../types'
+import type { Card, Comment, Deal, ID, Member } from '../types'
 import { fmtDateTime, initials } from '../utils'
 import { sanitizeCommentHtml } from '../richText'
 import { Avatar } from './Avatar'
@@ -15,36 +15,84 @@ import { liveComments, useCommentsSeen } from './commentsSeen'
 
 // ---------- Панель комментариев ----------
 
+/** Что умеет делать с комментариями хозяин списка (задача или сделка) */
+interface CommentsApi {
+  add: (html: string) => void
+  update: (commentId: ID, html: string) => void
+  remove: (commentId: ID) => void
+}
+
 export function CommentsPanel({ card }: { card: Card }) {
+  const store = useBoard()
+  return (
+    <CommentsThread
+      ownerId={card.id}
+      comments={card.comments}
+      api={{
+        add: (html) => store.addComment(card.id, html),
+        update: (id, html) => store.updateComment(card.id, id, html),
+        remove: (id) => store.removeComment(card.id, id),
+      }}
+    />
+  )
+}
+
+export function DealCommentsPanel({ deal }: { deal: Deal }) {
+  const store = useBoard()
+  return (
+    <CommentsThread
+      ownerId={deal.id}
+      comments={deal.comments}
+      placeholder="Пока нет комментариев. Обсудите сделку здесь."
+      api={{
+        add: (html) => store.addDealComment(deal.id, html),
+        update: (id, html) => store.updateDealComment(deal.id, id, html),
+        remove: (id) => store.removeDealComment(deal.id, id),
+      }}
+    />
+  )
+}
+
+function CommentsThread({
+  ownerId,
+  comments: all,
+  api,
+  placeholder = 'Пока нет комментариев. Напишите первый.',
+}: {
+  ownerId: ID
+  comments: Comment[] | undefined
+  api: CommentsApi
+  placeholder?: string
+}) {
   const store = useBoard()
   const { markSeen } = useCommentsSeen()
   const myId = store.identity?.id ?? null
 
   const comments = useMemo(
-    () => liveComments(card).sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
-    [card],
+    () => liveComments({ comments: all }).sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
+    [all],
   )
 
   // Открыли панель / появились новые комментарии — считаем прочитанными здесь
   useEffect(() => {
-    markSeen(card.id)
-  }, [card.id, card.comments, markSeen])
+    markSeen(ownerId)
+  }, [ownerId, all, markSeen])
 
   return (
     <aside className="cm-comments">
       <div className="cm-comments-head">
         <span className="field-label"><span className="inline-ico" aria-hidden><IcoComment size={14} /></span>Комментарии{comments.length ? ` · ${comments.length}` : ''}</span>
       </div>
-      <CommentComposer onSubmit={(html) => store.addComment(card.id, html)} />
+      <CommentComposer onSubmit={api.add} />
       <div className="comment-list">
         {comments.length === 0 ? (
-          <div className="muted comment-empty">Пока нет комментариев. Напишите первый.</div>
+          <div className="muted comment-empty">{placeholder}</div>
         ) : (
           comments.map((c) => (
             <CommentItem
               key={c.id}
-              card={card}
               comment={c}
+              api={api}
               members={store.members}
               isMine={!!myId && c.authorId === myId}
             />
@@ -58,24 +106,23 @@ export function CommentsPanel({ card }: { card: Card }) {
 // ---------- Один комментарий ----------
 
 function CommentItem({
-  card,
   comment,
+  api,
   members,
   isMine,
 }: {
-  card: Card
   comment: Comment
+  api: CommentsApi
   members: Member[]
   isMine: boolean
 }) {
-  const store = useBoard()
   const [editing, setEditing] = useState(false)
   const author = comment.authorId ? members.find((m) => m.id === comment.authorId) : undefined
   const html = useMemo(() => sanitizeCommentHtml(comment.html), [comment.html])
   const when = fmtDateTime(new Date(comment.createdAt))
 
   const remove = () => {
-    if (confirm('Удалить комментарий?')) store.removeComment(card.id, comment.id)
+    if (confirm('Удалить комментарий?')) api.remove(comment.id)
   }
 
   return (
@@ -103,7 +150,7 @@ function CommentItem({
             submitLabel="Сохранить"
             autoFocus
             onSubmit={(h) => {
-              store.updateComment(card.id, comment.id, h)
+              api.update(comment.id, h)
               setEditing(false)
             }}
             onCancel={() => setEditing(false)}
