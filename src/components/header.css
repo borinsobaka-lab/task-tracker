@@ -402,6 +402,11 @@
   font-weight: 700;
   box-shadow: none;
 }
+/* «Без проекта» — фильтр, как и логотипы проектов: выбранный обводится той же
+   зелёной рамкой (у «Все» рамки нет — это сброс фильтра, а не выбор) */
+.app-header .project-tab-none.active {
+  box-shadow: 0 0 0 2px var(--hdr-bg), 0 0 0 4px var(--accent);
+}
 
 /* Поиск — тёмно-серое поле */
 .app-header .header-search-input {
