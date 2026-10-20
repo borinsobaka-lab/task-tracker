@@ -286,6 +286,10 @@
   padding: 3px 6px;
   font-size: 12.5px;
 }
+select.settings-sleep-select:not([multiple]) {
+  padding-right: 26px;
+  background-position: right 9px center;
+}
 
 @media (max-width: 560px) {
   .settings-member-row2 {

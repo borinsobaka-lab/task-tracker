@@ -710,6 +710,10 @@ export interface BoardStore {
   updateDeal(id: ID, patch: Partial<Omit<Deal, 'id' | 'createdAt' | 'updatedAt'>>): void
   /** Удалить сделку (надгробие) вместе с её историей */
   deleteDeal(id: ID): void
+  /** Комментарии к сделке — как у задач: писать может любой, править и удалять — только свои */
+  addDealComment(dealId: ID, html: string): void
+  updateDealComment(dealId: ID, commentId: ID, html: string): void
+  removeDealComment(dealId: ID, commentId: ID): void
   /** Живые записи «Задачи и история», видимые участнику (новые выше) */
   crmRecords: CrmRecord[]
   addCrmRecord(init: Partial<Omit<CrmRecord, 'id' | 'createdAt' | 'updatedAt'>>): ID
@@ -804,6 +808,46 @@ function crmOf(d: BoardData): CrmData {
 
 /** Обязательные текстовые поля сущностей CRM: их не удаляем, а держим пустой строкой */
 const CRM_REQUIRED = new Set(['company', 'name'])
+
+/** Комментарий от текущего участника — в конец списка (задачи или сделки). */
+function pushComment(target: { comments?: Comment[] }, html: string, identity: Member | null): void {
+  const ts = nowISO()
+  const comment: Comment = {
+    id: uid(),
+    ...(identity ? { authorId: identity.id } : {}),
+    authorName: identity?.name ?? 'Аноним',
+    html,
+    createdAt: ts,
+    updatedAt: ts,
+  }
+  if (!target.comments) target.comments = []
+  target.comments.push(comment)
+}
+
+/** Правка своего комментария. true — что-то изменилось. */
+function editComment(target: { comments?: Comment[] }, commentId: ID, html: string, identity: Member | null): boolean {
+  const c = target.comments?.find((x) => x.id === commentId)
+  if (!c || c.deleted) return false
+  // Редактировать можно только свои комментарии
+  if (identity && c.authorId && c.authorId !== identity.id) return false
+  const ts = nowISO()
+  c.html = html
+  c.updatedAt = ts
+  c.editedAt = ts
+  return true
+}
+
+/** Удаление своего комментария (надгробие). true — что-то изменилось. */
+function dropComment(target: { comments?: Comment[] }, commentId: ID, identity: Member | null): boolean {
+  const c = target.comments?.find((x) => x.id === commentId)
+  if (!c || c.deleted) return false
+  if (identity && c.authorId && c.authorId !== identity.id) return false
+  // Надгробие: сохраняем факт удаления для синхронизации, содержимое стираем
+  c.deleted = true
+  c.html = ''
+  c.updatedAt = nowISO()
+  return true
+}
 
 /** Применить патч к сущности CRM: пустое значение удаляет поле (JSON не раздувается).
  *  Возвращает, изменилось ли что-нибудь. */
@@ -1429,45 +1473,18 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
       engine.update((d) => {
         const card = d.cards[cardId]
         if (!card || card.deleted) return
-        const ts = nowISO()
-        const comment: Comment = {
-          id: uid(),
-          ...(identity ? { authorId: identity.id } : {}),
-          authorName: identity?.name ?? 'Аноним',
-          html,
-          createdAt: ts,
-          updatedAt: ts,
-        }
-        if (!card.comments) card.comments = []
-        card.comments.push(comment)
+        pushComment(card, html, identity)
         touch(card)
       }),
     updateComment: (cardId, commentId, html) =>
       engine.update((d) => {
         const card = d.cards[cardId]
-        if (!card || card.deleted || !card.comments) return
-        const c = card.comments.find((x) => x.id === commentId)
-        if (!c || c.deleted) return
-        // Редактировать можно только свои комментарии
-        if (identity && c.authorId && c.authorId !== identity.id) return
-        const ts = nowISO()
-        c.html = html
-        c.updatedAt = ts
-        c.editedAt = ts
-        touch(card)
+        if (card && !card.deleted && editComment(card, commentId, html, identity)) touch(card)
       }),
     removeComment: (cardId, commentId) =>
       engine.update((d) => {
         const card = d.cards[cardId]
-        if (!card || card.deleted || !card.comments) return
-        const c = card.comments.find((x) => x.id === commentId)
-        if (!c || c.deleted) return
-        if (identity && c.authorId && c.authorId !== identity.id) return
-        // Надгробие: сохраняем факт удаления для синхронизации, содержимое стираем
-        c.deleted = true
-        c.html = ''
-        c.updatedAt = nowISO()
-        touch(card)
+        if (card && !card.deleted && dropComment(card, commentId, identity)) touch(card)
       }),
 
     scheduleCard: (id, date, start, durationMin) =>
@@ -1754,6 +1771,23 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
             touch(r)
           }
         }
+      }),
+    addDealComment: (dealId, html) =>
+      engine.update((d) => {
+        const deal = d.crm?.deals?.[dealId]
+        if (!deal || deal.deleted) return
+        pushComment(deal, html, identity)
+        touch(deal)
+      }),
+    updateDealComment: (dealId, commentId, html) =>
+      engine.update((d) => {
+        const deal = d.crm?.deals?.[dealId]
+        if (deal && !deal.deleted && editComment(deal, commentId, html, identity)) touch(deal)
+      }),
+    removeDealComment: (dealId, commentId) =>
+      engine.update((d) => {
+        const deal = d.crm?.deals?.[dealId]
+        if (deal && !deal.deleted && dropComment(deal, commentId, identity)) touch(deal)
       }),
 
     crmRecords: Object.values(crm?.records ?? {})

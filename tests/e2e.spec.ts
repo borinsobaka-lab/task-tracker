@@ -1006,6 +1006,37 @@ test('CRM: сделка, смена этапа пишет историю, ста
   await expect.poll(async () => Object.values((await savedBoard(page)).crm?.records ?? {}).length).toBe(1)
 })
 
+test('CRM: комментарии к сделке — пишем, видим на плитке, сохраняются', async ({ page }) => {
+  await createIdentity(page, 'Роман')
+  await page.locator('.view-tabs button', { hasText: 'CRM' }).click()
+  await page.getByRole('button', { name: 'Добавить сделку' }).click()
+
+  const modal = page.locator('.crm-deal-modal')
+  await modal.getByLabel('Компания / агентство').fill('Премьер')
+  // Справа от полей — панель комментариев, как у задачи
+  await expect(modal.locator('.cm-comments')).toBeVisible()
+  await expect(modal.locator('.comment-empty')).toBeVisible()
+  await modal.locator('.comment-composer .ProseMirror').click()
+  await page.keyboard.type('Клиент просит скидку')
+  await modal.locator('.comment-composer').getByRole('button', { name: 'Отправить' }).click()
+  const item = modal.locator('.comment', { hasText: 'Клиент просит скидку' })
+  await expect(item.locator('.comment-author')).toHaveText('Роман')
+
+  await page.keyboard.press('Escape')
+  await expect(modal).toBeHidden()
+  // Счётчик на плитке в воронке (свой комментарий — не «непрочитанный»)
+  const tile = page.locator('.crm-card', { hasText: 'Премьер' })
+  await expect(tile.locator('.crm-card-comments')).toHaveText('1')
+  await expect(tile.locator('.crm-card-comments')).not.toHaveClass(/unseen/)
+
+  await expect
+    .poll(async () => {
+      const deals = Object.values((await savedBoard(page)).crm?.deals ?? {}) as { comments?: { html: string }[] }[]
+      return deals[0]?.comments?.map((c) => c.html).join('')
+    })
+    .toContain('Клиент просит скидку')
+})
+
 test('CRM: пустая сделка от «+» не сохраняется', async ({ page }) => {
   await createIdentity(page)
   await page.locator('.view-tabs button', { hasText: 'CRM' }).click()

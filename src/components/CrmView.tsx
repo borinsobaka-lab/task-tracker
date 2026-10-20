@@ -42,7 +42,8 @@ import { inProjectFilter } from '../utils'
 import { SubHeader } from './SubHeader'
 import { Avatar, ProjectAvatar } from './Avatar'
 import { ControlBadge, DealModal, PartnerModal, RecordModal, todayKey } from './CrmModals'
-import { IcoBoard, IcoChart, IcoChecklist, IcoFile, IcoHandshake, IcoSearch } from '../icons'
+import { hasUnseenComments, liveComments, useCommentsSeen } from './commentsSeen'
+import { IcoBoard, IcoChart, IcoChecklist, IcoComment, IcoFile, IcoHandshake, IcoSearch } from '../icons'
 import './crm.css'
 
 export type CrmTab = 'funnel' | 'deals' | 'stats' | 'partners' | 'tasks' | 'rules'
@@ -365,6 +366,9 @@ function DealCard({ deal, showProject, overlay }: { deal: Deal; showProject: boo
   const project = showProject && deal.projectId ? store.projects.find((p) => p.id === deal.projectId) : undefined
   const step = stepControl(deal, today)
   const decision = decisionControl(deal, today)
+  const { seenAt } = useCommentsSeen()
+  const commentCount = liveComments(deal).length
+  const unseenComments = commentCount > 0 && hasUnseenComments(deal, store.identity?.id ?? null, seenAt(deal.id))
   return (
     <article className={'crm-card' + (overlay ? ' overlay' : '')}>
       <div className="crm-card-top">
@@ -391,6 +395,14 @@ function DealCard({ deal, showProject, overlay }: { deal: Deal; showProject: boo
         {decision && decision.tone !== 'ok' && decision.tone !== 'muted' && (
           <span className={`crm-badge tone-${decision.tone}`} title="Решение клиента">
             Решение: {decision.label === 'Срок прошёл' ? 'срок прошёл' : fmtShortDate(deal.decisionDate)}
+          </span>
+        )}
+        {commentCount > 0 && (
+          <span
+            className={'card-badge crm-card-comments' + (unseenComments ? ' unseen' : ' plain')}
+            title={unseenComments ? 'Есть непрочитанные комментарии' : `Комментариев: ${commentCount}`}
+          >
+            <IcoComment size={14} /> {commentCount}
           </span>
         )}
       </div>

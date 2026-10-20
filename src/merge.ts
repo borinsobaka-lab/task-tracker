@@ -3,7 +3,7 @@
 // удаления — через надгробия (deleted: true). После слияния доска нормализуется:
 // каждая живая карточка лежит ровно в одной живой колонке.
 
-import type { Attachment, BoardData, Card, ChecklistItem, Column, Comment, CrmData, Member, ID, Note, Project, Series } from './types'
+import type { Attachment, BoardData, Card, ChecklistItem, Column, Comment, CrmData, Deal, Member, ID, Note, Project, Series } from './types'
 import { nowISO } from './utils'
 
 const TOMBSTONE_TTL_MS = 45 * 24 * 60 * 60 * 1000
@@ -95,22 +95,37 @@ function mergeById<T extends { id: ID; updatedAt: string }>(local: T[], remote: 
   return out
 }
 
-/** Слияние двух словарей сущностей по id: одна и та же — по более свежему updatedAt (LWW). */
-function mergeRecords<T extends { updatedAt: string }>(a: Record<ID, T> | undefined, b: Record<ID, T> | undefined): Record<ID, T> {
+/** Слияние двух словарей сущностей по id: одна и та же — по более свежему updatedAt (LWW)
+ *  или своей функцией слияния двух версий. */
+function mergeRecords<T extends { updatedAt: string }>(
+  a: Record<ID, T> | undefined,
+  b: Record<ID, T> | undefined,
+  merge: (l: T, r: T) => T = newer,
+): Record<ID, T> {
   const out: Record<ID, T> = {}
   for (const id of new Set([...Object.keys(a ?? {}), ...Object.keys(b ?? {})])) {
     const l = a?.[id]
     const r = b?.[id]
-    out[id] = l && r ? newer(l, r) : (l ?? r)!
+    out[id] = l && r ? merge(l, r) : (l ?? r)!
   }
   return out
+}
+
+/** Сделка: поля — по LWW, комментарии сливаем по id (как у карточек), чтобы
+ *  одновременные сообщения двух участников не терялись. */
+function mergeDeal(a: Deal, b: Deal): Deal {
+  const base = newer(a, b)
+  if (base.deleted) return base
+  const other = base === a ? b : a
+  const comments = mergeComments(base.comments, other.comments)
+  return comments ? { ...base, comments } : base
 }
 
 /** CRM: сделки, записи истории и партнёры сливаются независимо, каждая — по LWW. */
 function mergeCrm(a: CrmData | undefined, b: CrmData | undefined): CrmData | undefined {
   if (!a && !b) return undefined
   return {
-    deals: mergeRecords(a?.deals, b?.deals),
+    deals: mergeRecords(a?.deals, b?.deals, mergeDeal),
     records: mergeRecords(a?.records, b?.records),
     partners: mergeRecords(a?.partners, b?.partners),
   }
