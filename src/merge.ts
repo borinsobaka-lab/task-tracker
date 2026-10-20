@@ -121,13 +121,14 @@ function mergeDeal(a: Deal, b: Deal): Deal {
   return comments ? { ...base, comments } : base
 }
 
-/** CRM: сделки, записи истории и партнёры сливаются независимо, каждая — по LWW. */
+/** CRM: сделки, записи истории, компании и контакты сливаются независимо, каждая — по LWW. */
 function mergeCrm(a: CrmData | undefined, b: CrmData | undefined): CrmData | undefined {
   if (!a && !b) return undefined
   return {
     deals: mergeRecords(a?.deals, b?.deals, mergeDeal),
     records: mergeRecords(a?.records, b?.records),
     partners: mergeRecords(a?.partners, b?.partners),
+    ...(a?.contacts || b?.contacts ? { contacts: mergeRecords(a?.contacts, b?.contacts) } : {}),
   }
 }
 
@@ -292,7 +293,12 @@ function dropOldTombstones(crm: CrmData, cutoff: number): CrmData {
     }
     return out
   }
-  return { deals: keep(crm.deals), records: keep(crm.records), partners: keep(crm.partners) }
+  return {
+    deals: keep(crm.deals),
+    records: keep(crm.records),
+    partners: keep(crm.partners),
+    ...(crm.contacts ? { contacts: keep(crm.contacts) } : {}),
+  }
 }
 
 export function emptyBoard(): BoardData {

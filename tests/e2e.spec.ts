@@ -976,7 +976,28 @@ test('CRM: сделка, смена этапа пишет историю, ста
   // Без шага и срока — контроль шага предупреждает
   await expect(modal.locator('.crm-controls')).toContainText('Нет шага / срока')
 
+  // Сумма — с разделителями разрядов
+  await expect(modal.getByLabel('Сумма предложения, ₽')).toHaveValue('190\u00a0000')
+
+  // В «КП отправлено» без нужных полей не пускает: перечисляет и подсвечивает их
   await modal.getByLabel('Этап').selectOption('proposal')
+  await expect(modal.getByLabel('Этап')).toHaveValue('new')
+  await expect(modal.locator('.crm-required')).toContainText('Контактное лицо')
+  await expect(modal.locator('.crm-field.invalid', { hasText: 'Подтверждённый итог' })).toBeVisible()
+  await expect(modal.getByRole('button', { name: 'Перевести в «КП отправлено»' })).toBeDisabled()
+
+  await modal.getByLabel('Имя', { exact: true }).fill('Ирина Никишина')
+  await modal.getByLabel('Телефон').fill('+7 902 635-30-54')
+  await modal.getByLabel('Последний контакт').fill('2026-10-19')
+  await modal.getByLabel('Что делаем дальше').fill('Созвон по КП')
+  await modal.getByLabel('Срок шага').fill('2099-01-10')
+  await modal.getByLabel('Дата мероприятия').fill('2099-11-27')
+  await modal.getByLabel('Потребность / модули').fill('Регистрация и бейджи')
+  await modal.getByLabel('Подтверждённый итог').fill('Обсудили состав модулей')
+  await modal.getByLabel('КП: ссылка и версия').fill('https://kp.example/v1')
+  await expect(modal.locator('.crm-field.invalid')).toHaveCount(0)
+  await modal.getByRole('button', { name: 'Перевести в «КП отправлено»' }).click()
+  await expect(modal.getByLabel('Этап')).toHaveValue('proposal')
   await expect(modal.locator('.crm-history')).toContainText('Новый контакт → КП отправлено')
   // Дата отправки КП проставилась сама
   const today = await page.evaluate(() => {
@@ -996,14 +1017,19 @@ test('CRM: сделка, смена этапа пишет историю, ста
   await page.getByRole('tab', { name: 'Статистика' }).click()
   await expect(page.locator('.crm-kpi', { hasText: 'Открытая воронка' })).toContainText('190 000 ₽')
   await expect(page.locator('.crm-kpi', { hasText: 'КП за 7 дней' })).toContainText('1')
-  // «Нет шага или срока» ведёт к отфильтрованной таблице
-  await page.locator('.crm-attention button', { hasText: 'Нет шага или срока' }).click()
+  // «Записи требуют уточнения» ведёт к отфильтрованной таблице
+  await page.locator('.crm-attention button', { hasText: 'Записи требуют уточнения' }).click()
   await expect(page.locator('.crm-table tbody tr')).toHaveCount(1)
   await expect(page.locator('.crm-table')).toContainText('МТС')
 
   // Всё сохранилось в board.json
   await expect.poll(async () => Object.values((await savedBoard(page)).crm?.deals ?? {}).length).toBe(1)
   await expect.poll(async () => Object.values((await savedBoard(page)).crm?.records ?? {}).length).toBe(1)
+  // Компания и контакт, введённые в сделке, — в справочниках
+  await expect.poll(async () => Object.values((await savedBoard(page)).crm?.partners ?? {}).length).toBe(1)
+  await expect
+    .poll(async () => (Object.values((await savedBoard(page)).crm?.contacts ?? {}) as { name: string; phone?: string }[]).map((c) => `${c.name}|${c.phone}`))
+    .toEqual(['Ирина Никишина|+7 902 635-30-54'])
 })
 
 test('CRM: комментарии к сделке — пишем, видим на плитке, сохраняются', async ({ page }) => {
@@ -1103,7 +1129,7 @@ test('CRM: старая версия приложения стёрла CRM — �
   await expect(page.locator('.crm-card', { hasText: 'Важный клиент' })).toBeVisible()
 })
 
-test('CRM: партнёр, задача по сделке и контроль просрочки', async ({ page }) => {
+test('CRM: компания, задача по сделке и контроль просрочки', async ({ page }) => {
   await createIdentity(page)
   await page.waitForFunction(() => (JSON.parse(localStorage.getItem('tt.local.data') ?? '{}').members ?? []).length > 0)
   await page.evaluate(() => {
@@ -1138,12 +1164,140 @@ test('CRM: партнёр, задача по сделке и контроль п
   await page.getByRole('tab', { name: 'Задачи' }).click()
   await expect(page.locator('.crm-table tbody tr', { hasText: 'Отправить КП' })).toContainText('Просрочено')
 
-  // Партнёр
-  await page.getByRole('tab', { name: 'Партнёры' }).click()
-  await page.getByRole('button', { name: '+ Партнёр' }).click()
-  await page.locator('.crm-modal').getByLabel('Компания / партнёр').fill('Агентство Вектор')
+  // Компания-партнёр: у партнёра свой контроль шага
+  await page.getByRole('tab', { name: 'Компании' }).click()
+  await page.getByRole('button', { name: '+ Компания' }).click()
+  await page.locator('.crm-modal').getByLabel('Название').fill('Агентство Вектор')
+  await page.locator('.crm-modal').getByLabel('Тип').selectOption('partner')
   await page.keyboard.press('Escape')
   await expect(page.locator('.crm-table tbody tr', { hasText: 'Агентство Вектор' })).toContainText('Нет шага / срока')
+})
+
+/** Положить в демо-хранилище CRM (и, если нужно, проекты / участников) и открыть раздел */
+async function seedCrm(page: import('@playwright/test').Page, fill: string, tab = 'funnel') {
+  await page.waitForFunction(() => (JSON.parse(localStorage.getItem('tt.local.data') ?? '{}').members ?? []).length > 0)
+  await page.evaluate(
+    ([body, crmTab]) => {
+      const data = JSON.parse(localStorage.getItem('tt.local.data')!)
+      const ts = new Date().toISOString()
+      const me = localStorage.getItem('tt.identity')!
+      new Function('data', 'ts', 'me', body)(data, ts, me)
+      localStorage.setItem('tt.local.data', JSON.stringify(data))
+      localStorage.setItem('tt.local.rev', String(Number(localStorage.getItem('tt.local.rev') ?? '1') + 1))
+      localStorage.setItem('tt.view', 'crm')
+      localStorage.setItem('tt.crmTab', crmTab)
+    },
+    [fill, tab],
+  )
+  await page.reload()
+}
+
+test('CRM: компания и контакт — выбор из справочника, контакт подставляет телефон и email', async ({ page }) => {
+  await createIdentity(page)
+  await seedCrm(
+    page,
+    `data.crm = {
+      deals: {},
+      records: {},
+      partners: { co1: { id: 'co1', name: 'Премьер', kind: 'agency', status: 'contact', createdAt: ts, updatedAt: ts } },
+      contacts: { ct1: { id: 'ct1', name: 'Ирина Никишина', role: 'Продюсер', phone: '+7 902 635-30-54', email: 'irina@premier.ru', companyId: 'co1', createdAt: ts, updatedAt: ts } },
+    }`,
+  )
+  await page.getByRole('button', { name: 'Добавить сделку' }).click()
+  const modal = page.locator('.crm-deal-modal')
+  // Полей «ID сделки» и «Партнёр» больше нет
+  await expect(modal.getByLabel('ID сделки')).toHaveCount(0)
+  await expect(modal.getByLabel('Партнёр', { exact: true })).toHaveCount(0)
+
+  await modal.getByLabel('Компания / агентство').fill('прем')
+  await modal.locator('.combo-opt', { hasText: 'Премьер' }).click()
+  await expect(modal.getByLabel('Компания / агентство')).toHaveValue('Премьер')
+
+  await modal.getByLabel('Имя', { exact: true }).fill('Ири')
+  await modal.locator('.combo-opt', { hasText: 'Ирина Никишина' }).click()
+  await expect(modal.getByLabel('Телефон')).toHaveValue('+7 902 635-30-54')
+  await expect(modal.getByLabel('Email')).toHaveValue('irina@premier.ru')
+  await expect(modal.getByLabel('Должность / роль')).toHaveValue('Продюсер')
+  await page.keyboard.press('Escape')
+
+  await expect.poll(async () => {
+    const d = Object.values((await savedBoard(page)).crm?.deals ?? {})[0] as { partnerId?: string; contactId?: string }
+    return `${d?.partnerId}|${d?.contactId}`
+  }).toBe('co1|ct1')
+
+  // Новая компания и новый контакт, введённые текстом, попадают во вкладки
+  await page.getByRole('button', { name: 'Добавить сделку' }).click()
+  await modal.getByLabel('Компания / агентство').fill('Вектор Ивент')
+  await modal.getByLabel('Имя', { exact: true }).fill('Олег Петров')
+  await modal.getByLabel('Email').fill('oleg@vector.ru')
+  await page.keyboard.press('Escape')
+  await page.getByRole('tab', { name: 'Компании' }).click()
+  await expect(page.locator('.crm-table tbody tr', { hasText: 'Вектор Ивент' })).toContainText('Клиент')
+  await page.getByRole('tab', { name: 'Контакты' }).click()
+  await expect(page.locator('.crm-table tbody tr', { hasText: 'Олег Петров' })).toContainText('oleg@vector.ru')
+  await expect(page.locator('.crm-table tbody tr', { hasText: 'Олег Петров' })).toContainText('Вектор Ивент')
+})
+
+test('CRM: сделки до справочников — компании и контакты переносятся во вкладки', async ({ page }) => {
+  await createIdentity(page)
+  await seedCrm(
+    page,
+    `data.crm = {
+      deals: { d1: { id: 'd1', company: 'Альфа', contactName: 'Олег', contactInfo: '+7 999 111-22-33, oleg@alfa.ru', stage: 'new', createdAt: ts, updatedAt: ts } },
+      records: {},
+      partners: {},
+    }`,
+    'contacts',
+  )
+  const row = page.locator('.crm-table tbody tr', { hasText: 'Олег' })
+  await expect(row).toContainText('+7 999 111-22-33')
+  await expect(row).toContainText('oleg@alfa.ru')
+  await expect(row).toContainText('Альфа')
+  await page.getByRole('tab', { name: 'Компании' }).click()
+  await expect(page.locator('.crm-table tbody tr', { hasText: 'Альфа' })).toBeVisible()
+})
+
+test('CRM: перетаскивание на этап без нужных полей — предупреждение и карточка с подсветкой', async ({ page }) => {
+  await createIdentity(page)
+  await seedCrm(
+    page,
+    `data.crm = { deals: { d1: { id: 'd1', company: 'Премьер', stage: 'new', createdAt: ts, updatedAt: ts } }, records: {}, partners: {} }`,
+  )
+  const card = page.locator('.crm-card', { hasText: 'Премьер' })
+  const target = page.locator('.crm-col', { hasText: 'Контакт установлен' })
+  const from = (await card.boundingBox())!
+  const to = (await target.boundingBox())!
+  await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2)
+  await page.mouse.down()
+  await page.mouse.move(from.x + from.width / 2 + 20, from.y + from.height / 2, { steps: 4 })
+  await page.mouse.move(to.x + to.width / 2, to.y + 120, { steps: 12 })
+  await page.mouse.up()
+
+  const dialog = page.locator('.crm-blocked')
+  await expect(dialog).toContainText('Сначала заполните поля')
+  await expect(dialog).toContainText('Контактное лицо')
+  await expect(dialog).toContainText('Срок шага')
+  // Сделка осталась на месте
+  await expect(page.locator('.crm-col', { hasText: 'Новый контакт' }).locator('.crm-card')).toContainText('Премьер')
+
+  await dialog.getByRole('button', { name: 'Заполнить' }).click()
+  const modal = page.locator('.crm-deal-modal')
+  await expect(modal.locator('.crm-required.blocking')).toContainText('Контакт установлен')
+  await expect(modal.locator('.crm-field.invalid', { hasText: 'Последний контакт' })).toBeVisible()
+})
+
+test('CRM: ответственный — только участники проекта', async ({ page }) => {
+  await createIdentity(page, 'Рома')
+  await seedCrm(
+    page,
+    `data.members.push({ id: 'm-out', name: 'Пётр', color: '#888888', createdAt: ts, updatedAt: ts })
+    data.projects = [{ id: 'p1', name: 'EventBase', memberIds: [me], createdAt: ts, updatedAt: ts }]
+    data.crm = { deals: { d1: { id: 'd1', company: 'Премьер', stage: 'new', projectId: 'p1', ownerId: me, createdAt: ts, updatedAt: ts } }, records: {}, partners: {} }`,
+  )
+  await page.locator('.crm-card', { hasText: 'Премьер' }).click()
+  const owner = page.locator('.crm-deal-modal').getByLabel('Ответственный')
+  await expect(owner.locator('option', { hasText: 'Рома' })).toHaveCount(1)
+  await expect(owner.locator('option', { hasText: 'Пётр' })).toHaveCount(0)
 })
 
 test('заголовок вкладки браузера — по текущему разделу', async ({ page }) => {

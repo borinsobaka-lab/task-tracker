@@ -267,7 +267,11 @@ export interface Deal {
   lastContactDate?: string
   /** Подтверждённый итог последнего контакта */
   outcome?: string
+  /** Контактное лицо — запись из справочника «Контакты». contactName — его имя
+   *  (копия для поиска и таблиц, обновляется при переименовании контакта). */
+  contactId?: ID
   contactName?: string
+  /** Телефон / email из старых версий (до справочника контактов) — переносится в контакт */
   contactInfo?: string
   source?: LeadSource
   /** Потребность / модули */
@@ -292,6 +296,8 @@ export interface Deal {
   /** Основание / ссылка */
   basis?: string
   quality?: DataQuality
+  /** Компания / агентство — запись из раздела «Компании». company — её название
+   *  (копия для поиска и таблиц, обновляется при переименовании компании). */
   partnerId?: ID
   /** Обсуждение сделки — как комментарии к задаче */
   comments?: Comment[]
@@ -329,12 +335,20 @@ export interface CrmRecord {
 
 export type PartnerStatus = 'contact' | 'discussion' | 'agreement' | 'active' | 'paused' | 'finished'
 
-/** Партнёр (лист «Партнёрства»). Выручку партнёрство не приносит само —
- *  коммерческие проекты заводятся сделками со ссылкой на партнёра. */
+/** Тип компании: клиент, агентство или партнёр (у партнёра — свои договорённости и шаги). */
+export type CompanyKind = 'client' | 'agency' | 'partner'
+
+/** Компания (раздел «Компании», бывшие «Партнёры»). Исторически тип называется Partner:
+ *  в данных это crm.partners. Выручку партнёрство не приносит само — коммерческие
+ *  проекты заводятся сделками со ссылкой на компанию. */
 export interface Partner {
   id: ID
   code?: string
   name: string
+  /** Нет — старая запись раздела «Партнёры», считаем партнёром */
+  kind?: CompanyKind
+  /** Заметка о компании */
+  note?: string
   contact?: string
   /** Формат сотрудничества */
   format?: string
@@ -354,10 +368,30 @@ export interface Partner {
   updatedAt: string
 }
 
+/** Контакт (вкладка «Контакты»): человек со стороны клиента, агентства или партнёра. */
+export interface Contact {
+  id: ID
+  name: string
+  /** Должность / роль */
+  role?: string
+  phone?: string
+  email?: string
+  /** Компания из раздела «Компании» */
+  companyId?: ID
+  note?: string
+  projectId?: ID
+  createdBy?: ID
+  deleted?: boolean
+  createdAt: string
+  updatedAt: string
+}
+
 export interface CrmData {
   deals: Record<ID, Deal>
   records: Record<ID, CrmRecord>
   partners: Record<ID, Partner>
+  /** Контакты (может отсутствовать в данных до справочника контактов) */
+  contacts?: Record<ID, Contact>
 }
 
 export interface BoardData {
