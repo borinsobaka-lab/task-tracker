@@ -5,9 +5,10 @@ import { useBoard } from '../store'
 import type { ID } from '../types'
 import { QUADRANT_COLOR, QUADRANT_LABEL } from '../eisenhower'
 import { cardMatchesQuery, NO_PROJECT } from '../utils'
-import { IcoBoard, IcoCalendar, IcoMatrix, IcoNotes, IcoRecurring, IcoSearch, IcoSettings } from '../icons'
+import { IcoBoard, IcoCalendar, IcoCrm, IcoMatrix, IcoNotes, IcoRecurring, IcoSearch, IcoSettings } from '../icons'
 import type { IconProps } from '../icons'
 import { NOTES_COLOR } from '../notes'
+import { CRM_COLOR } from '../crm'
 import './header.css'
 
 const STATUS_LABEL: Record<string, { text: string; cls: string }> = {
@@ -24,6 +25,7 @@ const VIEWS: { key: ViewKind; label: string; Icon: ComponentType<IconProps>; col
   { key: 'matrix', label: 'Матрица', Icon: IcoMatrix, color: '#ef4444' }, // красный
   { key: 'recurring', label: 'Повтор', Icon: IcoRecurring, color: '#22c55e' }, // зелёный
   { key: 'notes', label: 'Заметки', Icon: IcoNotes, color: NOTES_COLOR }, // жёлтый, как у Apple Notes
+  { key: 'crm', label: 'CRM', Icon: IcoCrm, color: CRM_COLOR }, // фиолетовый
 ]
 
 /** Верхний хедер: табы разделов, глобальный поиск и кнопка настроек. */
@@ -69,8 +71,8 @@ export function Header({
 
       <ProjectTabs projectFilter={projectFilter} onChange={onProjectFilterChange} />
 
-      {/* Поиск задач к заметкам не относится — в «Заметках» у списка свой поиск */}
-      {view !== 'notes' && <SearchBox onOpenCard={onOpenCard} />}
+      {/* Поиск задач к заметкам и CRM не относится — у них свой поиск */}
+      {view !== 'notes' && view !== 'crm' && <SearchBox onOpenCard={onOpenCard} />}
 
       <div className="header-right">
         <span
@@ -99,6 +101,7 @@ export function BottomNav({
   onViewChange: (v: ViewKind) => void
   onNewTask: () => void
 }) {
+  const addLabel = view === 'notes' ? 'Новая заметка' : view === 'crm' ? 'Новая сделка' : 'Добавить задачу'
   return (
     <nav className="bottom-nav" aria-label="Разделы">
       {VIEWS.map((v) => {
@@ -121,10 +124,10 @@ export function BottomNav({
       })}
       <button
         type="button"
-        className={'bottom-nav-item bottom-nav-add' + (view === 'notes' ? ' notes' : '')}
+        className={'bottom-nav-item bottom-nav-add' + (view === 'notes' ? ' notes' : view === 'crm' ? ' crm' : '')}
         onClick={onNewTask}
-        title={view === 'notes' ? 'Новая заметка' : 'Добавить задачу'}
-        aria-label={view === 'notes' ? 'Новая заметка' : 'Добавить задачу'}
+        title={addLabel}
+        aria-label={addLabel}
       >
         <span className="bottom-nav-add-circle" aria-hidden>+</span>
       </button>

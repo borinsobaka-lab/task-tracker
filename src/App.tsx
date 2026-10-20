@@ -32,6 +32,7 @@ import './components/calendar.css'
 import './components/eisenhower.css'
 import './components/recurring.css'
 import './components/notes.css'
+import './components/crm.css'
 import './components/settings.css'
 import './app.css'
 
@@ -46,6 +47,7 @@ const chunks = {
   matrix: () => import('./components/EisenhowerView'),
   recurring: () => import('./components/RecurringView'),
   notes: () => import('./components/NotesView'),
+  crm: () => import('./components/CrmView'),
   card: () => import('./components/CardModal'),
   settings: () => import('./components/SettingsModal'),
 }
@@ -54,6 +56,7 @@ const CalendarView = lazy(() => chunks.calendar().then((m) => ({ default: m.Cale
 const EisenhowerView = lazy(() => chunks.matrix().then((m) => ({ default: m.EisenhowerView })))
 const RecurringView = lazy(() => chunks.recurring().then((m) => ({ default: m.RecurringView })))
 const NotesView = lazy(() => chunks.notes().then((m) => ({ default: m.NotesView })))
+const CrmView = lazy(() => chunks.crm().then((m) => ({ default: m.CrmView })))
 const CardModal = lazy(() => chunks.card().then((m) => ({ default: m.CardModal })))
 const SettingsModal = lazy(() => chunks.settings().then((m) => ({ default: m.SettingsModal })))
 const PasswordScreen = lazy(() => import('./components/PasswordScreen').then((m) => ({ default: m.PasswordScreen })))
@@ -251,7 +254,7 @@ function TimelinePublisher({ token }: { token: string }) {
   return null
 }
 
-export type ViewKind = 'board' | 'calendar' | 'matrix' | 'recurring' | 'notes'
+export type ViewKind = 'board' | 'calendar' | 'matrix' | 'recurring' | 'notes' | 'crm'
 
 function Shell({ onLogout }: { onLogout: () => void }) {
   const store = useMaybeBoard()
@@ -271,6 +274,8 @@ function Shell({ onLogout }: { onLogout: () => void }) {
   const [quickAddOpen, setQuickAddOpen] = useState(false)
   // «+» в нижнем меню в разделе «Заметки» создаёт заметку (функцию кладёт NotesView)
   const composeNoteRef = useRef<(() => void) | null>(null)
+  // …а в разделе «CRM» — сделку (функцию кладёт CrmView)
+  const composeCrmRef = useRef<(() => void) | null>(null)
   // Фильтры по участникам и проектам (пустой набор — «все»). Запоминаются за
   // выбранным участником в board.json и восстанавливаются при следующем входе.
   const [memberFilter, setMemberFilterState] = useState<ReadonlySet<ID>>(new Set())
@@ -457,6 +462,8 @@ function Shell({ onLogout }: { onLogout: () => void }) {
           if (view === 'calendar') return <CalendarView {...shared} />
           if (view === 'matrix') return <EisenhowerView {...shared} />
           if (view === 'notes') return <NotesView composeRef={composeNoteRef} projectFilter={projectFilter} />
+          if (view === 'crm')
+            return <CrmView composeRef={composeCrmRef} projectFilter={projectFilter} memberFilter={memberFilter} onMemberFilterChange={setMemberFilter} />
           return <RecurringView {...shared} />
         })()}
         </Lazy>
@@ -464,11 +471,20 @@ function Shell({ onLogout }: { onLogout: () => void }) {
       <BottomNav
         view={view}
         onViewChange={changeView}
-        onNewTask={() => (view === 'notes' && composeNoteRef.current ? composeNoteRef.current() : setQuickAddOpen(true))}
+        onNewTask={() => {
+          if (view === 'notes' && composeNoteRef.current) composeNoteRef.current()
+          else if (view === 'crm' && composeCrmRef.current) composeCrmRef.current()
+          else setQuickAddOpen(true)
+        }}
       />
       {/* Десктоп: плавающая кнопка быстрого создания — в «Заметках» жёлтая «Добавить заметку»,
-          в остальных разделах «Добавить задачу» */}
-      {view === 'notes' ? (
+          в «CRM» фиолетовая «Добавить сделку», в остальных разделах «Добавить задачу» */}
+      {view === 'crm' ? (
+        <button className="fab fab-crm" onClick={() => composeCrmRef.current?.()} title="Добавить сделку" aria-label="Добавить сделку">
+          <span className="fab-plus" aria-hidden>+</span>
+          <span className="fab-text">Добавить сделку</span>
+        </button>
+      ) : view === 'notes' ? (
         <button
           className="fab fab-note"
           onClick={() => composeNoteRef.current?.()}

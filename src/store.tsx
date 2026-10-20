@@ -4,7 +4,7 @@
 
 import React, { createContext, useContext, useEffect, useMemo, useSyncExternalStore } from 'react'
 import { produce } from 'immer'
-import type { Attachment, BoardData, Card, CardKind, ChecklistItem, Column, ColumnRole, Comment, EisenhowerQuadrant, ID, Member, Note, Project, RecurrenceRule, Series } from './types'
+import type { Attachment, BoardData, Card, CardKind, ChecklistItem, Column, ColumnRole, Comment, CrmData, CrmRecord, Deal, EisenhowerQuadrant, ID, Member, Note, Partner, Project, RecurrenceRule, Series } from './types'
 import type { RemoteState, StorageAdapter } from './storage/adapter'
 import { ConflictError } from './storage/adapter'
 import { emptyBoard, mergeBoards, normalizeBoard } from './merge'
@@ -12,6 +12,7 @@ import { dateMatchesRule, firstOccurrence, nextOccurrence } from './recurrence'
 import { getIdentity, setIdentityId } from './config'
 import { clamp, hasContent, nowISO, toDateKey, uid } from './utils'
 import { celebrate } from './confetti'
+import { STAGE_BY_KEY } from './crm'
 import { flushBoardCache, readBoardCache, writeBoardCache } from './boardCache'
 
 export interface SeriesInput {
@@ -155,29 +156,50 @@ export interface StoreSnapshot {
   fresh: boolean
 }
 
-// ---------- Страховка заметок от старых версий приложения ----------
-// Версии до раздела «Заметки» при слиянии конфликтующих правок собирали доску
-// заново и теряли поле notes целиком. Пока такие версии могут быть открыты
-// (старый адрес, Android-оболочка), новая версия держит копию заметок на
-// устройстве и, увидев данные без поля notes, возвращает заметки обратно.
+// ---------- Страховка заметок и CRM от старых версий приложения ----------
+// Версии до раздела «Заметки» (и до «CRM») при слиянии конфликтующих правок
+// собирали доску заново и теряли незнакомое поле — notes или crm — целиком.
+// Пока такие версии могут быть открыты (старый адрес, Android-оболочка), новая
+// версия держит копию заметок и CRM на устройстве и, увидев данные без этого
+// поля, возвращает его обратно.
 
 function notesCacheKey(adapter: StorageAdapter): string {
   return `tt.notesCache.${adapter.kind}`
 }
+function crmCacheKey(adapter: StorageAdapter): string {
+  return `tt.crmCache.${adapter.kind}`
+}
 
-function readNotesCache(adapter: StorageAdapter): Record<ID, Note> | null {
+function readJson<T>(key: string): T | null {
   try {
-    const raw = localStorage.getItem(notesCacheKey(adapter))
-    return raw ? (JSON.parse(raw) as Record<ID, Note>) : null
+    const raw = localStorage.getItem(key)
+    return raw ? (JSON.parse(raw) as T) : null
   } catch {
     return null
   }
 }
 
-/** Данные без поля notes (их сохранила старая версия) + известные нам заметки → доска с заметками. */
-function healNotes(data: BoardData, known: Record<ID, Note> | null | undefined): BoardData | null {
-  if (data.notes !== undefined || !known || Object.keys(known).length === 0) return null
-  return { ...data, notes: known }
+interface KnownFields {
+  notes?: Record<ID, Note> | null
+  crm?: CrmData | null
+}
+
+/** Что известно о заметках и CRM: из текущих данных, а нет их — из копии на устройстве. */
+function knownFields(adapter: StorageAdapter, data?: BoardData | null): KnownFields {
+  return {
+    notes: data?.notes ?? readJson<Record<ID, Note>>(notesCacheKey(adapter)),
+    crm: data?.crm ?? readJson<CrmData>(crmCacheKey(adapter)),
+  }
+}
+
+/** Данные без поля notes/crm (их сохранила старая версия) + известное нам → доска с ними. Нечего чинить — null. */
+function healLost(data: BoardData, known: KnownFields): BoardData | null {
+  let out: BoardData | null = null
+  if (data.notes === undefined && known.notes && Object.keys(known.notes).length > 0) out = { ...(out ?? data), notes: known.notes }
+  const crm = known.crm
+  if (data.crm === undefined && crm && Object.keys(crm.deals ?? {}).length + Object.keys(crm.records ?? {}).length + Object.keys(crm.partners ?? {}).length > 0)
+    out = { ...(out ?? data), crm }
+  return out
 }
 
 const SAVE_DEBOUNCE_MS = 1200
@@ -243,14 +265,24 @@ export class SyncEngine {
   }
 
   private cachedNotes: BoardData['notes'] = undefined
+  private cachedCrm: BoardData['crm'] = undefined
 
   private emit(): void {
-    // Копия заметок на устройстве (см. healNotes) — только когда они изменились
+    // Копия заметок и CRM на устройстве (см. healLost) — только когда они изменились
     const notes = this.data?.notes
     if (notes && notes !== this.cachedNotes) {
       this.cachedNotes = notes
       try {
         localStorage.setItem(notesCacheKey(this.adapter), JSON.stringify(notes))
+      } catch {
+        /* нет места — не страшно, это страховка */
+      }
+    }
+    const crm = this.data?.crm
+    if (crm && crm !== this.cachedCrm) {
+      this.cachedCrm = crm
+      try {
+        localStorage.setItem(crmCacheKey(this.adapter), JSON.stringify(crm))
       } catch {
         /* нет места — не страшно, это страховка */
       }
@@ -274,7 +306,7 @@ export class SyncEngine {
     const cached = cacheKey ? await readBoardCache(cacheKey) : null
     if (aborted()) return
     if (cached && !this.data && Date.now() - cached.savedAt < MAX_CACHE_AGE_MS) {
-      const healed = healNotes(cached.data, readNotesCache(this.adapter))
+      const healed = healLost(cached.data, knownFields(this.adapter))
       this.data = healed ?? cached.data
       this.rev = cached.rev
       this.etag = cached.etag
@@ -303,8 +335,8 @@ export class SyncEngine {
           this.rev = remote.rev
           this.etag = remote.etag
         } else {
-          // Заметки потеряны старой версией приложения — возвращаем из копии на устройстве
-          const healed = healNotes(remote.data, this.data?.notes ?? readNotesCache(this.adapter))
+          // Заметки или CRM потеряны старой версией приложения — возвращаем из копии на устройстве
+          const healed = healLost(remote.data, knownFields(this.adapter, this.data))
           this.data = healed ?? remote.data
           this.rev = remote.rev
           this.etag = remote.etag
@@ -516,8 +548,8 @@ export class SyncEngine {
       let healed = false
       if (remote !== 'unchanged' && revChanged) {
         this.cacheRemote(remote.data, remote.rev, remote.etag)
-        // Старая версия приложения сохранила доску без заметок — возвращаем наши
-        const fixed = healNotes(remote.data, this.data.notes)
+        // Старая версия приложения сохранила доску без заметок или CRM — возвращаем наши
+        const fixed = healLost(remote.data, { notes: this.data.notes, crm: this.data.crm })
         this.data = fixed ?? remote.data
         this.rev = remote.rev
         this.etag = remote.etag
@@ -667,6 +699,30 @@ export interface BoardStore {
   /** Уход из заметки: пустую удаляем, а вложения, убранные из текста, стираем вместе с файлами */
   cleanupNote(id: ID): void
 
+  // CRM. Сделки и партнёры с проектом видят те, кому виден проект; без проекта — все.
+  // Записи истории видны вместе со своей сделкой / партнёром.
+  /** Живые сделки, видимые участнику (в порядке создания) */
+  deals: Deal[]
+  deal(id: ID): Deal | undefined
+  addDeal(init: Partial<Omit<Deal, 'id' | 'createdAt' | 'updatedAt'>>): ID
+  /** Пустая строка / undefined в патче — поле очищается. Смена этапа сама пишет запись
+   *  «Смена этапа» в историю и заполняет пустые даты (КП, выигрыша / проигрыша). */
+  updateDeal(id: ID, patch: Partial<Omit<Deal, 'id' | 'createdAt' | 'updatedAt'>>): void
+  /** Удалить сделку (надгробие) вместе с её историей */
+  deleteDeal(id: ID): void
+  /** Живые записи «Задачи и история», видимые участнику (новые выше) */
+  crmRecords: CrmRecord[]
+  addCrmRecord(init: Partial<Omit<CrmRecord, 'id' | 'createdAt' | 'updatedAt'>>): ID
+  updateCrmRecord(id: ID, patch: Partial<Omit<CrmRecord, 'id' | 'createdAt' | 'updatedAt'>>): void
+  deleteCrmRecord(id: ID): void
+  /** Живые партнёры, видимые участнику */
+  partners: Partner[]
+  partner(id: ID): Partner | undefined
+  addPartner(init: Partial<Omit<Partner, 'id' | 'createdAt' | 'updatedAt'>>): ID
+  updatePartner(id: ID, patch: Partial<Omit<Partner, 'id' | 'createdAt' | 'updatedAt'>>): void
+  /** Удалить партнёра (надгробие); ссылки сделок на него снимаются */
+  deletePartner(id: ID): void
+
   flush(): Promise<void>
   refresh(): Promise<void>
 }
@@ -737,6 +793,43 @@ function touch(e: { updatedAt: string }): void {
   e.updatedAt = nowISO()
 }
 
+/** CRM в черновике immer (создаёт пустую, если её ещё нет) */
+function crmOf(d: BoardData): CrmData {
+  if (!d.crm) d.crm = { deals: {}, records: {}, partners: {} }
+  if (!d.crm.deals) d.crm.deals = {}
+  if (!d.crm.records) d.crm.records = {}
+  if (!d.crm.partners) d.crm.partners = {}
+  return d.crm
+}
+
+/** Обязательные текстовые поля сущностей CRM: их не удаляем, а держим пустой строкой */
+const CRM_REQUIRED = new Set(['company', 'name'])
+
+/** Применить патч к сущности CRM: пустое значение удаляет поле (JSON не раздувается).
+ *  Возвращает, изменилось ли что-нибудь. */
+function applyCrmPatch(target: object, patch: object): boolean {
+  const t = target as Record<string, unknown>
+  let changed = false
+  for (const [k, v] of Object.entries(patch)) {
+    const empty = v === undefined || v === null || v === ''
+    if (empty && CRM_REQUIRED.has(k)) {
+      if (t[k] !== '') {
+        t[k] = ''
+        changed = true
+      }
+    } else if (empty) {
+      if (k in t) {
+        delete t[k]
+        changed = true
+      }
+    } else if (t[k] !== v) {
+      t[k] = v
+      changed = true
+    }
+  }
+  return changed
+}
+
 function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
   const data = snap.data!
   const liveColumns = data.columns.filter((c) => !c.deleted)
@@ -764,6 +857,20 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
   // только автор (у старых заметок без автора владельца не определить — видят все)
   const noteVisible = (n: Note): boolean =>
     n.projectId ? !hiddenProjectIds.has(n.projectId) : !n.authorId || (identity !== null && n.authorId === identity.id)
+
+  // CRM: с проектом — кому виден проект; без проекта — всем (общая база продаж)
+  const crmVisible = (x: { projectId?: ID }): boolean => !x.projectId || !hiddenProjectIds.has(x.projectId)
+  const crm = data.crm
+  const dealOk = (id: ID | undefined): boolean => {
+    if (!id) return true
+    const dl = crm?.deals?.[id]
+    return !!dl && !dl.deleted && crmVisible(dl)
+  }
+  const partnerOk = (id: ID | undefined): boolean => {
+    if (!id) return true
+    const p = crm?.partners?.[id]
+    return !!p && !p.deleted && crmVisible(p)
+  }
 
   const getCard = (id: ID): Card | undefined => {
     const c = data.cards[id]
@@ -874,6 +981,12 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
           if (n.projectId === id) {
             delete n.projectId
             touch(n)
+          }
+        }
+        for (const x of [...Object.values(d.crm?.deals ?? {}), ...Object.values(d.crm?.partners ?? {})]) {
+          if (x.projectId === id) {
+            delete x.projectId
+            touch(x)
           }
         }
       }),
@@ -1573,6 +1686,148 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
         touch(n)
       })
     },
+
+    deals: Object.values(crm?.deals ?? {})
+      .filter((x) => !x.deleted && crmVisible(x))
+      .sort((a, b) => a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id)),
+    deal: (id) => {
+      const x = crm?.deals?.[id]
+      return x && !x.deleted && crmVisible(x) ? x : undefined
+    },
+    addDeal: (init) => {
+      const id = uid()
+      const ts = nowISO()
+      engine.update((d) => {
+        const deal: Deal = { id, company: '', stage: 'new', createdAt: ts, updatedAt: ts }
+        applyCrmPatch(deal, { ...(identity ? { createdBy: identity.id, ownerId: identity.id } : {}), ...init })
+        crmOf(d).deals[id] = deal
+      })
+      return id
+    },
+    updateDeal: (id, patch) =>
+      engine.update((d) => {
+        const deal = d.crm?.deals?.[id]
+        if (!deal || deal.deleted) return
+        const from = deal.stage
+        const p: Partial<Deal> = { ...patch }
+        const stageChanged = !!p.stage && p.stage !== from
+        if (stageChanged) {
+          const today = toDateKey(new Date())
+          // Даты, которые подтверждают переход, — если их ещё не заполнили
+          if (p.stage === 'proposal' && !deal.proposalDate && !p.proposalDate) p.proposalDate = today
+          if ((p.stage === 'won' || p.stage === 'lost') && !deal.closedDate && !p.closedDate) p.closedDate = today
+          if (p.stage === 'won' && deal.orderAmount === undefined && p.orderAmount === undefined && deal.amount !== undefined) p.orderAmount = deal.amount
+        }
+        if (!applyCrmPatch(deal, p)) return
+        touch(deal)
+        if (stageChanged) {
+          const today = toDateKey(new Date())
+          const rid = uid()
+          const ts = nowISO()
+          const label = (k: Deal['stage']) => STAGE_BY_KEY[k]?.label ?? k
+          const rec: CrmRecord = {
+            id: rid,
+            dealId: id,
+            date: today,
+            type: 'stage',
+            result: `${label(from)} → ${label(deal.stage)}`,
+            status: 'done',
+            doneDate: today,
+            createdAt: ts,
+            updatedAt: ts,
+          }
+          if (identity) {
+            rec.ownerId = identity.id
+            rec.createdBy = identity.id
+          }
+          crmOf(d).records[rid] = rec
+        }
+      }),
+    deleteDeal: (id) =>
+      engine.update((d) => {
+        const deal = d.crm?.deals?.[id]
+        if (!deal || deal.deleted) return
+        d.crm!.deals[id] = { id, company: '', stage: deal.stage, deleted: true, createdAt: deal.createdAt, updatedAt: nowISO() }
+        for (const r of Object.values(d.crm!.records ?? {})) {
+          if (r.dealId === id && !r.deleted) {
+            r.deleted = true
+            touch(r)
+          }
+        }
+      }),
+
+    crmRecords: Object.values(crm?.records ?? {})
+      .filter((r) => !r.deleted && dealOk(r.dealId) && partnerOk(r.partnerId))
+      .sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt) || a.id.localeCompare(b.id)),
+    addCrmRecord: (init) => {
+      const id = uid()
+      const ts = nowISO()
+      engine.update((d) => {
+        const rec: CrmRecord = { id, date: toDateKey(new Date()), type: 'call', status: 'done', createdAt: ts, updatedAt: ts }
+        applyCrmPatch(rec, { ...(identity ? { createdBy: identity.id, ownerId: identity.id } : {}), ...init })
+        crmOf(d).records[id] = rec
+      })
+      return id
+    },
+    updateCrmRecord: (id, patch) =>
+      engine.update((d) => {
+        const r = d.crm?.records?.[id]
+        if (!r || r.deleted) return
+        const p = { ...patch }
+        // Отметили выполненной — дата выполнения сегодня, если не указана
+        if (p.status === 'done' && r.status !== 'done' && !r.doneDate && !p.doneDate) p.doneDate = toDateKey(new Date())
+        if (applyCrmPatch(r, p)) touch(r)
+      }),
+    deleteCrmRecord: (id) =>
+      engine.update((d) => {
+        const r = d.crm?.records?.[id]
+        if (!r || r.deleted) return
+        r.deleted = true
+        touch(r)
+      }),
+
+    partners: Object.values(crm?.partners ?? {})
+      .filter((x) => !x.deleted && crmVisible(x))
+      .sort((a, b) => a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id)),
+    partner: (id) => {
+      const x = crm?.partners?.[id]
+      return x && !x.deleted && crmVisible(x) ? x : undefined
+    },
+    addPartner: (init) => {
+      const id = uid()
+      const ts = nowISO()
+      engine.update((d) => {
+        const p: Partner = { id, name: '', status: 'contact', createdAt: ts, updatedAt: ts }
+        applyCrmPatch(p, { ...(identity ? { ownerId: identity.id } : {}), ...init })
+        crmOf(d).partners[id] = p
+      })
+      return id
+    },
+    updatePartner: (id, patch) =>
+      engine.update((d) => {
+        const p = d.crm?.partners?.[id]
+        if (!p || p.deleted) return
+        if (applyCrmPatch(p, patch)) touch(p)
+      }),
+    deletePartner: (id) =>
+      engine.update((d) => {
+        const p = d.crm?.partners?.[id]
+        if (!p || p.deleted) return
+        p.deleted = true
+        touch(p)
+        for (const dl of Object.values(d.crm!.deals ?? {})) {
+          if (dl.partnerId === id) {
+            delete dl.partnerId
+            touch(dl)
+          }
+        }
+        for (const r of Object.values(d.crm!.records ?? {})) {
+          if (r.partnerId === id && !r.deleted) {
+            r.deleted = true
+            touch(r)
+          }
+        }
+      }),
 
     downloadAttachment: async (att) => {
       const blob: Blob = await engine.adapter.downloadAttachment(att)
