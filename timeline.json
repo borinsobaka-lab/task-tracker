@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-20T12:57:39.418Z",
+  "generatedAt": "2026-10-20T12:57:58.669Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -3869,6 +3869,7 @@
       "id": "bf25dcab-a966-4abd-b24a-782619ee6426",
       "title": "Тестирование мульти-эвента",
       "date": "2026-10-20",
+      "priorityColor": "#3b82f6",
       "members": [
         {
           "id": "a4ae5373-516a-42e7-961c-7da6ac6bc3a8",
