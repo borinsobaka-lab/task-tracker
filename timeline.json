@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-20T12:59:47.594Z",
+  "generatedAt": "2026-10-20T13:01:34.882Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -3973,6 +3973,21 @@
       "title": "Финализация мульти-эвента",
       "date": "2026-10-20",
       "start": "23:00",
+      "durationMin": 60,
+      "priorityColor": "#ef4444",
+      "members": [
+        {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
+          "name": "Вова",
+          "color": "#84cc16"
+        }
+      ]
+    },
+    {
+      "id": "5342f163-b1a9-48fb-915e-1dabc5a5c224",
+      "title": "Подготовить график выхода статей. Первые статьи взять у Ромы.",
+      "date": "2026-10-20",
+      "start": "23:40",
       "durationMin": 60,
       "priorityColor": "#ef4444",
       "members": [
