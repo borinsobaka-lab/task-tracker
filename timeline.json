@@ -1,26 +1,11 @@
 {
-  "generatedAt": "2026-10-19T17:04:30.050Z",
+  "generatedAt": "2026-10-20T11:17:54.978Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
       "title": "Оплата Роялти",
       "date": "2026-07-07",
       "done": true,
-      "members": [
-        {
-          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
-          "name": "Вова",
-          "color": "#84cc16"
-        }
-      ]
-    },
-    {
-      "id": "42e8f9f8-aa79-4b41-bd44-864afee08289",
-      "title": "Paddle",
-      "date": "2026-07-07",
-      "start": "11:00",
-      "durationMin": 120,
-      "kind": "meeting",
       "members": [
         {
           "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
@@ -156,21 +141,6 @@
       ]
     },
     {
-      "id": "4fc0b591-5d57-4612-9927-957f51a8c37f",
-      "title": "Paddle",
-      "date": "2026-07-08",
-      "start": "22:00",
-      "durationMin": 120,
-      "kind": "meeting",
-      "members": [
-        {
-          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
-          "name": "Вова",
-          "color": "#84cc16"
-        }
-      ]
-    },
-    {
       "id": "f5d2013a-9e47-4b33-85fa-39747971fbc5",
       "title": "Оплата таргетолог Полина",
       "date": "2026-07-09",
@@ -248,21 +218,6 @@
       ]
     },
     {
-      "id": "cb63b75f-6b30-4e40-b7f4-743eb1dccd83",
-      "title": "Paddle",
-      "date": "2026-07-09",
-      "start": "23:00",
-      "durationMin": 120,
-      "kind": "meeting",
-      "members": [
-        {
-          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
-          "name": "Вова",
-          "color": "#84cc16"
-        }
-      ]
-    },
-    {
       "id": "74d6f970-90c5-49b0-b2f5-cfd4e8c68932",
       "title": "Зарплата Настя",
       "date": "2026-07-10",
@@ -307,21 +262,6 @@
       "date": "2026-07-10",
       "done": true,
       "priorityColor": "#eab308",
-      "members": [
-        {
-          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
-          "name": "Вова",
-          "color": "#84cc16"
-        }
-      ]
-    },
-    {
-      "id": "49df120b-249c-4698-bdce-4ff72cb5e324",
-      "title": "Paddle",
-      "date": "2026-07-10",
-      "start": "22:00",
-      "durationMin": 120,
-      "kind": "meeting",
       "members": [
         {
           "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
