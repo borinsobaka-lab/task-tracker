@@ -3,10 +3,10 @@
 // Делает две вещи (обе — на быстрой инфраструктуре Cloudflare, без задержек):
 //
 //  1) ГРУППОВЫЕ ОТЧЁТЫ по проектам (у каждого проекта — своя Telegram-группа):
-//       • утром — список задач на сегодня;
-//       • вечером — итоги дня + задачи на завтра;
-//       • днём — то же утреннее сообщение постоянно обновляется под текущие
-//         статусы (проверка раз в минуту, а не раз в 15 минут).
+//       • утром — список задач на сегодня (вечернего итога нет — убран по
+//         просьбе владельца, приходит только утреннее сообщение);
+//       • до конца дня — то же утреннее сообщение постоянно обновляется под
+//         текущие статусы (проверка раз в минуту, а не раз в 15 минут).
 //     В группу проекта уходят ТОЛЬКО задачи этого проекта. Задачи без проекта —
 //     личные (их видят только исполнители и автор) и в чаты не попадают никогда.
 //     Группы берутся из board.projects[].tgGroupId (настраивается в приложении);
@@ -591,31 +591,6 @@ export function morningText(env, board, group = { projectId: null, name: '' }, p
   const moved = renderMoved(movedCards(board, plannedIds, today))
   return `☀️ <b>Доброе утро!</b>\n\n${overdue}📅 <b>Задачи на сегодня, ${ddmm(today)}:</b>\n\n${body}${moved}`
 }
-export function eveningText(env, board, group = { projectId: null, name: '' }, plannedIds = []) {
-  const { colById, members } = buildIndex(board)
-  const today = dateKey(env, 0)
-  const tomorrow = dateKey(env, 1)
-  const cards = reportCards(board, today, group.projectId)
-  const done = cards.filter((c) => statusOf(c, colById) === 'done')
-  let summary
-  if (cards.length === 0) summary = 'Задач на сегодня не было.'
-  else {
-    const groups = groupByMember(cards, members).map((g) => {
-      const d = g.cards.filter((c) => statusOf(c, colById) === 'done').length
-      return `${groupHeader(g)} — готово ${d} из ${g.cards.length}\n` + g.cards.map((c) => '   ' + fmtCardLine(c, colById)).join('\n')
-    })
-    summary = groups.join('\n\n')
-  }
-  const moved = renderMoved(movedCards(board, plannedIds, today))
-  const tomCards = reportCards(board, tomorrow, group.projectId)
-  let tomorrowBlock = ''
-  if (tomCards.length) {
-    tomorrowBlock = `\n\n📅 <b>На завтра, ${ddmm(tomorrow)}:</b>\n\n` + renderGroups(groupByMember(tomCards, members), colById)
-  }
-  const head = `🌙 <b>Итоги дня, ${ddmm(today)}</b>\nВыполнено ${done.length} из ${cards.length}.`
-  return `${head}\n\n${summary}${moved}${tomorrowBlock}`
-}
-
 async function sendGroup(env, chatId, text) {
   const r = await tgApi(env, 'sendMessage', {
     chat_id: chatId,
@@ -640,7 +615,7 @@ async function editGroup(env, chatId, msgId, text) {
 }
 
 // Окно отправки: утреннее уходит ТОЛЬКО с MORNING до MORNING + REPORT_WINDOW_MIN
-// (по умолчанию 60 минут), вечернее — с EVENING до EVENING + окно. Раньше утро
+// (по умолчанию 60 минут). Раньше утро
 // разрешалось слать в любой момент до вечера, поэтому любая потеря отметки
 // «уже отправлено» (сбой записи KV, свежий изолят в другом дата-центре — память
 // и Cache API там пустые) оборачивалась «Доброе утро!» посреди дня. Опоздали —
@@ -686,7 +661,6 @@ export async function runGroupReport(env, board) {
   const today = dateKey(env, 0)
   const nowHM = tzHHMM(env)
   const morning = env.MORNING || '10:00'
-  const evening = env.EVENING || '20:00'
   const windowMin = Number(env.REPORT_WINDOW_MIN) > 0 ? Number(env.REPORT_WINDOW_MIN) : 60
   const keep = { expirationTtl: 3 * 86400 }
 
@@ -699,11 +673,10 @@ export async function runGroupReport(env, board) {
     return {
       ...((gs.days || {})[today] || {}),
       morningSent: gs.morningDate === today,
-      eveningSent: gs.eveningDate === today,
     }
   }
 
-  // Каждая группа проекта живёт своим циклом (утро/день/вечер) независимо;
+  // Каждая группа проекта живёт своим циклом (утро/день) независимо;
   // ошибка в одной группе не должна ломать остальные.
   for (const group of groups) {
     try {
@@ -716,10 +689,8 @@ export async function runGroupReport(env, board) {
         const old = await legacyDay(group.chatId)
         day = {}
         if (old.morningSent) Object.assign(day, { morningSent: true, morningMsgId: old.morningMsgId, plannedIds: old.plannedIds, overdueIds: old.overdueIds })
-        if (old.eveningSent) day.eveningSent = true
       }
       const sentMorning = `sent/morning/${group.chatId}/${today}`
-      const sentEvening = `sent/evening/${group.chatId}/${today}`
 
       // Утро — один раз за день и только в своё окно
       if (!day.morningSent && inSendWindow(nowHM, morning, windowMin)) {
@@ -736,22 +707,10 @@ export async function runGroupReport(env, board) {
         continue
       }
 
-      // Вечер — один раз за день и только в своё окно
-      if (!day.eveningSent && inSendWindow(nowHM, evening, windowMin)) {
-        if (await hasMarker(sentEvening)) continue
-        const planned = day.plannedIds || []
-        if (day.morningMsgId) await editGroup(env, group.chatId, day.morningMsgId, morningText(env, board, group, planned, day.overdueIds || []))
-        const id = await sendGroup(env, group.chatId, eveningText(env, board, group, planned))
-        if (id) {
-          await putMarker(sentEvening, 100000)
-          Object.assign(day, { eveningSent: true, eveningMsgId: id })
-          await kvPutRetry(env, key, day, keep)
-        }
-        continue
-      }
-
-      // Днём — обновляем утреннее сообщение под текущие статусы (идемпотентно, без записи в KV)
-      if (day.morningMsgId && nowHM >= morning && nowHM < evening) {
+      // До конца дня — обновляем утреннее сообщение под текущие статусы
+      // (идемпотентно, без записи в KV). Вечернего итога нет, поэтому правки
+      // не обрываются в 20:00: задачи, закрытые поздно, тоже отметятся.
+      if (day.morningMsgId && nowHM >= morning) {
         const last = lastDayEdit.get(group.chatId)
         // Та же доска (кэш вернул тот же объект), тот же день и сообщение — текст тот же
         if (last && last.board === board && last.msgId === day.morningMsgId && last.today === today) continue
@@ -1178,7 +1137,7 @@ export default {
           await tgSend(env, chatId, `❌ Не удалось отправить в группу ${label} (id=<code>${esc(group.chatId)}</code>): ${esc((r && r.description) || 'нет ответа от Telegram')}\n\nЧастые причины: бот не добавлен в группу, у него нет права писать сообщения, либо id группы неверный (перепроверьте через /id@ИмяБота внутри группы).`)
         }
       }
-      await tgSend(env, chatId, `Отчёты приходят: утро — ${esc(env.MORNING || '10:00')}, вечер — ${esc(env.EVENING || '20:00')} по ${esc(env.TZ_NAME || 'TZ')}.`)
+      await tgSend(env, chatId, `Отчёт приходит утром — в ${esc(env.MORNING || '10:00')} по ${esc(env.TZ_NAME || 'TZ')}, а до конца дня обновляется под текущие статусы.`)
       return new Response('OK')
     }
     try {
