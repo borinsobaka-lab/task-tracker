@@ -28,6 +28,11 @@ const VIEWS: { key: ViewKind; label: string; Icon: ComponentType<IconProps>; col
   { key: 'crm', label: 'CRM', Icon: IcoCrm, color: CRM_COLOR }, // фиолетовый
 ]
 
+/** Название раздела — для шапки на телефоне и заголовка вкладки браузера */
+export function viewLabel(view: ViewKind): string {
+  return VIEWS.find((v) => v.key === view)?.label ?? ''
+}
+
 /** Верхний хедер: табы разделов, глобальный поиск и кнопка настроек. */
 export function Header({
   view,
@@ -50,7 +55,7 @@ export function Header({
   return (
     <header className="app-header">
       {/* Мобильная версия: разделы переехали в нижнюю навигацию, в шапке — название текущего */}
-      <div className="header-title-mobile">{VIEWS.find((v) => v.key === view)?.label}</div>
+      <div className="header-title-mobile">{viewLabel(view)}</div>
       <nav className="view-tabs" aria-label="Вид">
         {VIEWS.map((v) => (
           <button

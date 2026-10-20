@@ -1114,3 +1114,15 @@ test('CRM: партнёр, задача по сделке и контроль п
   await page.keyboard.press('Escape')
   await expect(page.locator('.crm-table tbody tr', { hasText: 'Агентство Вектор' })).toContainText('Нет шага / срока')
 })
+
+test('заголовок вкладки браузера — по текущему разделу', async ({ page }) => {
+  await createIdentity(page)
+  await expect(page).toHaveTitle('Доска — Задачи')
+  for (const name of ['Календарь', 'Заметки', 'CRM']) {
+    await page.locator('.view-tabs button', { hasText: name }).click()
+    await expect(page).toHaveTitle(`${name} — Задачи`)
+  }
+  // После перезагрузки — раздел, в котором остановились
+  await page.reload()
+  await expect(page).toHaveTitle('CRM — Задачи')
+})

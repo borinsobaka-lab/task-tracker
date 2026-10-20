@@ -6,7 +6,7 @@ import { LocalAdapter } from './storage/local'
 import { getDataRepoConfig, getSavedView, getToken, isDemoMode, OWNER_PASSWORD, setSavedView, setToken } from './config'
 import { getAuthState } from './auth'
 import type { EncryptedBlob } from './crypto'
-import { Header, BottomNav } from './components/Header'
+import { Header, BottomNav, viewLabel } from './components/Header'
 import { Confetti } from './components/Confetti'
 import { TaskStartChime } from './components/TaskStartChime'
 import { NotifyPrompt } from './components/NotifyPrompt'
@@ -320,6 +320,11 @@ function Shell({ onLogout }: { onLogout: () => void }) {
     if (!boardReady) return
     reportIdentityToNative(identityId, identityName)
   }, [boardReady, identityId, identityName])
+
+  // Заголовок вкладки браузера — по текущему разделу: «CRM — Задачи», «Календарь — Задачи»…
+  useEffect(() => {
+    document.title = `${viewLabel(view)} — Задачи`
+  }, [view])
 
   // Доска показана — в простое подгружаем остальные разделы и карточку задачи
   useEffect(() => {
