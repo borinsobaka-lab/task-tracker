@@ -2,7 +2,7 @@
 // Запуск: node bot/worker/test.mjs   (Node ≥ 20 с глобальным Web Crypto)
 
 import assert from 'node:assert/strict'
-import { verifyPassword, authNeedsAppLogin, assignedCardIds, upcomingWithin, activeMembers, morningText, eveningText, makeInboxCard, overdueCards, matchesProject } from './worker.js'
+import { verifyPassword, authNeedsAppLogin, assignedCardIds, upcomingWithin, activeMembers, morningText, makeInboxCard, overdueCards, matchesProject } from './worker.js'
 
 function b64(bytes) {
   let s = ''
@@ -101,8 +101,6 @@ assert.ok(mt.includes('Вова'), 'группировка по исполнит
 assert.ok(!mt.includes('👤') && !mt.includes('📭'), 'нет эмодзи перед исполнителями')
 assert.ok(mt.includes('<b>Вова</b>'), 'имя исполнителя жирным')
 assert.ok(!mt.includes('➖') && !mt.includes('нужно сделать'), 'нет черты и легенды статусов')
-const et = eveningText(env, boardToday, allGroup, [])
-assert.ok(et.includes('Итоги дня'), 'вечерний заголовок')
 
 // 3b) Режим по проектам: в группу проекта идут ТОЛЬКО его задачи (личные задачи
 //     без проекта — никуда), названия проекта в сообщении нет (оно и так приходит
@@ -112,7 +110,6 @@ const beta = { chatId: 'g2', projectId: 'proj-2', name: 'Бета' }
 const mAlpha = morningText(env, boardToday, alpha, [])
 assert.ok(!mAlpha.includes('📁'), 'нет строки с папкой и названием проекта')
 assert.ok(mAlpha.startsWith('☀️ <b>Доброе утро!</b>'), 'сообщение начинается сразу с приветствия')
-assert.ok(eveningText(env, boardToday, alpha, []).startsWith('🌙 <b>Итоги дня'), 'вечерний отчёт без шапки проекта')
 assert.ok(mAlpha.includes('Задача Альфы'), 'задача проекта попала в его группу')
 assert.ok(!mAlpha.includes('Позвонить в банк'), 'личная задача без проекта в группу проекта НЕ попала')
 assert.ok(!mAlpha.includes('Задача Беты'), 'чужая задача не попала в группу проекта Альфа')
@@ -277,10 +274,10 @@ async function tick(kv, hm, { fresh = false, board = groupsBoard } = {}) {
 }
 const sends = (calls) => calls.filter((c) => c.method === 'sendMessage')
 const mornings = (calls) => sends(calls).filter((c) => c.body.text.includes('Доброе утро'))
-const evenings = (calls) => sends(calls).filter((c) => c.body.text.includes('Итоги дня'))
 
 {
-  // Обычный день: утро в 10:00 в обе группы, дальше только правки, вечер в 20:00
+  // Обычный день: утро в 10:00 в обе группы, дальше до конца дня только правки —
+  // вечернего итога нет
   const kv = makeKV()
   assert.equal(sends(await tick(kv, '09:59', { fresh: true })).length, 0, 'до 10:00 ничего не шлём')
   assert.equal(mornings(await tick(kv, '10:00')).length, 2, 'утро в 10:00 — в каждую группу')
@@ -288,8 +285,12 @@ const evenings = (calls) => sends(calls).filter((c) => c.body.text.includes('И�
   assert.equal(sends(t1).length, 0, 'повторного утра нет даже в новом изоляте')
   assert.equal(t1.filter((c) => c.method === 'editMessageText').length, 2, 'днём утреннее обновляется')
   assert.equal(sends(await tick(kv, '14:42', { fresh: true })).length, 0, 'в 14:42 ничего не отправляется')
-  assert.equal(evenings(await tick(kv, '20:00')).length, 2, 'вечер в 20:00 — в каждую группу')
-  assert.equal(sends(await tick(kv, '20:01', { fresh: true })).length, 0, 'повторного вечера нет')
+  const t2 = await tick(kv, '20:00', { fresh: true })
+  assert.equal(sends(t2).length, 0, 'в 20:00 вечерний отчёт НЕ приходит')
+  assert.equal(t2.filter((c) => c.method === 'editMessageText').length, 2, 'вечером утреннее по-прежнему обновляется')
+  const t3 = await tick(kv, '23:30', { fresh: true })
+  assert.equal(sends(t3).length, 0, 'поздно вечером ничего не шлём')
+  assert.equal(t3.filter((c) => c.method === 'editMessageText').length, 2, 'правки утреннего — до конца дня')
 }
 {
   // Отметка «утро отправлено» потеряна (пустой KV, свежий изолят) — днём
@@ -297,7 +298,6 @@ const evenings = (calls) => sends(calls).filter((c) => c.body.text.includes('И�
   const kv = makeKV()
   assert.equal(mornings(await tick(kv, '14:42', { fresh: true })).length, 0, 'потеряна отметка — в 14:42 утро НЕ шлётся')
   assert.equal(mornings(await tick(kv, '11:00', { fresh: true })).length, 0, 'окно утра — до 11:00, позже не шлём')
-  assert.equal(evenings(await tick(kv, '23:30', { fresh: true })).length, 0, 'вечер после окна не шлётся')
 }
 {
   // KV не принимает записи вовсе: дубли возможны лишь при смене изолята и только

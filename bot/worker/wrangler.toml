@@ -26,7 +26,6 @@ AUTH_BRANCH = "app-config"
 TZ_NAME = "Asia/Tbilisi"
 APP_URL = "https://borinsobaka-lab.github.io/task-tracker/"
 MORNING = "10:00"   # время утреннего сообщения (по TZ_NAME)
-EVENING = "20:00"   # время вечернего сообщения (по TZ_NAME)
 GROUP_CHAT_ID = "ЗАМЕНИТЬ_НА_ID_ГРУППЫ"  # напр. -1001234567890
 
 # Секреты НЕ храните в этом файле — задайте отдельно (см. SETUP.md):
