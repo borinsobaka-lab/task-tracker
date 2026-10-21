@@ -66,6 +66,7 @@ function Field({
   span,
   field,
   invalid,
+  hint,
   children,
 }: {
   label: string
@@ -73,12 +74,15 @@ function Field({
   span?: 2 | 3 | 4
   field?: DealFieldKey
   invalid?: boolean
+  /** Пояснение под полем — как его правильно заполнять */
+  hint?: string
   children: ReactNode
 }) {
   return (
     <label className={'crm-field' + (wide ? ' wide' : '') + (span ? ` s${span}` : '') + (invalid ? ' invalid' : '')} data-field={field}>
       <span className="crm-field-label">{label}</span>
       {children}
+      {hint && <span className="crm-field-hint">{hint}</span>}
     </label>
   )
 }
@@ -495,7 +499,7 @@ export function DealModal({
               <Field label="Мероприятие" span={3} {...req('event')}>
                 <TextIn value={deal.event} onChange={(v) => set({ event: v })} placeholder="Конференция 27.11.26" />
               </Field>
-              <Field label="Сумма предложения, ₽" span={3} {...req('amount')}>
+              <Field label="Сумма предложения, ₽" span={3} {...req('amount')} hint="Полная сумма к оплате, с НДС. Не знаете — оставьте пустым">
                 <MoneyIn value={deal.amount} onChange={(v) => set({ amount: v })} />
               </Field>
               <Field label="Источник лида" span={3}>
@@ -599,7 +603,7 @@ export function DealModal({
               <Field label="Статус оплаты" span={2}>
                 <SelectIn value={deal.paymentStatus} onChange={(v) => set({ paymentStatus: v })} options={PAYMENT_STATUSES} />
               </Field>
-              <Field label="Получено всего, ₽" span={2}>
+              <Field label="Получено всего, ₽" span={2} hint="Сколько получено всего, а не последний платёж. Платёж — запись «Оплата» в истории">
                 <MoneyIn value={deal.paidTotal} onChange={(v) => set({ paidTotal: v })} />
               </Field>
               <Field label="Дата последней оплаты" span={2}>
@@ -616,7 +620,7 @@ export function DealModal({
               <Field label="Основание / ссылка" span={4} {...req('basis')}>
                 <TextIn value={deal.basis} onChange={(v) => set({ basis: v })} placeholder="Договор, письмо, ссылка" />
               </Field>
-              <Field label="Актуальность данных" span={2}>
+              <Field label="Актуальность данных" span={2} hint="Неизвестное не угадывайте — «Требует уточнения»">
                 <SelectIn value={deal.quality} onChange={(v) => set({ quality: v })} options={QUALITY} empty="Не проверено" />
               </Field>
             </div>

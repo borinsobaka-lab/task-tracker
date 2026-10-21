@@ -94,6 +94,66 @@
   gap: 6px;
   padding: 9px 12px 0;
 }
+/* «i» у заголовка этапа — подсказка с правилами этапа */
+.crm-stage-info {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  margin-left: -2px;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  color: var(--text-faint);
+  cursor: help;
+}
+.crm-stage-info:hover,
+.crm-stage-info[aria-expanded='true'] {
+  color: var(--text);
+  background: rgba(30, 33, 48, 0.07);
+}
+.crm-stage-tip {
+  position: fixed;
+  z-index: 300;
+  padding: 12px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--text);
+  pointer-events: none;
+}
+.crm-stage-tip-title {
+  display: flex;
+  align-items: center;
+  font-weight: 700;
+  font-size: 14px;
+}
+.crm-stage-tip p {
+  margin: 4px 0 0;
+}
+.crm-stage-tip-sub {
+  margin-top: 8px;
+  font-weight: 650;
+  color: var(--text-soft);
+  font-size: 12px;
+}
+.crm-stage-tip ul {
+  margin: 3px 0 0;
+  padding-left: 18px;
+}
+.crm-stage-tip-note {
+  color: var(--text-soft);
+  border-top: 1px solid var(--border);
+  padding-top: 6px;
+  margin-top: 8px !important;
+}
+
 .crm-col-title {
   flex: 1;
   min-width: 0;
@@ -493,49 +553,6 @@
 
 /* ---------- Правила ---------- */
 
-.crm-rules {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 14px;
-  align-items: start;
-}
-.crm-rules-stages {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-.crm-rules-stages li {
-  display: grid;
-  grid-template-columns: 16px 190px 1fr;
-  align-items: baseline;
-  gap: 4px;
-  padding: 7px 0;
-  border-bottom: 1px solid var(--border);
-  font-size: 13.5px;
-}
-.crm-rules-stages li:last-child {
-  border-bottom: none;
-}
-.crm-rules-list {
-  margin: 0;
-}
-.crm-rules-list > div {
-  padding: 7px 0;
-  border-bottom: 1px solid var(--border);
-}
-.crm-rules-list > div:last-child {
-  border-bottom: none;
-}
-.crm-rules-list dt {
-  font-weight: 650;
-}
-.crm-rules-list dd {
-  margin: 2px 0 0;
-  color: var(--text-soft);
-  line-height: 1.45;
-  font-size: 13.5px;
-}
-
 /* ---------- Окна ---------- */
 
 .crm-modal {
@@ -822,10 +839,9 @@
   margin-top: 12px;
   font-size: 13px;
 }
-.crm-rules-req {
-  display: block;
-  margin-top: 2px;
-  font-size: 12.5px;
+.crm-field-hint {
+  font-size: 11.5px;
+  line-height: 1.35;
   color: var(--text-faint);
 }
 
@@ -938,8 +954,7 @@
 }
 
 @media (max-width: 900px) {
-  .crm-stats-grid,
-  .crm-rules {
+  .crm-stats-grid {
     grid-template-columns: minmax(0, 1fr);
   }
 }
@@ -1013,13 +1028,6 @@
   }
   .crm-modal-body.crm-deal-main {
     padding: 12px 12px 16px;
-  }
-  .crm-rules-stages li {
-    grid-template-columns: 16px 1fr;
-  }
-  .crm-rules-stages li span:last-child {
-    grid-column: 2;
-    color: var(--text-soft);
   }
   .crm-kpi-value {
     font-size: 19px;

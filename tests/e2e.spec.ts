@@ -1286,6 +1286,19 @@ test('CRM: перетаскивание на этап без нужных пол
   await expect(modal.locator('.crm-field.invalid', { hasText: 'Последний контакт' })).toBeVisible()
 })
 
+test('CRM: правила этапа — в подсказке «i» у заголовка колонки, отдельной вкладки нет', async ({ page }) => {
+  await createIdentity(page)
+  await page.locator('.view-tabs button', { hasText: 'CRM' }).click()
+  await expect(page.getByRole('tab', { name: 'Правила' })).toHaveCount(0)
+  await page.locator('.crm-col', { hasText: 'КП отправлено' }).getByRole('button', { name: /правила/ }).hover()
+  const tip = page.getByRole('tooltip')
+  await expect(tip).toContainText('КП отправлено: сохранены дата, версия, ссылка и сумма.')
+  await expect(tip).toContainText('КП: ссылка и версия')
+  await expect(tip).toContainText('Дата отправки КП ставится сама.')
+  await page.mouse.move(5, 500)
+  await expect(tip).toHaveCount(0)
+})
+
 test('CRM: ответственный — только участники проекта', async ({ page }) => {
   await createIdentity(page, 'Рома')
   await seedCrm(

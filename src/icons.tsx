@@ -62,6 +62,17 @@ export function IcoX({ size = 22, color = 'currentColor' }: { size?: number; col
   )
 }
 
+/** «i» в кружке — подсказка с правилами */
+export function IcoInfo({ size = 16, color = 'currentColor' }: { size?: number; color?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="9.25" stroke={color} strokeWidth="1.8" />
+      <path d="M12 11v5.5" stroke={color} strokeWidth="2" strokeLinecap="round" />
+      <circle cx="12" cy="7.75" r="1.25" fill={color} />
+    </svg>
+  )
+}
+
 /** Простые понятные стрелки-«шевроны» (крупнее и жирнее набора Solar). */
 export function IcoArrowLeft({ size = 22, color = 'currentColor' }: { size?: number; color?: string }) {
   return (
