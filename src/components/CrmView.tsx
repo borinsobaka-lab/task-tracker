@@ -2,12 +2,14 @@
 //  • Воронка — доска сделок по этапам (перетаскивание меняет этап и пишет историю);
 //  • Сделки — таблица со всеми контролями (шаг, решение, запись) и сортировкой;
 //  • Статистика — лист «Обзор»: этапы, «Требует внимания», деньги, неделя;
-//  • Компании (бывшие «Партнёры»), Контакты, Задачи (лист «Задачи и история») и Правила.
+//  • Компании (бывшие «Партнёры»), Контакты и Задачи (лист «Задачи и история»).
+// Правила ведения — в подсказках: «i» у заголовка этапа воронки и пояснения у полей.
 // Перевод сделки на этап, для которого не заполнены нужные поля, не проходит:
 // доска показывает, чего не хватает, и предлагает открыть карточку.
 // Фильтр проектов из шапки и фильтр участников (ответственный) действуют на всё.
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import type { CSSProperties, MutableRefObject, ReactNode } from 'react'
 import { DndContext, DragOverlay, PointerSensor, TouchSensor, useDraggable, useDroppable, useSensor, useSensors } from '@dnd-kit/core'
 import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core'
@@ -18,7 +20,6 @@ import {
   COMPANY_KINDS,
   companyKind,
   CRM_COLOR,
-  CRM_RULES,
   CRM_STAGES,
   crmOverview,
   dealMatchesAttention,
@@ -42,17 +43,17 @@ import {
   TASK_STATUSES,
   taskControl,
 } from '../crm'
-import type { AttentionKey, DealFieldKey } from '../crm'
+import type { AttentionKey, DealFieldKey, StageMeta } from '../crm'
 import { inProjectFilter } from '../utils'
 import { SubHeader } from './SubHeader'
 import { Avatar, ProjectAvatar } from './Avatar'
 import { CompanyModal, ContactModal, ControlBadge, DealModal, RecordModal, todayKey } from './CrmModals'
 import { hasUnseenComments, liveComments, useCommentsSeen } from './commentsSeen'
-import { IcoBoard, IcoChart, IcoChecklist, IcoComment, IcoCrm, IcoFile, IcoMeeting, IcoSearch } from '../icons'
+import { IcoBoard, IcoChart, IcoChecklist, IcoComment, IcoCrm, IcoFile, IcoInfo, IcoMeeting, IcoSearch } from '../icons'
 import './crm.css'
 
 /** 'partners' — вкладка «Компании» (ключ прежний, чтобы запомненная вкладка не сбилась) */
-export type CrmTab = 'funnel' | 'deals' | 'stats' | 'partners' | 'contacts' | 'tasks' | 'rules'
+export type CrmTab = 'funnel' | 'deals' | 'stats' | 'partners' | 'contacts' | 'tasks'
 
 const TABS: { key: CrmTab; label: string; Icon: typeof IcoBoard }[] = [
   { key: 'funnel', label: 'Воронка', Icon: IcoBoard },
@@ -61,7 +62,6 @@ const TABS: { key: CrmTab; label: string; Icon: typeof IcoBoard }[] = [
   { key: 'partners', label: 'Компании', Icon: IcoCrm },
   { key: 'contacts', label: 'Контакты', Icon: IcoMeeting },
   { key: 'tasks', label: 'Задачи', Icon: IcoChecklist },
-  { key: 'rules', label: 'Правила', Icon: IcoFile },
 ]
 
 const TAB_KEY = 'tt.crmTab'
@@ -297,7 +297,6 @@ export function CrmView({
             onOpenPartner={setPartnerId}
           />
         )}
-        {tab === 'rules' && <Rules />}
         {(tab === 'funnel' || tab === 'deals') && deals.length === 0 && store.deals.length > 0 && (
           <div className="crm-filter-note muted">Сделки есть, но не подходят под фильтр проекта или участника.</div>
         )}
@@ -401,8 +400,9 @@ function Funnel({
           return (
             <StageColumn key={s.key} stage={s.key}>
               <div className="board-col-strip" style={{ background: s.color }} />
-              <div className="crm-col-head" title={s.criterion}>
+              <div className="crm-col-head">
                 <span className="crm-col-title">{s.label}</span>
+                <StageInfo stage={s} />
                 <span className="board-col-count">{list.length}</span>
               </div>
               <div className="crm-col-sum">{sum > 0 ? fmtMoneyShort(sum) : <span className="muted">—</span>}</div>
@@ -467,6 +467,72 @@ function StageBlockedDialog({ blocked, onFill, onCancel }: { blocked: Blocked; o
         </div>
       </div>
     </div>
+  )
+}
+
+/** «i» у заголовка этапа: при наведении (на телефоне — по нажатию) — что подтверждает
+ *  переход и какие поля нужно заполнить. Подсказка рисуется поверх всего (портал),
+ *  чтобы её не обрезала прокрутка воронки. */
+function StageInfo({ stage }: { stage: StageMeta }) {
+  const btn = useRef<HTMLButtonElement>(null)
+  const [pos, setPos] = useState<{ left: number; top: number } | null>(null)
+  const WIDTH = 300
+  const show = () => {
+    const r = btn.current?.getBoundingClientRect()
+    if (!r) return
+    const left = Math.min(Math.max(8, r.left + r.width / 2 - WIDTH / 2), window.innerWidth - WIDTH - 8)
+    setPos({ left, top: r.bottom + 8 })
+  }
+  const hide = () => setPos(null)
+  // Открытую нажатием подсказку закрывает нажатие в другом месте и прокрутка
+  useEffect(() => {
+    if (!pos) return
+    const close = (e: Event) => e.target !== btn.current && !btn.current?.contains(e.target as Node) && hide()
+    window.addEventListener('pointerdown', close)
+    window.addEventListener('scroll', hide, true)
+    return () => {
+      window.removeEventListener('pointerdown', close)
+      window.removeEventListener('scroll', hide, true)
+    }
+  }, [pos])
+  const fields = stageFields(stage.key)
+  return (
+    <>
+      <button
+        ref={btn}
+        type="button"
+        className="crm-stage-info"
+        aria-label={`Этап «${stage.label}»: правила`}
+        aria-expanded={!!pos}
+        onMouseEnter={show}
+        onMouseLeave={hide}
+        onFocus={show}
+        onBlur={hide}
+        onClick={show}
+        // Нажатие на «i» не должно начинать перетаскивание колонки / карточки
+        onPointerDown={(e) => e.stopPropagation()}
+      >
+        <IcoInfo size={15} />
+      </button>
+      {pos &&
+        createPortal(
+          <div className="crm-stage-tip" role="tooltip" style={{ left: pos.left, top: pos.top, width: WIDTH }}>
+            <div className="crm-stage-tip-title">
+              <span className="crm-stage-dot" style={{ background: stage.color }} />
+              {stage.label}
+            </div>
+            <p>{stage.criterion}</p>
+            <div className="crm-stage-tip-sub">Чтобы перевести сюда сделку, заполните:</div>
+            <ul>
+              {fields.map((k) => (
+                <li key={k}>{dealFieldLabel(k, stage.key)}</li>
+              ))}
+            </ul>
+            {stage.note && <p className="crm-stage-tip-note">{stage.note}</p>}
+          </div>,
+          document.body,
+        )}
+    </>
   )
 }
 
@@ -993,49 +1059,6 @@ function TasksList({
           </table>
         </div>
       )}
-    </div>
-  )
-}
-
-// ---------- Правила ----------
-
-/** Что этап требует заполнить. Этапы открытой воронки накопительные — у них только новое. */
-function requiredText(stage: DealStage): string {
-  const i = OPEN_STAGES.indexOf(stage)
-  const prev = i > 1 ? new Set(stageFields(OPEN_STAGES[i - 1])) : null
-  const fields = stageFields(stage).filter((k) => !prev?.has(k))
-  return `${prev ? 'Плюс к прежним этапам' : 'Заполнить'}: ${fields.map((k) => dealFieldLabel(k, stage)).join(', ')}.`
-}
-
-function Rules() {
-  return (
-    <div className="crm-page crm-rules">
-      <section className="crm-panel">
-        <h4>Этапы и что подтверждает переход</h4>
-        <ul className="crm-rules-stages">
-          {CRM_STAGES.map((s) => (
-            <li key={s.key}>
-              <span className="crm-stage-dot" style={{ background: s.color }} />
-              <b>{s.label}</b>
-              <span>
-                {s.criterion}
-                <span className="crm-rules-req">{requiredText(s.key)}</span>
-              </span>
-            </li>
-          ))}
-        </ul>
-      </section>
-      <section className="crm-panel">
-        <h4>Правила ведения</h4>
-        <dl className="crm-rules-list">
-          {CRM_RULES.map((r) => (
-            <div key={r.title}>
-              <dt>{r.title}</dt>
-              <dd>{r.text}</dd>
-            </div>
-          ))}
-        </dl>
-      </section>
     </div>
   )
 }
