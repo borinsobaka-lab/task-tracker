@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-21T21:51:11.475Z",
+  "generatedAt": "2026-10-21T21:51:16.834Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -3982,21 +3982,6 @@
       ]
     },
     {
-      "id": "b9aab991-f051-483e-b670-95aca2b12966",
-      "title": "Связаться с Elastic Fit, назначить встречу",
-      "date": "2026-10-21",
-      "start": "10:00",
-      "durationMin": 30,
-      "priorityColor": "#ef4444",
-      "members": [
-        {
-          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
-          "name": "Вова",
-          "color": "#84cc16"
-        }
-      ]
-    },
-    {
       "id": "01f7f6c9-b201-4370-a35a-9aaf5a374cf0:2026-10-20",
       "title": "Отправка промо-email писем клиентам",
       "date": "2026-10-21",
@@ -4136,6 +4121,21 @@
       "title": "Подготовь график выхода постов в Instagram NEBA.",
       "date": "2026-10-22",
       "start": "11:30",
+      "durationMin": 60,
+      "priorityColor": "#ef4444",
+      "members": [
+        {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
+          "name": "Вова",
+          "color": "#84cc16"
+        }
+      ]
+    },
+    {
+      "id": "b9aab991-f051-483e-b670-95aca2b12966",
+      "title": "Связаться с Elastic Fit, назначить встречу",
+      "date": "2026-10-22",
+      "start": "12:30",
       "durationMin": 60,
       "priorityColor": "#ef4444",
       "members": [
