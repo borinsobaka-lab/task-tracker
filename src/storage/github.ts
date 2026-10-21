@@ -118,6 +118,28 @@ export class GitHubAdapter implements StorageAdapter {
 
   private conditional = true
 
+  /** Все записи в ветку данных (board.json, загрузка и удаление вложений) идут
+   *  по одной: каждая — отдельный коммит, и параллельные коммиты в одну ветку
+   *  GitHub отвергает (409). Из-за этого падала загрузка нескольких файлов сразу. */
+  private writeQueue: Promise<unknown> = Promise.resolve()
+  private exclusive<T>(fn: () => Promise<T>): Promise<T> {
+    const run = this.writeQueue.then(fn, fn)
+    this.writeQueue = run.catch(() => {})
+    return run
+  }
+
+  /** Коммит в ветку может столкнуться с чужим (другое устройство) — 409; повторяем. */
+  private async retryOnConflict<T>(fn: () => Promise<T>): Promise<T> {
+    for (let attempt = 0; ; attempt++) {
+      try {
+        return await fn()
+      } catch (e) {
+        if ((e as GitHubApiError).status !== 409 || attempt >= 4) throw e
+        await new Promise((r) => setTimeout(r, 500 * (attempt + 1)))
+      }
+    }
+  }
+
   private async fetchBoard(ifNoneMatch?: string): Promise<RemoteState | null | 'unchanged'> {
     let res: Response
     try {
@@ -190,7 +212,11 @@ export class GitHubAdapter implements StorageAdapter {
     return loaded
   }
 
-  async save(data: BoardData, baseRev: string): Promise<{ rev: string }> {
+  save(data: BoardData, baseRev: string): Promise<{ rev: string }> {
+    return this.exclusive(() => this.saveNow(data, baseRev))
+  }
+
+  private async saveNow(data: BoardData, baseRev: string): Promise<{ rev: string }> {
     const json = JSON.stringify(data, null, 2)
     try {
       const res = await api<any>(this.auth, `${this.repoPath}/contents/${BOARD_FILE}`, {
@@ -218,14 +244,14 @@ export class GitHubAdapter implements StorageAdapter {
     const id = presetId ?? uid()
     const path = `attachments/${cardId}/${id.slice(0, 8)}_${sanitizeFileName(file.name)}`
     const content = await fileToBase64(file)
-    await api(this.auth, `${this.repoPath}/contents/${encPath(path)}`, {
-      method: 'PUT',
-      body: JSON.stringify({
-        message: `Вложение: ${file.name}`,
-        content,
-        branch: this.auth.branch,
-      }),
+    const body = JSON.stringify({
+      message: `Вложение: ${file.name}`,
+      content,
+      branch: this.auth.branch,
     })
+    await this.exclusive(() =>
+      this.retryOnConflict(() => api(this.auth, `${this.repoPath}/contents/${encPath(path)}`, { method: 'PUT', body })),
+    )
     return {
       id,
       name: file.name,
@@ -237,7 +263,11 @@ export class GitHubAdapter implements StorageAdapter {
     }
   }
 
-  async deleteAttachment(att: Attachment): Promise<void> {
+  deleteAttachment(att: Attachment): Promise<void> {
+    return this.exclusive(() => this.retryOnConflict(() => this.deleteAttachmentNow(att)))
+  }
+
+  private async deleteAttachmentNow(att: Attachment): Promise<void> {
     try {
       const meta = await api<any>(this.auth, `${this.repoPath}/contents/${encPath(att.path)}?ref=${encodeURIComponent(this.auth.branch)}`)
       await api(this.auth, `${this.repoPath}/contents/${encPath(att.path)}`, {

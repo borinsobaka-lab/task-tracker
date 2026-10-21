@@ -17,7 +17,6 @@ import type { Attachment, ID, Note, Project } from '../types'
 import { isMobileViewport } from '../config'
 import {
   addPendingUpload,
-  attachmentUrl,
   finishPendingUpload,
   NOTE_MAX_FILE_SIZE,
   noteDisplayTitle,
@@ -33,6 +32,7 @@ import {
 import { formatBytes, inProjectFilter, uid } from '../utils'
 import { EditorToolbar, RteButton, richTextExtensions, useSyncedEditor } from './RichTextEditor'
 import { NoteAttachment, NoteAttContext, TrailingParagraph } from './NoteAttachmentNode'
+import { ImageViewer } from './ImageViewer'
 import type { NoteAttContextValue } from './NoteAttachmentNode'
 import { ProjectAvatar } from './Avatar'
 import {
@@ -50,7 +50,6 @@ import {
   IcoPin,
   IcoSearch,
   IcoTrash,
-  IcoX,
 } from '../icons'
 import './notes.css'
 
@@ -870,65 +869,6 @@ function NoteProjectPicker({ note }: { note: Note }) {
           </div>
         </>
       )}
-    </div>
-  )
-}
-
-// ---------- Просмотр картинки на весь экран ----------
-
-function ImageViewer({
-  att,
-  load,
-  onClose,
-  onDownload,
-  onRemove,
-}: {
-  att: Attachment
-  load: (att: Attachment) => Promise<Blob>
-  onClose: () => void
-  onDownload: () => void
-  onRemove: () => void
-}) {
-  const [url, setUrl] = useState<string | null>(null)
-  useEffect(() => {
-    let alive = true
-    attachmentUrl(att, load)
-      .then((u) => alive && setUrl(u))
-      .catch(() => {})
-    return () => {
-      alive = false
-    }
-  }, [att, load])
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [onClose])
-
-  return (
-    <div className="note-viewer" role="dialog" aria-modal="true" aria-label={att.name} onClick={onClose}>
-      <div className="note-viewer-bar" onClick={(e) => e.stopPropagation()}>
-        <button type="button" className="note-viewer-btn" onClick={onClose} aria-label="Закрыть">
-          <IcoX size={24} />
-        </button>
-        <span className="note-viewer-name">{att.name}</span>
-        <button type="button" className="note-viewer-btn text" onClick={onDownload}>
-          Скачать
-        </button>
-        <button type="button" className="note-viewer-btn text danger" onClick={onRemove}>
-          Убрать
-        </button>
-      </div>
-      <div className="note-viewer-body">
-        {url ? (
-          <img src={url} alt={att.name} onClick={(e) => e.stopPropagation()} />
-        ) : att.thumb ? (
-          <img src={att.thumb} alt="" className="natt-img-blur" />
-        ) : (
-          <span className="spinner" />
-        )}
-      </div>
     </div>
   )
 }
