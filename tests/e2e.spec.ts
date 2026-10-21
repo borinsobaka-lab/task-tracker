@@ -611,6 +611,44 @@ test('заметки: картинка прямо в тексте, миниат�
   await expect(page.locator('.note-viewer')).toBeHidden()
 })
 
+test('вложения задачи: несколько файлов сразу, удаление и просмотр картинки', async ({ page }) => {
+  await createIdentity(page)
+  await page.getByText('Добавить карточку').first().click()
+  await page.locator('textarea').first().fill('С файлами')
+  await page.keyboard.press('Enter')
+  await page.getByText('С файлами').click()
+  await page.locator('.cm-att-list').waitFor()
+  // Три файла одним выбором — все загружаются
+  await page.locator('input[type="file"][multiple]').setInputFiles([
+    { name: 'photo.png', mimeType: 'image/png', buffer: PNG_1PX },
+    { name: 'a.txt', mimeType: 'text/plain', buffer: Buffer.from('a') },
+    { name: 'b.txt', mimeType: 'text/plain', buffer: Buffer.from('b') },
+  ])
+  await expect(page.locator('.cm-att:not(.cm-att-uploading)')).toHaveCount(3)
+  await expect(page.locator('.cm-att-uploading')).toHaveCount(0)
+
+  // Картинка открывается в просмотрщике; «Скачать» скачивает; Escape закрывает только просмотр
+  await page.locator('.cm-att-name', { hasText: 'photo.png' }).click()
+  await expect(page.locator('.note-viewer img')).toBeVisible()
+  const download = page.waitForEvent('download')
+  await page.locator('.note-viewer').getByRole('button', { name: 'Скачать' }).click()
+  expect((await download).suggestedFilename()).toBe('photo.png')
+  await page.keyboard.press('Escape')
+  await expect(page.locator('.note-viewer')).toBeHidden()
+  await expect(page.getByRole('button', { name: /Удалить карточку/ })).toBeVisible()
+
+  // Удаляем два файла подряд — они не возвращаются ни сразу, ни после перезагрузки
+  page.on('dialog', (d) => d.accept())
+  await page.locator('.cm-att', { hasText: 'a.txt' }).getByRole('button', { name: 'Удалить вложение' }).click()
+  await page.locator('.cm-att', { hasText: 'b.txt' }).getByRole('button', { name: 'Удалить вложение' }).click()
+  await expect(page.locator('.cm-att')).toHaveCount(1)
+  await page.waitForTimeout(2000) // сохранение (дебаунс)
+  await page.reload()
+  await page.getByText('С файлами').click()
+  await expect(page.locator('.cm-att')).toHaveCount(1)
+  await expect(page.locator('.cm-att-name')).toHaveText('photo.png')
+})
+
 test('заметки на телефоне: «+» создаёт заметку, «‹ Заметки» возвращает к списку', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 780 })
   await createIdentity(page)

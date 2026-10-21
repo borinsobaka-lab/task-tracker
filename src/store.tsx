@@ -1691,6 +1691,8 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
         const card = d.cards[cardId]
         if (!card) return
         card.attachments = card.attachments.filter((a) => a.id !== attId)
+        // Надгробие: иначе слияние с версией, где вложение ещё есть, вернёт его
+        card.removedAttachmentIds = [...new Set([...(card.removedAttachmentIds ?? []), attId])]
         touch(card)
       })
       if (att) {
@@ -1793,6 +1795,7 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
         if (orphans.length === 0) return
         files.push(...orphans.map((a) => ({ ...a })))
         n.attachments = n.attachments.filter((a) => !orphans.includes(a))
+        n.removedAttachmentIds = [...new Set([...(n.removedAttachmentIds ?? []), ...orphans.map((a) => a.id)])]
         touch(n)
       })
       deleteFiles(engine, files)

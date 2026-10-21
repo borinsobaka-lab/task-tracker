@@ -16,6 +16,8 @@ import { RichTextEditor } from './RichTextEditor'
 import { RecurrenceFields } from './RecurrenceFields'
 import { SheetGrabber } from './SheetGrabber'
 import { CommentsPanel } from './Comments'
+import { ImageViewer } from './ImageViewer'
+import { isImageMime } from '../notes'
 import './modal.css'
 
 const MAX_FILE_SIZE = 15 * 1024 * 1024 // 15 МБ
@@ -470,10 +472,14 @@ function CardModalInner({
     return () => document.removeEventListener('mousedown', onDown)
   }, [dateOpen])
 
+  // Открытая на весь экран картинка-вложение (см. «вложения» ниже)
+  const [viewerId, setViewerId] = useState<ID | null>(null)
+
   // Escape: сначала закрывает открытый поповер, затем — модалку
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return
+      if (viewerId) return // сначала закрывается просмотр картинки (это делает сам просмотрщик)
       if (membersOpen) {
         setMembersOpen(false)
         return
@@ -486,7 +492,7 @@ function CardModalInner({
     }
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
-  }, [membersOpen, dateOpen, onClose])
+  }, [viewerId, membersOpen, dateOpen, onClose])
 
   // --- срок/время: локальное состояние поповера ---
   const [dateVal, setDateVal] = useState('')
@@ -563,21 +569,27 @@ function CardModalInner({
 
   const handleFiles = async (files: File[]) => {
     if (card.kind === 'meeting') return // у встреч вложений нет
-    for (const file of files) {
-      if (file.size > MAX_FILE_SIZE) {
-        alert(`Файл «${file.name}» весит ${formatBytes(file.size)}. Максимальный размер — 15 МБ.`)
-        continue
-      }
-      const key = ++uploadKey.current
-      setUploads((u) => [...u, { key, name: file.name }])
+    const tooBig = files.filter((f) => f.size > MAX_FILE_SIZE)
+    if (tooBig.length) {
+      alert(
+        tooBig.map((f) => `Файл «${f.name}» весит ${formatBytes(f.size)}.`).join('\n') + '\nМаксимальный размер — 15 МБ.',
+      )
+    }
+    // Все выбранные файлы сразу видны в списке как «загрузка…», а грузятся по одному
+    const queue = files.filter((f) => f.size <= MAX_FILE_SIZE).map((file) => ({ key: ++uploadKey.current, file }))
+    if (!queue.length) return
+    setUploads((u) => [...u, ...queue.map(({ key, file }) => ({ key, name: file.name }))])
+    const failed: string[] = []
+    for (const { key, file } of queue) {
       try {
         await store.uploadAttachment(card.id, file)
       } catch (e) {
-        alert(`Не удалось загрузить файл «${file.name}»: ${errMsg(e)}`)
+        failed.push(`«${file.name}»: ${errMsg(e)}`)
       } finally {
         setUploads((u) => u.filter((x) => x.key !== key))
       }
     }
+    if (failed.length) alert(`Не удалось загрузить ${failed.length > 1 ? 'файлы' : 'файл'}:\n${failed.join('\n')}`)
   }
 
   const hasFiles = (e: ReactDragEvent) => Array.from(e.dataTransfer.types).includes('Files')
@@ -607,13 +619,22 @@ function CardModalInner({
     if (files.length) void handleFiles(files)
   }
 
-  const removeAttachment = (att: Attachment) => {
-    if (!confirm(`Удалить вложение «${att.name}»?`)) return
+  const removeAttachment = (att: Attachment): boolean => {
+    if (!confirm(`Удалить вложение «${att.name}»?`)) return false
     store.removeAttachment(card.id, att.id).catch((e) => alert(`Не удалось удалить вложение: ${errMsg(e)}`))
+    return true
   }
 
   const downloadAttachment = (att: Attachment) => {
     store.downloadAttachment(att).catch((e) => alert(`Не удалось скачать файл: ${errMsg(e)}`))
+  }
+
+  // Картинка открывается в просмотрщике прямо в приложении, остальные файлы — скачиваются
+  const viewerAtt = viewerId ? card.attachments.find((a) => a.id === viewerId) : undefined
+  const closeViewer = useCallback(() => setViewerId(null), [])
+  const openAttachment = (att: Attachment) => {
+    if (isImageMime(att.mime)) setViewerId(att.id)
+    else downloadAttachment(att)
   }
 
   // --- участники ---
@@ -1053,9 +1074,14 @@ function CardModalInner({
             {card.attachments.map((att) => (
               <div className="cm-att" key={att.id}>
                 <span className="cm-att-icon" aria-hidden="true">
-                  {att.mime.startsWith('image/') ? '🖼' : '📄'}
+                  {isImageMime(att.mime) ? '🖼' : '📄'}
                 </span>
-                <button type="button" className="cm-att-name" title="Скачать" onClick={() => downloadAttachment(att)}>
+                <button
+                  type="button"
+                  className="cm-att-name"
+                  title={isImageMime(att.mime) ? 'Открыть' : 'Скачать'}
+                  onClick={() => openAttachment(att)}
+                >
                   {att.name}
                 </button>
                 <span className="cm-att-meta muted">
@@ -1076,6 +1102,16 @@ function CardModalInner({
               <div className="muted cm-att-empty">Файлов нет — перетащите их сюда или нажмите «Прикрепить файл»</div>
             )}
           </div>
+          {viewerAtt && (
+            <ImageViewer
+              att={viewerAtt}
+              load={store.attachmentBlob}
+              onClose={closeViewer}
+              onDownload={() => downloadAttachment(viewerAtt)}
+              onRemove={() => removeAttachment(viewerAtt) && closeViewer()}
+              removeLabel="Удалить"
+            />
+          )}
         </section>
         )}
 

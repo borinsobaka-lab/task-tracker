@@ -26,7 +26,7 @@ function mergeCard(a: Card, b: Card): Card {
   return {
     ...base,
     checklist: mergeChecklist(base.checklist, other.checklist),
-    attachments: mergeAttachments(base.attachments, other.attachments),
+    ...mergeAttachments(base, other),
     comments: mergeComments(base.comments, other.comments),
   }
 }
@@ -70,14 +70,23 @@ function mergeNote(a: Note, b: Note): Note {
   const base = newer(a, b)
   if (base.deleted) return base
   const other = base === a ? b : a
-  return { ...base, attachments: mergeAttachments(base.attachments, other.attachments) }
+  return { ...base, ...mergeAttachments(base, other) }
 }
 
-function mergeAttachments(a: Attachment[], b: Attachment[]): Attachment[] {
+type WithAttachments = { attachments: Attachment[]; removedAttachmentIds?: ID[] }
+
+/** Вложения неизменяемы — объединяем обе стороны, кроме удалённых хоть на одной
+ *  из них (надгробия removedAttachmentIds тоже объединяем). */
+function mergeAttachments(a: WithAttachments, b: WithAttachments): WithAttachments {
+  const removed = new Set([...(a.removedAttachmentIds ?? []), ...(b.removedAttachmentIds ?? [])])
   const byId = new Map<ID, Attachment>()
-  for (const x of a) byId.set(x.id, x)
-  for (const x of b) if (!byId.has(x.id)) byId.set(x.id, x) // вложения неизменяемы — объединяем
-  return [...byId.values()]
+  for (const x of a.attachments) byId.set(x.id, x)
+  for (const x of b.attachments) if (!byId.has(x.id)) byId.set(x.id, x)
+  for (const id of removed) byId.delete(id)
+  return {
+    attachments: [...byId.values()],
+    ...(removed.size ? { removedAttachmentIds: [...removed] } : {}),
+  }
 }
 
 function mergeById<T extends { id: ID; updatedAt: string }>(local: T[], remote: T[]): T[] {
