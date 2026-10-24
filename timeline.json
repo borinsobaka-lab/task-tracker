@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-24T17:30:54.764Z",
+  "generatedAt": "2026-10-24T17:31:46.740Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -4276,6 +4276,15 @@
           "color": "#84cc16"
         }
       ]
+    },
+    {
+      "id": "6c54da5f-dd28-4d9e-afd3-d61fc05298a5",
+      "title": "Без названия",
+      "date": "2026-10-25",
+      "start": "10:00",
+      "durationMin": 60,
+      "kind": "meeting",
+      "members": []
     },
     {
       "id": "b9aab991-f051-483e-b670-95aca2b12966",
