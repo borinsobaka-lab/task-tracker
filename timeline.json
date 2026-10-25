@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-25T21:02:26.152Z",
+  "generatedAt": "2026-10-25T21:03:23.140Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -4325,6 +4325,14 @@
           "color": "#84cc16"
         }
       ]
+    },
+    {
+      "id": "f586cdd6-8a5b-487f-bd94-1c80380ddbae",
+      "title": "Без названия",
+      "date": "2026-10-26",
+      "start": "06:30",
+      "durationMin": 60,
+      "members": []
     },
     {
       "id": "b9aab991-f051-483e-b670-95aca2b12966",
