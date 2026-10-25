@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-25T21:02:02.650Z",
+  "generatedAt": "2026-10-25T21:02:26.152Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -4327,20 +4327,6 @@
       ]
     },
     {
-      "id": "e579ca31-c8fd-4bec-868b-d476983e7b2f",
-      "title": "Шаблон для заполнения Telegram-бота под проект",
-      "date": "2026-10-26",
-      "start": "06:00",
-      "durationMin": 60,
-      "members": [
-        {
-          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
-          "name": "Вова",
-          "color": "#84cc16"
-        }
-      ]
-    },
-    {
       "id": "b9aab991-f051-483e-b670-95aca2b12966",
       "title": "Связаться с Elastic Fit, назначить встречу",
       "date": "2026-10-26",
@@ -4401,6 +4387,20 @@
       "date": "2026-10-26",
       "start": "13:00",
       "durationMin": 30,
+      "members": [
+        {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
+          "name": "Вова",
+          "color": "#84cc16"
+        }
+      ]
+    },
+    {
+      "id": "e579ca31-c8fd-4bec-868b-d476983e7b2f",
+      "title": "Шаблон для заполнения Telegram-бота под проект",
+      "date": "2026-10-26",
+      "start": "13:30",
+      "durationMin": 60,
       "members": [
         {
           "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
