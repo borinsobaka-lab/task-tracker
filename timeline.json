@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-25T23:36:03.394Z",
+  "generatedAt": "2026-10-25T23:36:07.514Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -4444,7 +4444,7 @@
       "title": "Зарегистрировать Eventbase в списке отечественного ПО.",
       "date": "2026-10-27",
       "start": "10:00",
-      "durationMin": 270,
+      "durationMin": 300,
       "priorityColor": "#ef4444",
       "members": [
         {
