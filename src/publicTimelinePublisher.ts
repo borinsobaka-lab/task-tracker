@@ -17,7 +17,8 @@ export function buildTimelineItems(store: StoreLike): TLItem[] {
   const byId = new Map(store.members.map((m) => [m.id, m]))
   return store
     .liveCards()
-    .filter((c) => !!c.date)
+    // Блоки — личное время (сон, спорт…), в публичный таймлайн не выкладываем
+    .filter((c) => !!c.date && c.kind !== 'block')
     .map((c) => ({
       id: c.id,
       title: c.title,

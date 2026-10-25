@@ -10,7 +10,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
 
 const NAMES = [
   'AltArrowDown', 'AltArrowLeft', 'AltArrowRight', 'ArrowRightUp', 'Calendar', 'Camera', 'CaseMinimalistic', 'ChartSquare',
-  'Gallery', 'ChatRoundLine', 'CheckCircle', 'ClipboardList', 'CloseCircle', 'DocumentText', 'HandShake', 'Link', 'ListCheck',
+  'Gallery', 'ChatRoundLine', 'CheckCircle', 'ClipboardList', 'CloseCircle', 'DocumentText', 'HandShake', 'Hourglass', 'Link', 'ListCheck',
   'Magnifer', 'MenuDots', 'MinusCircle', 'Notebook', 'Notes', 'Paperclip', 'PenNewSquare', 'Pin',
   'RepeatOneMinimalistic', 'Rocket', 'Settings', 'SliderVertical', 'SortVertical', 'TrashBinMinimalistic',
   'UsersGroupRounded', 'Widget',

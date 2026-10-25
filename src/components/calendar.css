@@ -620,6 +620,39 @@
   color: #ffffff;
 }
 
+/* Блоки (сон, спорт…) — занятое время: серая штриховка, без тени и полосы приоритета */
+.cal-event.timeblock,
+.cal-chip.timeblock,
+.cal-side-card.timeblock {
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--surface-2),
+    var(--surface-2) 6px,
+    var(--surface) 6px,
+    var(--surface) 12px
+  );
+  color: var(--text-soft);
+}
+.cal-event.timeblock {
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+.cal-event.timeblock:hover {
+  box-shadow: inset 0 0 0 1px var(--border-strong), var(--shadow-sm);
+}
+.cal-chip.timeblock,
+.cal-side-card.timeblock {
+  border-left-width: 1px;
+  border-left-color: var(--border);
+  box-shadow: none;
+}
+.cal-event.timeblock .cal-event-title {
+  color: var(--text-soft);
+}
+.cal-chip-ico {
+  flex-shrink: 0;
+  display: inline-flex;
+}
+
 /* Верхняя строка: чекбокс + заголовок (заголовок с самого верха блока) */
 .cal-event-toprow {
   display: flex;

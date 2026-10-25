@@ -61,8 +61,9 @@ export interface Comment {
   deleted?: boolean
 }
 
-/** Тип карточки: обычная задача или встреча (со ссылкой на созвон). */
-export type CardKind = 'task' | 'meeting'
+/** Тип карточки: обычная задача, встреча (со ссылкой на созвон) или блок —
+ *  личное занятое время в календаре (сон, спорт…): только название и описание. */
+export type CardKind = 'task' | 'meeting' | 'block'
 
 // ---------- Повторяющиеся (регулярные) задачи ----------
 
@@ -118,7 +119,7 @@ export type EisenhowerQuadrant = 'q1' | 'q2' | 'q3' | 'q4'
 export interface Card {
   id: ID
   title: string
-  /** 'meeting' — встреча; отсутствует/'task' — обычная задача */
+  /** 'meeting' — встреча; 'block' — блок времени; отсутствует/'task' — обычная задача */
   kind?: CardKind
   /** Ссылка на созвон (только у встреч) */
   meetingUrl?: string
