@@ -83,11 +83,11 @@ export const GanttView = forwardRef<GanttHandle, { cards: Card[]; onOpenCard: (i
     // Гасим клик, который браузер шлёт сразу после перетаскивания (иначе открывалась бы карточка)
     const suppressClickRef = useRef(false)
 
-    // Строки — только задачи/встречи с датой, по возрастанию даты и времени
+    // Строки — только задачи/встречи с датой (без блоков), по возрастанию даты и времени
     const rows = useMemo(
       () =>
         cards
-          .filter((c) => !!c.date)
+          .filter((c) => !!c.date && c.kind !== 'block')
           .sort((a, b) =>
             a.date! < b.date! ? -1 : a.date! > b.date! ? 1 : (a.start ?? '').localeCompare(b.start ?? ''),
           ),

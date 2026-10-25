@@ -83,9 +83,10 @@ export function BoardView({ memberFilter, onMemberFilterChange, projectFilter, o
   )
 
   const matchesFilter = useCallback(
-    // Встречи и экземпляры регулярных задач на доске не показываем
+    // Встречи, блоки и экземпляры регулярных задач на доске не показываем
     (card: Card) =>
       card.kind !== 'meeting' &&
+      card.kind !== 'block' &&
       !card.seriesId &&
       (memberFilter.size === 0 || card.assigneeIds.some((id) => memberFilter.has(id))) &&
       inProjectFilter(card.projectId, projectFilter),

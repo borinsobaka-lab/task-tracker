@@ -34,7 +34,8 @@ export function TaskStartChime() {
       const nowMs = Date.now()
       const todayKey = toDateKey(new Date())
       for (const c of s.liveCards()) {
-        if (c.done || !c.start || c.date !== todayKey) continue
+        // Блоки (сон, спорт…) не задачи — об их начале не сигналим
+        if (c.done || c.kind === 'block' || !c.start || c.date !== todayKey) continue
         // Сигналим про свои задачи и общие (без исполнителя); чужие — не трогаем.
         if (me && c.assigneeIds.length > 0 && !c.assigneeIds.includes(me.id)) continue
         if (announced.current.has(c.id)) continue

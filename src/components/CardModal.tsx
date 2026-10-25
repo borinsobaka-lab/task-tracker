@@ -10,7 +10,7 @@ import type { Attachment, Card, CardKind, ChecklistItem, EisenhowerQuadrant, ID,
 import { fmtDayMonth, fmtFullDate, formatBytes, parseDateKey, toDateKey } from '../utils'
 import { QUADRANT_COLOR, QUADRANT_LABEL, QUADRANTS } from '../eisenhower'
 import { describeRule, ruleIsValid } from '../recurrence'
-import { IcoCalendar, IcoCheck, IcoChevronDown, IcoClose, IcoDescription, IcoMeeting, IcoNone, IcoPaperclip, IcoRecurring, IcoX } from '../icons'
+import { IcoCalendar, IcoCheck, IcoChevronDown, IcoClose, IcoDescription, IcoMeeting, IcoNone, IcoPaperclip, IcoRecurring, IcoTimeBlock, IcoX } from '../icons'
 import { Avatar } from './Avatar'
 import { RichTextEditor } from './RichTextEditor'
 import { RecurrenceFields } from './RecurrenceFields'
@@ -528,14 +528,22 @@ function CardModalInner({
     setDateOpen(false)
   }
 
-  // --- тип карточки: задача / встреча ---
+  // --- тип карточки: задача / встреча / блок ---
   const isMeeting = card.kind === 'meeting'
+  // Блок — личное занятое время (сон, спорт…): только название, описание и время
+  const isBlock = card.kind === 'block'
+  const isTask = !isMeeting && !isBlock
   const isRecurring = !!card.seriesId
   const series = card.seriesId ? store.seriesById(card.seriesId) : undefined
   const canDeleteSeries = !!series && !series.deleted
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const setKind = (kind: CardKind) => {
-    if ((card.kind ?? 'task') !== kind) store.updateCard(card.id, { kind })
+    if ((card.kind ?? 'task') === kind) return
+    // Блок личный: без участников, проекта, приоритета и зависимостей — его видит
+    // только автор, и он не попадает ни в чужие календари, ни в отчёты бота.
+    if (kind === 'block')
+      store.updateCard(card.id, { kind, assigneeIds: [], projectId: undefined, priority: undefined, blockedBy: undefined, done: false })
+    else store.updateCard(card.id, { kind })
   }
 
   // --- ссылка на созвон (у встреч) ---
@@ -568,7 +576,7 @@ function CardModalInner({
   const dragDepth = useRef(0)
 
   const handleFiles = async (files: File[]) => {
-    if (card.kind === 'meeting') return // у встреч вложений нет
+    if (!isTask) return // у встреч и блоков вложений нет
     const tooBig = files.filter((f) => f.size > MAX_FILE_SIZE)
     if (tooBig.length) {
       alert(
@@ -592,7 +600,8 @@ function CardModalInner({
     if (failed.length) alert(`Не удалось загрузить ${failed.length > 1 ? 'файлы' : 'файл'}:\n${failed.join('\n')}`)
   }
 
-  const hasFiles = (e: ReactDragEvent) => Array.from(e.dataTransfer.types).includes('Files')
+  // Файлы можно перетащить только в задачу — у встреч и блоков вложений нет
+  const hasFiles = (e: ReactDragEvent) => isTask && Array.from(e.dataTransfer.types).includes('Files')
 
   const onDragEnter = (e: ReactDragEvent<HTMLDivElement>) => {
     if (!hasFiles(e)) return
@@ -701,7 +710,7 @@ function CardModalInner({
       }}
     >
       <div
-        className={'modal cm' + (isMeeting ? '' : ' cm-wide') + (dragActive ? ' dragging' : '')}
+        className={'modal cm' + (isTask ? ' cm-wide' : '') + (dragActive ? ' dragging' : '')}
         role="dialog"
         aria-modal="true"
         onDragEnter={onDragEnter}
@@ -723,8 +732,8 @@ function CardModalInner({
                   <button
                     type="button"
                     role="tab"
-                    aria-selected={!isMeeting}
-                    className={!isMeeting ? 'active' : ''}
+                    aria-selected={isTask}
+                    className={isTask ? 'active' : ''}
                     onClick={() => setKind('task')}
                   >
                     Задача
@@ -738,18 +747,27 @@ function CardModalInner({
                   >
                     <span className="inline-ico"><IcoMeeting size={14} /></span>Встреча
                   </button>
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={isBlock}
+                    className={isBlock ? 'active' : ''}
+                    onClick={() => setKind('block')}
+                  >
+                    <span className="inline-ico"><IcoTimeBlock size={14} /></span>Блок
+                  </button>
                 </div>
               )}
-              {/* Приоритет по матрице — только у задач (не у встреч) */}
-              {!isMeeting && <PriorityPicker card={card} />}
+              {/* Приоритет по матрице — только у задач (не у встреч и блоков) */}
+              {isTask && <PriorityPicker card={card} />}
             </div>
             <button type="button" className="cm-close" title="Закрыть" aria-label="Закрыть" onClick={onClose}>
               <IcoX size={22} />
             </button>
           </div>
           <div className="cm-header-title-row">
-            {/* Встречи не отмечают выполненными — они просто проходят по времени */}
-            {!isMeeting && (
+            {/* Встречи и блоки не отмечают выполненными — они просто проходят по времени */}
+            {isTask && (
               <button
                 type="button"
                 className={'cm-done' + (card.done ? ' on' : '')}
@@ -790,6 +808,8 @@ function CardModalInner({
                 <span className="cm-subline muted">Повторяющаяся задача — настраивается в разделе «Регулярное»</span>
               ) : isMeeting ? (
                 <span className="cm-subline muted">Встреча — видна только в календаре</span>
+              ) : isBlock ? (
+                <span className="cm-subline muted">Блок времени — виден только вам и только в календаре</span>
               ) : (
                 <label className="cm-subline">
                   в колонке{' '}
@@ -818,6 +838,8 @@ function CardModalInner({
 
         {/* ---------- Мета: участники и срок ---------- */}
         <div className="cm-meta">
+          {/* У блока участников нет — он личный */}
+          {!isBlock && (
           <div className="cm-meta-block" ref={membersBlockRef}>
             <span className="field-label">Участники</span>
             <div className="cm-members">
@@ -853,9 +875,10 @@ function CardModalInner({
               </div>
             )}
           </div>
+          )}
 
           <div className="cm-meta-block" ref={dateBlockRef}>
-            <span className="field-label">Срок</span>
+            <span className="field-label">{isBlock ? 'Время' : 'Срок'}</span>
             <button
               type="button"
               className={'chip cm-date-chip' + (card.date ? ' active' : '')}
@@ -948,8 +971,8 @@ function CardModalInner({
           </div>
         </div>
 
-        {/* ---------- Проект ---------- */}
-        <ProjectPicker card={card} />
+        {/* ---------- Проект (у блока нет) ---------- */}
+        {!isBlock && <ProjectPicker card={card} />}
 
         {/* ---------- Ссылка на созвон (у встреч) ---------- */}
         {isMeeting && (
@@ -985,7 +1008,7 @@ function CardModalInner({
         {isMeeting && <MeetingRecurrence card={card} />}
 
         {/* ---------- Блокировки (зависимости, задаются на Ганте) ---------- */}
-        <BlockersSection card={card} onOpenCard={onOpenCard} />
+        {!isBlock && <BlockersSection card={card} onOpenCard={onOpenCard} />}
 
         {/* ---------- Описание ---------- */}
         <section className="cm-section">
@@ -998,7 +1021,7 @@ function CardModalInner({
         </section>
 
         {/* ---------- Чек-лист (только у задач) ---------- */}
-        {!isMeeting && (
+        {isTask && (
         <section className="cm-section">
           <div className="cm-check-head">
             <span className="field-label"><span className="inline-ico" aria-hidden><IcoCheck size={14} /></span>Чек-лист</span>
@@ -1044,7 +1067,7 @@ function CardModalInner({
         )}
 
         {/* ---------- Вложения (только у задач) ---------- */}
-        {!isMeeting && (
+        {isTask && (
         <section className="cm-section">
           <div className="cm-att-head">
             <span className="field-label"><span className="inline-ico" aria-hidden><IcoPaperclip size={14} /></span>Вложения</span>
@@ -1133,12 +1156,12 @@ function CardModalInner({
             </div>
           ) : (
             <button type="button" className="btn btn-danger btn-sm" onClick={deleteCard}>
-              Удалить {isMeeting ? 'встречу' : 'карточку'}
+              Удалить {isMeeting ? 'встречу' : isBlock ? 'блок' : 'карточку'}
             </button>
           )}
         </footer>
         </div>
-        {!isMeeting && <CommentsPanel card={card} />}
+        {isTask && <CommentsPanel card={card} />}
         </div>
       </div>
     </div>

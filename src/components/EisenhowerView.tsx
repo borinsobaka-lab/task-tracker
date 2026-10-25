@@ -41,7 +41,7 @@ export function EisenhowerView({ memberFilter, onMemberFilterChange, projectFilt
     (memberFilter.size === 0 || c.assigneeIds.some((id) => memberFilter.has(id))) &&
     inProjectFilter(c.projectId, projectFilter)
   // В матрице только обычные задачи: без встреч, без регулярных и без готовых
-  const cards = store.liveCards().filter((c) => c.kind !== 'meeting' && !c.seriesId && !c.done && inFilter(c))
+  const cards = store.liveCards().filter((c) => c.kind !== 'meeting' && c.kind !== 'block' && !c.seriesId && !c.done && inFilter(c))
 
   const inbox = cards.filter((c) => !c.priority)
   const byQuadrant: Record<EisenhowerQuadrant, Card[]> = { q1: [], q2: [], q3: [], q4: [] }

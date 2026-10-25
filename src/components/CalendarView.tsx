@@ -7,7 +7,7 @@ import { getCalDays, getCalPanelOpen, getCalGantt, isMobileViewport, setCalDays,
 import type { Card, ID, Member } from '../types'
 import { priorityStripeColor } from '../eisenhower'
 import type { ViewProps } from '../viewProps'
-import { IcoArrowLeft, IcoArrowRight, IcoCheck, IcoMeeting } from '../icons'
+import { IcoArrowLeft, IcoArrowRight, IcoCheck, IcoMeeting, IcoTimeBlock } from '../icons'
 import { SubHeader } from './SubHeader'
 import { GanttView } from './GanttView'
 import type { GanttHandle } from './GanttView'
@@ -282,14 +282,19 @@ export function CalendarView({ memberFilter, onMemberFilterChange, projectFilter
     const e = parseDateKey(c.endDate ?? c.date!)
     return new Date(e.getFullYear(), e.getMonth(), e.getDate(), 23, 59, 59).getTime()
   }
-  // Просроченная задача: не выполнена, не встреча, есть дата, и её конец уже прошёл.
-  const isOverdue = (c: Card): boolean => !c.done && c.kind !== 'meeting' && !!c.date && cardEndMs(c) < nowMs
+  // Просроченная задача: не выполнена, не встреча и не блок, есть дата, и её конец уже прошёл.
+  const isOverdue = (c: Card): boolean =>
+    !c.done && c.kind !== 'meeting' && c.kind !== 'block' && !!c.date && cardEndMs(c) < nowMs
 
   const memberById = useMemo(() => new Map(store.members.map((m) => [m.id, m])), [store.members])
 
+  // Блок личный (без участников и проекта): виден при фильтре по его автору,
+  // а фильтр по проектам его не прячет.
   const passesFilter = (c: Card): boolean =>
-    (memberFilter.size === 0 || c.assigneeIds.some((id) => memberFilter.has(id))) &&
-    inProjectFilter(c.projectId, projectFilter)
+    c.kind === 'block'
+      ? memberFilter.size === 0 || (!!c.createdBy && memberFilter.has(c.createdBy))
+      : (memberFilter.size === 0 || c.assigneeIds.some((id) => memberFilter.has(id))) &&
+        inProjectFilter(c.projectId, projectFilter)
 
   const visible = store.liveCards().filter(passesFilter)
   const liveColumns = store.columns.filter((c) => !c.deleted)
@@ -333,6 +338,10 @@ export function CalendarView({ memberFilter, onMemberFilterChange, projectFilter
     c.assigneeIds.map((id) => memberById.get(id)).filter((m): m is Member => !!m)
   const projectOf = (c: Card) => (c.projectId ? store.projects.find((p) => p.id === c.projectId) : undefined)
   const isMeeting = (c: Card): boolean => c.kind === 'meeting'
+  // Блок — занятое личное время (сон, спорт…): серый, штрихованный, без галочки
+  const isBlock = (c: Card): boolean => c.kind === 'block'
+  // Классы типа карточки: встреча — чёрная, блок — штрихованный
+  const kindClass = (c: Card): string => (isMeeting(c) ? ' meeting' : isBlock(c) ? ' timeblock' : '')
   // Встречи — фиксированного цвета, задачи — по цвету первого исполнителя.
   // Встречи — серые, полоса слева и текст всегда чёрные (независимо от участников).
   // Задачи — по цвету исполнителя.
@@ -598,7 +607,7 @@ export function CalendarView({ memberFilter, onMemberFilterChange, projectFilter
     return (
       <div
         key={c.id}
-        className={`cal-chip${c.done ? ' done' : ''}${overdue ? ' overdue' : ''}${dragging ? ' is-dragging' : ''}${armed ? ' armed' : ''}${isMeeting(c) ? ' meeting' : ''}${isRange ? ' range' : ''}`}
+        className={`cal-chip${c.done ? ' done' : ''}${overdue ? ' overdue' : ''}${dragging ? ' is-dragging' : ''}${armed ? ' armed' : ''}${kindClass(c)}${isRange ? ' range' : ''}`}
         style={{ '--ev-color': colorOf(c), '--prio-color': priorityStripeColor(c.priority) } as React.CSSProperties}
         title={isRange ? `${c.title} (многодневная — правьте в Ганте)` : c.title}
         // Многодневные не таскаем в календаре (диапазон меняется в Ганте/карточке) — открываем по клику
@@ -608,7 +617,8 @@ export function CalendarView({ memberFilter, onMemberFilterChange, projectFilter
         onClick={isRange ? () => onOpenCard(c.id) : undefined}
         {...dragEvents}
       >
-        {!isMeeting(c) && (
+        {isBlock(c) && <span className="cal-chip-ico inline-ico" aria-hidden><IcoTimeBlock size={13} /></span>}
+        {!isMeeting(c) && !isBlock(c) && (
           <button
             type="button"
             className={'cal-chip-check' + (c.done ? ' on' : '')}
@@ -644,6 +654,7 @@ export function CalendarView({ memberFilter, onMemberFilterChange, projectFilter
     const armed = armedCardId === c.id && (drag?.source.kind === 'block' || drag?.source.kind === 'resize')
     const label = timeRange(ev.startMin, ev.startMin + dur)
     const mtg = isMeeting(c)
+    const blk = isBlock(c)
     // Встречи не отмечают выполненными — они просто «проходят». Прошедшие зачёркиваем.
     const dayKey = dayKeys[dayIdx]
     const meetingPast = mtg && (dayKey < todayKey || (dayKey === todayKey && ev.startMin + dur <= nowMin))
@@ -651,7 +662,7 @@ export function CalendarView({ memberFilter, onMemberFilterChange, projectFilter
     return (
       <div
         key={c.id}
-        className={`cal-event${c.done ? ' done' : ''}${overdue ? ' overdue' : ''}${meetingPast ? ' past' : ''}${compact ? ' compact' : ''}${dragging ? ' is-dragging' : ''}${armed ? ' armed' : ''}${mtg ? ' meeting' : ''}`}
+        className={`cal-event${c.done ? ' done' : ''}${overdue ? ' overdue' : ''}${meetingPast ? ' past' : ''}${compact ? ' compact' : ''}${dragging ? ' is-dragging' : ''}${armed ? ' armed' : ''}${kindClass(c)}`}
         style={
           {
             top,
@@ -682,7 +693,7 @@ export function CalendarView({ memberFilter, onMemberFilterChange, projectFilter
         {...dragEvents}
       >
         <div className="cal-event-toprow">
-          {!mtg && (
+          {!mtg && !blk && (
             // Приоритет теперь показывает полоса слева, здесь остаётся только чекбокс
             <div className="cal-event-left">
               <button
@@ -702,6 +713,7 @@ export function CalendarView({ memberFilter, onMemberFilterChange, projectFilter
           )}
           <div className="cal-event-title">
             {mtg && <span className="cal-meeting-ico inline-ico" aria-hidden><IcoMeeting size={16} /></span>}
+            {blk && <span className="cal-meeting-ico inline-ico" aria-hidden><IcoTimeBlock size={15} /></span>}
             {c.title}
           </div>
         </div>
@@ -756,13 +768,14 @@ export function CalendarView({ memberFilter, onMemberFilterChange, projectFilter
     return (
       <div
         key={c.id}
-        className={`cal-side-card${c.done ? ' done' : ''}${dragging ? ' is-dragging' : ''}${armed ? ' armed' : ''}${isMeeting(c) ? ' meeting' : ''}`}
+        className={`cal-side-card${c.done ? ' done' : ''}${dragging ? ' is-dragging' : ''}${armed ? ' armed' : ''}${kindClass(c)}`}
         style={{ '--ev-color': colorOf(c), '--prio-color': priorityStripeColor(c.priority) } as React.CSSProperties}
         onPointerDown={(e) => beginDrag(e, { kind: 'unscheduled', cardId: c.id }, { durationMin: 60 })}
         {...dragEvents}
       >
         <div className="cal-side-title">
           {isMeeting(c) && <span className="inline-ico" aria-hidden><IcoMeeting size={16} /></span>}
+          {isBlock(c) && <span className="inline-ico" aria-hidden><IcoTimeBlock size={15} /></span>}
           {c.title}
         </div>
         {(project || assignees.length > 0) && (

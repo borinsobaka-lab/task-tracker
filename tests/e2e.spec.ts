@@ -1362,3 +1362,34 @@ test('заголовок вкладки браузера — по текущем
   await page.reload()
   await expect(page).toHaveTitle('CRM — Задачи')
 })
+
+test('календарь: клик по времени создаёт «Блок» — только название и описание, без доски', async ({ page }) => {
+  await createIdentity(page)
+  await page.getByRole('button', { name: 'Календарь' }).click()
+  // Клик по пустому месту сегодняшней колонки — черновик со временем
+  const col = page.locator('.cal-day-col.today')
+  await col.scrollIntoViewIfNeeded()
+  const box = (await col.boundingBox())!
+  await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2)
+
+  await page.getByRole('tab', { name: 'Блок' }).click()
+  await expect(page.getByRole('tab', { name: 'Блок' })).toHaveAttribute('aria-selected', 'true')
+  await page.locator('textarea.cm-title').fill('Сон')
+  // У блока нет участников, проекта, чек-листа, вложений, комментариев и галочки «выполнено»
+  await expect(page.getByText('Участники', { exact: true })).toHaveCount(0)
+  await expect(page.getByText('Чек-лист')).toHaveCount(0)
+  await expect(page.getByText('Вложения')).toHaveCount(0)
+  await expect(page.locator('.cm-done')).toHaveCount(0)
+  await expect(page.getByText('Описание')).toBeVisible()
+  await page.keyboard.press('Escape')
+
+  // В календаре — штрихованный блок без чекбокса
+  const ev = page.locator('.cal-event.timeblock', { hasText: 'Сон' })
+  await expect(ev).toBeVisible()
+  await expect(ev.locator('.cal-event-check')).toHaveCount(0)
+
+  // На доске блока нет
+  await page.getByRole('button', { name: 'Доска' }).click()
+  await expect(page.getByText('Нужно сделать')).toBeVisible()
+  await expect(page.getByText('Сон')).toHaveCount(0)
+})
