@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-25T21:14:22.838Z",
+  "generatedAt": "2026-10-25T22:44:41.371Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -4317,6 +4317,15 @@
       "date": "2026-10-26",
       "start": "05:00",
       "durationMin": 60,
+      "members": []
+    },
+    {
+      "id": "e4c18eff-21eb-47fc-a5bb-5daf57418a74",
+      "title": "Сон",
+      "date": "2026-10-26",
+      "start": "06:00",
+      "durationMin": 300,
+      "kind": "block",
       "members": []
     },
     {
