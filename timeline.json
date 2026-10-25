@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-25T20:51:32.060Z",
+  "generatedAt": "2026-10-25T20:51:36.391Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -4462,6 +4462,7 @@
       "date": "2026-10-29",
       "start": "10:00",
       "durationMin": 120,
+      "kind": "meeting",
       "members": [
         {
           "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
