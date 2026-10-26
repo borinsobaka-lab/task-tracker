@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-26T07:44:43.703Z",
+  "generatedAt": "2026-10-26T08:19:29.612Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -4289,31 +4289,6 @@
       ]
     },
     {
-      "id": "9f0329bb-1fb3-4ce6-91c7-f8f43174b754",
-      "title": "Созвон втроем.",
-      "date": "2026-10-26",
-      "start": "12:00",
-      "durationMin": 30,
-      "kind": "meeting",
-      "members": [
-        {
-          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
-          "name": "Вова",
-          "color": "#84cc16"
-        },
-        {
-          "id": "83d23fdb-962e-4265-ae13-e9090a58dc69",
-          "name": "Оля",
-          "color": "#f59e0b"
-        },
-        {
-          "id": "cf4dd8bc-12e0-4cf7-8115-a7667b80e91b",
-          "name": "Витя",
-          "color": "#6366f1"
-        }
-      ]
-    },
-    {
       "id": "b9aab991-f051-483e-b670-95aca2b12966",
       "title": "Связаться с Elastic Fit, назначить встречу",
       "date": "2026-10-26",
@@ -4339,6 +4314,31 @@
           "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
+        }
+      ]
+    },
+    {
+      "id": "9f0329bb-1fb3-4ce6-91c7-f8f43174b754",
+      "title": "Созвон втроем.",
+      "date": "2026-10-26",
+      "start": "13:00",
+      "durationMin": 30,
+      "kind": "meeting",
+      "members": [
+        {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
+          "name": "Вова",
+          "color": "#84cc16"
+        },
+        {
+          "id": "83d23fdb-962e-4265-ae13-e9090a58dc69",
+          "name": "Оля",
+          "color": "#f59e0b"
+        },
+        {
+          "id": "cf4dd8bc-12e0-4cf7-8115-a7667b80e91b",
+          "name": "Витя",
+          "color": "#6366f1"
         }
       ]
     },
