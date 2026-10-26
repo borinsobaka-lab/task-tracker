@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-26T21:23:22.995Z",
+  "generatedAt": "2026-10-26T21:23:34.970Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -4415,11 +4415,17 @@
     },
     {
       "id": "c51f2be8-a837-430f-b271-8add7b58f726",
-      "title": "Без названия",
+      "title": "Регистрация бота в МАX",
       "date": "2026-10-27",
       "start": "12:00",
-      "durationMin": 60,
-      "members": []
+      "durationMin": 30,
+      "members": [
+        {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
+          "name": "Вова",
+          "color": "#84cc16"
+        }
+      ]
     },
     {
       "id": "46a06cfe-7554-4f0f-9dae-01ef9dfdd3a6",
