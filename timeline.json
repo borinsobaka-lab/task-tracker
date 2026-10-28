@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-28T12:18:41.252Z",
+  "generatedAt": "2026-10-28T12:18:59.151Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -4633,6 +4633,20 @@
       "start": "15:30",
       "durationMin": 240,
       "priorityColor": "#ef4444",
+      "members": [
+        {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
+          "name": "Вова",
+          "color": "#84cc16"
+        }
+      ]
+    },
+    {
+      "id": "8e1c7ad9-ad31-464c-8806-cc57296ad6d1",
+      "title": "Что контролировать в амо",
+      "date": "2026-10-29",
+      "start": "17:30",
+      "durationMin": 180,
       "members": [
         {
           "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
