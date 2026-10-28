@@ -1,12 +1,12 @@
 // Канбан-доска: горизонтальная лента колонок с карточками.
-// Drag-and-drop карточек (внутри и между колонками) и колонок — @dnd-kit.
+// Drag-and-drop карточек (внутри и между колонками) — @dnd-kit. Колонки одни на
+// всю систему (все проекты и доски): их набор и порядок фиксированы.
 // Все изменения данных идут строго через методы store; во время перетаскивания
-// используется локальное optimistic-состояние, а в onDragEnd — один вызов moveCard/moveColumn.
+// используется локальное optimistic-состояние, а в onDragEnd — один вызов moveCard.
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { CSSProperties, MutableRefObject } from 'react'
 import {
-  closestCenter,
   closestCorners,
   DndContext,
   DragOverlay,
@@ -14,6 +14,7 @@ import {
   MouseSensor,
   pointerWithin,
   TouchSensor,
+  useDroppable,
   useSensor,
   useSensors,
 } from '@dnd-kit/core'
@@ -24,7 +25,6 @@ import type {
   DragStartEvent,
 } from '@dnd-kit/core'
 import {
-  horizontalListSortingStrategy,
   SortableContext,
   useSortable,
   verticalListSortingStrategy,
@@ -36,7 +36,7 @@ import { ROLE_META, ROLE_ORDER } from '../columnRoles'
 import { priorityStripeColor } from '../eisenhower'
 import { COLUMN_COLORS, fmtDayMonth, hasContent, parseDateKey, toDateKey } from '../utils'
 import type { ViewProps } from '../viewProps'
-import { IcoCalendar, IcoCheck, IcoClose, IcoComment, IcoDescription, IcoMeeting, IcoMenu, IcoNone, IcoPaperclip, IcoSort, IcoTrash } from '../icons'
+import { IcoCalendar, IcoCheck, IcoClose, IcoComment, IcoDescription, IcoMeeting, IcoMenu, IcoNone, IcoPaperclip, IcoSort } from '../icons'
 import { Avatar, AvatarStack, ProjectAvatar } from './Avatar'
 import { SubHeader } from './SubHeader'
 import { BoardPicker, parseBoardSel } from './BoardPicker'
@@ -84,10 +84,9 @@ export function BoardView({
   }, [selGone, onBoardSelChange])
   const boardId = sel.kind === 'board' && !selGone ? sel.id : undefined
   const projectId = sel.kind === 'project' && !selGone ? sel.id : undefined
-  const columns = store.columnsOf(boardId)
+  const columns = store.columns
 
   const [activeCardId, setActiveCardId] = useState<ID | null>(null)
-  const [activeColumnId, setActiveColumnId] = useState<ID | null>(null)
   // Порядок видимых карточек по колонкам на время перетаскивания (optimistic)
   const [localCards, setLocalCards] = useState<CardsByCol | null>(null)
   // Гасим click, который браузер шлёт сразу после завершения drag
@@ -108,8 +107,13 @@ export function BoardView({
       !card.seriesId &&
       (memberFilter.size === 0 || card.assigneeIds.some((id) => memberFilter.has(id))) &&
       // Своя доска показывает все свои задачи; общая — по выбранному проекту
-      (boardId !== undefined ||
-        (sel.kind === 'none' ? !card.projectId : projectId === undefined || card.projectId === projectId)),
+      // «Все задачи» — все; своя доска — её задачи; проект — его задачи;
+      // «Без проекта» — задачи вне проектов и своих досок
+      (boardId !== undefined
+        ? card.boardId === boardId
+        : projectId !== undefined
+          ? card.projectId === projectId
+          : sel.kind !== 'none' || (!card.projectId && !card.boardId)),
     [memberFilter, boardId, projectId, sel.kind],
   )
 
@@ -125,15 +129,9 @@ export function BoardView({
     return ids.map((id) => store.card(id)).filter((c): c is Card => !!c)
   }
 
-  // Колонки таскаем только между колонками; карточки — сначала точное попадание
-  // указателем в карточку, потом в колонку, иначе ближайший угол.
+  // Карточки: сначала точное попадание указателем в карточку, потом в колонку,
+  // иначе ближайший угол.
   const collisionDetection: CollisionDetection = useCallback((args) => {
-    if (args.active.data.current?.type === 'column') {
-      return closestCenter({
-        ...args,
-        droppableContainers: args.droppableContainers.filter((c) => c.data.current?.type === 'column'),
-      })
-    }
     const cardContainers = args.droppableContainers.filter((c) => c.data.current?.type === 'card')
     const withinCards = pointerWithin({ ...args, droppableContainers: cardContainers })
     if (withinCards.length > 0) return withinCards
@@ -149,12 +147,7 @@ export function BoardView({
   }, [])
 
   const handleDragStart = ({ active }: DragStartEvent) => {
-    const type = active.data.current?.type
-    if (type === 'column') {
-      setActiveColumnId(String(active.id))
-      return
-    }
-    if (type === 'card') {
+    if (active.data.current?.type === 'card') {
       setActiveCardId(String(active.id))
       const snapshot: CardsByCol = {}
       for (const col of columns) snapshot[col.id] = visibleIdsFromStore(col.id)
@@ -195,19 +188,7 @@ export function BoardView({
       suppressClickRef.current = false
     }, 0)
 
-    const type = active.data.current?.type
-
-    if (type === 'column') {
-      setActiveColumnId(null)
-      if (!over) return
-      const fromIndex = columns.findIndex((c) => c.id === String(active.id))
-      const toIndex = columns.findIndex((c) => c.id === String(over.id))
-      if (fromIndex < 0 || toIndex < 0 || fromIndex === toIndex) return
-      store.moveColumn(String(active.id), toIndex)
-      return
-    }
-
-    if (type !== 'card') return
+    if (active.data.current?.type !== 'card') return
     const local = localCards
     setActiveCardId(null)
     setLocalCards(null)
@@ -256,12 +237,10 @@ export function BoardView({
 
   const handleDragCancel = () => {
     setActiveCardId(null)
-    setActiveColumnId(null)
     setLocalCards(null)
   }
 
   const activeCard = activeCardId ? store.card(activeCardId) ?? null : null
-  const activeColumn = activeColumnId ? columns.find((c) => c.id === activeColumnId) ?? null : null
 
   return (
     <>
@@ -278,7 +257,6 @@ export function BoardView({
         onDragCancel={handleDragCancel}
       >
         <div className="board">
-        <SortableContext items={columns.map((c) => c.id)} strategy={horizontalListSortingStrategy}>
           {columns.map((col) => (
             <BoardColumn
               key={col.id}
@@ -288,19 +266,15 @@ export function BoardView({
               cardDragActive={activeCardId !== null}
               suppressClickRef={suppressClickRef}
               onOpenCard={onOpenCard}
-              projectId={projectId}
+              tag={{ projectId, boardId }}
             />
           ))}
-        </SortableContext>
-        <AddColumn boardId={boardId} />
-      </div>
+        </div>
         <DragOverlay>
           {activeCard ? (
             <div className={cardClassName(activeCard) + ' card-overlay'} style={cardStyle(activeCard)}>
               <CardContent card={activeCard} members={store.members} />
             </div>
-          ) : activeColumn ? (
-            <ColumnGhost column={activeColumn} cards={cardsFor(activeColumn)} members={store.members} />
           ) : null}
         </DragOverlay>
       </DndContext>
@@ -317,7 +291,7 @@ function BoardColumn({
   cardDragActive,
   suppressClickRef,
   onOpenCard,
-  projectId,
+  tag,
 }: {
   column: Column
   cards: Card[]
@@ -325,18 +299,16 @@ function BoardColumn({
   cardDragActive: boolean
   suppressClickRef: MutableRefObject<boolean>
   onOpenCard: (id: ID) => void
-  /** Открыта доска проекта — новые карточки сразу в этот проект */
-  projectId?: ID
+  /** Открыта доска проекта или своя доска — новые карточки сразу туда */
+  tag: { projectId?: ID; boardId?: ID }
 }) {
   const store = useBoard()
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState('')
   const cancelledRef = useRef(false)
 
-  const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({
-    id: column.id,
-    data: { type: 'column' },
-  })
+  // Колонка — только цель для карточек (сами колонки не перетаскиваются)
+  const { setNodeRef } = useDroppable({ id: column.id, data: { type: 'column' } })
 
   const startEdit = () => {
     if (suppressClickRef.current) return
@@ -354,13 +326,9 @@ function BoardColumn({
   }
 
   return (
-    <section
-      ref={setNodeRef}
-      className={'board-col' + (isDragging ? ' col-dragging' : '')}
-      style={{ transform: CSS.Translate.toString(transform), transition }}
-    >
+    <section ref={setNodeRef} className="board-col">
       {column.color && <div className="board-col-strip" style={{ background: column.color }} />}
-      <div className="board-col-header" ref={setActivatorNodeRef} {...attributes} {...listeners}>
+      <div className="board-col-header">
         {editing ? (
           <input
             className="board-col-title-input"
@@ -409,7 +377,7 @@ function BoardColumn({
       </SortableContext>
 
       <div className="board-col-footer">
-        <AddCard columnId={column.id} projectId={projectId} />
+        <AddCard columnId={column.id} tag={tag} />
       </div>
     </section>
   )
@@ -418,18 +386,6 @@ function BoardColumn({
 function ColumnMenu({ column }: { column: Column }) {
   const store = useBoard()
   const [open, setOpen] = useState(false)
-
-  const remove = () => {
-    setOpen(false)
-    const count = store.cardsInColumn(column.id).length
-    const warn =
-      count > 0
-        ? `Вместе с ней будут удалены все её карточки (${count} шт.). `
-        : ''
-    if (window.confirm(`Удалить колонку «${column.title}»? ${warn}Это действие нельзя отменить.`)) {
-      store.deleteColumn(column.id)
-    }
-  }
 
   const setRole = (role: ColumnRole | undefined) => {
     store.setColumnRole(column.id, role)
@@ -518,34 +474,9 @@ function ColumnMenu({ column }: { column: Column }) {
                 />
               ))}
             </div>
-            <div className="col-menu-sep" />
-            <button className="col-menu-item danger" role="menuitem" onClick={remove}>
-              <span className="col-menu-emoji"><IcoTrash size={16} color="currentColor" /></span>
-              Удалить колонку
-            </button>
           </div>
         </>
       )}
-    </div>
-  )
-}
-
-// Копия колонки для DragOverlay
-function ColumnGhost({ column, cards, members }: { column: Column; cards: Card[]; members: Member[] }) {
-  return (
-    <div className="board-col col-overlay">
-      {column.color && <div className="board-col-strip" style={{ background: column.color }} />}
-      <div className="board-col-header">
-        <h3 className="board-col-title">{column.title}</h3>
-        <span className="board-col-count">{cards.length}</span>
-      </div>
-      <div className="board-col-cards">
-        {cards.map((c) => (
-          <div key={c.id} className={cardClassName(c)} style={cardStyle(c)}>
-            <CardContent card={c} members={members} />
-          </div>
-        ))}
-      </div>
     </div>
   )
 }
@@ -751,7 +682,7 @@ function CardContent({ card, members, interactive }: { card: Card; members: Memb
 
 // ---------- Быстрое добавление ----------
 
-function AddCard({ columnId, projectId }: { columnId: ID; projectId?: ID }) {
+function AddCard({ columnId, tag }: { columnId: ID; tag: { projectId?: ID; boardId?: ID } }) {
   const store = useBoard()
   const [open, setOpen] = useState(false)
   const [text, setText] = useState('')
@@ -786,7 +717,7 @@ function AddCard({ columnId, projectId }: { columnId: ID; projectId?: ID }) {
       taRef.current?.focus()
       return
     }
-    store.addCard(columnId, t, projectId)
+    store.addCard(columnId, t, tag)
     setText('')
     // Прокручиваем список к новой карточке
     const list = taRef.current?.closest('.board-col')?.querySelector('.board-col-cards')
@@ -826,69 +757,6 @@ function AddCard({ columnId, projectId }: { columnId: ID; projectId?: ID }) {
         <button className="icon-btn" title="Отмена" aria-label="Отмена" onClick={close}>
           <IcoClose size={18} />
         </button>
-      </div>
-    </div>
-  )
-}
-
-function AddColumn({ boardId }: { boardId?: ID }) {
-  const store = useBoard()
-  const [open, setOpen] = useState(false)
-  const [title, setTitle] = useState('')
-  const inputRef = useRef<HTMLInputElement>(null)
-
-  useEffect(() => {
-    if (open) inputRef.current?.focus()
-  }, [open])
-
-  const close = () => {
-    setOpen(false)
-    setTitle('')
-  }
-
-  const submit = () => {
-    const t = title.trim()
-    if (!t) {
-      inputRef.current?.focus()
-      return
-    }
-    store.addColumn(t, boardId)
-    setTitle('')
-    inputRef.current?.focus()
-  }
-
-  if (!open) {
-    return (
-      <div className="board-add-col">
-        <button className="board-add-col-btn" onClick={() => setOpen(true)}>
-          + Добавить колонку
-        </button>
-      </div>
-    )
-  }
-
-  return (
-    <div className="board-add-col">
-      <div className="board-add-col-form">
-        <input
-          ref={inputRef}
-          className="input"
-          placeholder="Название колонки"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') submit()
-            if (e.key === 'Escape') close()
-          }}
-        />
-        <div className="composer-actions">
-          <button className="btn btn-primary btn-sm" onClick={submit}>
-            Добавить
-          </button>
-          <button className="icon-btn" title="Отмена" aria-label="Отмена" onClick={close}>
-            <IcoClose size={18} />
-          </button>
-        </div>
       </div>
     </div>
   )

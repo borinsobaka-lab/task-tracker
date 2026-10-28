@@ -194,7 +194,8 @@ export function mergeBoards(local: BoardData, remote: BoardData): BoardData {
  * - card.columnId соответствует фактическому расположению;
  * - старые надгробия вычищаются.
  */
-export function normalizeBoard(data: BoardData): BoardData {
+export function normalizeBoard(input: BoardData): BoardData {
+  const data = foldBoardColumns(input)
   const liveColumns = data.columns.filter((c) => !c.deleted)
   const isLiveCard = (id: ID) => {
     const c = data.cards[id]
@@ -232,10 +233,7 @@ export function normalizeBoard(data: BoardData): BoardData {
   for (const [id, card] of Object.entries(data.cards)) {
     if (card.deleted || card.seriesId || placed.has(id)) continue
     if (liveColsAfter.length === 0) continue
-    const target =
-      liveColsAfter.find((c) => c.id === card.columnId) ??
-      liveColsAfter.find((c) => (c.boardId ?? '') === (card.boardId ?? '')) ??
-      liveColsAfter[0]
+    const target = liveColsAfter.find((c) => c.id === card.columnId) ?? liveColsAfter[0]
     target.cardIds = [...target.cardIds, id]
     homeOf.set(id, target.id)
   }
@@ -293,6 +291,41 @@ export function normalizeBoard(data: BoardData): BoardData {
   // чтобы не хранить и не тащить при загрузке.
   delete (result as { activity?: unknown }).activity
   return result
+}
+
+/**
+ * Колонки одни на всю систему. Первая версия своих досок заводила им отдельные
+ * колонки (Column.boardId) — переносим их задачи в общую колонку с тем же
+ * статусом (без статуса — с тем же названием, иначе в первую), а сами колонки
+ * удаляем. Задачи остаются на своей доске (Card.boardId).
+ */
+function foldBoardColumns(data: BoardData): BoardData {
+  const extra = data.columns.filter((c) => c.boardId && !c.deleted)
+  if (extra.length === 0) return data
+  const main = data.columns.filter((c) => !c.boardId && !c.deleted)
+  if (main.length === 0) return data
+  const ts = nowISO()
+  const target = (col: Column): Column =>
+    main.find((m) => col.role && m.role === col.role) ??
+    main.find((m) => m.title.trim().toLowerCase() === col.title.trim().toLowerCase()) ??
+    main[0]
+  const added = new Map<ID, ID[]>()
+  const cards = { ...data.cards }
+  for (const col of extra) {
+    const to = target(col)
+    for (const id of col.cardIds) {
+      const card = cards[id]
+      if (!card || card.deleted) continue
+      cards[id] = { ...card, columnId: to.id, ...(card.boardId ? {} : { boardId: col.boardId }), updatedAt: ts }
+      added.set(to.id, [...(added.get(to.id) ?? []), id])
+    }
+  }
+  const columns = data.columns.map((c) => {
+    if (c.boardId && !c.deleted) return { ...c, deleted: true, cardIds: [], updatedAt: ts }
+    const more = added.get(c.id)
+    return more ? { ...c, cardIds: [...c.cardIds.filter((id) => !more.includes(id)), ...more], updatedAt: ts } : c
+  })
+  return { ...data, columns, cards }
 }
 
 function dropOldTombstones(crm: CrmData, cutoff: number): CrmData {

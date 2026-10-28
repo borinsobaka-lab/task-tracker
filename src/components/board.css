@@ -29,10 +29,6 @@
   box-shadow: var(--shadow-sm);
 }
 
-.board-col.col-dragging {
-  opacity: 0.35;
-}
-
 /* Цветная полоска сверху подложки — цвет статуса колонки */
 .board-col-strip {
   height: 5px;
@@ -40,28 +36,15 @@
   border-radius: var(--radius) var(--radius) 0 0;
 }
 
-.board-col.col-overlay {
-  height: 100%;
-  box-shadow: var(--shadow-lg);
-  opacity: 0.95;
-  cursor: grabbing;
-  overflow: hidden;
-}
-
 .board-col-header {
   display: flex;
   align-items: center;
   gap: 6px;
   padding: 8px 6px 6px 12px;
-  cursor: grab;
-  touch-action: none;
   user-select: none;
   -webkit-user-select: none;
   flex-shrink: 0;
   outline: none;
-}
-.board-col-header:active {
-  cursor: grabbing;
 }
 
 .board-col-title {
@@ -516,51 +499,12 @@
   gap: 6px;
 }
 
-/* ---------- Добавление колонки ---------- */
-
-.board-add-col {
-  width: 290px;
-  min-width: 290px;
-  flex-shrink: 0;
-}
-
-.board-add-col-btn {
-  display: block;
-  width: 100%;
-  padding: 11px 14px;
-  text-align: left;
-  border: 1px dashed var(--border-strong);
-  border-radius: var(--radius);
-  background: rgba(255, 255, 255, 0.55);
-  color: var(--text-soft);
-  cursor: pointer;
-  font-weight: 500;
-  transition: background 0.12s, border-color 0.12s, color 0.12s;
-}
-.board-add-col-btn:hover {
-  background: var(--surface);
-  border-color: var(--accent);
-  color: var(--text);
-}
-
-.board-add-col-form {
-  background: var(--bg-panel);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-sm);
-  padding: 8px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
 @media (max-width: 720px) {
   .board {
     padding: 10px;
     gap: 10px;
   }
-  .board-col,
-  .board-add-col {
+  .board-col {
     width: 265px;
     min-width: 265px;
   }

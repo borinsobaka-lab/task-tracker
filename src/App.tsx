@@ -420,16 +420,17 @@ function Shell({ onLogout }: { onLogout: () => void }) {
   // Создание задачи-черновика: пустой заголовок (курсор сразу в поле), в колонке
   // «Нужно сделать». Черновик удаляем при закрытии, если так и остался пустым.
   // schedule — сразу поставить дату/время (клик по календарю).
-  // В разделе «Доска» задача создаётся на открытой доске: своей — в её колонке,
-  // доске проекта — сразу в этом проекте.
+  // В разделе «Доска» задача создаётся на открытой доске: своей или доске проекта.
   const createDraft = (schedule?: { date: string; start: string | null }) => {
     const onBoard = view === 'board'
     const boardId = onBoard && boardSel.startsWith('b:') ? boardSel.slice(2) : undefined
     const projectId = onBoard && boardSel.startsWith('p:') ? boardSel.slice(2) : undefined
-    const cols = boardId && store.boards.some((b) => b.id === boardId) ? store.columnsOf(boardId) : store.columns
-    const col = cols.find((c) => c.role === 'todo') ?? cols[0]
+    const col = store.columns.find((c) => c.role === 'todo') ?? store.columns[0]
     if (!col) return
-    const id = store.addCard(col.id, '', projectId && store.projects.some((p) => p.id === projectId) ? projectId : undefined)
+    const id = store.addCard(col.id, '', {
+      boardId: boardId && store.boards.some((b) => b.id === boardId) ? boardId : undefined,
+      projectId: projectId && store.projects.some((p) => p.id === projectId) ? projectId : undefined,
+    })
     if (schedule) {
       if (schedule.start) store.scheduleCard(id, schedule.date, schedule.start, 60)
       else store.scheduleCard(id, schedule.date, null)
