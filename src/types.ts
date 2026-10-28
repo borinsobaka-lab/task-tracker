@@ -127,6 +127,8 @@ export interface Card {
   priority?: EisenhowerQuadrant
   /** Проект, к которому относится задача/встреча (id из BoardData.projects). Нет — «без проекта». */
   projectId?: ID
+  /** Своя доска (id из BoardData.boards), на которой лежит задача. Нет — общая доска. */
+  boardId?: ID
   /** Если задан — это экземпляр повторяющейся задачи (серии) */
   seriesId?: ID
   /** Кто создал задачу (id участника). Задачу без проекта видят только её исполнители
@@ -184,6 +186,25 @@ export interface Column {
   role?: ColumnRole
   /** Цвет колонки (hex). Рисуется полоской сверху подложки. Нет — без полоски. */
   color?: string
+  /** Своя доска, которой принадлежит колонка. Нет — колонка общей доски. */
+  boardId?: ID
+  deleted?: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+/**
+ * Своя доска раздела «Доска» — под процесс, который не нужно заводить проектом
+ * (спринт, марафон…). Колонки — свои (Column.boardId), задачи — тоже (Card.boardId).
+ * В календаре и матрице её задачи видны вместе со всеми, с её аватаркой.
+ */
+export interface CustomBoard {
+  id: ID
+  name: string
+  /** Аватарка доски: data-URL. Нет — заглушка с буквой. */
+  icon?: string
+  /** Кто видит доску и её задачи. Пусто/нет — все. */
+  memberIds?: ID[]
   deleted?: boolean
   createdAt: string
   updatedAt: string
@@ -409,6 +430,8 @@ export interface BoardData {
   series?: Record<ID, Series>
   /** Проекты для табов в шапке (может отсутствовать в старых данных) */
   projects?: Project[]
+  /** Свои доски раздела «Доска» (может отсутствовать в старых данных) */
+  boards?: CustomBoard[]
   /** Заметки (может отсутствовать в старых данных) */
   notes?: Record<ID, Note>
   /** CRM: сделки, задачи и история, партнёры (может отсутствовать в старых данных) */

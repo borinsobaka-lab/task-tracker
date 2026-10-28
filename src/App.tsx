@@ -3,7 +3,7 @@ import { BoardProvider, useMaybeBoard, useSyncMeta } from './store'
 import type { StorageAdapter } from './storage/adapter'
 import { GitHubAdapter } from './storage/github'
 import { LocalAdapter } from './storage/local'
-import { getDataRepoConfig, getSavedView, getToken, isDemoMode, OWNER_PASSWORD, setSavedView, setToken } from './config'
+import { getBoardSel, getDataRepoConfig, getSavedView, getToken, isDemoMode, OWNER_PASSWORD, setBoardSel, setSavedView, setToken } from './config'
 import { getAuthState } from './auth'
 import type { EncryptedBlob } from './crypto'
 import { Header, BottomNav, viewLabel } from './components/Header'
@@ -280,6 +280,12 @@ function Shell({ onLogout }: { onLogout: () => void }) {
   // выбранным участником в board.json и восстанавливаются при следующем входе.
   const [memberFilter, setMemberFilterState] = useState<ReadonlySet<ID>>(new Set())
   const [projectFilter, setProjectFilterState] = useState<ReadonlySet<ID>>(new Set())
+  // Раздел «Доска»: открытая доска (общая / проекта / своя) — запоминается на устройстве
+  const [boardSel, setBoardSelState] = useState<string>(getBoardSel)
+  const changeBoardSel = useCallback((sel: string) => {
+    setBoardSelState(sel)
+    setBoardSel(sel)
+  }, [])
   // Карточка, созданная кнопкой «+» и ещё не заполненная (черновик). Ref на
   // свежий store — чтобы после закрытия увидеть досохранённые название/описание.
   const draftIdRef = useRef<ID | null>(null)
@@ -414,10 +420,16 @@ function Shell({ onLogout }: { onLogout: () => void }) {
   // Создание задачи-черновика: пустой заголовок (курсор сразу в поле), в колонке
   // «Нужно сделать». Черновик удаляем при закрытии, если так и остался пустым.
   // schedule — сразу поставить дату/время (клик по календарю).
+  // В разделе «Доска» задача создаётся на открытой доске: своей — в её колонке,
+  // доске проекта — сразу в этом проекте.
   const createDraft = (schedule?: { date: string; start: string | null }) => {
-    const col = store.columns.find((c) => c.role === 'todo') ?? store.columns[0]
+    const onBoard = view === 'board'
+    const boardId = onBoard && boardSel.startsWith('b:') ? boardSel.slice(2) : undefined
+    const projectId = onBoard && boardSel.startsWith('p:') ? boardSel.slice(2) : undefined
+    const cols = boardId && store.boards.some((b) => b.id === boardId) ? store.columnsOf(boardId) : store.columns
+    const col = cols.find((c) => c.role === 'todo') ?? cols[0]
     if (!col) return
-    const id = store.addCard(col.id, '')
+    const id = store.addCard(col.id, '', projectId && store.projects.some((p) => p.id === projectId) ? projectId : undefined)
     if (schedule) {
       if (schedule.start) store.scheduleCard(id, schedule.date, schedule.start, 60)
       else store.scheduleCard(id, schedule.date, null)
@@ -463,7 +475,7 @@ function Shell({ onLogout }: { onLogout: () => void }) {
             onOpenCard: setSelectedCardId,
             onCreateDraft: createDraft,
           }
-          if (view === 'board') return <BoardView {...shared} />
+          if (view === 'board') return <BoardView {...shared} boardSel={boardSel} onBoardSelChange={changeBoardSel} />
           if (view === 'calendar') return <CalendarView {...shared} />
           if (view === 'matrix') return <EisenhowerView {...shared} />
           if (view === 'notes') return <NotesView composeRef={composeNoteRef} projectFilter={projectFilter} />

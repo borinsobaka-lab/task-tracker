@@ -34,11 +34,12 @@ import { useBoard } from '../store'
 import type { Card, Column, ColumnRole, ID, Member } from '../types'
 import { ROLE_META, ROLE_ORDER } from '../columnRoles'
 import { priorityStripeColor } from '../eisenhower'
-import { COLUMN_COLORS, fmtDayMonth, hasContent, inProjectFilter, parseDateKey, toDateKey } from '../utils'
+import { COLUMN_COLORS, fmtDayMonth, hasContent, parseDateKey, toDateKey } from '../utils'
 import type { ViewProps } from '../viewProps'
 import { IcoCalendar, IcoCheck, IcoClose, IcoComment, IcoDescription, IcoMeeting, IcoMenu, IcoNone, IcoPaperclip, IcoSort, IcoTrash } from '../icons'
 import { Avatar, AvatarStack, ProjectAvatar } from './Avatar'
 import { SubHeader } from './SubHeader'
+import { BoardPicker, parseBoardSel } from './BoardPicker'
 import { hasUnseenComments, liveComments, useCommentsSeen } from './commentsSeen'
 import './board.css'
 
@@ -64,9 +65,26 @@ function cardStyle(card: Card): CSSProperties {
 
 // ---------- Корневой компонент ----------
 
-export function BoardView({ memberFilter, onMemberFilterChange, projectFilter, onOpenCard }: ViewProps) {
+export function BoardView({
+  memberFilter,
+  onMemberFilterChange,
+  onOpenCard,
+  boardSel,
+  onBoardSelChange,
+}: ViewProps & { boardSel: string; onBoardSelChange: (sel: string) => void }) {
   const store = useBoard()
-  const columns = store.columns
+  // Какая доска открыта (выбор в выпадающем списке вместо табов проектов в шапке).
+  // Проект или своя доска пропали (удалены, закрыт доступ) — возвращаемся к общей.
+  const sel = parseBoardSel(boardSel)
+  const selGone =
+    (sel.kind === 'project' && !store.projects.some((p) => p.id === sel.id)) ||
+    (sel.kind === 'board' && !store.boards.some((b) => b.id === sel.id))
+  useEffect(() => {
+    if (selGone) onBoardSelChange('')
+  }, [selGone, onBoardSelChange])
+  const boardId = sel.kind === 'board' && !selGone ? sel.id : undefined
+  const projectId = sel.kind === 'project' && !selGone ? sel.id : undefined
+  const columns = store.columnsOf(boardId)
 
   const [activeCardId, setActiveCardId] = useState<ID | null>(null)
   const [activeColumnId, setActiveColumnId] = useState<ID | null>(null)
@@ -89,8 +107,10 @@ export function BoardView({ memberFilter, onMemberFilterChange, projectFilter, o
       card.kind !== 'block' &&
       !card.seriesId &&
       (memberFilter.size === 0 || card.assigneeIds.some((id) => memberFilter.has(id))) &&
-      inProjectFilter(card.projectId, projectFilter),
-    [memberFilter, projectFilter],
+      // Своя доска показывает все свои задачи; общая — по выбранному проекту
+      (boardId !== undefined ||
+        (sel.kind === 'none' ? !card.projectId : projectId === undefined || card.projectId === projectId)),
+    [memberFilter, boardId, projectId, sel.kind],
   )
 
   const isColumnId = useCallback((id: string) => columns.some((c) => c.id === id), [columns])
@@ -245,7 +265,9 @@ export function BoardView({ memberFilter, onMemberFilterChange, projectFilter, o
 
   return (
     <>
-      <SubHeader memberFilter={memberFilter} onMemberFilterChange={onMemberFilterChange} />
+      <SubHeader memberFilter={memberFilter} onMemberFilterChange={onMemberFilterChange}>
+        <BoardPicker value={selGone ? '' : boardSel} onChange={onBoardSelChange} />
+      </SubHeader>
       <DndContext
         sensors={sensors}
         collisionDetection={collisionDetection}
@@ -266,10 +288,11 @@ export function BoardView({ memberFilter, onMemberFilterChange, projectFilter, o
               cardDragActive={activeCardId !== null}
               suppressClickRef={suppressClickRef}
               onOpenCard={onOpenCard}
+              projectId={projectId}
             />
           ))}
         </SortableContext>
-        <AddColumn />
+        <AddColumn boardId={boardId} />
       </div>
         <DragOverlay>
           {activeCard ? (
@@ -294,6 +317,7 @@ function BoardColumn({
   cardDragActive,
   suppressClickRef,
   onOpenCard,
+  projectId,
 }: {
   column: Column
   cards: Card[]
@@ -301,6 +325,8 @@ function BoardColumn({
   cardDragActive: boolean
   suppressClickRef: MutableRefObject<boolean>
   onOpenCard: (id: ID) => void
+  /** Открыта доска проекта — новые карточки сразу в этот проект */
+  projectId?: ID
 }) {
   const store = useBoard()
   const [editing, setEditing] = useState(false)
@@ -383,7 +409,7 @@ function BoardColumn({
       </SortableContext>
 
       <div className="board-col-footer">
-        <AddCard columnId={column.id} />
+        <AddCard columnId={column.id} projectId={projectId} />
       </div>
     </section>
   )
@@ -640,7 +666,7 @@ function CardContent({ card, members, interactive }: { card: Card; members: Memb
   const assignees = card.assigneeIds
     .map((id) => members.find((m) => m.id === id))
     .filter((m): m is Member => !!m)
-  const project = card.projectId ? store.projects.find((p) => p.id === card.projectId) : undefined
+  const project = store.tagOf(card)
 
   let dateLabel: string | null = null
   let overdue = false
@@ -725,7 +751,7 @@ function CardContent({ card, members, interactive }: { card: Card; members: Memb
 
 // ---------- Быстрое добавление ----------
 
-function AddCard({ columnId }: { columnId: ID }) {
+function AddCard({ columnId, projectId }: { columnId: ID; projectId?: ID }) {
   const store = useBoard()
   const [open, setOpen] = useState(false)
   const [text, setText] = useState('')
@@ -760,7 +786,7 @@ function AddCard({ columnId }: { columnId: ID }) {
       taRef.current?.focus()
       return
     }
-    store.addCard(columnId, t)
+    store.addCard(columnId, t, projectId)
     setText('')
     // Прокручиваем список к новой карточке
     const list = taRef.current?.closest('.board-col')?.querySelector('.board-col-cards')
@@ -805,7 +831,7 @@ function AddCard({ columnId }: { columnId: ID }) {
   )
 }
 
-function AddColumn() {
+function AddColumn({ boardId }: { boardId?: ID }) {
   const store = useBoard()
   const [open, setOpen] = useState(false)
   const [title, setTitle] = useState('')
@@ -826,7 +852,7 @@ function AddColumn() {
       inputRef.current?.focus()
       return
     }
-    store.addColumn(t)
+    store.addColumn(t, boardId)
     setTitle('')
     inputRef.current?.focus()
   }

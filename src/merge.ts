@@ -3,7 +3,7 @@
 // удаления — через надгробия (deleted: true). После слияния доска нормализуется:
 // каждая живая карточка лежит ровно в одной живой колонке.
 
-import type { Attachment, BoardData, Card, ChecklistItem, Column, Comment, CrmData, Deal, Member, ID, Note, Project, Series } from './types'
+import type { Attachment, BoardData, Card, ChecklistItem, Column, Comment, CrmData, CustomBoard, Deal, Member, ID, Note, Project, Series } from './types'
 import { nowISO } from './utils'
 
 const TOMBSTONE_TTL_MS = 45 * 24 * 60 * 60 * 1000
@@ -145,6 +145,7 @@ export function mergeBoards(local: BoardData, remote: BoardData): BoardData {
   const members: Member[] = mergeById(local.members, remote.members)
   const columns: Column[] = mergeById(local.columns, remote.columns)
   const projects: Project[] = mergeById(local.projects ?? [], remote.projects ?? [])
+  const boards: CustomBoard[] = mergeById(local.boards ?? [], remote.boards ?? [])
 
   const cards: Record<ID, Card> = {}
   const ids = new Set([...Object.keys(local.cards), ...Object.keys(remote.cards)])
@@ -177,6 +178,7 @@ export function mergeBoards(local: BoardData, remote: BoardData): BoardData {
     cards,
     series,
     projects,
+    ...((local.boards || remote.boards) ? { boards } : {}),
     notes,
     ...((local.crm || remote.crm) ? { crm: mergeCrm(local.crm, remote.crm) } : {}),
     updatedAt: local.updatedAt >= remote.updatedAt ? local.updatedAt : remote.updatedAt,
@@ -230,7 +232,10 @@ export function normalizeBoard(data: BoardData): BoardData {
   for (const [id, card] of Object.entries(data.cards)) {
     if (card.deleted || card.seriesId || placed.has(id)) continue
     if (liveColsAfter.length === 0) continue
-    const target = liveColsAfter.find((c) => c.id === card.columnId) ?? liveColsAfter[0]
+    const target =
+      liveColsAfter.find((c) => c.id === card.columnId) ??
+      liveColsAfter.find((c) => (c.boardId ?? '') === (card.boardId ?? '')) ??
+      liveColsAfter[0]
     target.cardIds = [...target.cardIds, id]
     homeOf.set(id, target.id)
   }

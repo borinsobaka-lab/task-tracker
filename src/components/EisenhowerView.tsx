@@ -184,7 +184,7 @@ function EisCardBody({
   dragging?: boolean
 }) {
   const store = useBoard()
-  const project = card.projectId ? store.projects.find((p) => p.id === card.projectId) : undefined
+  const project = store.tagOf(card) // проект или своя доска
   return (
     <div className={'eis-card-body' + (dragging ? ' overlay' : '')} style={color ? { borderLeftColor: color } : undefined}>
       <div className="eis-card-title">

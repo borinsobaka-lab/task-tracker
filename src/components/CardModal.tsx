@@ -86,6 +86,27 @@ function useDebouncedValue(fn: (v: string) => void, ms: number): { run: (v: stri
 function ProjectPicker({ card }: { card: Card }) {
   const store = useBoard()
   const projects = store.projects
+  // Задача своей доски — не в проекте, а на доске: показываем доску (без выбора)
+  const board = card.boardId ? store.boards.find((b) => b.id === card.boardId) : undefined
+  if (board) {
+    return (
+      <section className="cm-section">
+        <span className="field-label">Доска</span>
+        <div className="cm-projects">
+          <span className="cm-project active" title={board.name}>
+            {board.icon ? (
+              <img className="cm-project-icon" src={board.icon} alt="" />
+            ) : (
+              <span className="cm-project-ph" aria-hidden>
+                {(board.name || 'Д').charAt(0).toUpperCase()}
+              </span>
+            )}
+            <span className="cm-project-name">{board.name}</span>
+          </span>
+        </div>
+      </section>
+    )
+  }
   if (projects.length === 0) return null // проектов ещё нет — выбирать не из чего
   const current = card.projectId ?? null
   return (
@@ -821,7 +842,7 @@ function CardModalInner({
                       if (colId !== card.columnId) store.moveCard(card.id, colId, store.cardsInColumn(colId).length)
                     }}
                   >
-                    {store.columns.map((c) => (
+                    {store.columnsOf(card.boardId).map((c) => (
                       <option key={c.id} value={c.id}>
                         {c.title}
                       </option>

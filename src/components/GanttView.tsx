@@ -51,7 +51,7 @@ export const GanttView = forwardRef<GanttHandle, { cards: Card[]; onOpenCard: (i
     const memberById = useMemo(() => new Map(store.members.map((m) => [m.id, m])), [store.members])
     const assigneesOf = (c: Card): Member[] =>
       c.assigneeIds.map((id) => memberById.get(id)).filter((m): m is Member => !!m)
-    const projectOf = (c: Card) => (c.projectId ? store.projects.find((p) => p.id === c.projectId) : undefined)
+    const projectOf = (c: Card) => store.tagOf(c) // проект или своя доска
     const isMeeting = (c: Card) => c.kind === 'meeting'
     // Задачи — белые (как карточки во всех разделах), встречи — чёрные,
     // готовые — тёмно-зелёные со штриховкой
