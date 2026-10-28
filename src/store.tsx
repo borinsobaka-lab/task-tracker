@@ -4,7 +4,7 @@
 
 import React, { createContext, useContext, useEffect, useMemo, useSyncExternalStore } from 'react'
 import { produce } from 'immer'
-import type { Attachment, BoardData, Card, CardKind, ChecklistItem, Column, ColumnRole, Comment, Contact, CrmData, CrmRecord, Deal, EisenhowerQuadrant, ID, Member, Note, Partner, Project, RecurrenceRule, Series } from './types'
+import type { Attachment, BoardData, Card, CardKind, ChecklistItem, Column, ColumnRole, Comment, Contact, CrmData, CrmRecord, CustomBoard, Deal, EisenhowerQuadrant, ID, Member, Note, Partner, Project, RecurrenceRule, Series } from './types'
 import type { RemoteState, StorageAdapter } from './storage/adapter'
 import { ConflictError } from './storage/adapter'
 import { emptyBoard, mergeBoards, normalizeBoard } from './merge'
@@ -157,7 +157,7 @@ export interface StoreSnapshot {
 }
 
 // ---------- Страховка заметок и CRM от старых версий приложения ----------
-// Версии до раздела «Заметки» (и до «CRM») при слиянии конфликтующих правок
+// Версии до раздела «Заметки» (и до «CRM», и до своих досок) при слиянии конфликтующих правок
 // собирали доску заново и теряли незнакомое поле — notes или crm — целиком.
 // Пока такие версии могут быть открыты (старый адрес, Android-оболочка), новая
 // версия держит копию заметок и CRM на устройстве и, увидев данные без этого
@@ -168,6 +168,9 @@ function notesCacheKey(adapter: StorageAdapter): string {
 }
 function crmCacheKey(adapter: StorageAdapter): string {
   return `tt.crmCache.${adapter.kind}`
+}
+function boardsCacheKey(adapter: StorageAdapter): string {
+  return `tt.boardsCache.${adapter.kind}`
 }
 
 function readJson<T>(key: string): T | null {
@@ -182,6 +185,7 @@ function readJson<T>(key: string): T | null {
 interface KnownFields {
   notes?: Record<ID, Note> | null
   crm?: CrmData | null
+  boards?: CustomBoard[] | null
 }
 
 /** Что известно о заметках и CRM: из текущих данных, а нет их — из копии на устройстве. */
@@ -189,6 +193,7 @@ function knownFields(adapter: StorageAdapter, data?: BoardData | null): KnownFie
   return {
     notes: data?.notes ?? readJson<Record<ID, Note>>(notesCacheKey(adapter)),
     crm: data?.crm ?? readJson<CrmData>(crmCacheKey(adapter)),
+    boards: data?.boards ?? readJson<CustomBoard[]>(boardsCacheKey(adapter)),
   }
 }
 
@@ -199,6 +204,7 @@ function healLost(data: BoardData, known: KnownFields): BoardData | null {
   const crm = known.crm
   if (data.crm === undefined && crm && Object.keys(crm.deals ?? {}).length + Object.keys(crm.records ?? {}).length + Object.keys(crm.partners ?? {}).length + Object.keys(crm.contacts ?? {}).length > 0)
     out = { ...(out ?? data), crm }
+  if (data.boards === undefined && known.boards && known.boards.length > 0) out = { ...(out ?? data), boards: known.boards }
   return out
 }
 
@@ -266,6 +272,7 @@ export class SyncEngine {
 
   private cachedNotes: BoardData['notes'] = undefined
   private cachedCrm: BoardData['crm'] = undefined
+  private cachedBoards: BoardData['boards'] = undefined
 
   private emit(): void {
     // Копия заметок и CRM на устройстве (см. healLost) — только когда они изменились
@@ -283,6 +290,15 @@ export class SyncEngine {
       this.cachedCrm = crm
       try {
         localStorage.setItem(crmCacheKey(this.adapter), JSON.stringify(crm))
+      } catch {
+        /* нет места — не страшно, это страховка */
+      }
+    }
+    const boards = this.data?.boards
+    if (boards && boards !== this.cachedBoards) {
+      this.cachedBoards = boards
+      try {
+        localStorage.setItem(boardsCacheKey(this.adapter), JSON.stringify(boards))
       } catch {
         /* нет места — не страшно, это страховка */
       }
@@ -548,8 +564,8 @@ export class SyncEngine {
       let healed = false
       if (remote !== 'unchanged' && revChanged) {
         this.cacheRemote(remote.data, remote.rev, remote.etag)
-        // Старая версия приложения сохранила доску без заметок или CRM — возвращаем наши
-        const fixed = healLost(remote.data, { notes: this.data.notes, crm: this.data.crm })
+        // Старая версия приложения сохранила доску без заметок, CRM или своих досок — возвращаем наши
+        const fixed = healLost(remote.data, { notes: this.data.notes, crm: this.data.crm, boards: this.data.boards })
         this.data = fixed ?? remote.data
         this.rev = remote.rev
         this.etag = remote.etag
@@ -589,7 +605,12 @@ export interface BoardStore {
   lastError: string | null
 
   members: Member[] // без архивных
-  columns: Column[] // без удалённых
+  /** Колонки общей доски (без удалённых и без колонок своих досок) */
+  columns: Column[]
+  /** Все живые колонки — общей доски и своих досок (сначала общей) */
+  allColumns: Column[]
+  /** Живые колонки доски: boardId нет — общей, есть — своей */
+  columnsOf(boardId?: ID): Column[]
   /** Карточка по id; карточки закрытых для текущего участника проектов не возвращаются */
   card(id: ID): Card | undefined
   cardsInColumn(columnId: ID): Card[]
@@ -617,8 +638,19 @@ export interface BoardStore {
   /** Удалить проект (надгробие) и снять его со всех карточек, серий и заметок. */
   deleteProject(id: ID): void
 
+  // Свои доски (спринт, марафон…): свои колонки и задачи, доступ по участникам
+  /** Доски, видимые текущему участнику (пустой memberIds — видна всем) */
+  boards: CustomBoard[]
+  /** Создать доску с колонками как у общей доски; возвращает её id */
+  addBoard(init: { name: string; icon?: string; memberIds: ID[] }): ID
+  updateBoard(id: ID, patch: { name?: string; icon?: string | undefined; memberIds?: ID[] }): void
+  /** Удалить доску вместе с её колонками и задачами */
+  deleteBoard(id: ID): void
+  /** Проект задачи, а у задачи своей доски — доска (для аватарки на карточке) */
+  tagOf(card: Card): Pick<Project, 'name' | 'icon'> | undefined
+
   // Колонки
-  addColumn(title: string): void
+  addColumn(title: string, boardId?: ID): void
   renameColumn(id: ID, title: string): void
   setColumnRole(id: ID, role: ColumnRole | undefined): void
   setColumnColor(id: ID, color: string | undefined): void
@@ -628,7 +660,8 @@ export interface BoardStore {
   moveColumn(id: ID, toIndex: number): void
 
   // Карточки
-  addCard(columnId: ID, title: string): ID
+  /** Новая карточка в колонке (задача своей доски получает её boardId); projectId — сразу в проект */
+  addCard(columnId: ID, title: string, projectId?: ID): ID
   updateCard(id: ID, patch: Partial<Omit<Card, 'id' | 'createdAt' | 'updatedAt' | 'attachments'>>): void
   deleteCard(id: ID): void
   moveCard(id: ID, toColumnId: ID, toIndex: number): void
@@ -986,7 +1019,8 @@ function applyCrmPatch(target: object, patch: object): boolean {
 
 function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
   const data = snap.data!
-  const liveColumns = data.columns.filter((c) => !c.deleted)
+  const allLiveColumns = data.columns.filter((c) => !c.deleted)
+  const liveColumns = allLiveColumns.filter((c) => !c.boardId)
   const activeMembers = data.members.filter((m) => !m.archived)
   const identity = snap.identityId ? data.members.find((m) => m.id === snap.identityId && !m.archived) ?? null : null
 
@@ -1004,8 +1038,18 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
     if (assigneeIds.length === 0 && !createdBy) return true
     return identity !== null && (assigneeIds.includes(identity.id) || createdBy === identity.id)
   }
+  // Свои доски: с непустым memberIds видят только отмеченные. Задачи доски видны
+  // тем, кому видна доска (личными они не считаются — это общая доска процесса).
+  const visibleBoards = (data.boards ?? []).filter(
+    (b) => !b.deleted && (!b.memberIds?.length || (identity !== null && b.memberIds.includes(identity.id))),
+  )
+  const visibleBoardIds = new Set(visibleBoards.map((b) => b.id))
   const cardVisible = (c: Card): boolean =>
-    c.projectId ? !hiddenProjectIds.has(c.projectId) : isOwn(c.assigneeIds, c.createdBy)
+    c.boardId
+      ? visibleBoardIds.has(c.boardId)
+      : c.projectId
+        ? !hiddenProjectIds.has(c.projectId)
+        : isOwn(c.assigneeIds, c.createdBy)
   // Заметки — по тому же правилу: без проекта видят все, с проектом — кому виден проект
   // Заметки: с проектом — кому виден проект; без проекта — личная заметка, её видит
   // только автор (у старых заметок без автора владельца не определить — видят все)
@@ -1042,9 +1086,11 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
     projects: visibleProjects,
     allProjects,
     columns: liveColumns,
+    allColumns: [...liveColumns, ...allLiveColumns.filter((c) => c.boardId)],
+    columnsOf: (boardId) => (boardId ? allLiveColumns.filter((c) => c.boardId === boardId) : liveColumns),
     card: getCard,
     cardsInColumn: (columnId) => {
-      const col = liveColumns.find((c) => c.id === columnId)
+      const col = allLiveColumns.find((c) => c.id === columnId)
       if (!col) return []
       return col.cardIds.map((id) => getCard(id)).filter((c): c is Card => !!c)
     },
@@ -1145,10 +1191,86 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
         }
       }),
 
-    addColumn: (title) =>
+    boards: visibleBoards,
+    addBoard: (init) => {
+      const ts = nowISO()
+      const id = uid()
+      engine.update((d) => {
+        if (!d.boards) d.boards = []
+        d.boards.push({
+          id,
+          name: init.name.trim() || 'Новая доска',
+          ...(init.icon ? { icon: init.icon } : {}),
+          ...(init.memberIds.length ? { memberIds: [...init.memberIds] } : {}),
+          createdAt: ts,
+          updatedAt: ts,
+        })
+        // Колонки — как у общей доски сейчас: те же названия, статусы и цвета
+        for (const col of d.columns.filter((c) => !c.deleted && !c.boardId)) {
+          d.columns.push({
+            id: uid(),
+            title: col.title,
+            cardIds: [],
+            ...(col.role ? { role: col.role } : {}),
+            ...(col.color ? { color: col.color } : {}),
+            boardId: id,
+            createdAt: ts,
+            updatedAt: ts,
+          })
+        }
+      })
+      return id
+    },
+    updateBoard: (id, patch) =>
+      engine.update((d) => {
+        const b = d.boards?.find((x) => x.id === id)
+        if (!b || b.deleted) return
+        if (patch.name !== undefined) b.name = patch.name
+        if ('icon' in patch) {
+          if (patch.icon) b.icon = patch.icon
+          else delete b.icon
+        }
+        if (patch.memberIds !== undefined) {
+          if (patch.memberIds.length) b.memberIds = [...patch.memberIds]
+          else delete b.memberIds // пустой список = доску видят все
+        }
+        touch(b)
+      }),
+    deleteBoard: (id) =>
+      engine.update((d) => {
+        const b = d.boards?.find((x) => x.id === id)
+        if (!b || b.deleted) return
+        b.deleted = true
+        touch(b)
+        for (const col of d.columns) {
+          if (col.boardId !== id || col.deleted) continue
+          col.deleted = true
+          col.cardIds = []
+          touch(col)
+        }
+        for (const c of Object.values(d.cards)) {
+          if (c.boardId === id && !c.deleted) {
+            c.deleted = true
+            touch(c)
+          }
+        }
+      }),
+    tagOf: (card) => {
+      if (card.boardId) return visibleBoards.find((b) => b.id === card.boardId)
+      return card.projectId ? visibleProjects.find((p) => p.id === card.projectId) : undefined
+    },
+
+    addColumn: (title, boardId) =>
       engine.update((d) => {
         const ts = nowISO()
-        d.columns.push({ id: uid(), title: title.trim() || 'Новая колонка', cardIds: [], createdAt: ts, updatedAt: ts })
+        d.columns.push({
+          id: uid(),
+          title: title.trim() || 'Новая колонка',
+          cardIds: [],
+          ...(boardId ? { boardId } : {}),
+          createdAt: ts,
+          updatedAt: ts,
+        })
       }),
     renameColumn: (id, title) =>
       engine.update((d) => {
@@ -1219,18 +1341,25 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
       }),
     moveColumn: (id, toIndex) =>
       engine.update((d) => {
+        // toIndex — позиция среди колонок той же доски; колонки других досок
+        // остаются на своих местах в общем массиве
         const live = d.columns.filter((c) => !c.deleted)
-        const from = live.findIndex((c) => c.id === id)
-        if (from < 0) return
-        const target = live[from]
-        live.splice(from, 1)
-        live.splice(clamp(toIndex, 0, live.length), 0, target)
+        const target = live.find((c) => c.id === id)
+        if (!target) return
+        const slots = live.flatMap((c, i) => ((c.boardId ?? '') === (target.boardId ?? '') ? [i] : []))
+        const group = slots.map((i) => live[i])
+        const from = group.indexOf(target)
+        group.splice(from, 1)
+        group.splice(clamp(toIndex, 0, group.length), 0, target)
+        slots.forEach((slot, k) => {
+          live[slot] = group[k]
+        })
         // Пересобираем общий массив: живые в новом порядке + удалённые в конце
         d.columns = [...live, ...d.columns.filter((c) => c.deleted)]
         touch(target)
       }),
 
-    addCard: (columnId, title) => {
+    addCard: (columnId, title, projectId) => {
       const id = uid()
       engine.update((d) => {
         const col = d.columns.find((c) => c.id === columnId && !c.deleted)
@@ -1244,6 +1373,7 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
           assigneeIds: [],
           checklist: [],
           attachments: [],
+          ...(col.boardId ? { boardId: col.boardId } : projectId ? { projectId } : {}),
           ...(identity ? { createdBy: identity.id } : {}),
           createdAt: ts,
           updatedAt: ts,
@@ -1320,6 +1450,8 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
         to.cardIds = to.cardIds.filter((x) => x !== id)
         to.cardIds.splice(clamp(toIndex, 0, to.cardIds.length), 0, id)
         card.columnId = toColumnId
+        if (to.boardId) card.boardId = to.boardId
+        else delete card.boardId
         // Перемещение в колонку с ролью синхронизирует отметку «выполнено»:
         // в «Готово» → выполнено; в любую другую колонку с ролью → не выполнено.
         const wasDone = !!card.done
@@ -1378,8 +1510,10 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
           return
         }
 
-        // Обычная задача: переносим в колонку с ролью «Готово», если она есть
-        const doneCol = d.columns.find((c) => !c.deleted && c.role === 'done')
+        // Обычная задача: переносим в колонку с ролью «Готово» своей доски, если она есть
+        const doneCol = d.columns.find(
+          (c) => !c.deleted && c.role === 'done' && (c.boardId ?? '') === (card.boardId ?? ''),
+        )
         if (!doneCol || card.columnId === doneCol.id) return
         const from = d.columns.find((c) => c.id === card.columnId)
         if (from) {

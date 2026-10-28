@@ -565,3 +565,114 @@
     min-width: 265px;
   }
 }
+
+/* ---------- Выбор доски (второй хедер раздела «Доска») ---------- */
+.board-pick-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 240px;
+  padding: 0 10px 0 6px;
+  font-weight: 600;
+}
+.board-pick-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.board-pick-ph {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-soft);
+}
+.board-pick-settings {
+  flex-shrink: 0;
+}
+.board-pick-pop {
+  position: fixed;
+  z-index: 60;
+  width: 260px;
+  max-height: min(420px, calc(100vh - 120px));
+  overflow-y: auto;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  padding: 4px;
+}
+.board-pick-label-sep {
+  padding: 8px 8px 4px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-faint);
+}
+.board-pick-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: none;
+  border-radius: 6px;
+  padding: 6px 8px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text);
+}
+.board-pick-row:hover {
+  background: var(--surface-2);
+}
+.board-pick-row.active {
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+}
+.board-pick-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.board-pick-check {
+  color: var(--accent-strong);
+  display: inline-flex;
+}
+.board-pick-add {
+  margin-top: 2px;
+  color: var(--accent-strong);
+  font-weight: 600;
+}
+
+/* Окно создания / настройки своей доски */
+.board-editor-hint {
+  margin: 0 0 12px;
+  font-size: 13px;
+}
+.board-editor-main {
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+}
+.board-editor-name {
+  flex: 1;
+  min-width: 0;
+}
+.board-editor-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+}

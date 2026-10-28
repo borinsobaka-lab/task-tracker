@@ -85,6 +85,17 @@ export function setSavedView(v: SavedView): void {
   localStorage.setItem(LS.view, v)
 }
 
+/**
+ * Какая доска открыта в разделе «Доска»: '' — общая (все задачи), NO_PROJECT —
+ * задачи без проекта, 'p:<id>' — доска проекта, 'b:<id>' — своя доска.
+ */
+export function getBoardSel(): string {
+  return localStorage.getItem('tt.boardSel') ?? ''
+}
+export function setBoardSel(sel: string): void {
+  localStorage.setItem('tt.boardSel', sel)
+}
+
 /** Сколько дней показывать в календаре: 1 / 3 / 7. По умолчанию — 3 на телефоне, 7 иначе. */
 export function getCalDays(): number {
   const v = Number(localStorage.getItem('tt.calDays'))

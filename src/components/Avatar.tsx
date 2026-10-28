@@ -1,9 +1,9 @@
 import type { Member, Project } from '../types'
 import { initials } from '../utils'
 
-/** Аватарка проекта — логотип (или буква-заглушка) скруглённым квадратом,
+/** Аватарка проекта (или своей доски) — логотип (или буква-заглушка) скруглённым квадратом,
  *  чтобы визуально отличаться от круглых аватарок участников. */
-export function ProjectAvatar({ project, size }: { project: Project; size?: 'xs' | 'sm' | 'lg' }) {
+export function ProjectAvatar({ project, size }: { project: Pick<Project, 'name' | 'icon'>; size?: 'xs' | 'sm' | 'lg' }) {
   return (
     <span className={`project-avatar${size ? ' ' + size : ''}`} title={project.name}>
       {project.icon ? (
