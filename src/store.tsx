@@ -605,12 +605,8 @@ export interface BoardStore {
   lastError: string | null
 
   members: Member[] // без архивных
-  /** Колонки общей доски (без удалённых и без колонок своих досок) */
+  /** Колонки (без удалённых) — один набор на всю систему: общий для всех проектов и досок */
   columns: Column[]
-  /** Все живые колонки — общей доски и своих досок (сначала общей) */
-  allColumns: Column[]
-  /** Живые колонки доски: boardId нет — общей, есть — своей */
-  columnsOf(boardId?: ID): Column[]
   /** Карточка по id; карточки закрытых для текущего участника проектов не возвращаются */
   card(id: ID): Card | undefined
   cardsInColumn(columnId: ID): Card[]
@@ -638,10 +634,10 @@ export interface BoardStore {
   /** Удалить проект (надгробие) и снять его со всех карточек, серий и заметок. */
   deleteProject(id: ID): void
 
-  // Свои доски (спринт, марафон…): свои колонки и задачи, доступ по участникам
+  // Свои доски (спринт, марафон…): свои задачи (в общих колонках), доступ по участникам
   /** Доски, видимые текущему участнику (пустой memberIds — видна всем) */
   boards: CustomBoard[]
-  /** Создать доску с колонками как у общей доски; возвращает её id */
+  /** Создать доску; возвращает её id */
   addBoard(init: { name: string; icon?: string; memberIds: ID[] }): ID
   updateBoard(id: ID, patch: { name?: string; icon?: string | undefined; memberIds?: ID[] }): void
   /** Удалить доску вместе с её колонками и задачами */
@@ -649,19 +645,16 @@ export interface BoardStore {
   /** Проект задачи, а у задачи своей доски — доска (для аватарки на карточке) */
   tagOf(card: Card): Pick<Project, 'name' | 'icon'> | undefined
 
-  // Колонки
-  addColumn(title: string, boardId?: ID): void
+  // Колонки (набор и порядок фиксированы: добавлять, удалять и переставлять нельзя)
   renameColumn(id: ID, title: string): void
   setColumnRole(id: ID, role: ColumnRole | undefined): void
   setColumnColor(id: ID, color: string | undefined): void
   /** Разовая сортировка карточек колонки (порядок сохраняется в cardIds) */
   sortColumn(id: ID, by: 'due' | 'created' | 'priority'): void
-  deleteColumn(id: ID): void
-  moveColumn(id: ID, toIndex: number): void
 
   // Карточки
-  /** Новая карточка в колонке (задача своей доски получает её boardId); projectId — сразу в проект */
-  addCard(columnId: ID, title: string, projectId?: ID): ID
+  /** Новая карточка в колонке; tag — сразу в проект или на свою доску */
+  addCard(columnId: ID, title: string, tag?: { projectId?: ID; boardId?: ID }): ID
   updateCard(id: ID, patch: Partial<Omit<Card, 'id' | 'createdAt' | 'updatedAt' | 'attachments'>>): void
   deleteCard(id: ID): void
   moveCard(id: ID, toColumnId: ID, toIndex: number): void
@@ -1019,8 +1012,7 @@ function applyCrmPatch(target: object, patch: object): boolean {
 
 function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
   const data = snap.data!
-  const allLiveColumns = data.columns.filter((c) => !c.deleted)
-  const liveColumns = allLiveColumns.filter((c) => !c.boardId)
+  const liveColumns = data.columns.filter((c) => !c.deleted)
   const activeMembers = data.members.filter((m) => !m.archived)
   const identity = snap.identityId ? data.members.find((m) => m.id === snap.identityId && !m.archived) ?? null : null
 
@@ -1086,11 +1078,9 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
     projects: visibleProjects,
     allProjects,
     columns: liveColumns,
-    allColumns: [...liveColumns, ...allLiveColumns.filter((c) => c.boardId)],
-    columnsOf: (boardId) => (boardId ? allLiveColumns.filter((c) => c.boardId === boardId) : liveColumns),
     card: getCard,
     cardsInColumn: (columnId) => {
-      const col = allLiveColumns.find((c) => c.id === columnId)
+      const col = liveColumns.find((c) => c.id === columnId)
       if (!col) return []
       return col.cardIds.map((id) => getCard(id)).filter((c): c is Card => !!c)
     },
@@ -1205,19 +1195,6 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
           createdAt: ts,
           updatedAt: ts,
         })
-        // Колонки — как у общей доски сейчас: те же названия, статусы и цвета
-        for (const col of d.columns.filter((c) => !c.deleted && !c.boardId)) {
-          d.columns.push({
-            id: uid(),
-            title: col.title,
-            cardIds: [],
-            ...(col.role ? { role: col.role } : {}),
-            ...(col.color ? { color: col.color } : {}),
-            boardId: id,
-            createdAt: ts,
-            updatedAt: ts,
-          })
-        }
       })
       return id
     },
@@ -1242,16 +1219,15 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
         if (!b || b.deleted) return
         b.deleted = true
         touch(b)
-        for (const col of d.columns) {
-          if (col.boardId !== id || col.deleted) continue
-          col.deleted = true
-          col.cardIds = []
-          touch(col)
-        }
         for (const c of Object.values(d.cards)) {
           if (c.boardId === id && !c.deleted) {
             c.deleted = true
             touch(c)
+            const col = d.columns.find((x) => x.id === c.columnId)
+            if (col) {
+              col.cardIds = col.cardIds.filter((x) => x !== c.id)
+              touch(col)
+            }
           }
         }
       }),
@@ -1260,18 +1236,6 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
       return card.projectId ? visibleProjects.find((p) => p.id === card.projectId) : undefined
     },
 
-    addColumn: (title, boardId) =>
-      engine.update((d) => {
-        const ts = nowISO()
-        d.columns.push({
-          id: uid(),
-          title: title.trim() || 'Новая колонка',
-          cardIds: [],
-          ...(boardId ? { boardId } : {}),
-          createdAt: ts,
-          updatedAt: ts,
-        })
-      }),
     renameColumn: (id, title) =>
       engine.update((d) => {
         const col = d.columns.find((c) => c.id === id)
@@ -1324,42 +1288,7 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
         col.cardIds = live.map((c) => c.id)
         touch(col)
       }),
-    deleteColumn: (id) =>
-      engine.update((d) => {
-        const col = d.columns.find((c) => c.id === id)
-        if (!col) return
-        col.deleted = true
-        for (const cardId of col.cardIds) {
-          const card = d.cards[cardId]
-          if (card) {
-            card.deleted = true
-            touch(card)
-          }
-        }
-        col.cardIds = []
-        touch(col)
-      }),
-    moveColumn: (id, toIndex) =>
-      engine.update((d) => {
-        // toIndex — позиция среди колонок той же доски; колонки других досок
-        // остаются на своих местах в общем массиве
-        const live = d.columns.filter((c) => !c.deleted)
-        const target = live.find((c) => c.id === id)
-        if (!target) return
-        const slots = live.flatMap((c, i) => ((c.boardId ?? '') === (target.boardId ?? '') ? [i] : []))
-        const group = slots.map((i) => live[i])
-        const from = group.indexOf(target)
-        group.splice(from, 1)
-        group.splice(clamp(toIndex, 0, group.length), 0, target)
-        slots.forEach((slot, k) => {
-          live[slot] = group[k]
-        })
-        // Пересобираем общий массив: живые в новом порядке + удалённые в конце
-        d.columns = [...live, ...d.columns.filter((c) => c.deleted)]
-        touch(target)
-      }),
-
-    addCard: (columnId, title, projectId) => {
+    addCard: (columnId, title, tag) => {
       const id = uid()
       engine.update((d) => {
         const col = d.columns.find((c) => c.id === columnId && !c.deleted)
@@ -1373,7 +1302,7 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
           assigneeIds: [],
           checklist: [],
           attachments: [],
-          ...(col.boardId ? { boardId: col.boardId } : projectId ? { projectId } : {}),
+          ...(tag?.boardId ? { boardId: tag.boardId } : tag?.projectId ? { projectId: tag.projectId } : {}),
           ...(identity ? { createdBy: identity.id } : {}),
           createdAt: ts,
           updatedAt: ts,
@@ -1450,8 +1379,6 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
         to.cardIds = to.cardIds.filter((x) => x !== id)
         to.cardIds.splice(clamp(toIndex, 0, to.cardIds.length), 0, id)
         card.columnId = toColumnId
-        if (to.boardId) card.boardId = to.boardId
-        else delete card.boardId
         // Перемещение в колонку с ролью синхронизирует отметку «выполнено»:
         // в «Готово» → выполнено; в любую другую колонку с ролью → не выполнено.
         const wasDone = !!card.done
@@ -1510,10 +1437,8 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
           return
         }
 
-        // Обычная задача: переносим в колонку с ролью «Готово» своей доски, если она есть
-        const doneCol = d.columns.find(
-          (c) => !c.deleted && c.role === 'done' && (c.boardId ?? '') === (card.boardId ?? ''),
-        )
+        // Обычная задача: переносим в колонку с ролью «Готово», если она есть
+        const doneCol = d.columns.find((c) => !c.deleted && c.role === 'done')
         if (!doneCol || card.columnId === doneCol.id) return
         const from = d.columns.find((c) => c.id === card.columnId)
         if (from) {

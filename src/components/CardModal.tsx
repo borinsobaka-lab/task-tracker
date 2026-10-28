@@ -842,7 +842,7 @@ function CardModalInner({
                       if (colId !== card.columnId) store.moveCard(card.id, colId, store.cardsInColumn(colId).length)
                     }}
                   >
-                    {store.columnsOf(card.boardId).map((c) => (
+                    {store.columns.map((c) => (
                       <option key={c.id} value={c.id}>
                         {c.title}
                       </option>

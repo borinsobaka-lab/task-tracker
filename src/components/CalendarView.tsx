@@ -297,8 +297,7 @@ export function CalendarView({ memberFilter, onMemberFilterChange, projectFilter
         inProjectFilter(c.projectId, projectFilter)
 
   const visible = store.liveCards().filter(passesFilter)
-  // Колонки общей доски и своих досок (сначала общей)
-  const liveColumns = store.allColumns
+  const liveColumns = store.columns
   // Задачи со статусом «Готово» в панель «Без даты» не показываем — они уже
   // сделаны, распределять их по датам не нужно.
   const doneColIds = new Set(liveColumns.filter((c) => c.role === 'done').map((c) => c.id))
@@ -309,19 +308,9 @@ export function CalendarView({ memberFilter, onMemberFilterChange, projectFilter
   // Ожидает проверки → колонки без роли. «Готово» уже отфильтровано выше.
   const UNSCHED_RANK: Record<string, number> = { inbox: -1, todo: 0, doing: 1, review: 2 }
   const colRank = (role?: string): number => (role && role in UNSCHED_RANK ? UNSCHED_RANK[role] : 3)
-  // Задачи своих досок — в тех же группах: колонка с тем же статусом (а без
-  // статуса — с тем же названием) собирается в одну группу с колонкой общей доски.
-  const groupKey = (col: { role?: string; title: string }): string => col.role ?? 't:' + col.title.trim().toLowerCase()
-  const groupMap = new Map<string, { col: (typeof liveColumns)[number]; cards: Card[] }>()
-  for (const col of liveColumns) {
-    if (col.role !== 'done' && !groupMap.has(groupKey(col))) groupMap.set(groupKey(col), { col, cards: [] })
-  }
-  const colById = new Map(liveColumns.map((col) => [col.id, col]))
-  for (const c of unscheduled) {
-    const col = colById.get(c.columnId)
-    if (col) groupMap.get(groupKey(col))?.cards.push(c)
-  }
-  const unscheduledGroups = [...groupMap.values()]
+  const unscheduledGroups = liveColumns
+    .filter((col) => col.role !== 'done')
+    .map((col) => ({ col, cards: unscheduled.filter((c) => c.columnId === col.id) }))
     .filter((g) => g.cards.length > 0)
     .sort((a, b) => colRank(a.col.role) - colRank(b.col.role))
   const unscheduledOther = unscheduled.filter((c) => !liveColumns.some((col) => col.id === c.columnId))

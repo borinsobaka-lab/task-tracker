@@ -1457,7 +1457,7 @@ test('доска: проекты выбираются списком досок 
   await expect(page.locator('.project-tabs')).toBeVisible()
 })
 
-test('своя доска: создание с аватаркой и доступом, свои колонки и задачи в календаре и матрице', async ({ page }) => {
+test('своя доска: создание с аватаркой и доступом, общие колонки, задачи в календаре и матрице', async ({ page }) => {
   await seedProjects(page)
   await page.locator('.board-pick-btn').click()
   await page.locator('.board-pick-pop').getByRole('button', { name: 'Создать доску' }).click()
@@ -1479,7 +1479,7 @@ test('своя доска: создание с аватаркой и досту�
   await dlg.getByRole('button', { name: 'Создать доску' }).click()
   await expect(dlg).toBeHidden()
 
-  // Открылась новая доска: колонки — как у общей, задач нет
+  // Открылась новая доска: колонки — общие для всей системы, задач нет
   await expect(page.locator('.board-pick-btn')).toContainText('Марафон')
   await expect(page.locator('.board-pick-btn img.project-avatar-img')).toBeVisible()
   await expect(page.locator('.board-col-title')).toHaveText(['Нужно сделать', 'В работе', 'Проверка', 'Готово'].map((t) => new RegExp(t)))
@@ -1492,7 +1492,7 @@ test('своя доска: создание с аватаркой и досту�
   await expect(mcard).toBeVisible()
   await expect(mcard.locator('.project-avatar img')).toBeVisible()
 
-  // Карточка двигается по этапам своей доски: статус в модалке — колонки этой доски
+  // Карточка двигается по тем же этапам, что и везде
   await mcard.click()
   const sel = page.locator('.cm-col-select')
   await expect(sel.locator('option')).toHaveCount(4)
@@ -1500,19 +1500,22 @@ test('своя доска: создание с аватаркой и досту�
   await page.keyboard.press('Escape')
   await expect(page.locator('.board-col', { hasText: 'В работе' }).locator('.board-card', { hasText: 'Этап марафона' })).toBeVisible()
 
-  // Колонка, добавленная на своей доске, на общей не появляется
-  await page.getByText('+ Добавить колонку').click()
-  await page.getByPlaceholder('Название колонки').fill('Финиш')
-  await page.keyboard.press('Enter')
+  // Колонки нельзя добавлять, удалять и переставлять — набор один на всю систему
+  await expect(page.getByText('Добавить колонку')).toHaveCount(0)
+  await page.locator('.board-col', { hasText: 'В работе' }).getByRole('button', { name: 'Действия с колонкой' }).click()
+  await expect(page.getByRole('menuitem', { name: 'Удалить колонку' })).toHaveCount(0)
   await page.keyboard.press('Escape')
-  await expect(page.locator('.board-col-title', { hasText: 'Финиш' })).toBeVisible()
+  await page.locator('.col-menu-backdrop').click()
 
-  // На общей доске задачи и колонок своей доски нет
+  // «Все задачи» показывает и задачи своих досок (в тех же колонках); проекты — без них
   await page.locator('.board-pick-btn').click()
   await page.locator('.board-pick-pop').getByRole('menuitemradio', { name: 'Все задачи' }).click()
-  await expect(page.locator('.board-card', { hasText: 'Этап марафона' })).toHaveCount(0)
-  await expect(page.locator('.board-col-title', { hasText: 'Финиш' })).toHaveCount(0)
+  await expect(page.locator('.board-col', { hasText: 'В работе' }).locator('.board-card', { hasText: 'Этап марафона' })).toBeVisible()
   await expect(page.locator('.board-col')).toHaveCount(4)
+  await page.locator('.board-pick-btn').click()
+  await page.locator('.board-pick-pop').getByRole('menuitemradio', { name: 'Без проекта' }).click()
+  await expect(page.locator('.board-card', { hasText: 'Этап марафона' })).toHaveCount(0)
+  await expect(page.locator('.board-card', { hasText: 'Задача без проекта' })).toBeVisible()
 
   // Календарь: задача в списке «Без даты» слева, с аватаркой доски
   await page.locator('.view-tabs').getByRole('button', { name: 'Календарь' }).click()
@@ -1567,4 +1570,26 @@ test('своя доска: настройка доступа и удаление
   await expect(page.locator('.board-pick-btn')).toContainText('Все задачи')
   await page.locator('.view-tabs').getByRole('button', { name: 'Матрица' }).click()
   await expect(page.locator('.eis-card-body', { hasText: 'Задача спринта' })).toHaveCount(0)
+})
+
+test('колонки первой версии своих досок сливаются с общими', async ({ page }) => {
+  await seedProjects(page)
+  await page.evaluate(() => {
+    const data = JSON.parse(localStorage.getItem('tt.local.data')!)
+    const ts = new Date().toISOString()
+    data.boards = [{ id: 'b1', name: 'Старая доска', createdAt: ts, updatedAt: ts }]
+    const col = (id: string, title: string, role: string, cardIds: string[]) => ({ id, title, role, boardId: 'b1', cardIds, createdAt: ts, updatedAt: ts })
+    data.columns.push(col('bc1', 'Нужно сделать', 'todo', []), col('bc2', 'В работе', 'doing', ['old1']))
+    data.cards.old1 = {
+      id: 'old1', title: 'Задача старой доски', description: '', columnId: 'bc2', boardId: 'b1', assigneeIds: [], checklist: [], attachments: [], createdAt: ts, updatedAt: ts,
+    }
+    localStorage.setItem('tt.local.data', JSON.stringify(data))
+    localStorage.setItem('tt.local.rev', String(Number(localStorage.getItem('tt.local.rev') ?? '1') + 1))
+  })
+  await page.reload()
+  await expect(page.locator('.board-col')).toHaveCount(4)
+  await page.locator('.board-pick-btn').click()
+  await page.locator('.board-pick-pop').getByRole('menuitemradio', { name: 'Старая доска' }).click()
+  await expect(page.locator('.board-col')).toHaveCount(4)
+  await expect(page.locator('.board-col', { hasText: 'В работе' }).locator('.board-card', { hasText: 'Задача старой доски' })).toBeVisible()
 })

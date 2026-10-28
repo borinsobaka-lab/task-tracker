@@ -234,7 +234,7 @@ function SearchBox({ onOpenCard }: { onOpenCard: (id: ID) => void }) {
   const results = useMemo(() => {
     const q = query.trim()
     if (!q) return []
-    const cols = new Map(store.allColumns.map((c) => [c.id, c]))
+    const cols = new Map(store.columns.map((c) => [c.id, c]))
     // Ищем задачи на доске (у них есть статус-колонка); встречи и регулярные вне доски пропускаем.
     // Блоки (сон, спорт…) — не задачи, в поиске им не место.
     return store
