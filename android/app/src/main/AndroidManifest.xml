@@ -57,6 +57,33 @@
                 android:resource="@xml/appwidget_usage_info" />
         </receiver>
 
+        <!-- Виджет «Задачи Claude»: непросмотренные задачи Claude Code (в работе / готовые) -->
+        <receiver
+            android:name=".ClaudeTasksWidgetProvider"
+            android:exported="true"
+            android:label="@string/tasks_widget_title">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/appwidget_claude_tasks_info" />
+        </receiver>
+
+        <service
+            android:name=".ClaudeTasksWidgetService"
+            android:permission="android.permission.BIND_REMOTEVIEWS"
+            android:exported="false" />
+
+        <!-- Тап по задаче в виджете: отметить «смотрел» и открыть её в Claude Code -->
+        <activity
+            android:name=".ClaudeOpenActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:taskAffinity=""
+            android:theme="@android:style/Theme.NoDisplay" />
+
         <service
             android:name=".TimelineWidgetService"
             android:permission="android.permission.BIND_REMOTEVIEWS"

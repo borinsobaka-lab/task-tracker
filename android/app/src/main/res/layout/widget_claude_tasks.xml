@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Виджет «Задачи Claude»: задачи Claude Code, которые ещё не смотрели —
+     в работе (синяя точка) и готовые (зелёная). -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@drawable/widget_bg"
+    android:paddingTop="8dp"
+    android:paddingBottom="8dp">
+
+    <!-- Шапка: название, счётчики «в работе» / «готово», время обновления, «Обновить» -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="10dp"
+        android:paddingEnd="8dp"
+        android:paddingBottom="4dp">
+
+        <TextView
+            android:id="@+id/tasks_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/tasks_widget_title"
+            android:textColor="#111827"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <LinearLayout
+            android:id="@+id/tasks_ready_box"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/count_pill"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="7dp"
+            android:paddingEnd="8dp"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp"
+            android:visibility="gone">
+
+            <ImageView
+                android:layout_width="8dp"
+                android:layout_height="8dp"
+                android:layout_marginEnd="5dp"
+                android:contentDescription="@null"
+                android:src="@drawable/dot"
+                android:tint="#16A34A" />
+
+            <TextView
+                android:id="@+id/tasks_ready"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#374151"
+                android:textSize="13sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/tasks_working_box"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="6dp"
+            android:background="@drawable/count_pill"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="7dp"
+            android:paddingEnd="8dp"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp"
+            android:visibility="gone">
+
+            <ImageView
+                android:layout_width="8dp"
+                android:layout_height="8dp"
+                android:layout_marginEnd="5dp"
+                android:contentDescription="@null"
+                android:src="@drawable/dot"
+                android:tint="#2563EB" />
+
+            <TextView
+                android:id="@+id/tasks_working"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#374151"
+                android:textSize="13sp" />
+        </LinearLayout>
+
+        <!-- Время обновления или ошибка; заодно распорка — кнопка уходит вправо -->
+        <TextView
+            android:id="@+id/tasks_status"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"
+            android:gravity="end"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:textColor="#6B7280"
+            android:textSize="12sp" />
+
+        <ImageView
+            android:id="@+id/tasks_refresh"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:layout_marginStart="2dp"
+            android:padding="6dp"
+            android:contentDescription="@string/refresh"
+            android:src="@drawable/ic_refresh" />
+
+        <ProgressBar
+            android:id="@+id/tasks_refreshing"
+            style="?android:attr/progressBarStyleSmall"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:layout_marginStart="2dp"
+            android:padding="6dp"
+            android:indeterminate="true"
+            android:indeterminateTint="#357A17"
+            android:visibility="gone" />
+    </LinearLayout>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <ListView
+            android:id="@+id/tasks_list"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:divider="@android:color/transparent"
+            android:dividerHeight="8dp"
+            android:scrollbars="none" />
+
+        <TextView
+            android:id="@+id/tasks_empty"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:padding="12dp"
+            android:text="@string/tasks_empty"
+            android:textColor="#9095A8"
+            android:textSize="14sp" />
+    </FrameLayout>
+</LinearLayout>
