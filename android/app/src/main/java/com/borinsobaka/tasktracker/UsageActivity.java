@@ -13,7 +13,8 @@ import android.widget.TextView;
 
 /**
  * Экран «Лимиты Claude»: подключение аккаунта (вход на сайте Claude → вставить
- * код) и текущие цифры. Открывается тапом по виджету лимитов.
+ * код) и текущие цифры. Открывается тапом по виджету лимитов и по шапке виджета
+ * задач; вход до появления виджета задач предлагает повторить (нужен доступ к задачам).
  */
 public class UsageActivity extends Activity {
 
@@ -48,6 +49,7 @@ public class UsageActivity extends Activity {
         findViewById(R.id.usage_logout).setOnClickListener(v -> {
             ClaudeUsage.logout(this);
             UsageWidgetProvider.redraw(this);
+            ClaudeTasksWidgetProvider.redraw(this);
             render();
         });
         render();
@@ -58,7 +60,7 @@ public class UsageActivity extends Activity {
         super.onWindowFocusChanged(hasFocus);
         // Вернулись из браузера с кодом в буфере — подставим его сами
         // (буфер обмена Android отдаёт только окну в фокусе, поэтому не в onResume)
-        if (hasFocus && !ClaudeUsage.isConnected(this) && code.getText().length() == 0) {
+        if (hasFocus && !ClaudeUsage.canReadSessions(this) && code.getText().length() == 0) {
             String clip = clipboardText();
             if (clip != null && clip.matches("[A-Za-z0-9_\\-]{16,}#[A-Za-z0-9_\\-]{16,}")) code.setText(clip);
         }
@@ -74,6 +76,7 @@ public class UsageActivity extends Activity {
             try {
                 ClaudeUsage.finishLogin(this, pasted);
                 ClaudeUsage.fetch(this, true);
+                ClaudeSessions.fetch(this, true);
             } catch (Exception e) {
                 error = e.getMessage() != null ? e.getMessage() : "Не удалось подключить";
             }
@@ -85,6 +88,7 @@ public class UsageActivity extends Activity {
                 render();
                 showMessage(err);
                 UsageWidgetProvider.redraw(this);
+                ClaudeTasksWidgetProvider.redraw(this);
             });
         }, "claude-login").start();
     }
@@ -93,22 +97,28 @@ public class UsageActivity extends Activity {
         reload.setEnabled(false);
         new Thread(() -> {
             ClaudeUsage.fetch(this, true);
+            ClaudeSessions.fetch(this, true);
             runOnUiThread(() -> {
                 if (isFinishing()) return;
                 reload.setEnabled(true);
                 render();
                 UsageWidgetProvider.redraw(this);
+                ClaudeTasksWidgetProvider.redraw(this);
             });
         }, "claude-usage").start();
     }
 
     private void render() {
         boolean connected = ClaudeUsage.isConnected(this);
+        boolean tasks = ClaudeUsage.canReadSessions(this);
         ClaudeUsage.Snapshot s = ClaudeUsage.cached(this);
         connectedBox.setVisibility(connected ? View.VISIBLE : View.GONE);
-        loginBox.setVisibility(connected ? View.GONE : View.VISIBLE);
+        // Старый вход без доступа к задачам — предлагаем войти ещё раз, лимиты пока работают
+        loginBox.setVisibility(tasks ? View.GONE : View.VISIBLE);
         if (connected) {
-            state.setText(s.error != null ? "Подключено · " + s.error : "Аккаунт подключён");
+            state.setText(s.error != null ? "Подключено · " + s.error
+                    : tasks ? "Аккаунт подключён"
+                    : "Аккаунт подключён. Для виджета «Задачи Claude» войдите ещё раз (шаги ниже)");
             long now = System.currentTimeMillis();
             summary.setText(line("Сессия · 5 часов", s.session, now) + "\n\n"
                     + line("Неделя · все модели", s.weekAll, now) + "\n\n"

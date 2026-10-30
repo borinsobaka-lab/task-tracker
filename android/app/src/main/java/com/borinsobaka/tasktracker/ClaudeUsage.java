@@ -29,9 +29,11 @@ import java.util.Locale;
  *
  * Вход — свой OAuth-токен телефона (PKCE, код вставляется вручную), а не токен
  * с компьютера: refresh-токен при обновлении меняется, и если бы телефон обновлял
- * токен Claude Code, тот на компьютере разлогинивался бы. Просим только scope
- * user:profile — его хватает, чтобы читать лимиты; писать в Claude от имени
- * пользователя этот токен не может.
+ * токен Claude Code, тот на компьютере разлогинивался бы. Просим user:profile
+ * (лимиты) и user:sessions:claude_code (список задач Claude Code для виджета
+ * задач); модели от имени пользователя этот токен вызывать не может. Входы,
+ * сделанные до виджета задач, — только с user:profile: их обновляем с тем же
+ * scope, а для задач просим войти заново.
  */
 final class ClaudeUsage {
 
@@ -40,16 +42,21 @@ final class ClaudeUsage {
     private static final String TOKEN_URL = "https://platform.claude.com/v1/oauth/token";
     private static final String REDIRECT_URL = "https://platform.claude.com/oauth/code/callback";
     private static final String CLIENT_ID = "9d1c250a-e61b-44d9-88ed-5944d1962f5e";
-    private static final String SCOPE = "user:profile";
+    static final String SCOPE_PROFILE = "user:profile";
+    static final String SCOPE_SESSIONS = "user:sessions:claude_code";
+    private static final String SCOPE = SCOPE_PROFILE + " " + SCOPE_SESSIONS;
+    private static final String PROFILE_URL = "https://api.anthropic.com/api/oauth/profile";
     private static final String USAGE_URL = "https://api.anthropic.com/api/oauth/usage";
     private static final String OAUTH_BETA = "oauth-2025-04-20";
-    private static final String USER_AGENT = "task-tracker-android/1.0";
+    static final String USER_AGENT = "task-tracker-android/1.0";
 
     /** Отдельный файл настроек — исключён из резервной копии (там токены). */
     static final String FILE = "claude_usage";
     private static final String K_ACCESS = "access_token";
     private static final String K_REFRESH = "refresh_token";
     private static final String K_EXPIRES = "expires_at";
+    private static final String K_SCOPE = "scope";    // что выдал сервер при входе
+    private static final String K_ORG = "org_uuid";   // организация аккаунта — нужна API сессий
     private static final String K_VERIFIER = "pkce_verifier";
     private static final String K_STATE = "pkce_state";
     private static final String K_RAW = "usage_raw";
@@ -59,7 +66,7 @@ final class ClaudeUsage {
     /** Данные моложе этого не перезапрашиваем (тик виджета, повторные нажатия). */
     static final long FRESH_MS = 4 * 60 * 1000L;
 
-    private static final Object LOCK = new Object(); // один refresh за раз: токен одноразовый
+    static final Object LOCK = new Object(); // один refresh за раз: токен одноразовый
 
     private ClaudeUsage() {}
 
@@ -71,6 +78,15 @@ final class ClaudeUsage {
 
     static boolean isConnected(Context ctx) {
         return prefs(ctx).getString(K_REFRESH, null) != null;
+    }
+
+    /** Вход даёт доступ к списку задач Claude Code (вход после появления виджета задач). */
+    static boolean canReadSessions(Context ctx) {
+        return isConnected(ctx) && (" " + grantedScope(ctx) + " ").contains(" " + SCOPE_SESSIONS + " ");
+    }
+
+    private static String grantedScope(Context ctx) {
+        return prefs(ctx).getString(K_SCOPE, SCOPE_PROFILE); // старые входы scope не сохраняли
     }
 
     /** Шаг 1: адрес страницы входа Claude. Verifier/state запоминаем до шага 2. */
@@ -125,7 +141,15 @@ final class ClaudeUsage {
                     : "Ошибка входа: HTTP " + r.code);
         }
         synchronized (LOCK) {
-            saveTokens(ctx, new JSONObject(r.body), null);
+            JSONObject t = new JSONObject(r.body);
+            saveTokens(ctx, t, null);
+            // Сервер мог урезать scope — запоминаем выданный, им же будем обновлять токен
+            String granted = t.optString("scope", "").trim();
+            JSONObject org = t.optJSONObject("organization");
+            String orgUuid = org == null ? "" : org.optString("uuid", "");
+            SharedPreferences.Editor e = p.edit().putString(K_SCOPE, granted.isEmpty() ? SCOPE : granted);
+            if (orgUuid.isEmpty()) e.remove(K_ORG); else e.putString(K_ORG, orgUuid);
+            e.commit();
         }
         p.edit().remove(K_VERIFIER).remove(K_STATE).remove(K_ERROR).apply();
     }
@@ -155,7 +179,7 @@ final class ClaudeUsage {
                 .put("grant_type", "refresh_token")
                 .put("refresh_token", rt)
                 .put("client_id", CLIENT_ID)
-                .put("scope", SCOPE);
+                .put("scope", grantedScope(ctx));
         Http r = post(TOKEN_URL, body);
         if (r.code == 400 || r.code == 401) return false;
         if (r.code != 200) {
@@ -177,11 +201,9 @@ final class ClaudeUsage {
             if (!isConnected(ctx)) return;
             if (!force && System.currentTimeMillis() - p.getLong(K_FETCHED, 0) < FRESH_MS) return;
             try {
-                if (System.currentTimeMillis() > p.getLong(K_EXPIRES, 0) - 5 * 60 * 1000L && !refresh(ctx)) {
-                    signedOut(ctx);
-                    return;
-                }
-                Http r = getUsage(p.getString(K_ACCESS, ""));
+                String access = accessToken(ctx);
+                if (access == null) return;
+                Http r = getUsage(access);
                 if (r.code == 401) { // токен отозвали раньше срока — одна попытка обновить
                     if (!refresh(ctx)) {
                         signedOut(ctx);
@@ -205,6 +227,49 @@ final class ClaudeUsage {
                 p.edit().putString(K_ERROR, e.getMessage() != null ? e.getMessage() : "ошибка").apply();
             }
         }
+    }
+
+    /**
+     * Действующий access-токен (при необходимости обновлённый) или null, если вход
+     * отозван. Вызывать под LOCK и не из главного потока.
+     */
+    static String accessToken(Context ctx) throws Exception {
+        SharedPreferences p = prefs(ctx);
+        if (System.currentTimeMillis() > p.getLong(K_EXPIRES, 0) - 5 * 60 * 1000L && !refresh(ctx)) {
+            signedOut(ctx);
+            return null;
+        }
+        return p.getString(K_ACCESS, "");
+    }
+
+    /** То же после ответа 401: одна попытка обновить токен. null — вход отозван. */
+    static String accessTokenAfter401(Context ctx) throws Exception {
+        if (!refresh(ctx)) {
+            signedOut(ctx);
+            return null;
+        }
+        return prefs(ctx).getString(K_ACCESS, "");
+    }
+
+    /** UUID организации аккаунта (из ответа входа, иначе из профиля). Под LOCK, не из главного потока. */
+    static String orgUuid(Context ctx, String access) throws Exception {
+        SharedPreferences p = prefs(ctx);
+        String org = p.getString(K_ORG, null);
+        if (org != null && !org.isEmpty()) return org;
+        HttpURLConnection c = (HttpURLConnection) new URL(PROFILE_URL).openConnection();
+        c.setConnectTimeout(8000);
+        c.setReadTimeout(8000);
+        c.setRequestProperty("Authorization", "Bearer " + access);
+        c.setRequestProperty("anthropic-beta", OAUTH_BETA);
+        c.setRequestProperty("Accept", "application/json");
+        c.setRequestProperty("User-Agent", USER_AGENT);
+        Http r = Http.read(c);
+        if (r.code != 200) throw new Exception("профиль: ошибка HTTP " + r.code);
+        JSONObject o = new JSONObject(r.body).optJSONObject("organization");
+        org = o == null ? "" : o.optString("uuid", "");
+        if (org.isEmpty()) throw new Exception("не удалось узнать организацию аккаунта");
+        p.edit().putString(K_ORG, org).apply();
+        return org;
     }
 
     private static void signedOut(Context ctx) {
@@ -239,7 +304,7 @@ final class ClaudeUsage {
         return Http.read(c);
     }
 
-    private static final class Http {
+    static final class Http {
         int code;
         String body;
 
