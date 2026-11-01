@@ -10,6 +10,9 @@ import StarterKit from '@tiptap/starter-kit'
 import Link from '@tiptap/extension-link'
 import Underline from '@tiptap/extension-underline'
 import Placeholder from '@tiptap/extension-placeholder'
+import { Plugin, PluginKey } from '@tiptap/pm/state'
+import type { EditorState, Transaction } from '@tiptap/pm/state'
+import { isBareUrlText, shortenUrl } from '../richText'
 import './modal.css'
 
 const CHANGE_DEBOUNCE_MS = 700
@@ -19,10 +22,77 @@ export function richTextExtensions(placeholder?: string) {
   return [
     StarterKit.configure({ heading: { levels: [2, 3] } }),
     Underline,
-    Link.configure({ openOnClick: false, autolink: true }),
+    ShortLink.configure({ openOnClick: false, autolink: true }),
     Placeholder.configure({ placeholder: placeholder ?? 'Добавьте описание…' }),
   ]
 }
+
+/**
+ * Транзакция, заменяющая текст «голых» длинных ссылок (текст = адрес) на
+ * короткую подпись. Адрес (href) не меняется. null — менять нечего.
+ */
+function shortenLinksTr(state: EditorState): Transaction | null {
+  const linkType = state.schema.marks.link
+  if (!linkType) return null
+  const ranges: { from: number; to: number; text: string; node: import('@tiptap/pm/model').Node }[] = []
+  state.doc.descendants((node, pos) => {
+    if (!node.isText || !node.text) return
+    const mark = node.marks.find((m) => m.type === linkType)
+    const href = mark?.attrs.href as string | undefined
+    if (!href || !isBareUrlText(node.text, href)) return
+    const short = shortenUrl(node.text.trim())
+    if (short !== node.text) ranges.push({ from: pos, to: pos + node.nodeSize, text: short, node })
+  })
+  if (!ranges.length) return null
+  const tr = state.tr
+  // с конца — чтобы позиции ранних диапазонов не сдвигались
+  for (const r of ranges.reverse()) {
+    tr.replaceWith(r.from, r.to, state.schema.text(r.text, r.node.marks))
+  }
+  return tr
+}
+
+/**
+ * Ссылка: длинные адреса показываются коротко (полный — во всплывающей
+ * подсказке), клик сразу открывает ссылку в новой вкладке.
+ */
+const ShortLink = Link.extend({
+  renderHTML(props) {
+    const spec = this.parent?.(props)
+    if (Array.isArray(spec) && spec[1] && typeof spec[1] === 'object') {
+      const attrs = spec[1] as Record<string, unknown>
+      if (typeof attrs.href === 'string' && attrs.href) attrs.title = attrs.href
+    }
+    return spec as ReturnType<NonNullable<typeof this.parent>>
+  },
+
+  onCreate() {
+    // уже сохранённые длинные ссылки сокращаем при открытии, не считая это правкой
+    const tr = shortenLinksTr(this.editor.state)
+    if (tr) this.editor.view.dispatch(tr.setMeta('preventUpdate', true).setMeta('addToHistory', false))
+  },
+
+  addProseMirrorPlugins() {
+    return [
+      ...(this.parent?.() ?? []),
+      new Plugin({
+        key: new PluginKey('shortLinks'),
+        appendTransaction: (trs, _old, state) =>
+          trs.some((tr) => tr.docChanged) ? shortenLinksTr(state) : null,
+        props: {
+          handleClick: (_view, _pos, event) => {
+            if (event.button !== 0) return false
+            const a = (event.target as HTMLElement | null)?.closest?.('a')
+            const href = a?.getAttribute('href')
+            if (!a || !href) return false
+            window.open(href, '_blank', 'noopener,noreferrer')
+            return true
+          },
+        },
+      }),
+    ]
+  },
+})
 
 export function RichTextEditor({
   value,
