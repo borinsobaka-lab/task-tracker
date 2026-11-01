@@ -20,12 +20,20 @@ import { QUADRANTS } from '../eisenhower'
 import { IcoMeeting } from '../icons'
 import { AvatarStack, ProjectAvatar } from './Avatar'
 import { SubHeader } from './SubHeader'
+import { matchesPriority } from '../priorityFilter'
 import './eisenhower.css'
 import { inProjectFilter } from '../utils'
 
 const INBOX = 'inbox'
 
-export function EisenhowerView({ memberFilter, onMemberFilterChange, projectFilter, onOpenCard }: ViewProps) {
+export function EisenhowerView({
+  memberFilter,
+  onMemberFilterChange,
+  priorityFilter,
+  onPriorityFilterChange,
+  projectFilter,
+  onOpenCard,
+}: ViewProps) {
   const store = useBoard()
   const memberById = useMemo(() => new Map(store.members.map((m) => [m.id, m])), [store.members])
   const [activeId, setActiveId] = useState<ID | null>(null)
@@ -39,7 +47,8 @@ export function EisenhowerView({ memberFilter, onMemberFilterChange, projectFilt
 
   const inFilter = (c: Card) =>
     (memberFilter.size === 0 || c.assigneeIds.some((id) => memberFilter.has(id))) &&
-    inProjectFilter(c.projectId, projectFilter)
+    inProjectFilter(c.projectId, projectFilter) &&
+    matchesPriority(priorityFilter, c.priority)
   // В матрице только обычные задачи: без встреч, без регулярных и без готовых
   const cards = store.liveCards().filter((c) => c.kind !== 'meeting' && c.kind !== 'block' && !c.seriesId && !c.done && inFilter(c))
 
@@ -73,7 +82,12 @@ export function EisenhowerView({ memberFilter, onMemberFilterChange, projectFilt
 
   return (
     <>
-      <SubHeader memberFilter={memberFilter} onMemberFilterChange={onMemberFilterChange} />
+      <SubHeader
+        memberFilter={memberFilter}
+        onMemberFilterChange={onMemberFilterChange}
+        priorityFilter={priorityFilter}
+        onPriorityFilterChange={onPriorityFilterChange}
+      />
       <DndContext sensors={sensors} collisionDetection={pointerWithin} onDragStart={onDragStart} onDragEnd={onDragEnd}>
         <div className="eis-root">
         <Zone id={INBOX} className="eis-inbox">

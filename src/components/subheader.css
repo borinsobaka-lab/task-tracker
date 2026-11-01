@@ -72,3 +72,95 @@
     gap: 8px;
   }
 }
+
+/* Фильтр по приоритету (во всех разделах с задачами) */
+.prio-filter-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 240px;
+  padding: 0 10px;
+  font-weight: 600;
+}
+.prio-filter-btn.active {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+}
+.prio-filter-label,
+.prio-filter-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.prio-filter-dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
+}
+.prio-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.prio-dot-lg {
+  width: 12px;
+  height: 12px;
+  margin: 0 5px;
+}
+.prio-filter-pop {
+  position: fixed;
+  z-index: 60;
+  width: 260px;
+  max-height: min(420px, calc(100vh - 120px));
+  overflow-y: auto;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  padding: 4px;
+}
+.prio-filter-sep {
+  padding: 8px 8px 4px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-faint);
+}
+.prio-filter-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: none;
+  border-radius: 6px;
+  padding: 6px 8px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text);
+}
+.prio-filter-row:hover {
+  background: var(--surface-2);
+}
+.prio-filter-row.active {
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+}
+.prio-filter-name {
+  flex: 1;
+}
+.prio-filter-check {
+  color: var(--accent-strong);
+  display: inline-flex;
+}
+.prio-filter-reset {
+  margin-top: 2px;
+  color: var(--accent-strong);
+  font-weight: 600;
+}

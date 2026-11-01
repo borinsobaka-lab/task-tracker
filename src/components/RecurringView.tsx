@@ -9,6 +9,7 @@ import { IcoCheck, IcoNone, IcoRecurring, IcoX } from '../icons'
 import { Avatar, AvatarStack, ProjectAvatar } from './Avatar'
 import { RecurrenceFields } from './RecurrenceFields'
 import { SubHeader } from './SubHeader'
+import { matchesPriority } from '../priorityFilter'
 import { SheetGrabber } from './SheetGrabber'
 import './recurring.css'
 
@@ -33,14 +34,15 @@ const FREQ_FILTERS: { v: 'all' | RecurFreq; label: string }[] = [
   { v: 'yearly', label: 'Ежегодные' },
 ]
 
-export function RecurringView({ memberFilter, onMemberFilterChange, projectFilter }: ViewProps) {
+export function RecurringView({ memberFilter, onMemberFilterChange, priorityFilter, onPriorityFilterChange, projectFilter }: ViewProps) {
   const store = useBoard()
   const [editing, setEditing] = useState<Series | 'new' | null>(null)
   const [freqFilter, setFreqFilter] = useState<'all' | RecurFreq>('all')
 
   const inFilter = (c: Card) =>
     (memberFilter.size === 0 || c.assigneeIds.some((id) => memberFilter.has(id))) &&
-    inProjectFilter(c.projectId, projectFilter)
+    inProjectFilter(c.projectId, projectFilter) &&
+    matchesPriority(priorityFilter, c.priority)
   const freqOf = (c: Card) => (c.seriesId ? store.seriesById(c.seriesId)?.rule.freq : undefined)
   const inFreq = (c: Card) => freqFilter === 'all' || freqOf(c) === freqFilter
   // Раздел «Регулярное» — только задачи; повторяющиеся встречи живут в календаре
@@ -64,7 +66,12 @@ export function RecurringView({ memberFilter, onMemberFilterChange, projectFilte
 
   return (
     <div className="rec-root">
-      <SubHeader memberFilter={memberFilter} onMemberFilterChange={onMemberFilterChange}>
+      <SubHeader
+        memberFilter={memberFilter}
+        onMemberFilterChange={onMemberFilterChange}
+        priorityFilter={priorityFilter}
+        onPriorityFilterChange={onPriorityFilterChange}
+      >
         <button className="btn btn-primary btn-sm" onClick={() => setEditing('new')}>
           + Регулярная задача
         </button>

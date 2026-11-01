@@ -1593,3 +1593,59 @@ test('колонки первой версии своих досок слива�
   await expect(page.locator('.board-col')).toHaveCount(4)
   await expect(page.locator('.board-col', { hasText: 'В работе' }).locator('.board-card', { hasText: 'Задача старой доски' })).toBeVisible()
 })
+
+test('фильтр по приоритету: на доске и в других разделах остаются задачи выбранных приоритетов', async ({ page }) => {
+  await seedProjects(page)
+  await page.evaluate(() => {
+    const data = JSON.parse(localStorage.getItem('tt.local.data')!)
+    data.cards.c0.priority = 'q1'
+    data.cards.c1.priority = 'q2'
+    localStorage.setItem('tt.local.data', JSON.stringify(data))
+    localStorage.setItem('tt.local.rev', String(Number(localStorage.getItem('tt.local.rev') ?? '1') + 1))
+  })
+  await page.reload()
+  const card = (t: string) => page.locator('.board-card', { hasText: t })
+  const pop = page.locator('.prio-filter-pop')
+  await expect(page.locator('.board-card')).toHaveCount(3)
+  await expect(page.locator('.prio-filter-btn')).toContainText('Все приоритеты')
+
+  await page.locator('.prio-filter-btn').click()
+  await pop.getByRole('menuitemcheckbox', { name: 'Срочно и важно' }).click()
+  await expect(page.locator('.board-card')).toHaveCount(1)
+  await expect(card('Задача Альфы')).toBeVisible()
+
+  // Несколько приоритетов сразу, включая «Без приоритета»
+  await pop.getByRole('menuitemcheckbox', { name: 'Без приоритета' }).click()
+  await expect(page.locator('.board-card')).toHaveCount(2)
+  await expect(card('Задача без проекта')).toBeVisible()
+  await expect(page.locator('.prio-filter-btn')).toContainText('Приоритеты: 2')
+  await page.keyboard.press('Escape')
+
+  // Фильтр запоминается
+  await page.reload()
+  await expect(page.locator('.board-card')).toHaveCount(2)
+
+  // Один приоритет — новая карточка создаётся сразу с ним и не пропадает
+  await page.locator('.prio-filter-btn').click()
+  await pop.getByRole('menuitemcheckbox', { name: 'Без приоритета' }).click()
+  await expect(page.locator('.board-card')).toHaveCount(1)
+  await page.keyboard.press('Escape')
+  await page.getByText('Добавить карточку').first().click()
+  await page.locator('textarea').first().fill('Новая важная')
+  await page.keyboard.press('Enter')
+  await expect(card('Новая важная')).toBeVisible()
+  await expect(page.locator('.board-card')).toHaveCount(2)
+
+  // Фильтр общий для разделов: в матрице тоже только «Срочно и важно»
+  await page.locator('.view-tabs').getByRole('button', { name: 'Матрица' }).click()
+  await expect(page.locator('.prio-filter-btn')).toContainText('Срочно и важно')
+  await expect(page.locator('.eis-card')).toHaveCount(2)
+  await expect(page.locator('.eis-card', { hasText: 'Задача Беты' })).toHaveCount(0)
+
+  await page.locator('.prio-filter-btn').click()
+  await pop.getByRole('button', { name: 'Показать все' }).click()
+  await expect(page.locator('.eis-card')).toHaveCount(4)
+  await page.locator('.view-tabs').getByRole('button', { name: 'Доска' }).click()
+  await expect(page.locator('.prio-filter-btn')).toContainText('Все приоритеты')
+  await expect(page.locator('.board-card')).toHaveCount(4)
+})

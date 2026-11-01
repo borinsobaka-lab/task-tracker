@@ -9,6 +9,7 @@ import { priorityStripeColor } from '../eisenhower'
 import type { ViewProps } from '../viewProps'
 import { IcoArrowLeft, IcoArrowRight, IcoCheck, IcoMeeting, IcoTimeBlock } from '../icons'
 import { SubHeader } from './SubHeader'
+import { cardMatchesPriority } from '../priorityFilter'
 import { GanttView } from './GanttView'
 import type { GanttHandle } from './GanttView'
 import {
@@ -149,7 +150,15 @@ function rangeTitle(start: Date, end: Date): string {
 
 // ---------- Компонент ----------
 
-export function CalendarView({ memberFilter, onMemberFilterChange, projectFilter, onOpenCard, onCreateDraft }: ViewProps) {
+export function CalendarView({
+  memberFilter,
+  onMemberFilterChange,
+  priorityFilter,
+  onPriorityFilterChange,
+  projectFilter,
+  onOpenCard,
+  onCreateDraft,
+}: ViewProps) {
   const store = useBoard()
   // Сколько дней показывать: 1 / 3 / 7 — выбор пользователя (сохраняется).
   const [nDays, setNDaysState] = useState<number>(() => getCalDays())
@@ -296,7 +305,8 @@ export function CalendarView({ memberFilter, onMemberFilterChange, projectFilter
       : (memberFilter.size === 0 || c.assigneeIds.some((id) => memberFilter.has(id))) &&
         inProjectFilter(c.projectId, projectFilter)
 
-  const visible = store.liveCards().filter(passesFilter)
+  // Фильтр по приоритету прячет только задачи — встречи и блоки остаются
+  const visible = store.liveCards().filter((c) => passesFilter(c) && cardMatchesPriority(priorityFilter, c))
   const liveColumns = store.columns
   // Задачи со статусом «Готово» в панель «Без даты» не показываем — они уже
   // сделаны, распределять их по датам не нужно.
@@ -825,7 +835,12 @@ export function CalendarView({ memberFilter, onMemberFilterChange, projectFilter
       className={`cal-root${drag?.moved ? ' is-dragging' : ''}`}
       style={{ ['--cal-days' as string]: String(nDays), ['--cal-gutter-w' as string]: `${gutterW}px` }}
     >
-      <SubHeader memberFilter={memberFilter} onMemberFilterChange={onMemberFilterChange}>
+      <SubHeader
+        memberFilter={memberFilter}
+        onMemberFilterChange={onMemberFilterChange}
+        priorityFilter={priorityFilter}
+        onPriorityFilterChange={onPriorityFilterChange}
+      >
         <button className="btn btn-sm" onClick={() => (gantt ? ganttRef.current?.scrollToToday() : setAnchor(new Date()))}>
           Сегодня
         </button>
