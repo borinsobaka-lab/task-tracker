@@ -2,6 +2,8 @@ import type { ReactNode } from 'react'
 import { useBoard } from '../store'
 import type { ID } from '../types'
 import { Avatar } from './Avatar'
+import { PriorityFilter } from './PriorityFilter'
+import type { PriorityKey } from '../priorityFilter'
 import './subheader.css'
 
 /**
@@ -11,11 +13,16 @@ import './subheader.css'
 export function SubHeader({
   memberFilter,
   onMemberFilterChange,
+  priorityFilter,
+  onPriorityFilterChange,
   children,
   right,
 }: {
   memberFilter: ReadonlySet<ID>
   onMemberFilterChange: (f: ReadonlySet<ID>) => void
+  /** Есть в разделах с задачами: фильтр по приоритету после элементов раздела */
+  priorityFilter?: ReadonlySet<PriorityKey>
+  onPriorityFilterChange?: (f: ReadonlySet<PriorityKey>) => void
   children?: ReactNode
   right?: ReactNode
 }) {
@@ -30,7 +37,12 @@ export function SubHeader({
 
   return (
     <div className="subheader">
-      {children && <div className="subheader-controls">{children}</div>}
+      {(children || priorityFilter) && (
+        <div className="subheader-controls">
+          {children}
+          {priorityFilter && onPriorityFilterChange && <PriorityFilter value={priorityFilter} onChange={onPriorityFilterChange} />}
+        </div>
+      )}
 
       <div className="subheader-members" title="Фильтр по участникам">
         {store.members.map((m) => (

@@ -14,6 +14,8 @@ import { QuickAddSheet } from './components/QuickAddSheet'
 import { IdentityScreen } from './components/IdentityScreen'
 import { CommentsSeenProvider } from './components/commentsSeen'
 import { LazyBoundary as Lazy, ViewFallback } from './components/LazyBoundary'
+import { loadPriorityFilter, priorityForNew, savePriorityFilter } from './priorityFilter'
+import type { PriorityKey } from './priorityFilter'
 import { BootScreen } from './components/BootScreen'
 import { clearBoardCache } from './boardCache'
 import { isLiveTimelineHash, parseTimelineHash } from './timelineShare'
@@ -280,6 +282,12 @@ function Shell({ onLogout }: { onLogout: () => void }) {
   // выбранным участником в board.json и восстанавливаются при следующем входе.
   const [memberFilter, setMemberFilterState] = useState<ReadonlySet<ID>>(new Set())
   const [projectFilter, setProjectFilterState] = useState<ReadonlySet<ID>>(new Set())
+  // Фильтр по приоритету — общий для разделов с задачами, запоминается на устройстве
+  const [priorityFilter, setPriorityFilterState] = useState<ReadonlySet<PriorityKey>>(loadPriorityFilter)
+  const setPriorityFilter = useCallback((f: ReadonlySet<PriorityKey>) => {
+    setPriorityFilterState(f)
+    savePriorityFilter(f)
+  }, [])
   // Раздел «Доска»: открытая доска (общая / проекта / своя) — запоминается на устройстве
   const [boardSel, setBoardSelState] = useState<string>(getBoardSel)
   const changeBoardSel = useCallback((sel: string) => {
@@ -431,6 +439,9 @@ function Shell({ onLogout }: { onLogout: () => void }) {
       boardId: boardId && store.boards.some((b) => b.id === boardId) ? boardId : undefined,
       projectId: projectId && store.projects.some((p) => p.id === projectId) ? projectId : undefined,
     })
+    // Отмечен один приоритет — новая задача сразу с ним (иначе её скрыл бы фильтр)
+    const priority = priorityForNew(priorityFilter)
+    if (priority) store.updateCard(id, { priority })
     if (schedule) {
       if (schedule.start) store.scheduleCard(id, schedule.date, schedule.start, 60)
       else store.scheduleCard(id, schedule.date, null)
@@ -472,6 +483,8 @@ function Shell({ onLogout }: { onLogout: () => void }) {
           const shared = {
             memberFilter,
             onMemberFilterChange: setMemberFilter,
+            priorityFilter,
+            onPriorityFilterChange: setPriorityFilter,
             projectFilter,
             onOpenCard: setSelectedCardId,
             onCreateDraft: createDraft,

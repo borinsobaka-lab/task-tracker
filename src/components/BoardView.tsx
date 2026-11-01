@@ -31,7 +31,7 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { useBoard } from '../store'
-import type { Card, Column, ColumnRole, ID, Member } from '../types'
+import type { Card, Column, ColumnRole, EisenhowerQuadrant, ID, Member } from '../types'
 import { ROLE_META, ROLE_ORDER } from '../columnRoles'
 import { priorityStripeColor } from '../eisenhower'
 import { COLUMN_COLORS, fmtDayMonth, hasContent, parseDateKey, toDateKey } from '../utils'
@@ -40,6 +40,7 @@ import { IcoCalendar, IcoCheck, IcoClose, IcoComment, IcoDescription, IcoMeeting
 import { Avatar, AvatarStack, ProjectAvatar } from './Avatar'
 import { SubHeader } from './SubHeader'
 import { BoardPicker, parseBoardSel } from './BoardPicker'
+import { matchesPriority, priorityForNew } from '../priorityFilter'
 import { hasUnseenComments, liveComments, useCommentsSeen } from './commentsSeen'
 import './board.css'
 
@@ -68,6 +69,8 @@ function cardStyle(card: Card): CSSProperties {
 export function BoardView({
   memberFilter,
   onMemberFilterChange,
+  priorityFilter: prioFilter,
+  onPriorityFilterChange,
   onOpenCard,
   boardSel,
   onBoardSelChange,
@@ -85,6 +88,9 @@ export function BoardView({
   const boardId = sel.kind === 'board' && !selGone ? sel.id : undefined
   const projectId = sel.kind === 'project' && !selGone ? sel.id : undefined
   const columns = store.columns
+
+  // Отмечен ровно один приоритет — новые карточки создаём сразу с ним, иначе они бы пропадали
+  const newPriority = priorityForNew(prioFilter)
 
   const [activeCardId, setActiveCardId] = useState<ID | null>(null)
   // Порядок видимых карточек по колонкам на время перетаскивания (optimistic)
@@ -106,6 +112,7 @@ export function BoardView({
       card.kind !== 'block' &&
       !card.seriesId &&
       (memberFilter.size === 0 || card.assigneeIds.some((id) => memberFilter.has(id))) &&
+      matchesPriority(prioFilter, card.priority) &&
       // Своя доска показывает все свои задачи; общая — по выбранному проекту
       // «Все задачи» — все; своя доска — её задачи; проект — его задачи;
       // «Без проекта» — задачи вне проектов и своих досок
@@ -114,7 +121,7 @@ export function BoardView({
         : projectId !== undefined
           ? card.projectId === projectId
           : sel.kind !== 'none' || (!card.projectId && !card.boardId)),
-    [memberFilter, boardId, projectId, sel.kind],
+    [memberFilter, prioFilter, boardId, projectId, sel.kind],
   )
 
   const isColumnId = useCallback((id: string) => columns.some((c) => c.id === id), [columns])
@@ -244,7 +251,12 @@ export function BoardView({
 
   return (
     <>
-      <SubHeader memberFilter={memberFilter} onMemberFilterChange={onMemberFilterChange}>
+      <SubHeader
+        memberFilter={memberFilter}
+        onMemberFilterChange={onMemberFilterChange}
+        priorityFilter={prioFilter}
+        onPriorityFilterChange={onPriorityFilterChange}
+      >
         <BoardPicker value={selGone ? '' : boardSel} onChange={onBoardSelChange} />
       </SubHeader>
       <DndContext
@@ -267,6 +279,7 @@ export function BoardView({
               suppressClickRef={suppressClickRef}
               onOpenCard={onOpenCard}
               tag={{ projectId, boardId }}
+              newPriority={newPriority}
             />
           ))}
         </div>
@@ -292,6 +305,7 @@ function BoardColumn({
   suppressClickRef,
   onOpenCard,
   tag,
+  newPriority,
 }: {
   column: Column
   cards: Card[]
@@ -301,6 +315,8 @@ function BoardColumn({
   onOpenCard: (id: ID) => void
   /** Открыта доска проекта или своя доска — новые карточки сразу туда */
   tag: { projectId?: ID; boardId?: ID }
+  /** Приоритет для новых карточек (когда фильтр оставил ровно один) */
+  newPriority?: EisenhowerQuadrant
 }) {
   const store = useBoard()
   const [editing, setEditing] = useState(false)
@@ -377,7 +393,7 @@ function BoardColumn({
       </SortableContext>
 
       <div className="board-col-footer">
-        <AddCard columnId={column.id} tag={tag} />
+        <AddCard columnId={column.id} tag={tag} priority={newPriority} />
       </div>
     </section>
   )
@@ -682,7 +698,15 @@ function CardContent({ card, members, interactive }: { card: Card; members: Memb
 
 // ---------- Быстрое добавление ----------
 
-function AddCard({ columnId, tag }: { columnId: ID; tag: { projectId?: ID; boardId?: ID } }) {
+function AddCard({
+  columnId,
+  tag,
+  priority,
+}: {
+  columnId: ID
+  tag: { projectId?: ID; boardId?: ID }
+  priority?: EisenhowerQuadrant
+}) {
   const store = useBoard()
   const [open, setOpen] = useState(false)
   const [text, setText] = useState('')
@@ -717,7 +741,8 @@ function AddCard({ columnId, tag }: { columnId: ID; tag: { projectId?: ID; board
       taRef.current?.focus()
       return
     }
-    store.addCard(columnId, t, tag)
+    const id = store.addCard(columnId, t, tag)
+    if (priority) store.updateCard(id, { priority })
     setText('')
     // Прокручиваем список к новой карточке
     const list = taRef.current?.closest('.board-col')?.querySelector('.board-col-cards')
