@@ -112,6 +112,32 @@ test('редактирование описания с форматирован�
   await expect(page.locator('.cm-main .ProseMirror')).toContainText('Важный текст')
 })
 
+test('описание: длинная ссылка сокращается и открывается в новой вкладке', async ({ page, context }) => {
+  await createIdentity(page)
+  await page.getByText('Добавить карточку').first().click()
+  await page.locator('textarea').first().fill('Задача со ссылкой')
+  await page.keyboard.press('Enter')
+  await page.getByText('Задача со ссылкой').click()
+
+  const url = 'https://www.example.com/projects/2026/reports/quarterly-summary-final-version?ref=abc123&lang=ru'
+  const editor = page.locator('.cm-main .ProseMirror')
+  await editor.click()
+  await editor.pressSequentially(`Смотри ${url} `)
+
+  const link = editor.locator('a')
+  await expect(link).toHaveAttribute('href', url)
+  await expect(link).toHaveText('example.com/…/quarterly-summary-final…')
+  await expect(link).toHaveAttribute('title', url)
+
+  // клик сразу открывает ссылку в новой вкладке
+  await context.route('https://www.example.com/**', (route) => route.fulfill({ body: 'ok' }))
+  const popupPromise = page.waitForEvent('popup')
+  await link.click()
+  const popup = await popupPromise
+  expect(popup.url()).toBe(url)
+  await popup.close()
+})
+
 test('глобальный поиск в шапке находит задачу и открывает её', async ({ page }) => {
   await createIdentity(page)
   await page.getByText('Добавить карточку').first().click()
