@@ -1649,3 +1649,22 @@ test('фильтр по приоритету: на доске и в других
   await expect(page.locator('.prio-filter-btn')).toContainText('Все приоритеты')
   await expect(page.locator('.board-card')).toHaveCount(4)
 })
+
+test('календарь: будущие повторения регулярной задачи видны заранее', async ({ page }) => {
+  await createIdentity(page)
+  await page.getByRole('button', { name: 'Повтор' }).click()
+  await page.getByRole('button', { name: /Регулярная задача/ }).click()
+  await page.getByPlaceholder(/Планёрка/).fill('Зарядка')
+  await page.locator('.rec-freq').getByRole('button', { name: 'Ежедневно' }).click()
+  await page.getByRole('button', { name: 'Сохранить' }).click()
+
+  await page.getByRole('button', { name: 'Календарь' }).click()
+  await page.locator('.cal-view-select').selectOption('7')
+  // Следующая неделя целиком в будущем: ежедневная задача — 7 прогнозных повторений
+  await page.getByRole('button', { name: 'Показать следующие дни' }).click()
+  const projected = page.locator('[data-testid="cal-projected"]', { hasText: 'Зарядка' })
+  await expect(projected).toHaveCount(7)
+  // Клик открывает текущий экземпляр задачи
+  await projected.first().click()
+  await expect(page.getByRole('button', { name: /Удалить карточку/ })).toBeVisible()
+})

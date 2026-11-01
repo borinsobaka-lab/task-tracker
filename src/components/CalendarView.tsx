@@ -10,6 +10,7 @@ import type { ViewProps } from '../viewProps'
 import { IcoArrowLeft, IcoArrowRight, IcoCheck, IcoMeeting, IcoTimeBlock } from '../icons'
 import { SubHeader } from './SubHeader'
 import { cardMatchesPriority } from '../priorityFilter'
+import { dateMatchesRule, describeRule } from '../recurrence'
 import { GanttView } from './GanttView'
 import type { GanttHandle } from './GanttView'
 import {
@@ -293,6 +294,7 @@ export function CalendarView({
   }
   // Просроченная задача: не выполнена, не встреча и не блок, есть дата, и её конец уже прошёл.
   const isOverdue = (c: Card): boolean =>
+    !c.id.startsWith('proj:') &&
     !c.done && c.kind !== 'meeting' && c.kind !== 'block' && !!c.date && cardEndMs(c) < nowMs
 
   const memberById = useMemo(() => new Map(store.members.map((m) => [m.id, m])), [store.members])
@@ -306,7 +308,46 @@ export function CalendarView({
         inProjectFilter(c.projectId, projectFilter)
 
   // Фильтр по приоритету прячет только задачи — встречи и блоки остаются
-  const visible = store.liveCards().filter((c) => passesFilter(c) && cardMatchesPriority(priorityFilter, c))
+  const visibleReal = store.liveCards().filter((c) => passesFilter(c) && cardMatchesPriority(priorityFilter, c))
+
+  // Будущие повторения регулярных задач. В данных у серии хранится только один
+  // активный экземпляр (следующий создаётся при выполнении текущего), поэтому
+  // последующие даты показываем «прогнозом»: полупрозрачные карточки по правилу
+  // серии на все видимые дни после последнего экземпляра. Клик открывает текущий
+  // экземпляр. Встречи сюда не входят — у них будущие экземпляры создаются заранее.
+  const projectedSource = new Map<ID, ID>() // id прогнозной карточки → id реального экземпляра
+  const projected: Card[] = []
+  {
+    const bySeries = new Map<ID, Card[]>()
+    for (const c of visibleReal) {
+      if (!c.seriesId || c.kind === 'meeting' || !c.date) continue
+      const arr = bySeries.get(c.seriesId)
+      if (arr) arr.push(c)
+      else bySeries.set(c.seriesId, [c])
+    }
+    for (const [sid, insts] of bySeries) {
+      const s = store.seriesById(sid)
+      if (!s || s.deleted || s.kind === 'meeting') continue
+      // Шаблон — активный (невыполненный) экземпляр, иначе самый поздний
+      const sorted = insts.slice().sort((a, b) => a.date!.localeCompare(b.date!))
+      const tpl = sorted.filter((c) => !c.done).pop() ?? sorted[sorted.length - 1]
+      const lastKey = sorted[sorted.length - 1].date!
+      const taken = new Set(insts.map((c) => c.date!))
+      const ex = new Set(s.exdates ?? [])
+      for (const key of dayKeys) {
+        if (key <= lastKey || key < todayKey || taken.has(key) || ex.has(key)) continue
+        if (!dateMatchesRule(key, s.rule)) continue
+        const id = `proj:${sid}:${key}`
+        const p: Card = { ...tpl, id, date: key, done: false, checklist: [], attachments: [] }
+        delete p.endDate
+        projected.push(p)
+        projectedSource.set(id, tpl.id)
+      }
+    }
+  }
+  const isProjected = (c: Card): boolean => projectedSource.has(c.id)
+  const openProjected = (c: Card): void => onOpenCard(projectedSource.get(c.id)!)
+  const visible = [...visibleReal, ...projected]
   const liveColumns = store.columns
   // Задачи со статусом «Готово» в панель «Без даты» не показываем — они уже
   // сделаны, распределять их по датам не нужно.
@@ -610,7 +651,37 @@ export function CalendarView({
 
   // ---------- Рендер элементов ----------
 
+  // Подсказка у прогнозного повторения
+  const projectedTitle = (c: Card, extra = ''): string => {
+    const s = c.seriesId ? store.seriesById(c.seriesId) : undefined
+    return `${c.title}${extra}\nПовторение${s ? ` (${describeRule(s.rule)})` : ''} — появится, когда выполните текущую`
+  }
+
+  const renderProjectedChip = (c: Card): React.ReactNode => (
+    <div
+      key={c.id}
+      className="cal-chip projected"
+      data-testid="cal-projected"
+      style={{ '--ev-color': colorOf(c), '--prio-color': priorityStripeColor(c.priority) } as React.CSSProperties}
+      title={projectedTitle(c)}
+      onPointerDown={(e) => e.stopPropagation()}
+      onClick={(e) => {
+        e.stopPropagation()
+        openProjected(c)
+      }}
+    >
+      <span className="cal-chip-title">{c.title}</span>
+      {(projectOf(c) || assigneesOf(c).length > 0) && (
+        <span className="cal-chip-avatars">
+          {projectOf(c) && <ProjectAvatar project={projectOf(c)!} size="xs" />}
+          <AvatarStack members={assigneesOf(c)} size="xs" />
+        </span>
+      )}
+    </div>
+  )
+
   const renderChip = (c: Card): React.ReactNode => {
+    if (isProjected(c)) return renderProjectedChip(c)
     const dragging = draggedCardId === c.id && drag?.source.kind === 'allday'
     const armed = armedCardId === c.id && drag?.source.kind === 'allday'
     const overdue = isOverdue(c)
@@ -661,6 +732,41 @@ export function CalendarView({
     const top = (ev.startMin / 60) * HOUR_H
     const height = Math.max(((ev.endMin - ev.startMin) / 60) * HOUR_H - 2, 18)
     const compact = height < 40
+    if (isProjected(c)) {
+      const label = timeRange(ev.startMin, ev.startMin + dur)
+      return (
+        <div
+          key={c.id}
+          className={`cal-event projected${compact ? ' compact' : ''}`}
+          data-testid="cal-projected"
+          style={
+            {
+              top,
+              height,
+              left: `calc(${(ev.col * 100) / ev.cols}% + 2px)`,
+              width: `calc(${100 / ev.cols}% - 5px)`,
+              '--ev-color': colorOf(c),
+              '--prio-color': priorityStripeColor(c.priority),
+            } as React.CSSProperties
+          }
+          title={projectedTitle(c, `\n${label}`)}
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.stopPropagation()
+            openProjected(c)
+          }}
+        >
+          <div className="cal-event-toprow">
+            <div className="cal-event-title">{c.title}</div>
+          </div>
+          <div className="cal-event-time">{label}</div>
+          <div className="cal-event-avatars">
+            {projectOf(c) && <ProjectAvatar project={projectOf(c)!} size="xs" />}
+            <AvatarStack members={assigneesOf(c)} size="xs" />
+          </div>
+        </div>
+      )
+    }
     const dragging = draggedCardId === c.id && (drag?.source.kind === 'block' || drag?.source.kind === 'resize')
     const armed = armedCardId === c.id && (drag?.source.kind === 'block' || drag?.source.kind === 'resize')
     const label = timeRange(ev.startMin, ev.startMin + dur)
@@ -889,7 +995,7 @@ export function CalendarView({
       </SubHeader>
 
       {gantt ? (
-        <GanttView ref={ganttRef} cards={visible} onOpenCard={onOpenCard} />
+        <GanttView ref={ganttRef} cards={visibleReal} onOpenCard={onOpenCard} />
       ) : (
       <div className="cal-body">
         {panelOpen ? (

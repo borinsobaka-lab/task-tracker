@@ -1296,3 +1296,24 @@
     gap: 10px;
   }
 }
+
+/* Прогноз будущих повторений регулярной задачи: полупрозрачно, пунктирная рамка,
+   без тени и без перетаскивания — реальный экземпляр появится после выполнения текущего */
+.cal-chip.projected {
+  opacity: 0.6;
+  border-style: dashed;
+  border-left-style: solid;
+  box-shadow: none;
+  touch-action: auto;
+}
+.cal-event.projected {
+  opacity: 0.6;
+  background: transparent;
+  box-shadow: inset 4px 0 0 var(--prio-color), inset 0 0 0 1px var(--border-strong);
+  background-image: repeating-linear-gradient(135deg, transparent 0 6px, var(--surface-2, rgba(0,0,0,0.03)) 6px 12px);
+  touch-action: auto;
+}
+.cal-chip.projected:hover,
+.cal-event.projected:hover {
+  opacity: 0.85;
+}
