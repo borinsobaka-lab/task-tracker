@@ -101,6 +101,12 @@ export interface Series {
   durationMin?: number
   /** Даты-исключения (YYYY-MM-DD): удалённые по одному экземпляры не пересоздаём */
   exdates?: string[]
+  /** Чек-лист регулярной задачи (шаблон, отметки всегда сняты). Пункты общие у серии
+   *  и её экземпляров, а галочки у каждого повторения свои. Нет поля — старая серия,
+   *  чек-лист ещё не перенесён из экземпляра. */
+  checklist?: ChecklistItem[]
+  /** Приоритет регулярной задачи (общий у серии и её экземпляров) */
+  priority?: EisenhowerQuadrant
   deleted?: boolean
   createdAt: string
   updatedAt: string

@@ -1694,3 +1694,52 @@ test('календарь: будущие повторения регулярно
   await projected.first().click()
   await expect(page.getByRole('button', { name: /Удалить карточку/ })).toBeVisible()
 })
+
+test('повтор: правка времени не стирает описание и чек-лист, заполненные в календаре', async ({ page }) => {
+  await createIdentity(page)
+  await page.getByRole('button', { name: 'Повтор' }).click()
+  await page.getByRole('button', { name: /Регулярная задача/ }).click()
+  await page.getByPlaceholder(/Планёрка/).fill('Контроль АМО')
+  await page.locator('.rec-freq').getByRole('button', { name: 'Ежедневно' }).click()
+  await page.getByRole('button', { name: 'Сохранить' }).click()
+
+  // Заполняем описание и чек-лист в задаче в календаре
+  await page.getByRole('button', { name: 'Календарь' }).click()
+  const inst = () => page.locator('.cal-chip:not(.projected), .cal-event').filter({ hasText: 'Контроль АМО' }).first()
+  await inst().click()
+  const desc = page.locator('.modal .ProseMirror').first()
+  await desc.click()
+  await desc.pressSequentially('Проверить воронки')
+  const addItem = page.getByPlaceholder(/пункт/i)
+  await addItem.fill('Таблица ошибок')
+  await addItem.press('Enter')
+  await page.locator('.cm-check input[type="checkbox"], .modal input[type="checkbox"]').first().check()
+  await page.keyboard.press('Escape')
+
+  // В «Повторе» видно то же содержимое; меняем только время
+  await page.getByRole('button', { name: 'Повтор' }).click()
+  await page.locator('.rec-body', { hasText: 'Контроль АМО' }).first().click()
+  await expect(page.locator('.rec-editor .ProseMirror')).toContainText('Проверить воронки')
+  await expect(page.locator('[data-testid="rec-checklist"] input').first()).toHaveValue('Таблица ошибок')
+  await page.locator('.rec-time-toggle input').check()
+  await page.locator('.rec-time-row input[type="time"]').fill('15:00')
+  await page.getByRole('button', { name: 'Сохранить' }).click()
+
+  // Задача в календаре сохранила описание, пункт и его отметку, время обновилось
+  await page.getByRole('button', { name: 'Календарь' }).click()
+  await inst().click()
+  await expect(page.locator('.modal .ProseMirror').first()).toContainText('Проверить воронки')
+  await expect(page.locator('.cm-check-text').first()).toHaveValue('Таблица ошибок')
+  await expect(page.locator('.cm-check-count')).toHaveText('1/1')
+  await page.keyboard.press('Escape')
+
+  // Правка пункта в «Повторе» доходит до календаря
+  await page.getByRole('button', { name: 'Повтор' }).click()
+  await page.locator('.rec-body', { hasText: 'Контроль АМО' }).first().click()
+  await page.locator('[data-testid="rec-checklist"] input').first().fill('Таблица ошибок в датах')
+  await page.getByRole('button', { name: 'Сохранить' }).click()
+  await page.getByRole('button', { name: 'Календарь' }).click()
+  await inst().click()
+  await expect(page.locator('.cm-check-text').first()).toHaveValue('Таблица ошибок в датах')
+  await expect(page.locator('.cm-check-count')).toHaveText('1/1')
+})

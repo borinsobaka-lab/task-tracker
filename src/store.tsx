@@ -25,6 +25,10 @@ export interface SeriesInput {
   projectId?: ID
   start?: string
   durationMin?: number
+  /** Пункты чек-листа (без отметок). Не передан — чек-лист серии не меняется. */
+  checklist?: { id: ID; text: string }[]
+  /** Приоритет. Не передан (нет ключа) — не меняется; undefined — снять. */
+  priority?: EisenhowerQuadrant
 }
 
 const MAX_DONE_INSTANCES = 8 // сколько выполненных экземпляров серии храним
@@ -50,6 +54,12 @@ function makeInstance(seriesId: ID, s: Series, dateKey: string, ts: string): Car
   }
   if (s.projectId) c.projectId = s.projectId
   if (s.createdBy) c.createdBy = s.createdBy
+  if (s.kind !== 'meeting') {
+    // Чек-лист и приоритет регулярной задачи — из шаблона; галочки новое повторение
+    // начинает со снятыми. id пунктов те же, что в шаблоне, — по ним сверяем правки.
+    if (s.checklist) c.checklist = s.checklist.map((i) => ({ id: i.id, text: i.text, done: false, updatedAt: ts }))
+    if (s.priority) c.priority = s.priority
+  }
   if (s.kind === 'meeting') {
     c.kind = 'meeting'
     if (s.meetingUrl) c.meetingUrl = s.meetingUrl
@@ -142,6 +152,108 @@ function applySharedToInstances(d: BoardData, s: Series, sinceKey = ''): void {
     }
     if (ch) touch(c)
   }
+}
+
+// ---------- Регулярные задачи: шаблон серии ⇄ экземпляры в календаре ----------
+// Название, описание, ответственные, проект, приоритет и пункты чек-листа у серии
+// и её невыполненных экземпляров одинаковы: правка в «Повторе» уходит в задачу в
+// календаре, а правка задачи в календаре — в серию (и в остальные активные
+// экземпляры). У каждого повторения свои только дата, время, отметка «выполнено»,
+// галочки чек-листа, комментарии и вложения. Выполненные повторения — история,
+// их не переписываем.
+
+const SERIES_SHARED_KEYS = ['title', 'description', 'assigneeIds', 'projectId', 'priority', 'checklist'] as const
+
+function isTaskSeries(s: Series | undefined): s is Series {
+  return !!s && !s.deleted && s.kind !== 'meeting'
+}
+
+/** Чек-лист экземпляра → шаблон серии (без отметок). */
+function checklistTemplate(list: ChecklistItem[]): ChecklistItem[] {
+  return list.map((i) => ({ id: i.id, text: i.text, done: false, updatedAt: i.updatedAt }))
+}
+
+/** Пункты шаблона с сохранением галочек экземпляра (по id пункта). */
+function mergeChecklist(tpl: ChecklistItem[], cur: ChecklistItem[], ts: string): ChecklistItem[] {
+  const byId = new Map(cur.map((i) => [i.id, i]))
+  return tpl.map((t) => {
+    const c = byId.get(t.id)
+    if (!c) return { id: t.id, text: t.text, done: false, updatedAt: ts }
+    return c.text === t.text ? c : { ...c, text: t.text, updatedAt: ts }
+  })
+}
+
+const checklistKey = (list: ChecklistItem[]): string => JSON.stringify(list.map((i) => [i.id, i.text, !!i.done]))
+
+/**
+ * Старые серии не хранили чек-лист и приоритет — они жили только в экземпляре.
+ * Перед первой синхронизацией переносим их в шаблон из активного экземпляра,
+ * чтобы правка в «Повторе» их не стёрла.
+ */
+function adoptLegacyTemplate(d: BoardData, s: Series): void {
+  if (s.kind === 'meeting' || s.checklist !== undefined) return
+  const insts = Object.values(d.cards)
+    .filter((c) => c.seriesId === s.id && !c.deleted)
+    .sort((a, b) => (a.date ?? '').localeCompare(b.date ?? ''))
+  const src = insts.filter((c) => !c.done).pop() ?? insts.pop()
+  s.checklist = src ? checklistTemplate(src.checklist) : []
+  if (src?.priority) s.priority = src.priority
+  touch(s)
+}
+
+/** Общие поля серии → в её живые невыполненные экземпляры (кроме exceptId). */
+function applySeriesToTaskInstances(d: BoardData, s: Series, exceptId?: ID): void {
+  const ts = nowISO()
+  for (const c of Object.values(d.cards)) {
+    if (c.seriesId !== s.id || c.deleted || c.done || c.id === exceptId) continue
+    let ch = false
+    if (c.title !== s.title) {
+      c.title = s.title
+      ch = true
+    }
+    if (c.description !== s.description) {
+      c.description = s.description
+      ch = true
+    }
+    if (c.assigneeIds.join(',') !== s.assigneeIds.join(',')) {
+      c.assigneeIds = [...s.assigneeIds]
+      ch = true
+    }
+    if ((s.projectId ?? '') !== (c.projectId ?? '')) {
+      if (s.projectId) c.projectId = s.projectId
+      else delete c.projectId
+      ch = true
+    }
+    if ((s.priority ?? '') !== (c.priority ?? '')) {
+      if (s.priority) c.priority = s.priority
+      else delete c.priority
+      ch = true
+    }
+    if (s.checklist) {
+      const merged = mergeChecklist(s.checklist, c.checklist, ts)
+      if (checklistKey(merged) !== checklistKey(c.checklist)) {
+        c.checklist = merged
+        ch = true
+      }
+    }
+    if (ch) touch(c)
+  }
+}
+
+/** Правка экземпляра регулярной задачи (в календаре) → в серию и её остальные активные экземпляры. */
+function syncTaskSeriesFromCard(d: BoardData, card: Card): void {
+  const s = card.seriesId ? d.series?.[card.seriesId] : undefined
+  if (!isTaskSeries(s) || (card.kind && card.kind !== 'task')) return
+  s.title = card.title
+  s.description = card.description
+  s.assigneeIds = [...card.assigneeIds]
+  if (card.projectId) s.projectId = card.projectId
+  else delete s.projectId
+  if (card.priority) s.priority = card.priority
+  else delete s.priority
+  s.checklist = checklistTemplate(card.checklist)
+  touch(s)
+  applySeriesToTaskInstances(d, s, card.id)
 }
 
 export type SyncStatus = 'loading' | 'synced' | 'saving' | 'offline' | 'error'
@@ -1334,6 +1446,10 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
             applySharedToInstances(d, s)
           }
         }
+        // Регулярная задача: правка в календаре уходит в шаблон серии («Повтор»)
+        if (card.seriesId && card.kind !== 'meeting' && SERIES_SHARED_KEYS.some((k) => k in patch)) {
+          syncTaskSeriesFromCard(d, card)
+        }
       }),
     deleteCard: (id) =>
       engine.update((d) => {
@@ -1416,6 +1532,9 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
         if (card.seriesId) {
           const s = d.series?.[card.seriesId]
           if (s && !s.deleted) {
+            // Старая серия без шаблона чек-листа: актуальное содержимое — в экземпляре,
+            // переносим его в серию, чтобы следующее повторение его унаследовало.
+            if (isTaskSeries(s) && s.checklist === undefined) syncTaskSeriesFromCard(d, card)
             const hasActive = Object.values(d.cards).some(
               (c) => c.seriesId === card.seriesId && !c.deleted && !c.done && c.id !== id,
             )
@@ -1457,6 +1576,7 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
         if (priority) card.priority = priority
         else delete card.priority
         touch(card)
+        if (card.seriesId) syncTaskSeriesFromCard(d, card)
       }),
     addSeries: (input) =>
       engine.update((d) => {
@@ -1472,6 +1592,10 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
           ...(input.projectId ? { projectId: input.projectId } : {}),
           ...(identity ? { createdBy: identity.id } : {}),
           ...(input.start ? { start: input.start, durationMin: input.durationMin ?? 60 } : {}),
+          checklist: (input.checklist ?? [])
+            .filter((i) => i.text.trim())
+            .map((i) => ({ id: i.id, text: i.text.trim(), done: false, updatedAt: ts })),
+          ...(input.priority ? { priority: input.priority } : {}),
           createdAt: ts,
           updatedAt: ts,
         }
@@ -1486,7 +1610,13 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
       engine.update((d) => {
         const s = d.series?.[id]
         if (!s || s.deleted) return
+        const ts = nowISO()
+        adoptLegacyTemplate(d, s)
         const ruleChanged = JSON.stringify(input.rule) !== JSON.stringify(s.rule)
+        // Время у каждого повторения может быть своим (перенесли в календаре) —
+        // переписываем его у активного экземпляра, только если время серии изменили.
+        const timeChanged =
+          (input.start ?? '') !== (s.start ?? '') || (!!input.start && (input.durationMin ?? 60) !== (s.durationMin ?? 60))
         s.title = input.title.trim() || s.title
         s.description = input.description ?? ''
         s.assigneeIds = [...input.assigneeIds]
@@ -1500,21 +1630,34 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
           delete s.start
           delete s.durationMin
         }
+        if (input.checklist) {
+          const prev = new Map((s.checklist ?? []).map((i) => [i.id, i]))
+          s.checklist = input.checklist
+            .filter((i) => i.text.trim())
+            .map((i) => {
+              const text = i.text.trim()
+              const old = prev.get(i.id)
+              return { id: i.id, text, done: false, updatedAt: old && old.text === text ? old.updatedAt : ts }
+            })
+        }
+        if ('priority' in input) {
+          if (input.priority) s.priority = input.priority
+          else delete s.priority
+        }
         touch(s)
-        // Синхронизируем активный (невыполненный) экземпляр
+        // Общие поля — во все активные экземпляры (галочки чек-листа сохраняются)
+        if (s.kind !== 'meeting') applySeriesToTaskInstances(d, s)
+        // Дата/время — только если поменяли правило/время серии
         const active = Object.values(d.cards).find((c) => c.seriesId === id && !c.deleted && !c.done)
-        if (active) {
-          active.title = s.title
-          active.description = s.description
-          active.assigneeIds = [...s.assigneeIds]
-          if (s.projectId) active.projectId = s.projectId
-          else delete active.projectId
-          if (s.start) {
-            active.start = s.start
-            active.durationMin = s.durationMin
-          } else {
-            delete active.start
-            delete active.durationMin
+        if (active && (timeChanged || ruleChanged)) {
+          if (timeChanged) {
+            if (s.start) {
+              active.start = s.start
+              active.durationMin = s.durationMin
+            } else {
+              delete active.start
+              delete active.durationMin
+            }
           }
           if (ruleChanged) {
             const k = firstOccurrence(toDateKey(new Date()), s.rule)
@@ -1619,6 +1762,7 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
         if (!card || card.deleted) return
         card.checklist.push({ id: uid(), text: text.trim(), done: false, updatedAt: nowISO() })
         touch(card)
+        if (card.seriesId) syncTaskSeriesFromCard(d, card)
       }),
     updateChecklistItem: (cardId, itemId, patch) =>
       engine.update((d) => {
@@ -1629,6 +1773,8 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
         Object.assign(item, patch)
         item.updatedAt = nowISO()
         touch(card)
+        // Текст пункта общий у регулярной задачи, галочка — своя у каждого повторения
+        if (card.seriesId && 'text' in patch) syncTaskSeriesFromCard(d, card)
       }),
     removeChecklistItem: (cardId, itemId) =>
       engine.update((d) => {
@@ -1636,6 +1782,7 @@ function buildStore(engine: SyncEngine, snap: StoreSnapshot): BoardStore {
         if (!card || card.deleted) return
         card.checklist = card.checklist.filter((i) => i.id !== itemId)
         touch(card)
+        if (card.seriesId) syncTaskSeriesFromCard(d, card)
       }),
 
     addComment: (cardId, html) =>

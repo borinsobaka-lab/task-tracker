@@ -1,10 +1,11 @@
 import { Suspense, lazy, useState } from 'react'
 import { useBoard } from '../store'
 import type { SeriesInput } from '../store'
-import type { Card, ID, Member, RecurFreq, RecurrenceRule, Series } from '../types'
+import type { Card, EisenhowerQuadrant, ID, Member, RecurFreq, RecurrenceRule, Series } from '../types'
 import { describeRule, ruleIsValid } from '../recurrence'
 import type { ViewProps } from '../viewProps'
-import { fmtDayMonth, hasContent, inProjectFilter, parseDateKey, plainSnippet } from '../utils'
+import { fmtDayMonth, hasContent, inProjectFilter, parseDateKey, plainSnippet, uid } from '../utils'
+import { QUADRANTS } from '../eisenhower'
 import { IcoCheck, IcoNone, IcoRecurring, IcoX } from '../icons'
 import { Avatar, AvatarStack, ProjectAvatar } from './Avatar'
 import { RecurrenceFields } from './RecurrenceFields'
@@ -177,9 +178,23 @@ function RecRow({
 
 function RecurringEditor({ series, onClose }: { series: Series | null; onClose: () => void }) {
   const store = useBoard()
-  const [title, setTitle] = useState(series?.title ?? '')
-  const [description, setDescription] = useState(series?.description ?? '')
-  const [assignees, setAssignees] = useState<ID[]>(series?.assigneeIds ?? [])
+  // Содержимое берём из активного повторения в календаре: оно синхронно с серией,
+  // а у старых серий только в нём и есть правки, сделанные в календаре.
+  const active = series
+    ? store
+        .recurringCards()
+        .filter((c) => c.seriesId === series.id && !c.done)
+        .sort((a, b) => (a.date ?? '').localeCompare(b.date ?? ''))[0]
+    : undefined
+  const src = active ?? series
+  const [title, setTitle] = useState(src?.title ?? '')
+  const [description, setDescription] = useState(src?.description ?? '')
+  const [assignees, setAssignees] = useState<ID[]>(src?.assigneeIds ?? [])
+  const [checklist, setChecklist] = useState<{ id: ID; text: string }[]>(
+    (active?.checklist ?? series?.checklist ?? []).map((i) => ({ id: i.id, text: i.text })),
+  )
+  const [newItem, setNewItem] = useState('')
+  const [priority, setPriority] = useState<EisenhowerQuadrant | undefined>(active ? active.priority : series?.priority)
   const [freq, setFreq] = useState<RecurFreq>(series?.rule.freq ?? 'weekly')
   const [weekdays, setWeekdays] = useState<number[]>(series?.rule.weekdays ?? [new Date().getDay()])
   const [monthdays, setMonthdays] = useState<number[]>(series?.rule.monthdays ?? [new Date().getDate()])
@@ -188,7 +203,7 @@ function RecurringEditor({ series, onClose }: { series: Series | null; onClose: 
   const [hasTime, setHasTime] = useState(!!series?.start)
   const [time, setTime] = useState(series?.start ?? '10:00')
   const [duration, setDuration] = useState(series?.durationMin ?? 60)
-  const [projectId, setProjectId] = useState<ID | undefined>(series?.projectId)
+  const [projectId, setProjectId] = useState<ID | undefined>(src?.projectId)
   const [error, setError] = useState<string | null>(null)
 
   const buildRule = (): RecurrenceRule => {
@@ -211,6 +226,8 @@ function RecurringEditor({ series, onClose }: { series: Series | null; onClose: 
       rule,
       ...(projectId ? { projectId } : {}),
       ...(hasTime ? { start: time, durationMin: duration } : {}),
+      checklist: newItem.trim() ? [...checklist, { id: uid(), text: newItem }] : checklist,
+      priority,
     }
     if (series) store.updateSeries(series.id, input)
     else store.addSeries(input)
@@ -245,6 +262,64 @@ function RecurringEditor({ series, onClose }: { series: Series | null; onClose: 
         <Suspense fallback={<div className="rte" style={{ minHeight: 120 }} />}>
           <RichTextEditor value={description} onChange={setDescription} placeholder="Добавьте описание… (появится в задаче в календаре)" />
         </Suspense>
+
+        <label className="field-label" style={{ marginTop: 14 }}>
+          Чек-лист
+        </label>
+        <div className="rec-checklist" data-testid="rec-checklist">
+          {checklist.map((item, idx) => (
+            <div key={item.id} className="rec-check-row">
+              <input
+                className="input"
+                value={item.text}
+                aria-label={`Пункт ${idx + 1}`}
+                onChange={(e) => setChecklist(checklist.map((x) => (x.id === item.id ? { ...x, text: e.target.value } : x)))}
+              />
+              <button
+                type="button"
+                className="rec-check-remove"
+                title="Удалить пункт"
+                aria-label="Удалить пункт"
+                onClick={() => setChecklist(checklist.filter((x) => x.id !== item.id))}
+              >
+                <IcoX size={16} />
+              </button>
+            </div>
+          ))}
+          <input
+            className="input"
+            placeholder="Добавить пункт… (Enter)"
+            value={newItem}
+            onChange={(e) => setNewItem(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && newItem.trim()) {
+                e.preventDefault()
+                setChecklist([...checklist, { id: uid(), text: newItem.trim() }])
+                setNewItem('')
+              }
+            }}
+          />
+        </div>
+
+        <label className="field-label" style={{ marginTop: 14 }}>
+          Приоритет
+        </label>
+        <div className="rec-prio">
+          <button type="button" className={'rec-member' + (!priority ? ' on' : '')} onClick={() => setPriority(undefined)}>
+            Без приоритета
+          </button>
+          {QUADRANTS.map((q) => (
+            <button
+              key={q.key}
+              type="button"
+              className={'rec-member' + (priority === q.key ? ' on' : '')}
+              onClick={() => setPriority(q.key)}
+            >
+              <span className="rec-prio-dot" style={{ background: q.color }} />
+              {q.title}
+            </button>
+          ))}
+        </div>
 
         <label className="field-label" style={{ marginTop: 14 }}>
           Ответственные
