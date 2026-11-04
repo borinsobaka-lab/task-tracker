@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-04T10:22:41.081Z",
+  "generatedAt": "2026-11-04T10:22:55.596Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -5152,6 +5152,7 @@
       "id": "4ba6bc27-43bb-4ba9-a8b0-6d4d3d2dc687",
       "title": "созвон с кандидатом",
       "date": "2026-11-05",
+      "kind": "task",
       "members": [
         {
           "id": "4e018f91-dee4-4006-9a63-6f48b46a3d2d",
