@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-05T10:06:13.448Z",
+  "generatedAt": "2026-11-05T10:20:21.069Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -5163,7 +5163,7 @@
       "id": "199c676a-9455-4042-a6e7-0c7d54150efa",
       "title": "Встреча с Толиком",
       "date": "2026-11-05",
-      "start": "16:00",
+      "start": "17:00",
       "durationMin": 60,
       "kind": "meeting",
       "members": [
