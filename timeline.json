@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-05T16:19:50.081Z",
+  "generatedAt": "2026-11-05T16:20:20.253Z",
   "items": [
     {
       "id": "e7333d0f-2f26-41c6-abb7-fa61bf92380c",
@@ -5206,6 +5206,8 @@
       "id": "5d59ab23-81f7-4e07-8274-9ccbaad60a3f",
       "title": "созвон с кандидатом",
       "date": "2026-11-06",
+      "start": "12:00",
+      "durationMin": 60,
       "members": [
         {
           "id": "4e018f91-dee4-4006-9a63-6f48b46a3d2d",
