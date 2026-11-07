@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-07T08:15:40.777Z",
+  "generatedAt": "2026-11-07T09:54:43.290Z",
   "items": [
     {
       "id": "abfbdf36-212b-470d-a324-fd62b59281e1",
@@ -4380,6 +4380,19 @@
       "date": "2026-11-08",
       "start": "15:00",
       "durationMin": 30,
+      "priorityColor": "#ef4444",
+      "members": [
+        {
+          "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
+          "name": "Вова",
+          "color": "#84cc16"
+        }
+      ]
+    },
+    {
+      "id": "868f09b2-7920-471a-a116-6de288b023aa",
+      "title": "Раздел с билетами + QR",
+      "date": "2026-11-09",
       "priorityColor": "#ef4444",
       "members": [
         {
