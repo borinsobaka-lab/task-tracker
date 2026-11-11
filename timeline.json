@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-11T09:39:57.580Z",
+  "generatedAt": "2026-11-11T09:40:09.045Z",
   "items": [
     {
       "id": "abfbdf36-212b-470d-a324-fd62b59281e1",
@@ -4491,7 +4491,18 @@
       "date": "2026-11-11",
       "start": "15:30",
       "durationMin": 60,
-      "members": []
+      "members": [
+        {
+          "id": "ea32a415-3cfc-4b54-9d10-e2348d9922a0",
+          "name": "Рома",
+          "color": "#ef4444"
+        },
+        {
+          "id": "a4ae5373-516a-42e7-961c-7da6ac6bc3a8",
+          "name": "Дина",
+          "color": "#14b8a6"
+        }
+      ]
     },
     {
       "id": "af5bc1e0-9f32-4734-a8cd-9217243cc415:2026-11-11",
