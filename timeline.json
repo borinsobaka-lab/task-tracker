@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-11T10:44:33.317Z",
+  "generatedAt": "2026-11-11T12:51:08.933Z",
   "items": [
     {
       "id": "abfbdf36-212b-470d-a324-fd62b59281e1",
@@ -3503,6 +3503,15 @@
           "color": "#84cc16"
         }
       ]
+    },
+    {
+      "id": "e4c18eff-21eb-47fc-a5bb-5daf57418a74",
+      "title": "Сон",
+      "date": "2026-10-27",
+      "start": "04:30",
+      "durationMin": 480,
+      "kind": "block",
+      "members": []
     },
     {
       "id": "f98ffaaa-2ee2-435f-9d10-986e760bfc73",
