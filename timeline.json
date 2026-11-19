@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-19T16:39:47.184Z",
+  "generatedAt": "2026-11-19T16:39:55.071Z",
   "items": [
     {
       "id": "abfbdf36-212b-470d-a324-fd62b59281e1",
@@ -957,16 +957,6 @@
           "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
-        },
-        {
-          "id": "83d23fdb-962e-4265-ae13-e9090a58dc69",
-          "name": "Оля",
-          "color": "#f59e0b"
-        },
-        {
-          "id": "cf4dd8bc-12e0-4cf7-8115-a7667b80e91b",
-          "name": "Витя",
-          "color": "#6366f1"
         }
       ]
     },
@@ -1067,16 +1057,6 @@
           "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
-        },
-        {
-          "id": "83d23fdb-962e-4265-ae13-e9090a58dc69",
-          "name": "Оля",
-          "color": "#f59e0b"
-        },
-        {
-          "id": "cf4dd8bc-12e0-4cf7-8115-a7667b80e91b",
-          "name": "Витя",
-          "color": "#6366f1"
         }
       ]
     },
@@ -1093,11 +1073,6 @@
           "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
-        },
-        {
-          "id": "83d23fdb-962e-4265-ae13-e9090a58dc69",
-          "name": "Оля",
-          "color": "#f59e0b"
         }
       ]
     },
@@ -1250,13 +1225,7 @@
       "durationMin": 180,
       "done": true,
       "priorityColor": "#ef4444",
-      "members": [
-        {
-          "id": "83d23fdb-962e-4265-ae13-e9090a58dc69",
-          "name": "Оля",
-          "color": "#f59e0b"
-        }
-      ]
+      "members": []
     },
     {
       "id": "953d1cf3-3857-485e-bb10-91f23a7d6ef7",
@@ -1266,18 +1235,7 @@
       "durationMin": 540,
       "done": true,
       "priorityColor": "#ef4444",
-      "members": [
-        {
-          "id": "83d23fdb-962e-4265-ae13-e9090a58dc69",
-          "name": "Оля",
-          "color": "#f59e0b"
-        },
-        {
-          "id": "cf4dd8bc-12e0-4cf7-8115-a7667b80e91b",
-          "name": "Витя",
-          "color": "#6366f1"
-        }
-      ]
+      "members": []
     },
     {
       "id": "52f43fbd-4982-431b-9717-9d3edd15f6fe",
@@ -1287,13 +1245,7 @@
       "durationMin": 540,
       "done": true,
       "priorityColor": "#ef4444",
-      "members": [
-        {
-          "id": "cf4dd8bc-12e0-4cf7-8115-a7667b80e91b",
-          "name": "Витя",
-          "color": "#6366f1"
-        }
-      ]
+      "members": []
     },
     {
       "id": "55676402-f5d1-4a7d-9822-6e0d975ca5fe",
@@ -1462,13 +1414,7 @@
       "start": "15:30",
       "durationMin": 60,
       "done": true,
-      "members": [
-        {
-          "id": "cf4dd8bc-12e0-4cf7-8115-a7667b80e91b",
-          "name": "Витя",
-          "color": "#6366f1"
-        }
-      ]
+      "members": []
     },
     {
       "id": "72ac3572-aa40-4313-bef4-d1d25e9b5ba0",
@@ -1478,18 +1424,7 @@
       "durationMin": 60,
       "kind": "task",
       "done": true,
-      "members": [
-        {
-          "id": "83d23fdb-962e-4265-ae13-e9090a58dc69",
-          "name": "Оля",
-          "color": "#f59e0b"
-        },
-        {
-          "id": "cf4dd8bc-12e0-4cf7-8115-a7667b80e91b",
-          "name": "Витя",
-          "color": "#6366f1"
-        }
-      ]
+      "members": []
     },
     {
       "id": "a91ddc8c-ebe6-4d8a-861f-82c8b14cc756",
@@ -1499,11 +1434,6 @@
       "durationMin": 60,
       "done": true,
       "members": [
-        {
-          "id": "cf4dd8bc-12e0-4cf7-8115-a7667b80e91b",
-          "name": "Витя",
-          "color": "#6366f1"
-        },
         {
           "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
@@ -1560,16 +1490,6 @@
           "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
-        },
-        {
-          "id": "83d23fdb-962e-4265-ae13-e9090a58dc69",
-          "name": "Оля",
-          "color": "#f59e0b"
-        },
-        {
-          "id": "cf4dd8bc-12e0-4cf7-8115-a7667b80e91b",
-          "name": "Витя",
-          "color": "#6366f1"
         }
       ]
     },
@@ -2682,11 +2602,6 @@
       "kind": "meeting",
       "members": [
         {
-          "id": "cf4dd8bc-12e0-4cf7-8115-a7667b80e91b",
-          "name": "Витя",
-          "color": "#6366f1"
-        },
-        {
           "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
@@ -3149,16 +3064,6 @@
           "id": "deb49f40-3c33-4f40-b63e-6822dc9172b0",
           "name": "Вова",
           "color": "#84cc16"
-        },
-        {
-          "id": "83d23fdb-962e-4265-ae13-e9090a58dc69",
-          "name": "Оля",
-          "color": "#f59e0b"
-        },
-        {
-          "id": "cf4dd8bc-12e0-4cf7-8115-a7667b80e91b",
-          "name": "Витя",
-          "color": "#6366f1"
         }
       ]
     },
